@@ -1,0 +1,7 @@
+@if (showLoader()) {
+  <app-loader />
+}
+
+@if (!showLoader()) {
+  <router-outlet />
+}
