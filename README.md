@@ -332,18 +332,6 @@ Este es un proyecto académico intermodular. Las contribuciones del equipo se co
 
 ### Workflow de Git
 
-```bash
-# Crear rama para nueva funcionalidad
-git checkout -b feature/nombre-funcionalidad
-
-# Hacer commits descriptivos
-git commit -m "feat: descripción del cambio"
-
-# Push a GitHub
-git push origin feature/nombre-funcionalidad
-
-# Crear Pull Request en GitHub
-```
 
 ---
 
@@ -356,7 +344,6 @@ Este proyecto es parte de un trabajo académico intermodular.
 ## 📞 Contacto
 
 Para más información sobre el proyecto:
-- **GitHub**: [Sergiibut05](https://github.com/Sergiibut05)
 - **Repositorio**: [BookMatch-Proyecto-Intermodular](https://github.com/Sergiibut05/BookMatch-Proyecto-Intermodular)
 
 ---
