@@ -132,39 +132,7 @@ cd BookMatch-Proyecto-Intermodular/BookMatch-Angular
 npm install
 ```
 
-### 3. Configurar Firebase
-
-Crea los archivos de configuración de Firebase con tus credenciales:
-
-**`src/environments/environment.ts`**
-```typescript
-export const environment = {
-  production: false,
-  firebase: {
-    apiKey: "TU_API_KEY",
-    authDomain: "TU_AUTH_DOMAIN",
-    projectId: "TU_PROJECT_ID",
-    storageBucket: "TU_STORAGE_BUCKET",
-    messagingSenderId: "TU_MESSAGING_SENDER_ID",
-    appId: "TU_APP_ID",
-    databaseURL: "TU_DATABASE_URL"
-  }
-};
-```
-
-**`src/environments/environment.prod.ts`**
-```typescript
-export const environment = {
-  production: true,
-  firebase: {
-    // Mismas credenciales de Firebase
-  }
-};
-```
-
-> **Nota:** Obtén tus credenciales desde la [Consola de Firebase](https://console.firebase.google.com/)
-
-### 4. Ejecutar la Aplicación
+### 3. Ejecutar la Aplicación
 
 #### Modo Desarrollo
 ```bash
