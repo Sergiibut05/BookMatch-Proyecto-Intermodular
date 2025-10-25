@@ -1,0 +1,14 @@
+<div class="home-container">
+    <nav class="navbar">
+      <h1>BookMatch</h1>
+      <div class="nav-actions">
+        <span>Bienvenido, {{ authService.currentUser()?.email }}</span>
+        <button (click)="logout()" class="btn-logout">Cerrar Sesión</button>
+      </div>
+    </nav>
+    
+    <div class="content">
+      <h2>¡Bienvenido a BookMatch!</h2>
+      <p>Tu plataforma para comprar, intercambiar y descubrir libros.</p>
+    </div>
+</div>

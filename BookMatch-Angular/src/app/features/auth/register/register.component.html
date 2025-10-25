@@ -1,0 +1,86 @@
+<div class="auth-container">
+    <div class="auth-card">
+      <div class="auth-header">
+        <h1>BookMatch</h1>
+        <p>Crea tu cuenta</p>
+      </div>
+
+      <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="auth-form">
+        <div class="form-group">
+          <label for="email">Correo electrónico</label>
+          <input 
+            type="email" 
+            id="email" 
+            formControlName="email"
+            placeholder="tu@email.com"
+            [class.error]="registerForm.get('email')?.invalid && registerForm.get('email')?.touched"
+          />
+          @if (registerForm.get('email')?.invalid && registerForm.get('email')?.touched) {
+            <span class="error-message">Por favor, introduce un email válido</span>
+          }
+        </div>
+
+        <div class="form-group">
+          <label for="password">Contraseña</label>
+          <input 
+            type="password" 
+            id="password" 
+            formControlName="password"
+            placeholder="••••••••"
+            [class.error]="registerForm.get('password')?.invalid && registerForm.get('password')?.touched"
+          />
+          @if (registerForm.get('password')?.invalid && registerForm.get('password')?.touched) {
+            <span class="error-message">La contraseña debe tener al menos 6 caracteres</span>
+          }
+        </div>
+
+        <div class="form-group">
+          <label for="confirmPassword">Confirmar contraseña</label>
+          <input 
+            type="password" 
+            id="confirmPassword" 
+            formControlName="confirmPassword"
+            placeholder="••••••••"
+            [class.error]="registerForm.hasError('passwordMismatch') && registerForm.get('confirmPassword')?.touched"
+          />
+          @if (registerForm.hasError('passwordMismatch') && registerForm.get('confirmPassword')?.touched) {
+            <span class="error-message">Las contraseñas no coinciden</span>
+          }
+        </div>
+
+        @if (errorMessage) {
+          <div class="alert alert-error">{{ errorMessage }}</div>
+        }
+
+        @if (successMessage) {
+          <div class="alert alert-success">{{ successMessage }}</div>
+        }
+
+        <button type="submit" class="btn btn-primary" [disabled]="registerForm.invalid || loading">
+          @if (loading) {
+            <span class="spinner"></span>
+          } @else {
+            Crear Cuenta
+          }
+        </button>
+      </form>
+
+      <div class="divider">
+        <span>O continúa con</span>
+      </div>
+
+      <button type="button" class="btn btn-google" (click)="loginWithGoogle()" [disabled]="loading">
+        <svg width="18" height="18" viewBox="0 0 18 18">
+          <path fill="#4285F4" d="M16.51 8H8.98v3h4.3c-.18 1-.74 1.48-1.6 2.04v2.01h2.6a7.8 7.8 0 0 0 2.38-5.88c0-.57-.05-.66-.15-1.18Z"/>
+          <path fill="#34A853" d="M8.98 17c2.16 0 3.97-.72 5.3-1.94l-2.6-2a4.8 4.8 0 0 1-7.18-2.54H1.83v2.07A8 8 0 0 0 8.98 17Z"/>
+          <path fill="#FBBC05" d="M4.5 10.52a4.8 4.8 0 0 1 0-3.04V5.41H1.83a8 8 0 0 0 0 7.18l2.67-2.07Z"/>
+          <path fill="#EA4335" d="M8.98 4.18c1.17 0 2.23.4 3.06 1.2l2.3-2.3A8 8 0 0 0 1.83 5.4L4.5 7.49a4.77 4.77 0 0 1 4.48-3.3Z"/>
+        </svg>
+        Google
+      </button>
+
+      <div class="auth-footer">
+        <p>¿Ya tienes cuenta? <a routerLink="/auth/login">Inicia sesión aquí</a></p>
+      </div>
+    </div>
+</div>
