@@ -187,7 +187,6 @@ ng test --code-coverage
 - ✅ Splash screen animado con libro 3D
 - ✅ Diseño moderno con gradientes
 - ✅ Formularios con validación en tiempo real
-- ✅ Responsive design
 - ✅ Animaciones y transiciones suaves
 
 ---
