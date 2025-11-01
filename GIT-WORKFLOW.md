@@ -1,4 +1,4 @@
-# 🌳 Git Workflow - BookMatch Team
+# 🌳 Git Workflow - Team
 
 > Guía rápida para trabajar con ramas en el proyecto BookMatch
 
