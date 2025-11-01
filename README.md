@@ -318,8 +318,6 @@ Para más información sobre el proyecto:
 ## ⭐ Agradecimientos
 
 - Profesores y tutores del proyecto intermodular
-- Comunidad de Angular
-- Firebase team
 - Beta testers
 
 ---
