@@ -40,7 +40,6 @@ La idea surge de la necesidad de fomentar la lectura y adaptarse a las nuevas te
 - [ ] Sistema de recomendaciones con IA (n8n)
 - [ ] Comunidad lectora (foros y reseñas)
 - [ ] Perfil de usuario
-- [ ] Sistema de notificaciones
 
 ### 📅 Planificado
 
