@@ -283,7 +283,6 @@ ng test --code-coverage
 - ✅ Splash screen animado con libro 3D
 - ✅ Diseño moderno con gradientes
 - ✅ Formularios con validación en tiempo real
-- ✅ Responsive design
 - ✅ Animaciones y transiciones suaves
 - ✅ Tailwind CSS integrado
 - ✅ Componente home con grid de libros
@@ -620,8 +619,6 @@ Para más información sobre el proyecto:
 ## ⭐ Agradecimientos
 
 - Profesores y tutores del proyecto intermodular
-- Comunidad de Angular
-- Firebase team
 - Beta testers
 
 ---
