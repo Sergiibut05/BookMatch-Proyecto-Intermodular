@@ -1,0 +1,184 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          Int      @id @default(autoincrement())
+  firebaseUid String   @unique @map("firebase_uid")
+  email       String   @unique
+  fullName    String?  @map("full_name")
+  avatarUrl   String?  @map("avatar_url")
+  phone       String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  // Relaciones
+  userBooks   UserBook[]
+  orders      Order[]
+  reviews     Review[]
+
+  @@map("users")
+}
+
+// Categorías de libros
+model Category {
+  id          Int       @id @default(autoincrement())
+  name        String    @unique // Nombre único: "Fantasía", "Novedades", etc.
+  slug        String    @unique // URL-friendly: "fantasia", "novedades"
+  type        CategoryType // Principal o especial
+  parentId    Int?      @map("parent_id") // Para subcategorías (opcional)
+  icon        String?
+  description String?
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  // Relaciones
+  parent      Category?     @relation("CategoryHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
+  children    Category[]     @relation("CategoryHierarchy")
+  catalogBooks CatalogBookCategory[]
+  userBooks   UserBookCategory[]
+
+  @@map("categories")
+}
+
+enum CategoryType {
+  MAIN      // (Fantasía, Ciencia Ficción, etc.)
+  SPECIAL   // (Novedades, Más vendidos, Recomendados)
+}
+
+// Libro del catálogo
+model CatalogBook {
+  id          Int      @id @default(autoincrement())
+  title       String
+  author      String
+  isbn        String   @unique
+  description String?
+  coverUrl    String?  @map("cover_url")        
+  imageUrls   String[] @default([])             
+  price       Decimal  @db.Decimal(10, 2)       
+  stock       Int      @default(0)               
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  // Relaciones
+  orderItems  OrderItem[]
+  reviews     Review[]
+  categories  CatalogBookCategory[] // Many-to-many con Category
+
+  @@map("catalog_books")
+}
+
+// Tabla de unión para CatalogBook <-> Category (many-to-many)
+model CatalogBookCategory {
+  id             Int      @id @default(autoincrement())
+  catalogBookId  Int      @map("catalog_book_id")
+  categoryId     Int      @map("category_id")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  catalogBook CatalogBook @relation(fields: [catalogBookId], references: [id], onDelete: Cascade)
+  category     Category    @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@unique([catalogBookId, categoryId]) // Un libro no puede tener la misma categoría dos veces
+  @@map("catalog_book_categories")
+}
+
+// Libro de usuario 
+model UserBook {
+  id          Int       @id @default(autoincrement())
+  title       String
+  author      String
+  isbn        String?   
+  description String?
+  coverUrl    String?   @map("cover_url")
+  imageUrls   String[]  @default([])
+  ownerId     Int       @map("owner_id")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  // Relaciones
+  owner       User      @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  categories  UserBookCategory[] // Many-to-many con Category
+
+  @@map("user_books")
+}
+
+// Tabla de unión para UserBook <-> Category (many-to-many)
+model UserBookCategory {
+  id        Int      @id @default(autoincrement())
+  userBookId Int     @map("user_book_id")
+  categoryId Int     @map("category_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  userBook UserBook  @relation(fields: [userBookId], references: [id], onDelete: Cascade)
+  category Category  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@unique([userBookId, categoryId]) // Un libro no puede tener la misma categoría dos veces
+  @@map("user_book_categories")
+}
+
+
+
+model Order {
+  id              Int           @id @default(autoincrement())
+  userId          Int           @map("user_id")
+  totalAmount     Decimal       @map("total_amount") @db.Decimal(10, 2)
+  status          OrderStatus   @default(PENDING)
+  paymentIntentId String?       @map("payment_intent_id")
+  shippingAddress String?       @map("shipping_address")
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
+
+  user  User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items OrderItem[]
+
+  @@map("orders")
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+model OrderItem {
+  id       Int     @id @default(autoincrement())
+  orderId Int     @map("order_id")
+  catalogBookId  Int     @map("catalog_book_id") // Solo se pueden comprar libros del catálogo
+  quantity Int     @default(1)
+  price    Decimal @db.Decimal(10, 2)
+
+  order Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  catalogBook CatalogBook @relation(fields: [catalogBookId], references: [id], onDelete: Cascade)
+
+  @@map("order_items")
+}
+
+model Review {
+  id        Int      @id @default(autoincrement())
+  catalogBookId Int  @map("catalog_book_id")
+  userId    Int      @map("user_id")
+  rating    Int      // 1-5
+  comment   String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  catalogBook CatalogBook @relation(fields: [catalogBookId], references: [id], onDelete: Cascade)
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([catalogBookId, userId]) // Un usuario solo puede reseñar un libro una vez
+  @@map("reviews")
+}
+
