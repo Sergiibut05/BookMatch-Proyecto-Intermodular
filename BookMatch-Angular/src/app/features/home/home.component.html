@@ -1,14 +1,110 @@
-<div class="home-container">
-    <nav class="navbar">
-      <h1>BookMatch</h1>
-      <div class="nav-actions">
-        <span>Bienvenido, {{ authService.currentUser()?.email }}</span>
-        <button (click)="logout()" class="btn-logout">Cerrar Sesión</button>
+<div class="min-h-screen" style="background-color: #FCF5E2;">
+  <!-- Navbar -->
+  <nav class="bg-white shadow-md sticky top-0 z-50 border-b" style="border-color: #E9E1D1;">
+    <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+      <h1 class="text-2xl font-bold" style="color: #45332D;">📚 BookMatch</h1>
+      <div class="flex items-center gap-4">
+        <span class="text-sm" style="color: #45332D;">
+          Bienvenido, <span class="font-semibold">{{ authService.currentUser()?.email }}</span>
+        </span>
+        <button 
+          (click)="logout()" 
+          class="px-4 py-2 rounded-lg transition-colors duration-200 font-medium"
+          style="background-color: #E0A15E; color: #FCF5E2;"
+          onmouseover="this.style.backgroundColor='#B88B65'"
+          onmouseout="this.style.backgroundColor='#E0A15E'">
+          Cerrar Sesión
+        </button>
       </div>
-    </nav>
-    
-    <div class="content">
-      <h2>¡Bienvenido a BookMatch!</h2>
-      <p>Tu plataforma para comprar, intercambiar y descubrir libros.</p>
     </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <div class="container mx-auto px-4 py-8 text-center">
+    <h2 class="text-4xl font-bold mb-4" style="color: #45332D;">¡Bienvenido a BookMatch!</h2>
+    <p class="text-lg mb-8" style="color: #4E6A6A; opacity: 0.7;">Tu plataforma para comprar, intercambiar y descubrir libros.</p>
+  </div>
+
+  <!-- Books Grid -->
+  <div class="container mx-auto px-4 pb-12">
+    @if (books().length === 0) {
+      <div class="text-center py-12">
+        <div class="inline-block p-6 bg-white rounded-xl shadow-sm">
+          <p class="text-lg" style="color: #D4C9B9;">Cargando libros...</p>
+        </div>
+      </div>
+    } @else {
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        @for (book of books(); track book.id) {
+          <div class="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 group border" style="border-color: #E9E1D1;">
+            <!-- Book Cover -->
+            <div class="relative h-64 overflow-hidden bg-gray-100">
+              @if (book.coverUrl) {
+                <img 
+                  [src]="book.coverUrl" 
+                  [alt]="book.title"
+                  class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                  (error)="$event.target.src='https://via.placeholder.com/300x400?text=' + book.title">
+              } @else {
+                <div class="w-full h-full flex items-center justify-center" style="background: linear-gradient(135deg, #E0A15E 0%, #B88B65 100%);">
+                  <span class="text-6xl" style="color: #FCF5E2;">📖</span>
+                </div>
+              }
+              
+              <!-- Stock Badge -->
+              @if (book.stock > 0) {
+                <span class="absolute top-3 right-3 px-3 py-1 rounded-full text-xs font-semibold shadow-md"
+                      style="background-color: #E0A15E; color: #FCF5E2;">
+                  En stock
+                </span>
+              } @else {
+                <span class="absolute top-3 right-3 px-3 py-1 rounded-full text-xs font-semibold shadow-md bg-red-500 text-white">
+                  Sin stock
+                </span>
+              }
+            </div>
+
+            <!-- Book Info -->
+            <div class="p-5">
+              <h3 class="text-xl font-bold mb-2 line-clamp-2 min-h-[3.5rem]" style="color: #45332D;">
+                {{ book.title }}
+              </h3>
+              <p class="mb-3 text-sm" style="color: #4E6A6A; opacity: 0.7;">por {{ book.author }}</p>
+              
+              @if (book.description) {
+                <p class="mb-4 text-sm line-clamp-2" style="color: #D4C9B9;">{{ book.description }}</p>
+              }
+
+              <!-- Categories -->
+              @if (book.categories && book.categories.length > 0) {
+                <div class="flex flex-wrap gap-2 mb-4">
+                  @for (cat of book.categories.slice(0, 2); track cat.id) {
+                    <span class="px-2 py-1 rounded-full text-xs border"
+                          style="background-color: #FCF5E2; color: #45332D; border-color: #E9E1D1;">
+                      {{ cat.category.name }}
+                    </span>
+                  }
+                </div>
+              }
+
+              <!-- Price and Actions -->
+              <div class="flex justify-between items-center mt-4 pt-4" style="border-top: 1px solid #E9E1D1;">
+                <div>
+                  <p class="text-2xl font-bold" style="color: #45332D;">{{ book.price | number:'1.2-2' }}€</p>
+                  <p class="text-xs mt-1" style="color: #D4C9B9;">Stock: {{ book.stock }}</p>
+                </div>
+                <button 
+                  class="px-4 py-2 rounded-lg transition-colors duration-200 font-medium text-sm"
+                  style="background-color: #E0A15E; color: #FCF5E2;"
+                  onmouseover="this.style.backgroundColor='#B88B65'"
+                  onmouseout="this.style.backgroundColor='#E0A15E'">
+                  Ver detalles
+                </button>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </div>
 </div>

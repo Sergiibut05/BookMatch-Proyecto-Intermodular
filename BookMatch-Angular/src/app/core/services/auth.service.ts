@@ -1,6 +1,6 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { Auth, createUserWithEmailAndPassword, signInWithEmailAndPassword, 
-         signInWithPopup, GoogleAuthProvider, signOut, user, User } from '@angular/fire/auth';
+         signInWithPopup, GoogleAuthProvider, signOut, user, User, onAuthStateChanged } from '@angular/fire/auth';
 import { Router } from '@angular/router';
 import { Observable, from } from 'rxjs';
 
@@ -12,15 +12,33 @@ export class AuthService {
   private router = inject(Router);
   
   currentUser = signal<User | null>(null);
+  private readonly TOKEN_KEY = 'firebase_token';
   user$ = user(this.auth);
 
   constructor() {
     // Escuchar cambios en el estado de autenticación
     this.user$.subscribe(user => {
       this.currentUser.set(user);
+      if (user) {
+        user.getIdToken().then(token => {
+          localStorage.setItem(this.TOKEN_KEY, token);
+        });
+      } else {
+        localStorage.removeItem(this.TOKEN_KEY);
+      }
+    });
+
+    onAuthStateChanged(this.auth, (user) => {
+      if (user) {
+        user.getIdToken().then(token => {
+          localStorage.setItem(this.TOKEN_KEY, token);
+        });
+      }
     });
   }
 
+  
+  
   // Registro con email y contraseña
   register(email: string, password: string): Observable<any> {
     return from(createUserWithEmailAndPassword(this.auth, email, password));
@@ -40,11 +58,22 @@ export class AuthService {
 
   // Cerrar sesión
   logout(): Observable<any> {
+    localStorage.removeItem(this.TOKEN_KEY);
     return from(signOut(this.auth));
   }
 
   // Verificar si está autenticado
   isAuthenticated(): boolean {
     return this.currentUser() !== null;
+  }
+
+  async getToken(): Promise<string | null> {
+    const user = this.currentUser();
+    if (user) {
+      const token = await user.getIdToken();
+      localStorage.setItem(this.TOKEN_KEY, token);
+      return token;
+    }
+    return localStorage.getItem(this.TOKEN_KEY);
   }
 }
