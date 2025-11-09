@@ -4,11 +4,12 @@ import { Router } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { CatalogService } from '@core/services/catalog.service';
 import { CatalogBook } from '@shared/models';
+import { Header } from '@shared/components/header/header';
 
 
 @Component({
   selector: 'app-home',
-  imports: [CommonModule],
+  imports: [CommonModule, Header],
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss',
 })
@@ -30,12 +31,6 @@ export class HomeComponent {
     });
   }
 
-  logout(): void {
-    this.authService.logout().subscribe({
-      next: () => {
-        this.router.navigate(['/auth/login']);
-      }
-    });
-  }
+
   
 }

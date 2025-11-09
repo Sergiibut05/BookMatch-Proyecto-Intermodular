@@ -1,23 +1,6 @@
+<app-header></app-header>
+
 <div class="min-h-screen" style="background-color: #FCF5E2;">
-  <!-- Navbar -->
-  <nav class="bg-white shadow-md sticky top-0 z-50 border-b" style="border-color: #E9E1D1;">
-    <div class="container mx-auto px-4 py-4 flex justify-between items-center">
-      <h1 class="text-2xl font-bold" style="color: #45332D;">📚 BookMatch</h1>
-      <div class="flex items-center gap-4">
-        <span class="text-sm" style="color: #45332D;">
-          Bienvenido, <span class="font-semibold">{{ authService.currentUser()?.email }}</span>
-        </span>
-        <button 
-          (click)="logout()" 
-          class="px-4 py-2 rounded-lg transition-colors duration-200 font-medium"
-          style="background-color: #E0A15E; color: #FCF5E2;"
-          onmouseover="this.style.backgroundColor='#B88B65'"
-          onmouseout="this.style.backgroundColor='#E0A15E'">
-          Cerrar Sesión
-        </button>
-      </div>
-    </div>
-  </nav>
 
   <!-- Hero Section -->
   <div class="container mx-auto px-4 py-8 text-center">

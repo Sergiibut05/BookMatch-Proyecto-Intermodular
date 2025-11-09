@@ -1,0 +1,34 @@
+<!-- Navbar -->
+  <nav class="bg-white shadow-md sticky top-0 z-50 border-b" style="border-color: #E9E1D1;">
+  <div class="container mx-auto px-4 py-3 md:py-4 flex justify-between items-center">
+    
+    <div class="flex items-center">
+      <img 
+        src="favicon.png" 
+        alt="BookMatch Logo" 
+        class="h-10 w-10 md:h-12 md:w-12 mr-2" 
+      />
+      <h1 class="text-xl md:text-2xl font-bold" style="color: #45332D;">BookMatch</h1>
+    </div>
+    
+    <div class="flex items-center gap-4">
+      
+      <span 
+        class="hidden md:block text-sm whitespace-nowrap" 
+        style="color: #45332D;"
+      >
+        Bienvenido, <span class="font-semibold">{{ authService.currentUser()?.email }}</span>
+      </span>
+      
+      <button 
+        (click)="logout()" 
+        class="px-3 py-1.5 md:px-4 md:py-2 rounded-lg transition-colors duration-200 font-medium whitespace-nowrap text-sm md:text-base"
+        style="background-color: #E0A15E; color: #FCF5E2;"
+        onmouseover="this.style.backgroundColor='#B88B65'"
+        onmouseout="this.style.backgroundColor='#E0A15E'">
+        Cerrar Sesión
+      </button>
+      
+    </div>
+  </div>
+</nav>
