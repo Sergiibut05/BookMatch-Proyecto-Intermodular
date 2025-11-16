@@ -60,24 +60,73 @@ async function ensureCategoriesExist(categoryIds: number[] | undefined) {
   }
 }
 
-export async function listCatalogBooks(filters: { categoryIds?: number[] } = {}) {
+type ListFilters = { categoryIds?: number[]; categoryNames?: string[] };
+type Pagination = { page: number; limit: number };
+
+export async function listCatalogBooks(filters: ListFilters = {}, pagination?: Pagination) {
   const where: Prisma.CatalogBookWhereInput = {};
 
+  // Construimos cláusulas AND a nivel superior para combinar múltiples condiciones "some"
+  const andClauses: Prisma.CatalogBookWhereInput[] = [];
   if (filters.categoryIds && filters.categoryIds.length > 0) {
-    where.categories = {
-      some: {
-        categoryId: { in: filters.categoryIds },
+    andClauses.push({
+      categories: {
+        some: {
+          categoryId: { in: filters.categoryIds },
+        },
       },
-    };
+    });
+  }
+  if (filters.categoryNames && filters.categoryNames.length > 0) {
+    andClauses.push({
+      categories: {
+        some: {
+          category: {
+            name: { in: filters.categoryNames },
+          },
+        },
+      },
+    });
+  }
+  if (andClauses.length > 0) {
+    where.AND = andClauses;
   }
 
-  const books = await prisma.catalogBook.findMany({
+  const skip = pagination ? (pagination.page - 1) * pagination.limit : undefined;
+  const take = pagination ? pagination.limit : undefined;
+
+  const total = await prisma.catalogBook.count({ where });
+
+  const findArgs: Prisma.CatalogBookFindManyArgs = {
     where,
     ...catalogBookWithCategories,
     orderBy: { id: 'asc' },
-  });
+  };
+  if (skip !== undefined) findArgs.skip = skip;
+  if (take !== undefined) findArgs.take = take;
 
-  return books.map(mapCatalogBook);
+  const books = (await prisma.catalogBook.findMany(findArgs)) as unknown as CatalogBookRecord[];
+
+  const items = books.map(mapCatalogBook);
+
+  if (!pagination) {
+    // Compatibilidad si se llama sin paginación
+    return items;
+  }
+
+  const { page, limit } = pagination;
+  const maxPage = Math.max(1, Math.ceil(total / limit));
+  const previousPage = page > 1 ? page - 1 : null;
+  const nextPage = page < maxPage ? page + 1 : null;
+
+  return {
+    total,
+    page,
+    limit,
+    previousPage,
+    nextPage,
+    items,
+  };
 }
 
 export async function findCatalogBookById(id: number) {

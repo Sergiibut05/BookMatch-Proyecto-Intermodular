@@ -1,9 +1,19 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { Router, RouterModule } from '@angular/router';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, AbstractControl } from '@angular/forms';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 
+function passwordMatchValidator(control: AbstractControl) {
+  const password = control.get('password');
+  const confirmPassword = control.get('confirmPassword');
+
+  if(!password || !confirmPassword) return null;
+  if(password.value !== confirmPassword.value) {
+    return { passwordMismatch: true };
+  }
+  return null;
+}
 
 @Component({
   selector: 'app-register',
@@ -12,42 +22,44 @@ import { AuthService } from '../../../core/services/auth.service';
   styleUrl: './register.component.scss',
 })
 export class RegisterComponent {
-  private fb = inject(FormBuilder);
+  returnUrl: string = '/dashboard';
+  builder:FormBuilder = inject(FormBuilder);
   private authService = inject(AuthService);
   private router = inject(Router);
 
-  registerForm: FormGroup;
+  formRegister: FormGroup;
   loading = false;
   errorMessage = '';
   successMessage = '';
 
-  constructor() {
-    this.registerForm = this.fb.group({
+  constructor(private route: ActivatedRoute) {
+    this.formRegister = this.builder.group({
+      name:['',[Validators.required, Validators.minLength(3)]],
+      surname:['',[Validators.required, Validators.minLength(3)]],
       email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, Validators.minLength(6)]],
       confirmPassword: ['', Validators.required]
-    }, { validators: this.passwordMatchValidator });
+    }, { validators: passwordMatchValidator });
+
+    // Para guardar la url de la página que el usuario intentaba acceder(si había una)
+    this.returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/dashboard';
   }
 
-  passwordMatchValidator(form: FormGroup) {
-    const password = form.get('password')?.value;
-    const confirmPassword = form.get('confirmPassword')?.value;
-    return password === confirmPassword ? null : { passwordMismatch: true };
-  }
+
 
   onSubmit(): void {
-    if (this.registerForm.valid) {
+    if (this.formRegister.valid) {
       this.loading = true;
       this.errorMessage = '';
       this.successMessage = '';
       
-      const { email, password } = this.registerForm.value;
+      const { email, password, name, surname } = this.formRegister.value;
       
-      this.authService.register(email, password).subscribe({
+      this.authService.register(email, password, name, surname).subscribe({
         next: () => {
           this.successMessage = 'Cuenta creada exitosamente. Redirigiendo...';
           setTimeout(() => {
-            this.router.navigate(['/home']);
+            this.router.navigate([this.returnUrl]);
           }, 1500);
         },
         error: (error) => {
@@ -64,7 +76,7 @@ export class RegisterComponent {
     
     this.authService.loginWithGoogle().subscribe({
       next: () => {
-        this.router.navigate(['/home']);
+        this.router.navigate([this.returnUrl]);
       },
       error: (error) => {
         this.loading = false;
@@ -73,15 +85,71 @@ export class RegisterComponent {
     });
   }
 
-  private getErrorMessage(errorCode: string): string {
-    const errorMessages: { [key: string]: string } = {
-      'auth/email-already-in-use': 'Este correo ya está registrado.',
-      'auth/invalid-email': 'Correo electrónico inválido.',
-      'auth/weak-password': 'La contraseña es demasiado débil.',
-      'auth/popup-closed-by-user': 'Registro cancelado.',
-      'default': 'Error al crear la cuenta. Intenta de nuevo.'
-    };
-    
-    return errorMessages[errorCode] || errorMessages['default'];
+  private getErrorMessage(code: string): string {
+    switch (code) {
+      case 'auth/email-already-in-use':
+        return 'El email ya está en uso';
+      case 'auth/invalid-email':
+        return 'El email no es válido';
+      case 'auth/weak-password':
+        return 'La contraseña es demasiado débil';
+      case 'auth/operation-not-allowed':
+        return 'Operación no permitida';
+      case 'auth/popup-closed-by-user':
+        return 'La ventana de autenticación se cerró';
+      default:
+        return 'Ha ocurrido un error. Inténtalo de nuevo';
+    }
+  }
+
+  getError(control:string){
+       
+    switch(control){
+      case 'name':
+        if(this.formRegister.controls['name'].errors!=null && 
+           Object.keys(this.formRegister.controls['name'].errors).includes('required'))
+           return "*El campo nombre es requerido";
+        else if(this.formRegister.controls['name'].errors!=null && 
+           Object.keys(this.formRegister.controls['name'].errors).includes('minlength'))
+           return "*Debe introducir al menos 3 caracteres";
+        
+        break;
+      case 'surname':
+        if(this.formRegister.controls['surname'].errors!=null && 
+           Object.keys(this.formRegister.controls['surname'].errors).includes('required'))
+           return "*El campo apellidos es requerido";
+        else if(this.formRegister.controls['surname'].errors!=null && 
+           Object.keys(this.formRegister.controls['surname'].errors).includes('minlength'))
+           return "*Debe introducir al menos 3 caracteres";
+        
+        break;
+      case 'email':
+        if(this.formRegister.controls['email'].errors!=null && 
+           Object.keys(this.formRegister.controls['email'].errors).includes('required'))
+           return "*El campo email es requerido";
+        else if(this.formRegister.controls['email'].errors!=null && 
+           Object.keys(this.formRegister.controls['email'].errors).includes('email'))
+           return "*El email no es correcto";
+        
+        break;
+      case 'password': 
+        if(this.formRegister.controls['password'].errors!=null && 
+           Object.keys(this.formRegister.controls['password'].errors).includes('required'))
+           return "*El campo password es requerido";
+        else if(this.formRegister.controls['password'].errors!=null && 
+           Object.keys(this.formRegister.controls['password'].errors).includes('pattern'))
+           return "*Al menos una mayúscula, una minúscula, un número y 8 caracteres";
+        break;
+      case 'confirmPassword': 
+        if(this.formRegister.controls['confirmPassword'].errors!=null && 
+           Object.keys(this.formRegister.controls['confirmPassword'].errors).includes('required'))
+           return "*El campo password es requerido";
+        if(this.formRegister.controls['confirmPassword'].errors!=null && 
+           Object.keys(this.formRegister.controls['confirmPassword'].errors).includes('passwordMatch'))
+           return "*Las contranseñas no coinciden";
+        break;
+      default:return "";
+    }
+    return "";
   }
 }

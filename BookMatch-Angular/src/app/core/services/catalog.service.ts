@@ -25,9 +25,18 @@ export class CatalogService {
     );
   }
 
-  getAllBooks(): Observable<CatalogBook[]> {
+  getAllBooks(page = 1, limit = 10) {
     return this.authHeaders().pipe(
-      switchMap(headers => this.http.get<CatalogBook[]>(this.apiUrl, { headers }))
+      switchMap(headers =>
+        this.http.get<{
+          total: number;
+          page: number;
+          limit: number;
+          previousPage: number | null;
+          nextPage: number | null;
+          items: CatalogBook[];
+        }>(`${this.apiUrl}?page=${page}&limit=${limit}`, { headers })
+      )
     );
   }
 
@@ -40,6 +49,17 @@ export class CatalogService {
   createBook(book: CreateCatalogBookDto): Observable<CatalogBook> {
     return this.authHeaders().pipe(
       switchMap(headers => this.http.post<CatalogBook>(this.apiUrl, book, { headers }))
+    );
+  }
+
+  getBooksByCategoryName(name: string, page = 1, limit = 10) {
+    return this.authHeaders().pipe(
+      switchMap(headers =>
+        this.http.get<{ total: number; page: number; limit: number; items: CatalogBook }>(
+          `${this.apiUrl}?categoryNames=${encodeURIComponent(name)}&page=${page}&limit=${limit}`,
+          { headers }
+        )
+      )
     );
   }
 }

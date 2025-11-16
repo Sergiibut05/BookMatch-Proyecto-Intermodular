@@ -36,12 +36,37 @@ function parseCategoryIds(raw: unknown): number[] | undefined {
   return Array.from(new Set(ids));
 }
 
+function parseStringList(raw: unknown): string[] | undefined {
+  if (raw === undefined || raw === null || raw === '') {
+    return undefined;
+  }
+  const values = String(raw)
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean);
+  return values.length ? Array.from(new Set(values)) : [];
+}
+
+function parsePagination(query: any): { page: number; limit: number } {
+  const page = Math.max(1, Number(query.page) || 1);
+  // Límite por defecto 10, tope 100
+  const limit = Math.max(1, Math.min(100, Number(query.limit) || 10));
+  return { page, limit };
+}
+
 export async function listCatalogBooksCtrl(req: Request, res: Response) {
   try {
     const categoryIds = parseCategoryIds(req.query.categoryIds);
-    const filters = categoryIds === undefined ? {} : { categoryIds };
-    const books = await listCatalogBooks(filters);
-    res.json(books);
+    const categoryNames = parseStringList(req.query.categoryNames);
+    const { page, limit } = parsePagination(req.query);
+
+    const filters =
+      categoryIds === undefined && categoryNames === undefined
+        ? {}
+        : { ...(categoryIds !== undefined ? { categoryIds } : {}), ...(categoryNames !== undefined ? { categoryNames } : {}) };
+
+    const result = await listCatalogBooks(filters, { page, limit });
+    res.json(result);
   } catch (error: any) {
     res.status(400).json({ message: error.message });
   }

@@ -1,8 +1,8 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { Auth, createUserWithEmailAndPassword, signInWithEmailAndPassword, 
-         signInWithPopup, GoogleAuthProvider, signOut, user, User, onAuthStateChanged } from '@angular/fire/auth';
+         signInWithPopup, GoogleAuthProvider, signOut, user, User, onAuthStateChanged, updateProfile } from '@angular/fire/auth';
 import { Router } from '@angular/router';
-import { Observable, from } from 'rxjs';
+import { Observable, from, map, switchMap } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
@@ -40,8 +40,14 @@ export class AuthService {
   
   
   // Registro con email y contraseña
-  register(email: string, password: string): Observable<any> {
-    return from(createUserWithEmailAndPassword(this.auth, email, password));
+  register(email: string, password: string, name: string, surname: string): Observable<any> {
+    return from(createUserWithEmailAndPassword(this.auth, email, password)).pipe(
+      switchMap(({ user }) =>
+        from(updateProfile(user, { displayName: `${name} ${surname}` })).pipe(
+          map(() => ({ user }))
+        )
+      )
+    );
   }
 
   // Login con email y contraseña

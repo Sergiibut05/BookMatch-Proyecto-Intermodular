@@ -38,15 +38,47 @@ router.use(auth);
  *         schema:
  *           type: string
  *         description: Lista de IDs de categoría separados por coma
+ *       - in: query
+ *         name: categoryNames
+ *         schema:
+ *           type: string
+ *         description: Lista de nombres de categoría separados por coma
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *         description: Página (1-based). Por defecto 1
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *         description: Tamaño de página. Por defecto 10
  *     responses:
  *       200:
- *         description: Lista de libros
+ *         description: Lista de libros (paginada)
  *         content:
  *           application/json:
  *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/CatalogBook'
+ *               type: object
+ *               properties:
+ *                 total:
+ *                   type: integer
+ *                 page:
+ *                   type: integer
+ *                 limit:
+ *                   type: integer
+ *                 previousPage:
+ *                   oneOf:
+ *                     - type: integer
+ *                     - type: 'null'
+ *                 nextPage:
+ *                   oneOf:
+ *                     - type: integer
+ *                     - type: 'null'
+ *                 items:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/CatalogBook'
  *       401:
  *         description: No autorizado
  */

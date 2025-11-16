@@ -5,7 +5,36 @@
         <p>Crea tu cuenta</p>
       </div>
 
-      <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="auth-form">
+      <form [formGroup]="formRegister" (ngSubmit)="onSubmit()" class="auth-form">
+        <div class="form-group">
+          <label for="name">Nombre</label>
+          <input 
+            type="text" 
+            id="name" 
+            formControlName="name"
+            placeholder="tu nombre"
+          />
+          @if(formRegister.controls['name'].touched && formRegister.controls['name'].errors){
+            <span class="error-message">
+              {{ getError("name") }}
+            </span>
+          }
+        </div>
+
+        <div class="form-group">
+          <label for="surname">Apellidos</label>
+          <input 
+            type="text" 
+            id="surname" 
+            formControlName="surname"
+            placeholder="tus apellidos"
+          />
+          @if(formRegister.controls['surname'].touched && formRegister.controls['surname'].errors){
+            <span class="error-message">
+              {{ getError("surname") }}
+            </span>
+          }
+        </div>
         <div class="form-group">
           <label for="email">Correo electrónico</label>
           <input 
@@ -13,10 +42,11 @@
             id="email" 
             formControlName="email"
             placeholder="tu@email.com"
-            [class.error]="registerForm.get('email')?.invalid && registerForm.get('email')?.touched"
           />
-          @if (registerForm.get('email')?.invalid && registerForm.get('email')?.touched) {
-            <span class="error-message">Por favor, introduce un email válido</span>
+          @if(formRegister.controls['email'].touched && formRegister.controls['email'].errors){
+            <span class="error-message">
+              {{ getError("email") }}
+            </span>
           }
         </div>
 
@@ -27,10 +57,11 @@
             id="password" 
             formControlName="password"
             placeholder="••••••••"
-            [class.error]="registerForm.get('password')?.invalid && registerForm.get('password')?.touched"
           />
-          @if (registerForm.get('password')?.invalid && registerForm.get('password')?.touched) {
-            <span class="error-message">La contraseña debe tener al menos 6 caracteres</span>
+          @if(formRegister.controls['password'].touched && formRegister.controls['password'].errors){
+            <span class="error-message">
+              {{ getError("password") }}
+            </span>
           }
         </div>
 
@@ -41,9 +72,12 @@
             id="confirmPassword" 
             formControlName="confirmPassword"
             placeholder="••••••••"
-            [class.error]="registerForm.hasError('passwordMismatch') && registerForm.get('confirmPassword')?.touched"
           />
-          @if (registerForm.hasError('passwordMismatch') && registerForm.get('confirmPassword')?.touched) {
+          @if(formRegister.controls['confirmPassword'].touched && formRegister.controls['confirmPassword'].errors){
+            <span class="error-message">
+              {{ getError("confirmPassword") }}
+            </span>
+          } @else if (formRegister.hasError('passwordMismatch') && formRegister.get('confirmPassword')?.touched) {
             <span class="error-message">Las contraseñas no coinciden</span>
           }
         </div>
@@ -56,7 +90,7 @@
           <div class="alert alert-success">{{ successMessage }}</div>
         }
 
-        <button type="submit" class="btn btn-primary" [disabled]="registerForm.invalid || loading">
+        <button type="submit" class="btn btn-primary" [disabled]="formRegister.invalid || loading">
           @if (loading) {
             <span class="spinner"></span>
           } @else {

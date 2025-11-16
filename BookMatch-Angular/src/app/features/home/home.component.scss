@@ -1,0 +1,24 @@
+.carousel::-webkit-scrollbar {
+    display: none;
+}
+
+/* Evitar que la imagen recortada muestre “blancos” en esquinas al escalar */
+.group img {
+    will-change: transform;
+    transform-origin: center;
+}
+
+/* Mantener proporción 2:3 con tamaño de portada más razonable */
+.book-card {
+    width: 10rem;            /* 160px */
+    height: 15rem;           /* 240px => 2:3 */
+    overflow: visible;       /* permitir que el hover no se corte */
+    border-radius: 0.75rem;  /* tailwind rounded-xl */
+}
+
+.book-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
