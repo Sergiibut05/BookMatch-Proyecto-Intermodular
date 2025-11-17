@@ -1,0 +1,58 @@
+<div class="max-w-[1414px] mx-auto px-4 pb-6">
+  @if (books().length === 0) {
+    <div class="text-center py-12">
+      <div class="inline-block p-6 bg-white rounded-xl shadow-sm">
+        <p class="text-lg" style="color: #D4C9B9;">Cargando libros...</p>
+      </div>
+    </div>
+  }
+  <div class="flex items-center justify-between pr-4 pl-4">
+    <h2 class="text-2xl font-bold mb-4" style="color: #45332D;">{{ categoryTitle }}</h2>
+    @if (categoryUrl) {
+      <a class="text-lg mb-8" style="color: #4E6A6A; opacity: 0.7;" [href]="categoryUrl">Ver más →</a>
+    }
+  </div>
+
+  <div class="relative flex items-center">
+    <button
+      class="hidden sm:flex items-center justify-center mr-4 w-10 h-10 rounded-full shadow bg-white hover:bg-gray-100 border"
+      (click)="prev()"
+      aria-label="Anterior">
+      ‹
+    </button>
+
+    <div
+      #carousel
+      class="flex flex-nowrap items-stretch gap-10 w-full overflow-x-auto snap-x snap-mandatory scroll-smooth pb-2 carousel"
+      style="-ms-overflow-style: none; scrollbar-width: none; touch-action: pan-x;">
+
+      @for (book of books(); track book.id) {
+        <div
+          class="snap-start flex-none cursor-pointer group"
+          style="width: 10rem;">
+          <div class="relative bg-gray-100 book-card">
+            @if (book.coverUrl) {
+              <img
+                [src]="book.coverUrl"
+                [alt]="book.title"
+                class="book-image rounded-xl transition-transform duration-300 group-hover:scale-110"
+                (error)="$event.target.src='https://via.placeholder.com/300x400?text=' + book.title">
+            } @else {
+              <div class="w-full h-[240px] flex items-center justify-center rounded-xl" style="background: linear-gradient(135deg, #E0A15E 0%, #B88B65 100%);">
+                <span class="text-6xl" style="color: #FCF5E2;">📖</span>
+              </div>
+            }
+          </div>
+        </div>
+      }
+    </div>
+
+    <button
+      class="hidden sm:flex items-center justify-center ml-4 w-10 h-10 rounded-full shadow bg-white hover:bg-gray-100 border"
+      (click)="next()"
+      aria-label="Siguiente">
+      ›
+    </button>
+  </div>
+</div>
+

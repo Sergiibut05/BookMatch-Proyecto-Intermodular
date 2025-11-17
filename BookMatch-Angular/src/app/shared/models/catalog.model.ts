@@ -11,13 +11,6 @@ export interface Category {
     description?: string;
   }
   
-  export interface CatalogBookCategory {
-    id: number;
-    catalogBookId: number;
-    categoryId: number;
-    category: Category;
-  }
-  
   export interface CatalogBook {
     id: number;
     title: string;
@@ -28,7 +21,7 @@ export interface Category {
     imageUrls: string[];
     price: number;
     stock: number;
-    categories?: CatalogBookCategory[];
+    categories?: Category[];
     createdAt?: string;
     updatedAt?: string;
   }

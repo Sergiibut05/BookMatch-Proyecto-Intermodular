@@ -1,635 +1,206 @@
-# 📚 BookMatch - Proyecto Intermodular
+# 📚 BookMatch – Proyecto Intermodular
 
 ![Estado del Proyecto](https://img.shields.io/badge/Estado-En%20Desarrollo-yellow)
 ![Angular](https://img.shields.io/badge/Angular-20.3-red)
-![Firebase](https://img.shields.io/badge/Firebase-11.10-orange)
+![Firebase](https://img.shields.io/badge/Firebase-11-orange)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue)
 
-## 🎯 Descripción del Proyecto
+---
 
-**BookMatch** es una aplicación móvil y web que combina la compra de libros (nuevos y de segunda mano) con un sistema innovador de recomendaciones personalizadas mediante inteligencia artificial y una plataforma de trueque digital entre lectores.
+## 🎯 Descripción
 
-La idea surge de la necesidad de fomentar la lectura y adaptarse a las nuevas tendencias de consumo sostenible, uniendo tres conceptos clave:
-- 📖 **Lectura y cultura**
-- 💻 **Digitalización**
-- ♻️ **Economía circular**
+**BookMatch** es una plataforma web y móvil que combina compra de libros nuevos/usados con trueque digital y recomendaciones personalizadas. El MVP se centra en construir la base técnica: autenticación con Firebase, catálogo inicial y servicios backend listos para escalar.
 
 ---
 
-## 🚀 Estado Actual del Proyecto
+## 🚦 Estado del Proyecto
 
-### ✅ Completado
+### ✅ Entregado en este sprint
+- Proyecto Angular 20 configurado con estructura `core / shared / features`.
+- Autenticación completa con Firebase (email/contraseña y Google), persistencia de sesión y logout.
+- Formularios reactivos para login y registro con validaciones y mensajes dinámicos.
+- AuthGuard operativo y header reutilizable con contexto de usuario autenticado.
+- Home con grid de libros consumiendo el backend protegido.
+- Backend Express + TypeScript modularizado con middleware de seguridad, Swagger y Prisma.
+- Esquema de datos para usuarios, categorías, libros y pedidos; endpoints `/api/catalog-books` y `/api/users` protegidos por token de Firebase.
 
-#### Frontend (Angular)
-- [x] Configuración inicial del proyecto Angular 20
-- [x] Integración con Firebase Authentication
-- [x] Integración con Firebase Realtime Database
-- [x] Sistema de autenticación completo:
-  - Login con email/contraseña
-  - Registro de usuarios
-  - Login con Google OAuth
-  - Guards de protección de rutas
-  - Persistencia de sesión con localStorage
-- [x] Animación de carga (Splash Screen)
-- [x] Estructura de carpetas escalable (core, shared, features)
-- [x] Componentes standalone modernos
-- [x] Diseño responsive y UI moderna con Tailwind CSS
-- [x] Integración con backend API
-- [x] Componente home con catálogo de libros
-
-#### Backend (Node.js)
-- [x] Configuración inicial Node.js + Express + TypeScript
-- [x] Integración con Prisma ORM
-- [x] PostgreSQL con Docker
-- [x] Schema completo de base de datos:
-  - User, CatalogBook, UserBook, Category, Order, OrderItem, Review
-  - Relaciones many-to-many para categorías
-- [x] Arquitectura Clean (routes → controllers → services → repositories)
-- [x] API REST básica:
-  - GET `/api/catalog` - Listar libros
-  - GET `/api/catalog/:id` - Obtener libro por ID
-  - POST `/api/catalog` - Crear libro (protegido)
-- [x] Middleware de autenticación Firebase Admin
-- [x] Script de seed con 150 libros de prueba
-- [x] CORS configurado
-- [x] Health check endpoint
-
-### 🔄 En Progreso
-
-- [ ] CRUD completo de libros (PUT, DELETE)
-- [ ] Gestión de categorías
-- [ ] Sincronización Firebase → PostgreSQL (usuarios)
-- [ ] Sistema de trueque digital
-- [ ] Sistema de recomendaciones con IA (n8n)
-- [ ] Sistema de pedidos y pagos (Stripe/PayPal)
-- [ ] Sistema de reseñas
-- [ ] Comunidad lectora (foros)
-- [ ] Perfil de usuario completo
-- [ ] Sistema de notificaciones
-- [ ] Validación de datos con express-validator
-
-### 📅 Planificado
-
-Ver el backlog completo en [Jira](https://tu-jira-url.atlassian.net)
+### 🔄 En curso / siguientes pasos
+- Vista de perfil básico y navegación extendida.
+- Sincronización y pruebas integrales del flujo Firebase → backend.
+- Refinar documentación técnica y casos de QA.
 
 ---
 
-## 🏗️ Arquitectura del Proyecto
+## 🗂️ Estructura del repositorio
 
 ```
 BookMatch-Proyecto-Intermodular/
-│
-├── BookMatch-Angular/          # Frontend Web (Angular)
+├── BookMatch-Angular/        # Frontend (Angular standalone)
+│   └── src/app/
+│       ├── core/             # Servicios singleton, guards
+│       ├── shared/           # Componentes y modelos reutilizables
+│       └── features/         # Login, registro, home, etc.
+├── BookMatch-Backend/        # Backend (Express + Prisma)
 │   ├── src/
-│   │   ├── app/
-│   │   │   ├── core/          # Servicios singleton, guards, interceptors
-│   │   │   │   ├── guards/
-│   │   │   │   │   └── auth.guard.ts
-│   │   │   │   └── services/
-│   │   │   │       ├── auth.service.ts
-│   │   │   │       └── catalog.service.ts
-│   │   │   │
-│   │   │   ├── shared/        # Componentes reutilizables
-│   │   │   │   ├── components/
-│   │   │   │   │   └── loader/
-│   │   │   │   └── models/
-│   │   │   │
-│   │   │   ├── features/      # Módulos funcionales
-│   │   │   │   ├── auth/      # Login y registro
-│   │   │   │   ├── home/      # Dashboard principal
-│   │   │   │   ├── books/     # (Próximamente)
-│   │   │   │   ├── trueque/   # (Próximamente)
-│   │   │   │   └── profile/   # (Próximamente)
-│   │   │   │
-│   │   │   └── app.routes.ts  # Configuración de rutas
-│   │   │
-│   │   └── environments/      # Variables de entorno
-│   │
-│   └── package.json
-│
-├── Node-Backend/              # Backend API (Node.js + Express)
-│   ├── src/
-│   │   ├── config/            # Configuraciones (Prisma, etc.)
-│   │   ├── controllers/       # Controladores HTTP
-│   │   ├── database/          # Abstracción de BD
-│   │   ├── middleware/       # Middlewares (auth, etc.)
-│   │   ├── repositories/      # Acceso a datos
-│   │   ├── routes/            # Definición de rutas REST
-│   │   ├── services/          # Lógica de negocio
-│   │   └── app.ts             # Punto de entrada
-│   ├── prisma/
-│   │   └── schema.prisma      # Schema de Prisma
-│   ├── docker-compose.yml     # Docker para PostgreSQL
-│   ├── .env.example           # Template de variables de entorno
-│   └── README.md              # Documentación del backend
-│
-└── README.md                   # Este archivo
+│   │   ├── config/           # Env, Prisma, Swagger
+│   │   ├── middleware/       # Auth, rate limiting, errores
+│   │   └── modules/          # Auth, users, catalog-books
+│   └── prisma/               # Esquema y migraciones
+└── JiraTasks.md              # Propuestas de tareas para Jira
 ```
 
 ---
 
-## 🛠️ Tecnologías Utilizadas
+## 🧰 Requisitos previos
 
-### Frontend
-- **Angular 20.3** - Framework principal
-- **TypeScript 5.9** - Lenguaje de programación
-- **SCSS** - Preprocesador CSS
-- **RxJS** - Programación reactiva
-
-### Backend y Servicios
-- **Node.js + Express** - Servidor REST API
-- **TypeScript** - Lenguaje de programación
-- **Prisma** - ORM para PostgreSQL
-- **PostgreSQL** - Base de datos relacional (Docker)
-- **Firebase Authentication** - Gestión de usuarios
-- **Firebase Admin SDK** - Verificación de tokens en el backend
-- **n8n** - Automatización y recomendaciones IA (próximamente)
-
-### Herramientas de Desarrollo
-- **Angular CLI** - Herramientas de desarrollo
-- **Git/GitHub** - Control de versiones
-- **Jira** - Gestión de proyecto (Scrum)
-- **Figma** - Diseño UI/UX
-- **VS Code/Cursor** - Editor de código
+- Node.js 20.x (incluye npm 10) – [Descargar](https://nodejs.org/)
+- Git – [Descargar](https://git-scm.com/)
+- Cuenta de Firebase con acceso al proyecto `bookmatch-522d5`
+- URL de la base de datos PostgreSQL (hosteada en Render para el equipo)
 
 ---
 
-## 📋 Requisitos Previos
+## 🚀 Puesta en marcha
 
-Antes de comenzar, asegúrate de tener instalado:
-
-- **Node.js** (v20 o superior) - [Descargar](https://nodejs.org/)
-- **npm** (v10 o superior) - Viene con Node.js
-- **Angular CLI** - Se instalará con el proyecto
-- **Git** - [Descargar](https://git-scm.com/)
-
----
-
-## 🚀 Instalación y Configuración
-
-### Requisitos Previos
-
-- **Node.js** (v20 o superior) - [Descargar](https://nodejs.org/)
-- **npm** (v10 o superior) - Viene con Node.js
-- **Docker Desktop** - [Descargar](https://www.docker.com/products/docker-desktop) (para PostgreSQL del backend)
-- **Git** - [Descargar](https://git-scm.com/)
-
-### 1. Clonar el Repositorio
-
+### 1. Clonar el repositorio
 ```bash
 git clone https://github.com/Sergiibut05/BookMatch-Proyecto-Intermodular.git
 cd BookMatch-Proyecto-Intermodular
 ```
 
-### 2. Configurar el Backend
+### 2. Configurar el backend (`BookMatch-Backend`)
 
 ```bash
-cd Node-Backend
-
-# Instalar dependencias
+cd BookMatch-Backend
 npm install
-
-# Configurar variables de entorno
-# Copia .env.example a .env y edita los valores
-cp .env.example .env  # Si existe, o créalo manualmente
-
-# Iniciar PostgreSQL con Docker
-docker-compose up -d
-
-# Configurar Prisma
-npx prisma generate
-npx prisma db push
-# Editar PostgreSql con Prisma Studio
-$env:DATABASE_URL="postgresql://bookmatch_user:bookmatch_pass@localhost:5432/bookmatch_db?schema=public"; npx prisma studio
-
-
-# (Opcional) Poblar datos de prueba
-npm run seed:150
-
-# Iniciar el servidor
-npm run dev
 ```
 
-El backend estará disponible en: `http://localhost:3000`
+1. Crea un archivo `.env` (puedes basarte en `env.production.example`) con tus credenciales:
+   ```env
+   PORT=3000
+   NODE_ENV=development
 
-### 3. Configurar el Frontend
+   DATABASE_URL="postgresql://USUARIO:PASS@HOST:PUERTO/DATABASE?schema=public"
+
+   FIREBASE_PROJECT_ID=bookmatch-522d5
+   FIREBASE_CLIENT_EMAIL=firebase-adminsdk-xxxxx@bookmatch-522d5.iam.gserviceaccount.com
+   FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nTU_CLAVE_EN_BASE64_ESCAPADA\n-----END PRIVATE KEY-----\n"
+   ```
+   > Usa la URL proporcionada por Render para `DATABASE_URL`. No es necesario Docker en local.
+
+2. Genera el cliente de Prisma y aplica migraciones (sobre la base remota):
+   ```bash
+   npx prisma generate
+   npx prisma migrate deploy
+   ```
+
+3. Ejecuta el servidor:
+   ```bash
+   npm run dev   # nodemon (recomendado en desarrollo)
+   # o
+   npm start     # requiere build previo con npm run build
+   ```
+
+   El backend quedará disponible en `http://localhost:3000`. La documentación Swagger está en `http://localhost:3000/api-docs`.
+
+### 3. Configurar el frontend (`BookMatch-Angular`)
 
 ```bash
-cd BookMatch-Angular
-
-# Instalar dependencias
+cd ../BookMatch-Angular
 npm install
-
-# Iniciar la aplicación
-npm start
-# o
-ng serve
 ```
 
-El frontend estará disponible en: `http://localhost:4200`
+1. Verifica que `src/environments/environment.ts` tenga las credenciales de Firebase correctas. Si necesitas credenciales distintas, crea un archivo `.env.local` o modifica los entornos correspondientes.
+2. Arranca el servidor de desarrollo:
+   ```bash
+   npm start        # alias de ng serve
+   # o
+   ng serve --port 4300
+   ```
 
-#### Modo Desarrollo con puerto personalizado
-```bash
-ng serve --port 4300
-```
+   La app se sirve en `http://localhost:4200`.
 
-#### Build para Producción
+---
 
-**Frontend:**
-```bash
-cd BookMatch-Angular
-npm run build
-# o
-ng build --configuration production
-```
+## 🔐 Variables clave
 
-**Backend:**
-```bash
-cd Node-Backend
-npm run build
-npm start
-```
+- **Frontend:** `environment.ts` y `environment.prod.ts` contienen la configuración de Firebase (apiKey, authDomain, etc.).
+- **Backend:** `.env` controla el puerto, `DATABASE_URL` y credenciales de Firebase Admin. No se versiona; cada colaborador debe crear el suyo.
 
-Los archivos se generarán en `dist/` respectivo de cada proyecto
+---
+
+## 📡 Endpoints principales
+
+| Método | Ruta                    | Descripción                      | Auth |
+|--------|-------------------------|----------------------------------|------|
+| GET    | `/health`               | Health check                     | ❌   |
+| POST   | `/api/auth/register`    | Sincroniza usuario Firebase      | Token Firebase |
+| POST   | `/api/auth/login`       | Valida y devuelve perfil básico  | Token Firebase |
+| GET    | `/api/catalog-books`    | Lista catálogo de libros         | Token Firebase |
+| POST   | `/api/catalog-books`    | Crea libro                       | Token Firebase |
+| GET    | `/api/users/me`         | Perfil del usuario autenticado   | Token Firebase |
+
+> El middleware `auth` valida el `Authorization: Bearer <idToken>` contra Firebase y sincroniza el usuario en PostgreSQL.
 
 ---
 
 ## 🧪 Testing
 
 ```bash
-# Ejecutar tests unitarios
-npm test
-# o
+# Frontend (Angular)
+cd BookMatch-Angular
 ng test
 
-# Ejecutar tests con coverage
-ng test --code-coverage
+# Backend (Express)
+cd BookMatch-Backend
+npm test           # Jest
 ```
 
 ---
 
-## 📱 Funcionalidades Actuales
-
-### 🔐 Autenticación
-- ✅ Registro con email y contraseña
-- ✅ Login con email y contraseña
-- ✅ Login con Google OAuth
-- ✅ Cierre de sesión
-- ✅ Protección de rutas con Guards
-- ✅ Validación de formularios reactivos
-- ✅ Manejo de errores de Firebase
-
-### 🎨 Interfaz
-- ✅ Splash screen animado con libro 3D
-- ✅ Diseño moderno con gradientes
-- ✅ Formularios con validación en tiempo real
-- ✅ Animaciones y transiciones suaves
-- ✅ Tailwind CSS integrado
-- ✅ Componente home con grid de libros
-
-### 📚 Backend API
-- ✅ API REST con Express
-- ✅ Base de datos PostgreSQL con Prisma
-- ✅ Autenticación Firebase Admin
-- ✅ Endpoints de catálogo funcionando
-- ✅ 150 libros de prueba disponibles
-
----
-
-## 👥 Equipo de Desarrollo
-
-| Rol | Responsabilidades |
-|-----|-------------------|
-| **Samuel** | Backend + QA + Scrum Master<br>• Responsable técnico del backend (API, trueque, BD)<br>• Documentación API (Swagger)<br>• QA técnico y gestión de tareas |
-| **Lucas** | UX/UI Lead + Contenido Visual + QA Visual<br>• Diseño de interfaz en Figma<br>• Recursos gráficos<br>• Recomendaciones IA con n8n<br>• Apoyo frontend/backend |
-| **Sergii** | Frontend Developer (Web + Mobile)<br>• Desarrollo web en Angular<br>• App móvil en Kotlin (Android Studio)<br>• Integración Firebase y API backend |
-
----
-
-## 📊 Metodología de Trabajo
-
-El proyecto sigue la metodología **Scrum** con sprints de **1 mes** de duración:
-
-- **Sprint 1** ✅ - Configuración inicial del sistema y base de datos
-- **Sprint 2** ✅ - Registro e inicio de sesión
-- **Sprint 3** 🔄 - Catálogo básico de libros / Gestión de perfil
-- **Sprint 4** 📅 - Sistema de trueque digital / Notificaciones
-- **Sprint 5** 📅 - Sistema de recomendaciones IA / Comunidad lectora
-
----
-
-## 🎯 Objetivos SMART
-
-### 1. Lanzamiento del MVP funcional
-- **S**: MVP con registro, compra y trueque
-- **M**: Uso básico medido con testers
-- **A**: Tecnologías disponibles (Firebase, Angular, Kotlin)
-- **R**: Validar idea y fomentar lectura sostenible
-- **T**: 3 meses
-
-### 2. Sistema de recomendaciones IA
-- **S**: Recomendaciones personalizadas basadas en IA
-- **M**: Relevancia de sugerencias observada con testers
-- **A**: Uso de n8n y análisis de datos
-- **R**: Mejorar experiencia e impulsar economía circular
-- **T**: 2 meses post-MVP
-
-### 3. Comunidad lectora
-- **S**: Foros, reseñas e intercambios
-- **M**: Participación y ejemplos de interacciones
-- **A**: Usuarios de prueba (compañeros/conocidos)
-- **R**: Evaluar valor de función social
-- **T**: 3 meses desde activación
-
----
-
-## 🔧 Scripts Disponibles
-
-### Frontend (BookMatch-Angular)
-
-```bash
-npm start              # Inicia servidor de desarrollo
-ng serve               # Alternativa
-npm run build          # Build para producción
-npm test               # Tests unitarios
-```
-
-### Backend (Node-Backend)
-
-```bash
-npm run dev            # Inicia servidor con nodemon (auto-reload)
-npm run build          # Compila TypeScript
-npm start              # Ejecuta el build compilado
-npm run seed:150       # Añade 150 libros de prueba
-npx prisma studio      # Abre Prisma Studio (UI para BD)
-```
-
----
-
-## 🔧 Configuración Detallada del Backend
-
-### Variables de Entorno
-
-Crea el archivo `.env` en `Node-Backend/` con las siguientes variables:
-
-```env
-# Servidor
-PORT=3000
-NODE_ENV=development
-
-# Base de datos PostgreSQL
-DB_TYPE=postgresql
-DB_HOST=localhost
-DB_PORT=5432
-DB_NAME=bookmatch_db
-DB_USER=bookmatch_user
-DB_PASSWORD=bookmatch_pass
-
-# Prisma (formato específico)
-DATABASE_URL="postgresql://bookmatch_user:bookmatch_pass@localhost:5432/bookmatch_db?schema=public"
-
-# Firebase Admin SDK
-FIREBASE_PROJECT_ID=bookmatch-522d5
-FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nTU_CLAVE_PRIVADA_AQUI\n-----END PRIVATE KEY-----\n"
-FIREBASE_CLIENT_EMAIL=firebase-adminsdk-xxxxx@bookmatch-522d5.iam.gserviceaccount.com
-
-# Opcional: n8n (para recomendaciones IA)
-N8N_BASE_URL=http://localhost:5678
-N8N_API_KEY=
-
-# Opcional: Stripe (para pagos)
-STRIPE_SECRET_KEY=
-STRIPE_WEBHOOK_SECRET=
-
-# Opcional: Email (Gmail/Nodemailer)
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
-SMTP_USER=
-SMTP_PASSWORD=
-```
-
-**⚠️ IMPORTANTE**: El archivo `.env` **NO** se sube a Git. Cada colaborador debe crear su propio `.env` local.
-
-### Configuración de Firebase Admin
-
-1. Ve a [Firebase Console](https://console.firebase.google.com)
-2. Selecciona tu proyecto: `bookmatch-522d5`
-3. Configuración del proyecto ⚙️ → **Cuentas de servicio**
-4. Haz clic en **"Generar nueva clave privada"**
-5. Se descargará un archivo JSON con las credenciales
-6. Abre el JSON y copia estos valores al `.env`:
-   - **FIREBASE_PROJECT_ID**: `project_id` del JSON
-   - **FIREBASE_PRIVATE_KEY**: `private_key` del JSON (incluye `-----BEGIN PRIVATE KEY-----` y `-----END PRIVATE KEY-----`)
-   - **FIREBASE_CLIENT_EMAIL**: `client_email` del JSON
-
-**Importante**: La clave privada tiene saltos de línea (`\n`). En el `.env`, escríbela entre comillas dobles o escapa los saltos de línea.
-
-### Configuración de PostgreSQL con Docker
-
-Cada colaborador tiene su propia instancia de PostgreSQL local usando Docker.
-
-**Iniciar PostgreSQL:**
-```bash
-cd Node-Backend
-docker-compose up -d
-```
-
-**Detener PostgreSQL:**
-```bash
-docker-compose down
-```
-
-**Ver los datos (Prisma Studio):**
-```bash
-npx prisma studio
-```
-
-**Ver logs de PostgreSQL:**
-```bash
-docker logs bookmatch-postgres
-```
-
-**⚠️ Nota**: Los datos se guardan en un volumen de Docker, así que no se pierden al detener el contenedor. Solo se perderían si ejecutas `docker-compose down -v` (que elimina los volúmenes).
-
-### Estructura del Proyecto Backend
-
-```
-Node-Backend/
-├── src/
-│   ├── config/              # Configuraciones (Prisma client, etc.)
-│   ├── controllers/         # Controladores (manejan HTTP)
-│   ├── database/            # Abstracción de BD
-│   │   ├── interfaces/     # Interfaces genéricas
-│   │   └── implementations/ # Implementaciones específicas
-│   ├── middleware/          # Middlewares (auth, validación, errores)
-│   ├── models/              # Modelos de datos
-│   ├── repositories/        # Acceso a datos (envuelve Prisma)
-│   ├── routes/              # Definición de rutas REST
-│   ├── services/            # Lógica de negocio
-│   └── app.ts               # Punto de entrada
-├── prisma/
-│   ├── schema.prisma        # Schema de Prisma
-│   └── migrations/          # Migraciones de BD
-├── scripts/                 # Scripts útiles (seed, etc.)
-├── docker-compose.yml       # Docker Compose para PostgreSQL
-├── .env.example             # Template de variables de entorno
-├── .gitignore
-├── package.json
-└── tsconfig.json
-```
-
-### Endpoints de la API
-
-#### Públicos (sin autenticación)
-
-- `GET /health` - Health check del servidor
-- `GET /api/catalog` - Listar todos los libros del catálogo
-- `GET /api/catalog/:id` - Obtener libro por ID
-
-#### Protegidos (requieren autenticación)
-
-- `POST /api/catalog` - Crear libro nuevo
-  - Header requerido: `Authorization: Bearer <firebase_token>`
-
----
-
-## 🐛 Solución de Problemas
-
-### Error: Cannot find module '@angular/fire'
-```bash
-npm install firebase @angular/fire
-```
-
-### Error: Module resolution
-Verifica que `tsconfig.json` tenga:
-```json
-{
-  "compilerOptions": {
-    "module": "ES2022",
-    "moduleResolution": "bundler"
-  }
-}
-```
-
-### Error: Puerto ya en uso
-```bash
-ng serve --port 4300
-```
-
-### Backend: Error "Cannot connect to PostgreSQL"
-
-1. Verifica que Docker esté corriendo:
-   ```bash
-   docker ps
-   ```
-
-2. Inicia PostgreSQL:
-   ```bash
-   cd Node-Backend
-   docker-compose up -d
-   ```
-
-3. Verifica las variables de entorno en `.env`
-
-### Backend: Error "Missing required environment variable: DATABASE_URL"
-
-Asegúrate de tener `DATABASE_URL` en tu `.env`:
-```env
-DATABASE_URL="postgresql://bookmatch_user:bookmatch_pass@localhost:5432/bookmatch_db?schema=public"
-```
-
-### Backend: Error "Prisma Client not generated"
-
-Ejecuta:
-```bash
-cd Node-Backend
-npx prisma generate
-```
-
-### Backend: Error "Invalid Firebase token"
-
-1. Verifica que las credenciales de Firebase Admin estén correctas en `.env`
-2. Asegúrate de que el token del frontend sea válido
-3. Verifica los logs del servidor para más detalles
-
-### Frontend: Error Module resolution
-Verifica que `tsconfig.json` tenga:
-```json
-{
-  "compilerOptions": {
-    "module": "ES2022",
-    "moduleResolution": "bundler"
-  }
-}
-```
-
-### Error: Puerto ya en uso
-```bash
-ng serve --port 4300
-```
-
----
-
-## 📚 Recursos y Documentación
+## 🔧 Scripts útiles
 
 ### Frontend
-- [Angular Documentation](https://angular.dev)
-- [RxJS Documentation](https://rxjs.dev/)
-- [Tailwind CSS Documentation](https://tailwindcss.com/docs)
+```bash
+npm start            # Desarrollo
+npm run build        # Build producción
+ng test              # Tests unitarios
+```
 
 ### Backend
-- [Express Documentation](https://expressjs.com/)
-- [Prisma Documentation](https://www.prisma.io/docs)
-- [PostgreSQL Documentation](https://www.postgresql.org/docs/)
-- [Firebase Admin SDK Documentation](https://firebase.google.com/docs/admin/setup)
-- [TypeScript Documentation](https://www.typescriptlang.org/docs/)
-
-### General
-- [Firebase Documentation](https://firebase.google.com/docs)
-- [Docker Documentation](https://docs.docker.com/)
+```bash
+npm run dev          # Desarrollo con nodemon
+npm run build        # Compila a dist/
+npm start            # Ejecuta la build
+npx prisma studio    # Interfaz visual de la base de datos
+```
 
 ---
 
-## 🤝 Contribuir
+## 🗺️ Roadmap MVP
 
-Este es un proyecto académico intermodular. Las contribuciones del equipo se coordinan a través de:
-
-1. **Jira** - Gestión de tareas y sprints
-2. **GitHub** - Control de versiones
-3. **Discord** - Comunicación del equipo
-
-### Workflow de Git
-
+1. Configuración de base (repositorio, Firebase, PostgreSQL) ✅  
+2. Registro e inicio de sesión con formularios reactivos ✅  
+3. Catálogo inicial de libros y vista protegida 🔄  
+4. Perfil de usuario y flujos de trueque ⏳  
+5. Recomendaciones IA y pagos en iteraciones futuras ⏳
 
 ---
 
-## 📝 Licencia
+## 🤝 Contribución
 
-Este proyecto es parte de un trabajo académico intermodular.
+- El equipo trabaja con Jira para la planificación de sprints.
+- Usa ramas por feature (`feature/nombre`) y Pull Requests en GitHub.
+- Documenta los cambios relevantes en `JiraTasks.md` cuando no exista ticket previo.
 
 ---
 
 ## 📞 Contacto
 
-Para más información sobre el proyecto:
-- **Repositorio**: [BookMatch-Proyecto-Intermodular](https://github.com/Sergiibut05/BookMatch-Proyecto-Intermodular)
+- Repositorio: [BookMatch-Proyecto-Intermodular](https://github.com/Sergiibut05/BookMatch-Proyecto-Intermodular)
+- Proyecto Firebase: `bookmatch-522d5`
 
 ---
 
-## ⭐ Agradecimientos
-
-- Profesores y tutores del proyecto intermodular
-- Beta testers
-
----
-
-**Última actualización:** Noviembre 2025
-
-**Versión:** 0.2.0 (Backend integrado - MVP en desarrollo)
-
----
-
-## 📖 Documentación Adicional
-
-- **Frontend**: Ver [BookMatch-Angular/README.md](./BookMatch-Angular/README.md) para documentación del frontend
-
+**Última actualización:** Noviembre 2025  
+**Versión del documento:** 0.3.0 (Sprint MVP en curso)

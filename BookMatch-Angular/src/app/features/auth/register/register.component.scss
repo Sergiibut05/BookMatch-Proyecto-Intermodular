@@ -3,7 +3,7 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #ffebb4 0%, #dd9c57 100%);
     padding: 20px;
 }
 
@@ -36,7 +36,7 @@
 .auth-header h1 {
     font-size: 2.5rem;
     font-weight: 700;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #ffd45c 0%, #dd9c57 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     margin: 0 0 10px;
@@ -74,7 +74,7 @@
 
 .form-group input:focus {
     outline: none;
-    border-color: #667eea;
+    border-color: #ead466;
 }
 
 .form-group input.error {
@@ -122,13 +122,13 @@
 }
 
 .btn-primary {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
+    background: linear-gradient(135deg, #ffebb4 0%, #dd9c57 100%);
+    color: black;
 }
 
 .btn-primary:hover:not(:disabled) {
     transform: translateY(-2px);
-    box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+    box-shadow: 0 10px 20px rgba(199, 144, 25, 0.4);
 }
 
 .btn-google {
@@ -166,7 +166,7 @@
     content: '';
     position: absolute;
     top: 50%;
-    width: 40%;
+    width: 30%;
     height: 1px;
     background: #e0e0e0;
 }
@@ -192,7 +192,7 @@
 }
 
 .auth-footer a {
-    color: #667eea;
+    color: #dd9c57;
     text-decoration: none;
     font-weight: 600;
 }
