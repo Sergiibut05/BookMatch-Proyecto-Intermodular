@@ -15,4 +15,6 @@ import { Carousel } from '@shared/components/carousel/carousel';
 export class HomeComponent {
   authService = inject(AuthService);
   private router = inject(Router);
+
+  
 }

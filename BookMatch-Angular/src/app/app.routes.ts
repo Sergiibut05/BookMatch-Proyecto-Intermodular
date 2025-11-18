@@ -26,6 +26,11 @@ export const routes: Routes = [
         loadComponent: () => import('./features/home/home.component').then(m => m.HomeComponent)
       },
       {
+        path: 'categories/:categoria',
+        canActivate: [authGuard],
+        loadComponent: () => import('./features/categories/categories').then(m => m.Categories)
+      },
+      {
         path: '**',
         redirectTo: '/auth/login'
       }

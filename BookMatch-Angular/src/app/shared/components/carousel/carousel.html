@@ -9,7 +9,7 @@
   <div class="flex items-center justify-between pr-4 pl-4">
     <h2 class="text-2xl font-bold mb-4" style="color: #45332D;">{{ categoryTitle }}</h2>
     @if (categoryUrl) {
-      <a class="text-lg mb-8" style="color: #4E6A6A; opacity: 0.7;" [href]="categoryUrl">Ver más →</a>
+      <a class="text-lg mb-8" style="color: #4E6A6A; opacity: 0.7;" (click)="onSeeMore()">Ver más →</a>
     }
   </div>
 
