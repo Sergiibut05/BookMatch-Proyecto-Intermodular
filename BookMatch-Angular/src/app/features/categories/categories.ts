@@ -1,5 +1,5 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { CatalogService } from '@core/services/catalog.service';
 import { Header } from '@shared/components/header/header';
 import { CatalogBook } from '@shared/models';
@@ -14,6 +14,7 @@ import { CommonModule } from '@angular/common';
 export class Categories implements OnInit {
   private route = inject(ActivatedRoute);
   private catalogService = inject(CatalogService);
+  private router = inject(Router);
   
   category = signal<string>('');
   books = signal<CatalogBook[]>([]);
@@ -61,5 +62,8 @@ export class Categories implements OnInit {
   onBuyClick() {
     // Placeholder para futura funcionalidad
     console.log('Botón de comprar clickeado');
+  }
+  onBookClick(book: CatalogBook): void {
+    this.router.navigate(['/book-details', book.id]);
   }
 }

@@ -30,7 +30,7 @@
         <div
           class="snap-start flex-none cursor-pointer group"
           style="width: 10rem;">
-          <div class="relative bg-gray-100 book-card">
+          <div class="relative bg-gray-100 book-card" (click)="onBookClick(book)">
             @if (book.coverUrl) {
               <img
                 [src]="book.coverUrl"

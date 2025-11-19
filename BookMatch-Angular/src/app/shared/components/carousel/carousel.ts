@@ -96,5 +96,8 @@ export class Carousel {
   onSeeMore(): void {
     this.router.navigate(['/categories', this.categoryName]);
   }
+  onBookClick(book: CatalogBook): void {
+    this.router.navigate(['/book-details', book.id]);
+  }
 }
 

@@ -31,6 +31,11 @@ export const routes: Routes = [
         loadComponent: () => import('./features/categories/categories').then(m => m.Categories)
       },
       {
+        path: 'book-details/:id',
+        canActivate: [authGuard],
+        loadComponent: () => import('./features/book-details/book-details').then(m => m.BookDetails)
+      },
+      {
         path: '**',
         redirectTo: '/auth/login'
       }

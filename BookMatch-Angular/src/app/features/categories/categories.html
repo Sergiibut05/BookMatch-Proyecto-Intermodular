@@ -48,7 +48,7 @@
     @if (onGrid()) {
       <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
         @for (book of books(); track book.id) {
-          <div class="book-card-grid bg-white rounded-xl shadow-md transition-all duration-500 ease-out cursor-pointer">
+          <div class="book-card-grid bg-white rounded-xl shadow-md transition-all duration-500 ease-out cursor-pointer" (click)="onBookClick(book)">
             <!-- Imagen del libro -->
             <div class="p-3 rounded-lg">
               @if (book.coverUrl) {
@@ -93,7 +93,7 @@
     @if (!onGrid()) {
       <div class="space-y-6">
         @for (book of books(); track book.id) {
-          <div class="book-card-list bg-white rounded-xl shadow-md transition-all duration-500 ease-out cursor-pointer">
+          <div class="book-card-list bg-white rounded-xl shadow-md transition-all duration-500 ease-out cursor-pointer" (click)="onBookClick(book)">
             <div class="flex flex-col md:flex-row gap-4 p-4">
               <!-- Imagen del libro (izquierda) -->
               <div class="w-full md:w-48 flex-shrink-0 rounded-lg p-2">
