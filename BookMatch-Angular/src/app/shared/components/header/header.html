@@ -1,34 +1,133 @@
-<!-- Navbar -->
-  <nav class="bg-white shadow-md sticky top-0 z-50 border-b" style="border-color: #E9E1D1;">
-  <div class="container mx-auto px-4 py-3 md:py-4 flex justify-between items-center">
-    
-    <div class="flex items-center">
-      <img 
-        src="favicon.png" 
-        alt="BookMatch Logo" 
-        class="h-10 w-10 md:h-12 md:w-12 mr-2" 
-      />
-      <h1 class="text-xl md:text-2xl font-bold" style="color: #45332D;">BookMatch</h1>
+<!-- Overlay (fondo oscuro cuando el menú está abierto) -->
+<div 
+  *ngIf="isMenuOpen()" 
+  class="menu-overlay"
+  (click)="closeMenu()"
+></div>
+
+<!-- Menú lateral deslizante -->
+<div 
+  class="side-menu"
+  [class.menu-open]="isMenuOpen()"
+>
+  <div class="side-menu-header">
+    <h2 class="text-xl font-bold" style="color: #45332D;">Menú</h2>
+    <button 
+      (click)="closeMenu()" 
+      class="close-button"
+      aria-label="Cerrar menú"
+    >
+      <svg class="w-6 h-6" style="color: #45332D;" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="side-menu-content">
+    <!-- Aquí puedes agregar los elementos del menú -->
+    <div class="menu-item">
+      <a href="#" class="menu-link">Inicio</a>
     </div>
-    
-    <div class="flex items-center gap-4">
+    <div class="menu-item">
+      <a href="#" class="menu-link">Catálogo</a>
+    </div>
+    <div class="menu-item">
+      <a href="#" class="menu-link">Categorías</a>
+    </div>
+    <div class="menu-item">
+      <a href="#" class="menu-link">Mi Perfil</a>
+    </div>
+  </div>
+</div>
+
+<!-- Navbar -->
+<nav class="bg-white shadow-md sticky top-0 z-50 border-b" style="border-color: #E9E1D1;">
+  <div class="container mx-auto px-2 sm:px-4 py-2 md:py-3 lg:py-4">
+    <!-- Layout para móvil: una sola fila compacta -->
+    <div class="flex items-center justify-between gap-2 md:gap-4">
       
-      <span 
-        class="hidden md:block text-sm whitespace-nowrap" 
-        style="color: #45332D;"
-      >
-        Bienvenido, <span class="font-semibold">{{ authService.currentUser()?.email }}</span>
-      </span>
+      <!-- Sección izquierda: Menú hamburguesa (siempre visible) + Logo y texto (solo desktop) -->
+      <div class="flex items-center gap-2 md:gap-3">
+        <!-- Icono de menú hamburguesa -->
+        <button 
+          (click)="toggleMenu()" 
+          class="flex items-center justify-center p-2 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0"
+          aria-label="Abrir menú"
+        >
+          <svg class="w-5 h-5 md:w-6 md:h-6" style="color: #45332D;" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+          </svg>
+        </button>
+        
+        <!-- Logo y texto BookMatch (oculto en móvil) -->
+        <div class="hidden md:flex items-center">
+          <img 
+            src="favicon.png" 
+            alt="BookMatch Logo" 
+            class="h-10 w-10 lg:h-12 lg:w-12 mr-2" 
+          />
+          <h1 class="text-xl lg:text-2xl font-bold" style="color: #45332D;">BookMatch</h1>
+        </div>
+      </div>
       
-      <button 
-        (click)="logout()" 
-        class="px-3 py-1.5 md:px-4 md:py-2 rounded-lg transition-colors duration-200 font-medium whitespace-nowrap text-sm md:text-base"
-        style="background-color: #E0A15E; color: #FCF5E2;"
-        onmouseover="this.style.backgroundColor='#B88B65'"
-        onmouseout="this.style.backgroundColor='#E0A15E'">
-        Cerrar Sesión
-      </button>
+      <!-- Barra de búsqueda (centro) - Responsive -->
+      <div class="flex-1 max-w-xs sm:max-w-md md:max-w-lg lg:max-w-2xl mx-2 md:mx-4">
+        <div class="relative">
+          <input 
+            type="text" 
+            placeholder="Buscar..." 
+            class="w-full px-3 py-1.5 md:px-4 md:py-2 pl-8 md:pl-10 pr-3 md:pr-4 rounded-lg border text-sm md:text-base focus:outline-none focus:ring-2 focus:ring-opacity-50"
+            style="border-color: #E9E1D1; background-color: #FCF5E2; color: #45332D;"
+          />
+          <svg 
+            class="absolute left-2 md:left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 md:w-5 md:h-5" 
+            style="color: #45332D; opacity: 0.6;" 
+            fill="none" 
+            stroke="currentColor" 
+            viewBox="0 0 24 24" 
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+          </svg>
+        </div>
+      </div>
       
+      <!-- Sección derecha: Iconos y botón cerrar sesión -->
+      <div class="flex items-center gap-1 sm:gap-2 md:gap-4 flex-shrink-0">
+        
+        <!-- Texto Bienvenido (solo desktop) -->
+        <span 
+          class="hidden lg:block text-sm whitespace-nowrap" 
+          style="color: #45332D;"
+        >
+          Bienvenido, <span class="font-semibold">{{ authService.currentUser()?.displayName }}</span>
+        </span>
+        
+        <!-- Icono de carrito -->
+        <button class="flex items-center justify-center p-1.5 md:p-2 hover:bg-gray-100 rounded-lg transition-colors">
+          <svg class="w-5 h-5 md:w-6 md:h-6" style="color: #45332D;" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
+          </svg>
+        </button>
+        
+        <!-- Icono de perfil -->
+        <button class="flex items-center justify-center p-1.5 md:p-2 hover:bg-gray-100 rounded-lg transition-colors">
+          <svg class="w-5 h-5 md:w-6 md:h-6" style="color: #45332D;" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+          </svg>
+        </button>
+        
+        <!-- Botón Cerrar Sesión (oculto en móvil, visible desde tablet) -->
+        <button 
+          (click)="logout()" 
+          class="hidden sm:block px-2 py-1.5 md:px-3 lg:px-4 md:py-2 rounded-lg transition-colors duration-200 font-medium whitespace-nowrap text-xs sm:text-sm md:text-base"
+          style="background-color: #E0A15E; color: #FCF5E2;"
+          onmouseover="this.style.backgroundColor='#B88B65'"
+          onmouseout="this.style.backgroundColor='#E0A15E'">
+          <span class="hidden md:inline">Cerrar Sesión</span>
+          <span class="md:hidden">Salir</span>
+        </button>
+        
+      </div>
     </div>
   </div>
 </nav>

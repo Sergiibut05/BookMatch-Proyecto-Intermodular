@@ -1,0 +1,122 @@
+// Overlay (fondo oscuro)
+.menu-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 999;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+// Menú lateral
+.side-menu {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 280px;
+  max-width: 85vw;
+  background-color: #FCF5E2;
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  transform: translateX(-100%);
+  transition: transform 0.3s ease-in-out;
+  display: flex;
+  flex-direction: column;
+
+  // En pantallas pequeñas, el menú ocupa más espacio
+  @media (max-width: 640px) {
+    width: 75vw;
+    max-width: 300px;
+  }
+}
+
+// Cuando el menú está abierto
+.side-menu.menu-open {
+  transform: translateX(0);
+}
+
+// Header del menú
+.side-menu-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid #E9E1D1;
+
+  @media (max-width: 640px) {
+    padding: 0.75rem 1rem;
+  }
+
+  h2 {
+    font-size: 1.25rem;
+
+    @media (max-width: 640px) {
+      font-size: 1.125rem;
+    }
+  }
+}
+
+.close-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  border-radius: 0.5rem;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: rgba(69, 51, 45, 0.1);
+  }
+}
+
+// Contenido del menú
+.side-menu-content {
+  flex: 1;
+  padding: 1rem;
+  overflow-y: auto;
+
+  @media (max-width: 640px) {
+    padding: 0.75rem;
+  }
+}
+
+// Items del menú
+.menu-item {
+  margin-bottom: 0.5rem;
+}
+
+.menu-link {
+  display: block;
+  padding: 0.75rem 1rem;
+  color: #45332D;
+  text-decoration: none;
+  border-radius: 0.5rem;
+  transition: background-color 0.2s;
+  font-size: 0.9375rem;
+
+  @media (max-width: 640px) {
+    padding: 0.625rem 0.875rem;
+    font-size: 0.875rem;
+  }
+
+  &:hover {
+    background-color: rgba(224, 161, 94, 0.2);
+  }
+}
+
+// Animación de fade in para el overlay
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
