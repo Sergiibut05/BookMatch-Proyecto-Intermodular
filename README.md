@@ -177,6 +177,59 @@ npx prisma studio    # Interfaz visual de la base de datos
 
 ---
 
+# Guía de Setup y Seeding de Base de Datos
+
+Esta guía detalla los pasos necesarios para configurar el entorno, instalar las dependencias y ejecutar el script de "seeding" (llenado de datos) que conecta con Google Books API e inserta 1000 libros en la base de datos PostgreSQL usando Prisma.
+
+# ¿Qué hace el script de Seeding (`seed.ts`)?
+
+Este script actúa como un **robot bibliotecario automatizado**. Su objetivo es poblar la base de datos desde cero, conectándose a una fuente externa (Google Books API) y mapeando los datos a la estructura relacional compleja de Prisma (`Category`, `CatalogBook`, `CatalogBookCategory`).
+
+A continuación se detalla el flujo de ejecución paso a paso:
+
+## 1. Sincronización de Categorías (Setup)
+El script comienza leyendo una lista predefinida de categorías (con IDs fijos del 1 al 47).
+
+* **Lógica `Upsert`:** Utiliza la función `upsert` de Prisma. Esto significa que **Actualiza** si la categoría ya existe o la **Inserta** si es nueva.
+* **Integridad de Datos:** Garantiza que las categorías siempre tengan los mismos IDs (ej: "Terror" siempre será ID 1). Esto es vital para evitar errores en el frontend y mantener las relaciones Padre-Hijo intactas.
+
+## 2. Búsqueda y Recolección (API de Google)
+El script itera sobre cada categoría (excepto "Novedades") y realiza peticiones a la API de Google Books.
+
+* **Query Inteligente:** Busca por temática específica (`subject:Fantasía`, `subject:Ciencia`).
+* **Filtrado de Calidad (Data Hygiene):** No se guardan todos los resultados. El script descarta el libro si:
+    * No tiene un **ISBN** válido (requerido por el esquema `CatalogBook` como `@unique`).
+    * No tiene **Título** o **Autor**.
+* **Normalización de Datos:**
+    * **Imágenes:** Convierte enlaces `http` a `https` para evitar alertas de seguridad en el navegador.
+    * **Precios Simulados:** Dado que la API de Google es una biblioteca (no una tienda), raramente devuelve precios. El script genera un **precio aleatorio (12.00€ - 45.00€)** y un stock aleatorio para permitir pruebas funcionales de carrito y checkout.
+
+## 3. Persistencia en Base de Datos (Prisma)
+Una vez procesados los datos en memoria, se guardan respetando las relaciones SQL:
+
+1.  **Tabla `CatalogBook`:** Se guarda el libro. Si el ISBN ya existe (porque el libro aparece en dos categorías distintas), se reutiliza el registro existente en lugar de duplicarlo.
+2.  **Tabla Intermedia `CatalogBookCategory`:** Se crea el vínculo explícito.
+    * *Ejemplo:* "Vincular el Libro ID 505 con la Categoría ID 6".
+3.  **Rate Limiting:** El script incluye pausas programadas (`setTimeout`) entre peticiones para evitar que Google bloquee la IP por exceso de tráfico.
+
+## 4. La Lógica Especial de "Novedades" (ID 47)
+La categoría "Novedades" no se busca en Google para evitar resultados irrelevantes. Se genera procedimentalmente al final del script:
+
+1.  **Recolección:** El script selecciona los últimos **100 libros** que se acaban de insertar en la base de datos (de cualquier género).
+2.  **Barajado (Shuffle):** Mezcla estos libros aleatoriamente.
+3.  **Selección y Vinculación:** Toma 40 libros de esa mezcla y crea relaciones en `CatalogBookCategory` apuntando al `categoryId: 47`.
+    * *Resultado:* La sección "Novedades" muestra una mezcla ecléctica y fresca de Fantasía, Historia, Thriller, etc.
+
+## Resumen del Resultado
+Al finalizar la ejecución (aprox. 2-3 minutos), la base de datos contiene:
+
+* ✅ **45 Categorías** estructuradas jerárquicamente.
+* ✅ **~1000 Libros** reales con metadatos completos.
+* ✅ **Relaciones M:N** correctamente establecidas.
+* ✅ **Datos de E-commerce** (Precios y Stock) listos para pruebas.
+
+---
+
 ## 🗺️ Roadmap MVP
 
 1. Configuración de base (repositorio, Firebase, PostgreSQL) ✅  
@@ -200,35 +253,6 @@ npx prisma studio    # Interfaz visual de la base de datos
 - Repositorio: [BookMatch-Proyecto-Intermodular](https://github.com/Sergiibut05/BookMatch-Proyecto-Intermodular)
 - Proyecto Firebase: `bookmatch-522d5`
 
----
-
-# 🚀 Guía de Setup y Seeding de Base de Datos
-
-Esta guía detalla los pasos necesarios para configurar el entorno, instalar las dependencias y ejecutar el script de "seeding" (llenado de datos) que conecta con Google Books API e inserta 1000 libros en la base de datos PostgreSQL usando Prisma.
-
-## 📋 1. Requisitos Previos
-
-* **Node.js** instalado (v16 o superior).
-* **PostgreSQL** corriendo y una base de datos creada.
-* **Google Books API Key** válida.
-
-## 🛠️ 2. Instalación de Dependencias
-
-Ejecuta los siguientes comandos en la terminal dentro de la raíz del proyecto:
-
-```bash
-# 1. Iniciar proyecto (si no tienes package.json)
-npm init -y
-
-# 2. Instalar dependencias de producción
-npm install @prisma/client axios dotenv slugify
-
-# 3. Instalar dependencias de desarrollo
-npm install -D prisma@6.18.0 typescript ts-node @types/node
-
-# 4. Inicializar configuración de TypeScript
-npx tsc --init
-```
 ---
 
 **Última actualización:** Noviembre 2025  
