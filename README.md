@@ -202,5 +202,34 @@ npx prisma studio    # Interfaz visual de la base de datos
 
 ---
 
+# 🚀 Guía de Setup y Seeding de Base de Datos
+
+Esta guía detalla los pasos necesarios para configurar el entorno, instalar las dependencias y ejecutar el script de "seeding" (llenado de datos) que conecta con Google Books API e inserta 1000 libros en la base de datos PostgreSQL usando Prisma.
+
+## 📋 1. Requisitos Previos
+
+* **Node.js** instalado (v16 o superior).
+* **PostgreSQL** corriendo y una base de datos creada.
+* **Google Books API Key** válida.
+
+## 🛠️ 2. Instalación de Dependencias
+
+Ejecuta los siguientes comandos en la terminal dentro de la raíz del proyecto:
+
+```bash
+# 1. Iniciar proyecto (si no tienes package.json)
+npm init -y
+
+# 2. Instalar dependencias de producción
+npm install @prisma/client axios dotenv slugify
+
+# 3. Instalar dependencias de desarrollo
+npm install -D prisma@6.18.0 typescript ts-node @types/node
+
+# 4. Inicializar configuración de TypeScript
+npx tsc --init
+```
+---
+
 **Última actualización:** Noviembre 2025  
 **Versión del documento:** 0.3.0 (Sprint MVP en curso)
