@@ -2,12 +2,71 @@
 <app-header></app-header>
 
 <div class="min-h-screen" style="background-color: #FCF5E2;">
-
-  <div class="max-w-[1414px] mx-auto px-4 py-8 text-center">
-    <h2 class="text-4xl font-bold mb-4" style="color: #45332D;">¡Bienvenido a BookMatch!</h2>
-    <p class="text-lg mb-8" style="color: #4E6A6A; opacity: 0.7;">Tu plataforma para comprar, intercambiar y descubrir libros.</p>
+  
+  <!-- Banner -->
+  <div class="w-full pt-8 md:pt-12 mb-12 md:mb-16 px-4 md:px-6">
+    <div class="max-w-3xl mx-auto">
+      <img 
+        src="assets/banner-bookmatch.png" 
+        alt="BookMatch Banner" 
+        class="w-full h-auto object-cover rounded-xl md:rounded-2xl shadow-lg"
+      />
+    </div>
   </div>
 
+  <!-- Sección de características -->
+  <div class="max-w-[1414px] mx-auto px-4 mb-12">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12">
+      
+      <!-- Compra & Venta -->
+      <div class="text-center">
+        <div class="flex justify-center mb-4">
+          <div class="w-16 h-16 md:w-20 md:h-20 rounded-full flex items-center justify-center" style="background-color: #E0A15E;">
+            <svg class="w-8 h-8 md:w-10 md:h-10" style="color: #FCF5E2;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+            </svg>
+          </div>
+        </div>
+        <h3 class="text-xl md:text-2xl font-bold mb-3" style="color: #45332D;">Compra & Venta</h3>
+        <p class="text-sm md:text-base" style="color: #45332D; opacity: 0.8;">
+          Compra y vende libros de forma fácil y segura. Encuentra los títulos que buscas o dale una segunda vida a tus libros favoritos.
+        </p>
+      </div>
+
+      <!-- Trueque Digital -->
+      <div class="text-center">
+        <div class="flex justify-center mb-4">
+          <div class="w-16 h-16 md:w-20 md:h-20 rounded-full flex items-center justify-center" style="background-color: #E0A15E;">
+            <svg class="w-8 h-8 md:w-10 md:h-10" style="color: #FCF5E2;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+            </svg>
+          </div>
+        </div>
+        <h3 class="text-xl md:text-2xl font-bold mb-3" style="color: #45332D;">Trueque Digital</h3>
+        <p class="text-sm md:text-base" style="color: #45332D; opacity: 0.8;">
+          Intercambia tus libros con otros usuarios de manera sencilla. Una forma sostenible de descubrir nuevas lecturas sin gastar dinero.
+        </p>
+      </div>
+
+      <!-- Recomendaciones IA -->
+      <div class="text-center">
+        <div class="flex justify-center mb-4">
+          <div class="w-16 h-16 md:w-20 md:h-20 rounded-full flex items-center justify-center" style="background-color: #E0A15E;">
+            <svg class="w-8 h-8 md:w-10 md:h-10" style="color: #FCF5E2;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+            </svg>
+          </div>
+        </div>
+        <h3 class="text-xl md:text-2xl font-bold mb-3" style="color: #45332D;">Recomendaciones IA</h3>
+        <p class="text-sm md:text-base" style="color: #45332D; opacity: 0.8;">
+          Descubre tu próxima lectura favorita gracias a nuestra inteligencia artificial que aprende de tus gustos y preferencias.
+        </p>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Carousel de Novedades -->
   <div class="max-w-[1414px] mx-auto px-4 pb-12">
     <app-carousel
       categoryTitle="Novedades"
@@ -16,3 +75,4 @@
     ></app-carousel>
   </div>
 </div>
+<app-footer></app-footer>
