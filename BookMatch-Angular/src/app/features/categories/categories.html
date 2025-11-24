@@ -143,5 +143,56 @@
       </div>
     </div>
     }
+
+    <!-- Paginación -->
+    @if (total() > 0) {
+    <div class="mt-8 flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 border-t" style="border-color: #E9E1D1;">
+      <div class="text-sm" style="color: #45332D;">
+        Mostrando {{ startItem }} - {{ endItem }} de {{ total() }} libros
+      </div>
+      
+      <div class="flex items-center gap-2">
+        <!-- Botón Anterior -->
+        <button 
+          (click)="previousPage()" 
+          [disabled]="page() === 1"
+          class="px-4 py-2 rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          [style.background-color]="page() === 1 ? '#E9E1D1' : '#E0A15E'"
+          [style.color]="page() === 1 ? '#D4C9B9' : '#FCF5E2'"
+          style="border: 1px solid #E9E1D1;">
+          Anterior
+        </button>
+
+        <!-- Números de página -->
+        <div class="flex items-center gap-1">
+          @for (pageNum of getPageNumbers(); track pageNum) {
+            @if (pageNum === '...') {
+              <span class="px-2" style="color: #45332D;">...</span>
+            } @else {
+              <button 
+                (click)="goToPage($any(pageNum))"
+                class="w-10 h-10 rounded-lg font-medium transition-all"
+                [style.background-color]="page() === pageNum ? '#E0A15E' : 'white'"
+                [style.color]="page() === pageNum ? '#FCF5E2' : '#45332D'"
+                style="border: 1px solid #E9E1D1;">
+                {{ pageNum }}
+              </button>
+            }
+          }
+        </div>
+
+        <!-- Botón Siguiente -->
+        <button 
+          (click)="nextPage()" 
+          [disabled]="page() === totalPages"
+          class="px-4 py-2 rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          [style.background-color]="page() === totalPages ? '#E9E1D1' : '#E0A15E'"
+          [style.color]="page() === totalPages ? '#D4C9B9' : '#FCF5E2'"
+          style="border: 1px solid #E9E1D1;">
+          Siguiente
+        </button>
+      </div>
+    </div>
+    }
   </div>
 </div>
