@@ -82,4 +82,17 @@ export class AuthService {
     }
     return localStorage.getItem(this.TOKEN_KEY);
   }
+
+  /**
+   * Actualiza el perfil del usuario en Firebase Auth
+   */
+  async updateProfile(profileData: { displayName?: string; photoURL?: string }): Promise<void> {
+    const user = this.currentUser();
+    if (!user) {
+      throw new Error('Usuario no autenticado');
+    }
+    await updateProfile(user, profileData);
+    // Forzar actualización del token para reflejar cambios
+    await user.getIdToken(true);
+  }
 }
