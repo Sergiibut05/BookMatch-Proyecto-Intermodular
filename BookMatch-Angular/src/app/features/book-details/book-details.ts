@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { CatalogService } from '@core/services/catalog.service';
+import { PaymentService } from '@core/services/payment.service';
 import { Header } from '@shared/components/header/header';
 import { CatalogBook, Review } from '@shared/models';
 
@@ -14,10 +15,12 @@ import { CatalogBook, Review } from '@shared/models';
 export class BookDetails implements OnInit{
   private route = inject(ActivatedRoute);
   private catalogService = inject(CatalogService);
+  private paymentService = inject(PaymentService);
   bookId = signal<string>('');
   book = signal<CatalogBook | null>(null);
   selectedImageUrl = signal<string | null>(null);
   reviews = signal<Review[] | null>(null);
+  isProcessingPayment = signal<boolean>(false);
   
   
   ngOnInit(): void {
@@ -67,7 +70,30 @@ export class BookDetails implements OnInit{
   }
 
   onBuyWithStripe(): void {
-    // TODO: Implementar integración con Stripe
-    console.log('Comprar con Stripe:', this.book()?.id);
+    const book = this.book();
+    if (!book || book.stock === 0) {
+      return;
+    }
+
+    this.isProcessingPayment.set(true);
+
+    this.paymentService.createCheckoutSession(book.id, 1).subscribe({
+      next: (response) => {
+        // Redirigir a Stripe Checkout usando la URL proporcionada
+        try {
+          this.paymentService.redirectToCheckout(response.url);
+        } catch (error) {
+          console.error('Error al redirigir a Stripe:', error);
+          alert('Error al procesar el pago. Por favor, intenta de nuevo.');
+          this.isProcessingPayment.set(false);
+        }
+      },
+      error: (error) => {
+        console.error('Error al crear sesión de pago:', error);
+        const errorMessage = error.error?.message || 'Error al procesar el pago. Por favor, intenta de nuevo.';
+        alert(errorMessage);
+        this.isProcessingPayment.set(false);
+      }
+    });
   }
 }
