@@ -1,5 +1,5 @@
 // Como ambos archivos están en 'src', la ruta es './services/...'
-import { mailService } from './services/mail.service';
+import { mailService } from './services/mail.service'; //Aunque salga subrayado de rojo, funciona perfectamente
 
 async function main() {
     console.log('🚀 Iniciando script de prueba...');
