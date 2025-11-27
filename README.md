@@ -184,8 +184,14 @@ FRONTEND_URL=http://localhost:4200
 npx prisma generate
 npx prisma migrate deploy
 ```
+#### 2.4. Inicializar el Catálogo (Seeding)
+1. Ejecuta este script una única vez al montar el proyecto para llenar la base de datos con el catálogo estático de libros desde Google Books.
 
-#### 2.4. Ejecutar el Servidor
+```bash
+npx tsx seed.ts
+```
+
+#### 2.5. Ejecutar el Servidor
 
 ```bash
 npm run dev   # nodemon (recomendado en desarrollo)
@@ -237,6 +243,51 @@ ng serve --port 4300
 
 La app se sirve en `http://localhost:4200`.
 
+---
+## 📚 Guía Técnica de Seeding (Base de Datos)
+
+Esta sección detalla cómo funciona el script **`seed.ts`** que conecta con la **Google Books API** e inserta aproximadamente 1000 libros en la base de datos **PostgreSQL** usando **Prisma**.
+
+### ¿Qué hace el script de Seeding?
+
+Este script actúa como un **robot bibliotecario automatizado**. Su objetivo es poblar la base de datos desde cero, conectándose a una fuente externa y mapeando los datos a la estructura relacional compleja de Prisma (`Category`, `CatalogBook`, `CatalogBookCategory`).
+
+---
+
+### Flujo de Ejecución
+
+#### 1. Sincronización de Categorías (Setup)
+
+El script comienza leyendo una lista predefinida de categorías (con IDs fijos del 1 al 47).
+
+* **Lógica `Upsert`**: Utiliza la función `upsert` de Prisma. Esto significa que **Actualiza** si la categoría ya existe o la **Inserta** si es nueva.
+* **Integridad de Datos**: Garantiza que las categorías siempre tengan los mismos IDs (ej: "Terror" siempre será ID 1), lo cual es **vital para la navegación del frontend**.
+
+#### 2. Búsqueda y Recolección (API de Google)
+
+El script itera sobre cada categoría y realiza peticiones a la API de Google Books.
+
+* **Query Inteligente**: Busca por temática específica (`subject:Fantasía`, `subject:Ciencia`).
+* **Filtrado de Calidad (Data Hygiene)**: Descarta el libro si no tiene **ISBN** válido, título o autor.
+* **Normalización**:
+    * Convierte enlaces `http` a `https`.
+    * **Precios Simulados**: Genera un precio aleatorio (**12.00€ - 45.00€**) y stock, ya que la API de Google es una biblioteca, no una tienda.
+
+#### 3. Persistencia en Base de Datos
+
+* **Tabla `CatalogBook`**: Se guarda el libro. Si el ISBN ya existe, se **reutiliza el registro**.
+* **Tabla Intermedia `CatalogBookCategory`**: Se crea el **vínculo explícito** (Relación N:M).
+* **Rate Limiting**: Incluye pausas programadas para evitar bloqueos de IP por parte de Google.
+
+#### 4. La Lógica de "Novedades" (ID 47)
+
+La categoría "Novedades" se genera procedimentalmente al final:
+
+* Selecciona los **últimos 100 libros** insertados.
+* Los mezcla aleatoriamente (**Shuffle**).
+* Toma 40 libros y crea relaciones apuntando al `categoryId: 47`.
+
+**Resultado**: Una sección de novedades ecléctica y fresca.
 ---
 
 ## 🔐 Variables Clave
