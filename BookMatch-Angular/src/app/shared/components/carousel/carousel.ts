@@ -2,6 +2,7 @@ import { Component, ElementRef, Input, ViewChild, inject, signal } from '@angula
 import { CommonModule } from '@angular/common';
 import { CatalogService } from '@core/services/catalog.service';
 import { CatalogBook } from '@shared/models';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-carousel',
@@ -18,7 +19,7 @@ export class Carousel {
   @ViewChild('carousel', { static: false }) carouselRef!: ElementRef<HTMLDivElement>;
 
   private catalogService = inject(CatalogService);
-
+  private router = inject(Router);
   books = signal<CatalogBook[]>([]);
 
   constructor() {
@@ -91,6 +92,12 @@ export class Carousel {
       }, 200);
     }
     setTimeout(() => this.snapToNearest(), 220);
+  }
+  onSeeMore(): void {
+    this.router.navigate(['/categories', this.categoryName]);
+  }
+  onBookClick(book: CatalogBook): void {
+    this.router.navigate(['/book-details', book.id]);
   }
 }
 

@@ -9,5 +9,8 @@ export const environment = {
         appId: "1:735953151639:web:35092cd2fa7015d06f2bd2",
         databaseURL: "https://bookmatch-522d5-default-rtdb.europe-west1.firebasedatabase.app",
         measurementId: "G-YD2T0NCDTC"
-    }
+    },
+    // Stripe (TEST MODE - reemplaza con tu clave pública de prueba)
+    stripePublishableKey: 'pk_test_51SXKSE9RfkpN8LkuajmtkGe2fBJNNYiVhepYyANGrlr5xBW9nMJXEm76iUAoJb3iqutIywJviuf4QQJHFNFQQr0d007T7bx4gt',
+    apiUrl: 'http://localhost:3000/api'
 };

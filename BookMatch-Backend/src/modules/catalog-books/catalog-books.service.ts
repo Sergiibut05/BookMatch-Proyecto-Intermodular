@@ -27,16 +27,30 @@ const catalogBookWithCategories = Prisma.validator<Prisma.CatalogBookDefaultArgs
         },
       },
     },
+    reviews: {
+      select: {
+        id: true,
+        catalogBookId: true,
+        userId: true,
+        rating: true,
+        comment: true,
+        createdAt: true,
+      },
+    },
   },
 });
 
 type CatalogBookRecord = Prisma.CatalogBookGetPayload<typeof catalogBookWithCategories>;
 
 function mapCatalogBook(record: CatalogBookRecord) {
-  const { categories, ...rest } = record;
+  const { categories, reviews, ...rest } = record;
   return {
     ...rest,
     categories: categories.map((entry) => entry.category),
+    reviews: (reviews || []).map((review) => ({
+      ...review,
+      createdAt: review.createdAt.toISOString(),
+    })),
   };
 }
 

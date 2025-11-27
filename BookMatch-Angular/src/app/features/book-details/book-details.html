@@ -1,0 +1,225 @@
+<app-header></app-header>
+
+<div class="min-h-screen" style="background-color: #FCF5E2;">
+  <div class="max-w-[1414px] mx-auto px-4 py-8">
+    
+    <!-- Loading state -->
+    @if (!book()) {
+      <div class="flex items-center justify-center min-h-[60vh]">
+        <div class="text-center">
+          <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-t-transparent" style="border-color: #E0A15E;"></div>
+          <p class="mt-4 text-lg" style="color: #45332D;">Cargando libro...</p>
+        </div>
+      </div>
+    }
+
+    <!-- Book details content -->
+    @if (book()) {
+      <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 p-6 md:p-8 lg:p-12">
+          
+          <!-- Left column: Images -->
+          <div class="space-y-4 flex flex-col items-center">
+            <!-- Main image -->
+            <div class="relative rounded-xl overflow-hidden bg-white shadow-md max-w-xs w-full mx-auto" style="border: 2px solid #E9E1D1;">
+              @if (getMainImageUrl()) {
+                <img 
+                  [src]="getMainImageUrl()" 
+                  [alt]="book()!.title"
+                  class="w-full h-auto object-cover transition-transform duration-300 hover:scale-105"
+                  style="aspect-ratio: 2/3;"
+                  (error)="$event.target.src='https://via.placeholder.com/400x600?text=' + book()!.title">
+              } @else {
+                <div class="w-full flex items-center justify-center" style="aspect-ratio: 2/3; background: linear-gradient(135deg, #E0A15E 0%, #B88B65 100%);">
+                  <span class="text-8xl" style="color: #FCF5E2;">📖</span>
+                </div>
+              }
+            </div>
+
+            <!-- Image gallery (if multiple images) -->
+            @if (book()!.imageUrls && book()!.imageUrls.length > 1) {
+              <div class="grid grid-cols-4 gap-3">
+                @for (imageUrl of book()!.imageUrls; track $index) {
+                  <div 
+                    class="rounded-lg overflow-hidden cursor-pointer transition-all duration-200 hover:opacity-80" 
+                    [style.border]="selectedImageUrl() === imageUrl ? '3px solid #E0A15E' : '2px solid #E9E1D1'"
+                    (click)="selectImage(imageUrl)">
+                    <img 
+                      [src]="imageUrl" 
+                      [alt]="book()!.title + ' - Imagen ' + ($index + 1)"
+                      class="w-full h-full object-cover"
+                      style="aspect-ratio: 2/3;"
+                      (error)="$event.target.src='https://via.placeholder.com/150x225?text=' + book()!.title">
+                  </div>
+                }
+              </div>
+            }
+          </div>
+
+          <!-- Right column: Book information -->
+          <div class="flex flex-col space-y-6">
+            
+            <!-- Title and Author -->
+            <div>
+              <h1 class="text-3xl md:text-4xl font-bold mb-3" style="color: #45332D;">{{ book()!.title }}</h1>
+              <p class="text-xl md:text-2xl mb-2" style="color: #4E6A6A; opacity: 0.9;">{{ book()!.author }}</p>
+              @if (book()!.isbn) {
+                <p class="text-sm" style="color: #4E6A6A; opacity: 0.7;">ISBN: {{ book()!.isbn }}</p>
+              }
+            </div>
+
+            <!-- Categories -->
+            @if (book()!.categories && book()!.categories!.length > 0) {
+              <div class="flex flex-wrap gap-2">
+                @for (category of book()!.categories!; track category.id) {
+                  <span class="px-3 py-1 rounded-full text-sm font-medium" 
+                        style="background-color: #E9E1D1; color: #45332D;">
+                    {{ category.name }}
+                  </span>
+                }
+              </div>
+            }
+
+            <!-- Price section -->
+            <div class="py-4 border-t border-b" style="border-color: #E9E1D1;">
+              <div class="flex items-baseline gap-3">
+                <span class="text-4xl md:text-5xl font-bold" style="color: #E0A15E;">{{ book()!.price | number:'1.2-2' }}€</span>
+                <span class="text-xl line-through" style="color: #D4C9B9;">{{ (book()!.price * 1.15) | number:'1.2-2' }}€</span>
+                <span class="px-2 py-1 rounded text-sm font-semibold" style="background-color: #E0A15E; color: #FCF5E2;">-15%</span>
+              </div>
+            </div>
+
+            <!-- Stock status -->
+            <div class="flex items-center gap-2">
+              @if (book()!.stock > 0) {
+                <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium" 
+                      style="background-color: #E9E1D1; color: #45332D;">
+                  <span class="w-2 h-2 rounded-full" style="background-color: #4E6A6A;"></span>
+                  En stock ({{ book()!.stock }} disponibles)
+                </span>
+              } @else {
+                <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium" 
+                      style="background-color: #D4C9B9; color: #45332D;">
+                  <span class="w-2 h-2 rounded-full" style="background-color: #D4C9B9;"></span>
+                  Agotado
+                </span>
+              }
+            </div>
+
+            <!-- Description -->
+            @if (book()!.description) {
+              <div class="py-4">
+                <h2 class="text-xl font-semibold mb-3" style="color: #45332D;">Descripción</h2>
+                <p class="text-base leading-relaxed" style="color: #4E6A6A; opacity: 0.8;">{{ book()!.description }}</p>
+              </div>
+            }
+
+            <!-- Reviews section -->
+            <div class="py-4 border-t" style="border-color: #E9E1D1;">
+              <h2 class="text-xl font-semibold mb-4" style="color: #45332D;">Reseñas</h2>
+              @if (reviews() && reviews()!.length > 0) {
+                <div class="space-y-4">
+                  @for (review of reviews()!; track review.id) {
+                    <div class="bg-gray-50 rounded-lg p-4" style="background-color: #FCF5E2;">
+                      <div class="flex items-center gap-2 mb-2">
+                        <div class="flex">
+                          @for (star of [1,2,3,4,5]; track star) {
+                            <span class="text-xl" [style.color]="star <= review.rating ? '#E0A15E' : '#D4C9B9'">★</span>
+                          }
+                        </div>
+                        <span class="text-sm" style="color: #4E6A6A; opacity: 0.7;">{{ review.createdAt ? (review.createdAt | date:'short') : '' }}</span>
+                      </div>
+                      @if (review.comment) {
+                        <p class="text-sm" style="color: #45332D;">{{ review.comment }}</p>
+                      }
+                    </div>
+                  }
+                </div>
+              } @else {
+                <p class="text-sm" style="color: #4E6A6A; opacity: 0.7;">Aún no hay reseñas para este libro.</p>
+              }
+            </div>
+
+            <!-- Action buttons -->
+            <div class="flex flex-col sm:flex-row gap-4 pt-4">
+              <!-- Add to cart button -->
+              <button 
+                [disabled]="book()!.stock === 0"
+                class="flex-1 px-6 py-4 rounded-xl font-semibold text-lg transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                style="background-color: #E0A15E; color: #FCF5E2;"
+                onmouseover="if(!this.disabled) this.style.backgroundColor='#B88B65'"
+                onmouseout="if(!this.disabled) this.style.backgroundColor='#E0A15E'"
+                (click)="onAddToCart()">
+                <span class="material-symbols-outlined">shopping_cart</span>
+                Añadir a la cesta
+              </button>
+
+              <!-- Buy now button -->
+              <button 
+                [disabled]="book()!.stock === 0"
+                class="flex-1 px-6 py-4 rounded-xl font-semibold text-lg transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                style="background-color: #45332D; color: #FCF5E2;"
+                onmouseover="if(!this.disabled) this.style.backgroundColor='#2A1F1A'"
+                onmouseout="if(!this.disabled) this.style.backgroundColor='#45332D'"
+                (click)="onBuyNow()">
+                <span class="material-symbols-outlined">flash_on</span>
+                Comprar ahora
+              </button>
+            </div>
+
+            <!-- Stripe payment button -->
+            <button 
+              [disabled]="book()!.stock === 0 || isProcessingPayment()"
+              class="w-full px-6 py-4 rounded-xl font-semibold text-lg transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              style="background-color: #635BFF; color: white; border: 2px solid #635BFF;"
+              onmouseover="if(!this.disabled) this.style.backgroundColor='#4F46E5'"
+              onmouseout="if(!this.disabled) this.style.backgroundColor='#635BFF'"
+              (click)="onBuyWithStripe()">
+              @if (isProcessingPayment()) {
+                <div class="inline-block animate-spin rounded-full h-5 w-5 border-2 border-t-transparent border-white"></div>
+                <span>Procesando...</span>
+              } @else {
+                <svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M13.976 9.15c-2.172-.806-3.356-1.426-3.356-2.409 0-.831.683-1.305 1.901-1.305 2.227 0 4.515.858 6.09 1.631l.89-5.494C18.252.975 15.697 0 12.165 0 9.667 0 7.589.654 6.104 1.872 4.56 3.147 3.757 4.992 3.757 7.218c0 4.039 2.467 5.76 6.476 7.219 2.585.92 3.445 1.574 3.445 2.583 0 .98-.84 1.545-2.354 1.545-1.875 0-4.965-.921-6.99-2.109l-.9 5.555C5.175 22.99 8.385 24 11.714 24c2.641 0 4.843-.624 6.328-1.813 1.664-1.305 2.525-3.236 2.525-5.732 0-4.128-2.524-5.851-6.594-7.305h.003z"/>
+                </svg>
+                <span>Comprar con Stripe</span>
+              }
+            </button>
+
+            <!-- Additional info -->
+            <div class="pt-4 border-t" style="border-color: #E9E1D1;">
+              <div class="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <p class="font-semibold mb-1" style="color: #45332D;">Disponibilidad</p>
+                  <p style="color: #4E6A6A; opacity: 0.8;">
+                    @if (book()!.stock > 0) {
+                      Envío inmediato
+                    } @else {
+                      Sin stock
+                    }
+                  </p>
+                </div>
+                <div>
+                  <p class="font-semibold mb-1" style="color: #45332D;">Formato</p>
+                  <p style="color: #4E6A6A; opacity: 0.8;">Tapa blanda</p>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Error state -->
+    @if (book() === null && bookId()) {
+      <div class="flex items-center justify-center min-h-[60vh]">
+        <div class="text-center bg-white rounded-xl shadow-md p-8">
+          <p class="text-xl font-semibold mb-2" style="color: #45332D;">Libro no encontrado</p>
+          <p class="text-base" style="color: #4E6A6A; opacity: 0.8;">El libro que buscas no está disponible.</p>
+        </div>
+      </div>
+    }
+
+  </div>
+</div>

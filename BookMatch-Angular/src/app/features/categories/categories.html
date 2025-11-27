@@ -1,0 +1,198 @@
+<app-header></app-header>
+
+<div class="min-h-screen" style="background-color: #FCF5E2;">
+  <div class="max-w-[1414px] mx-auto px-4 py-8">
+    <!-- Header con título de categoría -->
+    <h1 class="text-4xl font-bold mb-8 capitalize" style="color: #45332D;">{{ category() }}</h1>
+
+    <!-- Controles: selector de cantidad y botones de vista -->
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 pb-4 border-b"
+      style="border-color: #E9E1D1;">
+      <div class="flex items-center gap-4">
+        <label for="limit-select" class="text-sm font-medium" style="color: #45332D;">Libros por página:</label>
+        <select id="limit-select" [value]="limit()" (change)="onLimitChange($event)"
+          class="px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-offset-2"
+          style="border-color: #E9E1D1; background-color: white; color: #45332D;">
+          <option value="10">10</option>
+          <option value="15">15</option>
+          <option value="20">20</option>
+          <option value="30">30</option>
+        </select>
+      </div>
+
+      <div class="hidden sm:flex items-center gap-2">
+        <button (click)="toggleView()" class="p-2 rounded-lg transition-colors"
+          [style.background-color]="onGrid() ? '#E0A15E' : 'white'" [style.color]="onGrid() ? '#FCF5E2' : '#45332D'"
+          style="border: 1px solid #E9E1D1;" title="Vista de cuadrícula">
+          <span class="material-symbols-outlined">grid_view</span>
+        </button>
+        <button (click)="toggleView()" class="p-2 rounded-lg transition-colors"
+          [style.background-color]="!onGrid() ? '#E0A15E' : 'white'" [style.color]="!onGrid() ? '#FCF5E2' : '#45332D'"
+          style="border: 1px solid #E9E1D1;" title="Vista de lista">
+          <span class="material-symbols-outlined">view_list</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Vista Grid -->
+    @if (onGrid()) {
+    <div class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+      @for (book of books(); track book.id) {
+      <div class="book-card-grid bg-white rounded-xl shadow-md transition-all duration-500 ease-out cursor-pointer"
+        (click)="onBookClick(book)">
+        <!-- Imagen del libro -->
+        <div class="p-2 sm:p-3 rounded-lg">
+          @if (book.coverUrl) {
+          <img [src]="book.coverUrl" [alt]="book.title"
+            class="book-image-grid w-full object-cover transition-transform duration-700 ease-out rounded-lg"
+            style="aspect-ratio: 2/3;"
+            (error)="$event.target.src='https://via.placeholder.com/300x450?text=' + book.title">
+          } @else {
+          <div class="w-full flex items-center justify-center"
+            style="aspect-ratio: 2/3; background: linear-gradient(135deg, #E0A15E 0%, #B88B65 100%);">
+            <span class="text-6xl" style="color: #FCF5E2;">📖</span>
+          </div>
+          }
+        </div>
+
+        <!-- Información del libro -->
+        <div class="p-2 sm:p-4 book-content-grid transition-all duration-500 ease-out">
+          <h3 class="text-lg font-semibold mb-2 line-clamp-2 h-[3.5rem] transition-all duration-500 ease-out"
+            style="color: #45332D;">{{ book.title }}</h3>
+          <p class="text-sm mb-3 transition-all duration-500 ease-out" style="color: #4E6A6A; opacity: 0.8;">{{
+            book.author }}</p>
+
+          <!-- Precios -->
+          <div class="flex flex-col gap-1 transition-all duration-500 ease-out">
+            <span class="text-sm line-through" style="color: #D4C9B9;">{{ getDiscountedPrice(book.price) |
+              number:'1.2-2' }}€</span>
+            <span class="text-xl font-bold" style="color: #E0A15E;">{{ book.price | number:'1.2-2' }}€</span>
+          </div>
+
+          <!-- Botón de comprar -->
+          <button class="w-full mt-4 py-2 rounded-lg font-medium transition-all duration-500 ease-out"
+            style="background-color: #E0A15E; color: #FCF5E2;" (click)="onBuyClick()">
+            Comprar
+          </button>
+        </div>
+      </div>
+      }
+    </div>
+    }
+
+    <!-- Vista List -->
+    @if (!onGrid()) {
+    <div class="space-y-6">
+      @for (book of books(); track book.id) {
+      <div class="book-card-list bg-white rounded-xl shadow-md transition-all duration-500 ease-out cursor-pointer"
+        (click)="onBookClick(book)">
+        <div class="flex flex-col md:flex-row gap-4 p-4">
+          <!-- Imagen del libro (izquierda) -->
+          <div class="w-full md:w-48 flex-shrink-0 rounded-lg p-2">
+            @if (book.coverUrl) {
+            <img [src]="book.coverUrl" [alt]="book.title"
+              class="book-image-list w-full object-cover transition-transform duration-700 ease-out rounded-lg"
+              style="aspect-ratio: 2/3;"
+              (error)="$event.target.src='https://via.placeholder.com/300x450?text=' + book.title">
+            } @else {
+            <div class="w-full flex items-center justify-center"
+              style="aspect-ratio: 2/3; background: linear-gradient(135deg, #E0A15E 0%, #B88B65 100%);">
+              <span class="text-6xl" style="color: #FCF5E2;">📖</span>
+            </div>
+            }
+          </div>
+
+          <!-- Información central (título, autor, descripción) -->
+          <div class="flex-1 flex flex-col justify-between py-2 book-content-list transition-all duration-500 ease-out">
+            <div>
+              <h3 class="text-xl font-semibold mb-2 transition-all duration-500 ease-out" style="color: #45332D;">{{
+                book.title }}</h3>
+              <p class="text-base mb-3 transition-all duration-500 ease-out" style="color: #4E6A6A; opacity: 0.8;">{{
+                book.author }}</p>
+              @if (book.description) {
+              <p class="text-sm line-clamp-3 transition-all duration-500 ease-out"
+                style="color: #4E6A6A; opacity: 0.7;">{{ book.description }}</p>
+              }
+            </div>
+          </div>
+
+          <!-- Precios y botón (derecha) -->
+          <div
+            class="w-full md:w-40 flex-shrink-0 flex flex-col justify-center items-start md:items-end gap-3 py-2 transition-all duration-500 ease-out">
+            <div class="flex flex-col gap-1 items-end">
+              <span class="text-sm line-through" style="color: #D4C9B9;">{{ getDiscountedPrice(book.price) |
+                number:'1.2-2' }}€</span>
+              <span class="text-2xl font-bold" style="color: #E0A15E;">{{ book.price | number:'1.2-2' }}€</span>
+            </div>
+            <button class="w-full md:w-auto px-6 py-2 rounded-lg font-medium transition-all duration-500 ease-out"
+              style="background-color: #E0A15E; color: #FCF5E2;" (click)="onBuyClick()">
+              Comprar
+            </button>
+          </div>
+        </div>
+      </div>
+      }
+    </div>
+    }
+
+    <!-- Mensaje cuando no hay libros -->
+    @if (books().length === 0) {
+    <div class="text-center py-12">
+      <div class="inline-block p-6 bg-white rounded-xl shadow-sm">
+        <p class="text-lg" style="color: #D4C9B9;">No se encontraron libros en esta categoría.</p>
+      </div>
+    </div>
+    }
+
+    <!-- Paginación -->
+    @if (total() > 0) {
+    <div class="mt-8 flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 border-t" style="border-color: #E9E1D1;">
+      <div class="text-sm" style="color: #45332D;">
+        Mostrando {{ startItem }} - {{ endItem }} de {{ total() }} libros
+      </div>
+      
+      <div class="flex items-center gap-2">
+        <!-- Botón Anterior -->
+        <button 
+          (click)="previousPage()" 
+          [disabled]="page() === 1"
+          class="px-4 py-2 rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          [style.background-color]="page() === 1 ? '#E9E1D1' : '#E0A15E'"
+          [style.color]="page() === 1 ? '#D4C9B9' : '#FCF5E2'"
+          style="border: 1px solid #E9E1D1;">
+          Anterior
+        </button>
+
+        <!-- Números de página -->
+        <div class="flex items-center gap-1">
+          @for (pageNum of getPageNumbers(); track pageNum) {
+            @if (pageNum === '...') {
+              <span class="px-2" style="color: #45332D;">...</span>
+            } @else {
+              <button 
+                (click)="goToPage($any(pageNum))"
+                class="w-10 h-10 rounded-lg font-medium transition-all"
+                [style.background-color]="page() === pageNum ? '#E0A15E' : 'white'"
+                [style.color]="page() === pageNum ? '#FCF5E2' : '#45332D'"
+                style="border: 1px solid #E9E1D1;">
+                {{ pageNum }}
+              </button>
+            }
+          }
+        </div>
+
+        <!-- Botón Siguiente -->
+        <button 
+          (click)="nextPage()" 
+          [disabled]="page() === totalPages"
+          class="px-4 py-2 rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          [style.background-color]="page() === totalPages ? '#E9E1D1' : '#E0A15E'"
+          [style.color]="page() === totalPages ? '#D4C9B9' : '#FCF5E2'"
+          style="border: 1px solid #E9E1D1;">
+          Siguiente
+        </button>
+      </div>
+    </div>
+    }
+  </div>
+</div>

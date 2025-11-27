@@ -22,6 +22,7 @@ export interface Category {
     price: number;
     stock: number;
     categories?: Category[];
+    reviews?: Review[];
     createdAt?: string;
     updatedAt?: string;
   }
@@ -40,3 +41,12 @@ export interface Category {
   }
   
   export interface UpdateCatalogBookDto extends Partial<CreateCatalogBookDto> {}
+
+  export interface Review {
+    id: number;
+    catalogBookId: number;
+    userId: number;
+    rating: number; // 1-5
+    comment?: string;
+    createdAt: string;
+  }

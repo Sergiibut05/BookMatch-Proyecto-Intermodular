@@ -26,6 +26,26 @@ export const routes: Routes = [
         loadComponent: () => import('./features/home/home.component').then(m => m.HomeComponent)
       },
       {
+        path: 'categories/:categoria',
+        canActivate: [authGuard],
+        loadComponent: () => import('./features/categories/categories').then(m => m.Categories)
+      },
+      {
+        path: 'book-details/:id',
+        canActivate: [authGuard],
+        loadComponent: () => import('./features/book-details/book-details').then(m => m.BookDetails)
+      },
+      {
+        path: 'payment-success',
+        canActivate: [authGuard],
+        loadComponent: () => import('./features/payment.success/payment.success.component').then(m => m.PaymentSuccessComponent)
+      },
+      {
+        path: 'profile',
+        canActivate: [authGuard],
+        loadComponent: () => import('./features/profile/profile').then(m => m.Profile)
+      },
+      {
         path: '**',
         redirectTo: '/auth/login'
       }
