@@ -128,7 +128,7 @@
           </button>
         } @else {
           <div class="flex items-center justify-center p-1.5 md:p-2 hover:bg-gray-100 rounded-lg transition-colors" (click)="goProfile()">
-            <img src="{{authService.currentUser()?.photoURL}}" alt="">
+            <img src="{{authService.currentUser()?.photoURL}}" alt="" class="w-6 h-6 md:w-8 md:h-8 rounded-full object-cover">
           </div>
         }
         
