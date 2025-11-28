@@ -3,6 +3,8 @@ import { env } from '../../config/env.js';
 import { prisma } from '../../config/db.js';
 import { findCatalogBookById } from '../catalog-books/catalog-books.service.js';
 import type { CreateCheckoutSessionInput, CreateCheckoutSessionCartInput } from './payments.schema.js';
+import { mailService } from '../../services/mail.service.js';
+import { generateOrderConfirmationEmail } from '../../utils/email-templates.js';
 
 const stripe = new Stripe(env.STRIPE_SECRET_KEY, {
   apiVersion: '2024-11-20.acacia',
@@ -241,6 +243,39 @@ export async function handleStripeWebhook(event: Stripe.Event) {
         },
       });
 
+      // Enviar correo de confirmación
+      try {
+        const user = await prisma.user.findUnique({
+          where: { id: userId },
+          select: { email: true },
+        });
+
+        if (user?.email) {
+          const emailItems = [{
+            title: book.title,
+            quantity: quantity,
+            price: priceNumber * quantity,
+          }];
+
+          const emailHtml = generateOrderConfirmationEmail(
+            order.id.toString(),
+            totalAmount,
+            emailItems
+          );
+
+          await mailService.sendEmail({
+            to: user.email,
+            subject: `Confirmación de pedido #${order.id} - BookMatch`,
+            html: emailHtml,
+          });
+
+          console.log(`✅ Correo de confirmación enviado a ${user.email} para pedido #${order.id}`);
+        }
+      } catch (emailError) {
+        console.error('❌ Error enviando correo de confirmación:', emailError);
+        // No lanzar error para no afectar el proceso de pago
+      }
+
       return order;
     } else if (type === 'cart') {
       // Compra desde carrito
@@ -315,6 +350,41 @@ export async function handleStripeWebhook(event: Stripe.Event) {
           },
         },
       });
+
+      // Enviar correo de confirmación
+      try {
+        const user = await prisma.user.findUnique({
+          where: { id: userId },
+          select: { email: true },
+        });
+
+        if (user?.email) {
+          const emailItems = order.items.map(item => ({
+            title: item.catalogBook.title,
+            quantity: item.quantity,
+            price: (typeof item.price === 'object' && 'toNumber' in item.price
+              ? item.price.toNumber()
+              : Number(item.price)) * item.quantity,
+          }));
+
+          const emailHtml = generateOrderConfirmationEmail(
+            order.id.toString(),
+            totalAmount,
+            emailItems
+          );
+
+          await mailService.sendEmail({
+            to: user.email,
+            subject: `Confirmación de pedido #${order.id} - BookMatch`,
+            html: emailHtml,
+          });
+
+          console.log(`✅ Correo de confirmación enviado a ${user.email} para pedido #${order.id}`);
+        }
+      } catch (emailError) {
+        console.error('❌ Error enviando correo de confirmación:', emailError);
+        // No lanzar error para no afectar el proceso de pago
+      }
 
       return order;
     }
@@ -426,10 +496,42 @@ export async function createOrderFromSession(sessionId: string, userId: number) 
       },
     });
 
+      // Enviar correo de confirmación
+      try {
+        const user = await prisma.user.findUnique({
+          where: { id: userId },
+          select: { email: true },
+        });
+
+        if (user?.email) {
+          const emailItems = [{
+            title: book.title,
+            quantity: quantity,
+            price: priceNumber * quantity,
+          }];
+
+          const emailHtml = generateOrderConfirmationEmail(
+            order.id.toString(),
+            totalAmount,
+            emailItems
+          );
+
+          await mailService.sendEmail({
+            to: user.email,
+            subject: `Confirmación de pedido #${order.id} - BookMatch`,
+            html: emailHtml,
+          });
+
+          console.log(`✅ Correo de confirmación enviado a ${user.email} para pedido #${order.id} (fallback)`);
+        }
+      } catch (emailError) {
+        console.error('❌ Error enviando correo de confirmación:', emailError);
+        // No lanzar error para no afectar el proceso de pago
+      }
+
     console.log(`Order creada desde sesión ${sessionId} para usuario ${userId}`);
     return order;
   } else {
     throw new Error('Tipo de compra no soportado en fallback');
   }
 }
-

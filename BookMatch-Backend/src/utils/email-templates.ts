@@ -1,3 +1,5 @@
+// src/utils/email-templates.ts
+
 const formatCurrency = (amount: number): string => {
     return new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(amount);
 };
@@ -5,15 +7,15 @@ const formatCurrency = (amount: number): string => {
 const styles = {
     container: 'max-width: 600px; margin: 0 auto; font-family: sans-serif; color: #333;',
     header: 'text-align: center; padding: 20px 0;',
-    logoHeader: 'text-allign:center; padding: 20px 0;',
+    logoHeader: 'text-align: center; padding: 20px 0;',
     card: 'background: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border: 1px solid #eee;',
     body: 'padding: 30px;',
     footer: 'text-align: center; font-size: 12px; color: #999; margin-top: 20px;',
-    button: 'display: inline-block; background-color: #4A90E2; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold; margin-top: 20px;',
+    button: 'display: inline-block; background-color: #D99D5B; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold; margin-top: 20px;',
     h1: 'color: #333; margin-top: 0; font-size: 22px;',
     text: 'line-height: 1.6; color: #555;',
     itemRow: 'border-bottom: 1px solid #eee; padding: 10px 0;',
-    totalRow: 'font-weight: bold; font-size: 18px; color: #4A90E2; text-align: right; padding-top: 15px;'
+    totalRow: 'font-weight: bold; font-size: 18px; color: #D99D5B; text-align: right; padding-top: 15px;'
 };
 
 const baseEmailLayout = (contentHtml: string): string => `
@@ -24,7 +26,7 @@ const baseEmailLayout = (contentHtml: string): string => `
         
         <div style="${styles.header}">
             <a href="https://bookmatch-app.com" target="_blank">
-            <img src="https://collection.cloudinary.com/dicxwevnm/c7b9750b73bf01decec9ab24314607d4" 
+            <img src="https://res.cloudinary.com/dicxwevnm/image/upload/v1764331988/Logo_BookMatch_l0ajzd.png" 
                 alt="BookMatch Logo" 
                 style="width: 150px; height: auto; border: 0;">
             </a>
@@ -44,9 +46,9 @@ const baseEmailLayout = (contentHtml: string): string => `
         </div>
     </body>
     </html>
-    `;
+`;
 
-    export const generateWelcomeEmail = (name: string): string => {
+export const generateWelcomeEmail = (name: string): string => {
     const content = `
         <h1 style="${styles.h1}">¡Bienvenido, ${name}! 👋</h1>
         <p style="${styles.text}">Gracias por unirte a la comunidad de BookMatch. Estamos emocionados de tenerte con nosotros en esta aventura literaria.</p>
@@ -56,9 +58,9 @@ const baseEmailLayout = (contentHtml: string): string => `
         </div>
     `;
     return baseEmailLayout(content);
-    };
+};
 
-    export const generatePasswordResetEmail = (resetLink: string): string => {
+export const generatePasswordResetEmail = (resetLink: string): string => {
     const content = `
         <h1 style="${styles.h1}">Restablecer Contraseña 🔒</h1>
         <p style="${styles.text}">Hemos recibido una solicitud para cambiar la contraseña de tu cuenta en BookMatch.</p>
@@ -73,30 +75,39 @@ const baseEmailLayout = (contentHtml: string): string => `
 
 export const generateOrderConfirmationEmail = (
     orderId: string, 
-    total: number, // Cambiado a number para formatear bien
-    items: Array<{ title: string; quantity: number; price: number }>
-    ): string => {
+    total: number, 
+    items: Array<{ title: string; quantity: number; price: number; coverUrl?: string | null }>
+): string => {
     
     const itemsHtml = items.map(item => `
-        <div style="${styles.itemRow}">
-        <div style="float: left;">${item.title} <span style="color: #999; font-size: 0.9em;">(x${item.quantity})</span></div>
-        <div style="float: right;">${formatCurrency(item.price)}</div>
-        <div style="clear: both;"></div>
-        </div>
+        <tr>
+            <td style="padding: 10px 0; border-bottom: 1px solid #eee; width: 60px;">
+                <img src="${item.coverUrl || 'https://via.placeholder.com/50x75?text=Sin+Foto'}" 
+                        alt="${item.title}" 
+                        style="width: 50px; height: auto; border-radius: 4px; display: block;">
+            </td>
+            <td style="padding: 10px; border-bottom: 1px solid #eee; vertical-align: middle;">
+                <div style="font-weight: bold; color: #333; font-size: 14px;">${item.title}</div>
+                <div style="color: #999; font-size: 12px;">Cantidad: ${item.quantity}</div>
+            </td>
+            <td style="padding: 10px 0; border-bottom: 1px solid #eee; text-align: right; vertical-align: middle; color: #333;">
+                ${formatCurrency(item.price)}
+            </td>
+        </tr>
     `).join('');
 
     const content = `
         <h1 style="${styles.h1}">Pedido Confirmado ✅</h1>
         <p style="${styles.text}">¡Gracias por tu compra! Tu pedido <strong>#${orderId}</strong> ha sido recibido y lo estamos preparando con cuidado.</p>
         
-        <h3 style="border-bottom: 2px solid #eee; padding-bottom: 10px; margin-top: 30px;">Resumen del pedido</h3>
+        <h3 style="border-bottom: 2px solid #eee; padding-bottom: 10px; margin-top: 30px; color: #D99D5B;">Resumen del pedido</h3>
         
-        <div style="margin-bottom: 20px;">
-        ${itemsHtml}
-        </div>
+        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 20px;">
+            ${itemsHtml}
+        </table>
 
         <div style="${styles.totalRow}">
-        Total: ${formatCurrency(total)}
+            Total: ${formatCurrency(total)}
         </div>
 
         <p style="${styles.text}; margin-top: 30px;">Te avisaremos en cuanto tus libros salgan del almacén.</p>

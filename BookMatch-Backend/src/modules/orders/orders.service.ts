@@ -49,6 +49,7 @@ export const createOrder = async (data: CreateOrderDto) => {
         title: item.catalogBook.title,
         quantity: item.quantity,
         price: Number(item.price),
+        coverUrl: item.catalogBook.coverUrl,
         }));
 
         const htmlContent = generateOrderConfirmationEmail(
