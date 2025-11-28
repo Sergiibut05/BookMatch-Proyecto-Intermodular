@@ -1,8 +1,9 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { CatalogService } from '@core/services/catalog.service';
 import { PaymentService } from '@core/services/payment.service';
+import { CartService } from '@core/services/cart.service'; // Importamos el carrito
 import { Header } from '@shared/components/header/header';
 import { CatalogBook, Review } from '@shared/models';
 
@@ -12,17 +13,22 @@ import { CatalogBook, Review } from '@shared/models';
   templateUrl: './book-details.html',
   styleUrl: './book-details.scss',
 })
-export class BookDetails implements OnInit{
+export class BookDetails implements OnInit {
   private route = inject(ActivatedRoute);
+  private router = inject(Router);
   private catalogService = inject(CatalogService);
   private paymentService = inject(PaymentService);
+  private cartService = inject(CartService); // Inyectamos el carrito
+
   bookId = signal<string>('');
   book = signal<CatalogBook | null>(null);
   selectedImageUrl = signal<string | null>(null);
   reviews = signal<Review[] | null>(null);
   isProcessingPayment = signal<boolean>(false);
   
-  
+  // Nueva señal para la animación del botón
+  isAddedToCart = signal<boolean>(false);
+
   ngOnInit(): void {
     this.route.paramMap.subscribe((params) => {
       const categoriaParam = params.get('id');
@@ -36,10 +42,8 @@ export class BookDetails implements OnInit{
   loadBook(): void {
     this.catalogService.getBookById(Number(this.bookId())).subscribe((book) => {
       this.book.set(book);
-      // Establecer la imagen principal seleccionada
       if (book) {
         this.selectedImageUrl.set(book.coverUrl || (book.imageUrls && book.imageUrls.length > 0 ? book.imageUrls[0] : null));
-        // Cargar reviews si vienen del backend
         if (book.reviews && book.reviews.length > 0) {
           this.reviews.set(book.reviews);
         } else {
@@ -59,27 +63,39 @@ export class BookDetails implements OnInit{
     return this.selectedImageUrl() || currentBook.coverUrl || (currentBook.imageUrls && currentBook.imageUrls.length > 0 ? currentBook.imageUrls[0] : null);
   }
 
+  // --- LÓGICA PROFESIONAL SIN POPUP ---
   onAddToCart(): void {
-    // TODO: Implementar lógica de añadir a la cesta
-    console.log('Añadir a la cesta:', this.book()?.id);
+    const currentBook = this.book();
+    if (currentBook) {
+      // 1. Añadir al servicio
+      this.cartService.addToCart(currentBook);
+      
+      // 2. Activar estado visual (botón verde)
+      this.isAddedToCart.set(true);
+
+      // 3. Volver al estado normal tras 2 segundos
+      setTimeout(() => {
+        this.isAddedToCart.set(false);
+      }, 2000);
+    }
   }
 
   onBuyNow(): void {
-    // TODO: Implementar lógica de compra inmediata
-    console.log('Comprar ahora:', this.book()?.id);
+    const currentBook = this.book();
+    if (currentBook) {
+      this.cartService.addToCart(currentBook);
+      this.router.navigate(['/cart']);
+    }
   }
 
   onBuyWithStripe(): void {
     const book = this.book();
-    if (!book || book.stock === 0) {
-      return;
-    }
+    if (!book || book.stock === 0) return;
 
     this.isProcessingPayment.set(true);
 
     this.paymentService.createCheckoutSession(book.id, 1).subscribe({
       next: (response) => {
-        // Redirigir a Stripe Checkout usando la URL proporcionada
         try {
           this.paymentService.redirectToCheckout(response.url);
         } catch (error) {

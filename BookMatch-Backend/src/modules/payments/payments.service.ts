@@ -18,31 +18,25 @@ export async function createCheckoutSession(
   input: CreateCheckoutSessionInput,
   userId: number
 ) {
-  // Buscar el libro en la BD
   const book = await findCatalogBookById(input.bookId);
   if (!book) {
     throw new Error('Libro no encontrado');
   }
 
-  // Verificar stock
   if (book.stock < input.quantity) {
     throw new Error(`Stock insuficiente. Disponible: ${book.stock}, Solicitado: ${input.quantity}`);
   }
 
-  // Obtener imagen del libro (coverUrl o primera imagen)
   const bookImage = book.coverUrl || (book.imageUrls && book.imageUrls.length > 0 ? book.imageUrls[0] : null);
 
-  // Convertir precio de Decimal a número
   const priceNumber = typeof book.price === 'object' && 'toNumber' in book.price
     ? book.price.toNumber()
     : Number(book.price);
 
-  // Validar que el precio sea válido
   if (isNaN(priceNumber) || priceNumber <= 0) {
     throw new Error('Precio del libro inválido');
   }
 
-  // Crear sesión de checkout en Stripe
   const session = await stripe.checkout.sessions.create({
     payment_method_types: ['card', 'link', 'paypal'],
     line_items: [
@@ -54,7 +48,7 @@ export async function createCheckoutSession(
             description: `${book.author}${book.description ? ` - ${book.description.substring(0, 100)}` : ''}`,
             images: bookImage ? [bookImage] : undefined,
           },
-          unit_amount: Math.round(priceNumber * 100), // Convertir a centavos
+          unit_amount: Math.round(priceNumber * 100),
         },
         quantity: input.quantity,
       },
@@ -69,8 +63,7 @@ export async function createCheckoutSession(
       userId: userId.toString(),
       bookId: book.id.toString(),
       quantity: input.quantity.toString(),
-      // Preparado para carrito: si en el futuro se usa, añadir items como JSON
-      type: 'single', // 'single' para compra directa, 'cart' para carrito
+      type: 'single',
     },
   });
 
@@ -82,7 +75,6 @@ export async function createCheckoutSession(
 
 /**
  * Crea una sesión de checkout de Stripe para múltiples libros (carrito)
- * Preparado para cuando se implemente el carrito
  */
 export async function createCheckoutSessionCart(
   input: CreateCheckoutSessionCartInput,
@@ -91,14 +83,12 @@ export async function createCheckoutSessionCart(
   const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [];
   const bookIds: number[] = [];
 
-  // Procesar cada item del carrito
   for (const item of input.items) {
     const book = await findCatalogBookById(item.bookId);
     if (!book) {
       throw new Error(`Libro con ID ${item.bookId} no encontrado`);
     }
 
-    // Verificar stock
     if (book.stock < item.quantity) {
       throw new Error(
         `Stock insuficiente para "${book.title}". Disponible: ${book.stock}, Solicitado: ${item.quantity}`
@@ -107,7 +97,6 @@ export async function createCheckoutSessionCart(
 
     const bookImage = book.coverUrl || (book.imageUrls && book.imageUrls.length > 0 ? book.imageUrls[0] : null);
 
-    // Convertir precio de Decimal a número
     const priceNumber = typeof book.price === 'object' && 'toNumber' in book.price
       ? book.price.toNumber()
       : Number(book.price);
@@ -132,7 +121,6 @@ export async function createCheckoutSessionCart(
     bookIds.push(book.id);
   }
 
-  // Crear sesión de checkout
   const session = await stripe.checkout.sessions.create({
     payment_method_types: ['card', 'link', 'paypal'],
     line_items: lineItems,
@@ -163,7 +151,6 @@ export async function handleStripeWebhook(event: Stripe.Event) {
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object as Stripe.Checkout.Session;
 
-    // Verificar que el pago fue exitoso
     if (session.payment_status !== 'paid') {
       console.warn(`Pago no completado para sesión ${session.id}`);
       return;
@@ -177,38 +164,29 @@ export async function handleStripeWebhook(event: Stripe.Event) {
     const userId = parseInt(metadata.userId, 10);
     const type = metadata.type || 'single';
 
+    // Obtener dirección común
+    let shippingAddress: string | null = null;
+    if (session.shipping_details?.address) {
+        const addr = session.shipping_details.address;
+        shippingAddress = [
+          addr.line1, addr.line2, addr.city, addr.postal_code, addr.state, addr.country
+        ].filter(Boolean).join(', ');
+    }
+
     if (type === 'single') {
-      // Compra directa de un libro
       const bookId = parseInt(metadata.bookId, 10);
       const quantity = parseInt(metadata.quantity, 10);
 
-      // Buscar el libro para obtener el precio actual
       const book = await findCatalogBookById(bookId);
       if (!book) {
         throw new Error(`Libro con ID ${bookId} no encontrado`);
       }
 
-      // Calcular total (convertir Decimal a número)
       const priceNumber = typeof book.price === 'object' && 'toNumber' in book.price
         ? book.price.toNumber()
         : Number(book.price);
       const totalAmount = priceNumber * quantity;
 
-      // Obtener dirección de envío de la sesión
-      let shippingAddress: string | null = null;
-      if (session.shipping_details?.address) {
-        const addr = session.shipping_details.address;
-        shippingAddress = [
-          addr.line1,
-          addr.line2,
-          addr.city,
-          addr.postal_code,
-          addr.state,
-          addr.country
-        ].filter(Boolean).join(', ');
-      }
-
-      // Crear la orden en la BD
       const order = await prisma.order.create({
         data: {
           userId,
@@ -233,7 +211,6 @@ export async function handleStripeWebhook(event: Stripe.Event) {
         },
       });
 
-      // Actualizar stock del libro
       await prisma.catalogBook.update({
         where: { id: bookId },
         data: {
@@ -243,7 +220,7 @@ export async function handleStripeWebhook(event: Stripe.Event) {
         },
       });
 
-      // Enviar correo de confirmación
+      // EMAIL SINGLE
       try {
         const user = await prisma.user.findUnique({
           where: { id: userId },
@@ -255,6 +232,7 @@ export async function handleStripeWebhook(event: Stripe.Event) {
             title: book.title,
             quantity: quantity,
             price: priceNumber * quantity,
+            coverUrl: book.coverUrl, // <--- AÑADIDO: Foto
           }];
 
           const emailHtml = generateOrderConfirmationEmail(
@@ -269,20 +247,18 @@ export async function handleStripeWebhook(event: Stripe.Event) {
             html: emailHtml,
           });
 
-          console.log(`✅ Correo de confirmación enviado a ${user.email} para pedido #${order.id}`);
+          console.log(`✅ Correo enviado a ${user.email} para pedido #${order.id}`);
         }
       } catch (emailError) {
-        console.error('❌ Error enviando correo de confirmación:', emailError);
-        // No lanzar error para no afectar el proceso de pago
+        console.error('❌ Error enviando correo:', emailError);
       }
 
       return order;
+
     } else if (type === 'cart') {
-      // Compra desde carrito
       const bookIds = JSON.parse(metadata.bookIds) as number[];
       const items = JSON.parse(metadata.items) as Array<{ bookId: number; quantity: number }>;
 
-      // Calcular total y crear items de la orden
       let totalAmount = 0;
       const orderItems = [];
 
@@ -292,7 +268,6 @@ export async function handleStripeWebhook(event: Stripe.Event) {
           throw new Error(`Libro con ID ${item.bookId} no encontrado`);
         }
 
-        // Convertir precio de Decimal a número
         const priceNumber = typeof book.price === 'object' && 'toNumber' in book.price
           ? book.price.toNumber()
           : Number(book.price);
@@ -305,7 +280,6 @@ export async function handleStripeWebhook(event: Stripe.Event) {
           price: book.price,
         });
 
-        // Actualizar stock
         await prisma.catalogBook.update({
           where: { id: item.bookId },
           data: {
@@ -316,21 +290,6 @@ export async function handleStripeWebhook(event: Stripe.Event) {
         });
       }
 
-      // Obtener dirección de envío de la sesión
-      let shippingAddress: string | null = null;
-      if (session.shipping_details?.address) {
-        const addr = session.shipping_details.address;
-        shippingAddress = [
-          addr.line1,
-          addr.line2,
-          addr.city,
-          addr.postal_code,
-          addr.state,
-          addr.country
-        ].filter(Boolean).join(', ');
-      }
-
-      // Crear la orden
       const order = await prisma.order.create({
         data: {
           userId,
@@ -345,13 +304,13 @@ export async function handleStripeWebhook(event: Stripe.Event) {
         include: {
           items: {
             include: {
-              catalogBook: true,
+              catalogBook: true, // <--- Importante para la foto
             },
           },
         },
       });
 
-      // Enviar correo de confirmación
+      // EMAIL CART
       try {
         const user = await prisma.user.findUnique({
           where: { id: userId },
@@ -365,6 +324,7 @@ export async function handleStripeWebhook(event: Stripe.Event) {
             price: (typeof item.price === 'object' && 'toNumber' in item.price
               ? item.price.toNumber()
               : Number(item.price)) * item.quantity,
+            coverUrl: item.catalogBook.coverUrl // <--- AÑADIDO: Foto
           }));
 
           const emailHtml = generateOrderConfirmationEmail(
@@ -379,11 +339,10 @@ export async function handleStripeWebhook(event: Stripe.Event) {
             html: emailHtml,
           });
 
-          console.log(`✅ Correo de confirmación enviado a ${user.email} para pedido #${order.id}`);
+          console.log(`✅ Correo enviado a ${user.email} para pedido #${order.id}`);
         }
       } catch (emailError) {
-        console.error('❌ Error enviando correo de confirmación:', emailError);
-        // No lanzar error para no afectar el proceso de pago
+        console.error('❌ Error enviando correo:', emailError);
       }
 
       return order;
@@ -403,11 +362,9 @@ export async function getCheckoutSession(sessionId: string) {
  * Crea la Order desde una sesión de checkout (fallback si el webhook no se ejecutó)
  */
 export async function createOrderFromSession(sessionId: string, userId: number) {
-  // Verificar si la Order ya existe
+  // 1. Verificar si ya existe
   const existingOrder = await prisma.order.findFirst({
-    where: {
-      paymentIntentId: sessionId,
-    },
+    where: { paymentIntentId: sessionId },
   });
 
   if (existingOrder) {
@@ -415,10 +372,9 @@ export async function createOrderFromSession(sessionId: string, userId: number) 
     return existingOrder;
   }
 
-  // Obtener la sesión de Stripe
+  // 2. Recuperar sesión de Stripe
   const session = await stripe.checkout.sessions.retrieve(sessionId);
 
-  // Verificar que el pago fue exitoso
   if (session.payment_status !== 'paid') {
     throw new Error(`Pago no completado. Status: ${session.payment_status}`);
   }
@@ -430,38 +386,95 @@ export async function createOrderFromSession(sessionId: string, userId: number) 
 
   const type = metadata.type || 'single';
 
+  // 3. Obtener dirección
+  let shippingAddress: string | null = null;
+  if (session.shipping_details?.address) {
+    const addr = session.shipping_details.address;
+    shippingAddress = [
+      addr.line1, addr.line2, addr.city, addr.postal_code, addr.state, addr.country
+    ].filter(Boolean).join(', ');
+  }
+
+  // --- CASO A: COMPRA INDIVIDUAL ---
   if (type === 'single') {
-    // Compra directa de un libro
     const bookId = parseInt(metadata.bookId, 10);
     const quantity = parseInt(metadata.quantity, 10);
 
-    // Buscar el libro para obtener el precio actual
     const book = await findCatalogBookById(bookId);
-    if (!book) {
-      throw new Error(`Libro con ID ${bookId} no encontrado`);
-    }
+    if (!book) throw new Error(`Libro con ID ${bookId} no encontrado`);
 
-    // Calcular total (convertir Decimal a número)
     const priceNumber = typeof book.price === 'object' && 'toNumber' in book.price
       ? book.price.toNumber()
       : Number(book.price);
-    const totalAmount = priceNumber * quantity;
 
-    // Obtener dirección de envío de la sesión
-    let shippingAddress: string | null = null;
-    if (session.shipping_details?.address) {
-      const addr = session.shipping_details.address;
-      shippingAddress = [
-        addr.line1,
-        addr.line2,
-        addr.city,
-        addr.postal_code,
-        addr.state,
-        addr.country
-      ].filter(Boolean).join(', ');
+    const order = await prisma.order.create({
+      data: {
+        userId,
+        totalAmount: priceNumber * quantity,
+        status: 'PAID',
+        paymentIntentId: session.payment_intent as string || session.id,
+        shippingAddress,
+        items: {
+          create: { catalogBookId: bookId, quantity, price: book.price },
+        },
+      },
+      include: { items: { include: { catalogBook: true } } },
+    });
+
+    await prisma.catalogBook.update({
+      where: { id: bookId },
+      data: { stock: { decrement: quantity } },
+    });
+
+    // Email Single Fallback
+    try {
+      const user = await prisma.user.findUnique({ where: { id: userId }, select: { email: true } });
+      if (user?.email) {
+        const emailItems = [{
+          title: book.title,
+          quantity: quantity,
+          price: priceNumber * quantity,
+          coverUrl: book.coverUrl,
+        }];
+        const emailHtml = generateOrderConfirmationEmail(order.id.toString(), Number(order.totalAmount), emailItems);
+        await mailService.sendEmail({ to: user.email, subject: `Pedido #${order.id} confirmado`, html: emailHtml });
+      }
+    } catch (e) { console.error('Error email fallback single:', e); }
+
+    return order;
+
+  // --- CASO B: CARRITO (SOLUCIÓN DEL ERROR "NO SOPORTADO") ---
+  } else if (type === 'cart') {
+    const items = JSON.parse(metadata.items) as Array<{ bookId: number; quantity: number }>;
+    
+    let totalAmount = 0;
+    const orderItems = [];
+
+    // Calcular totales y preparar items
+    for (const item of items) {
+      const book = await findCatalogBookById(item.bookId);
+      if (!book) continue;
+
+      const price = typeof book.price === 'object' && 'toNumber' in book.price 
+        ? book.price.toNumber() 
+        : Number(book.price);
+      
+      totalAmount += price * item.quantity;
+
+      orderItems.push({
+        catalogBookId: item.bookId,
+        quantity: item.quantity,
+        price: book.price,
+      });
+
+      // Actualizar stock
+      await prisma.catalogBook.update({
+        where: { id: item.bookId },
+        data: { stock: { decrement: item.quantity } },
+      });
     }
 
-    // Crear la orden en la BD
+    // Crear orden completa
     const order = await prisma.order.create({
       data: {
         userId,
@@ -469,69 +482,42 @@ export async function createOrderFromSession(sessionId: string, userId: number) 
         status: 'PAID',
         paymentIntentId: session.payment_intent as string || session.id,
         shippingAddress,
-        items: {
-          create: {
-            catalogBookId: bookId,
-            quantity,
-            price: book.price,
-          },
-        },
+        items: { create: orderItems },
       },
-      include: {
-        items: {
-          include: {
-            catalogBook: true,
-          },
-        },
-      },
+      include: { items: { include: { catalogBook: true } } },
     });
 
-    // Actualizar stock del libro
-    await prisma.catalogBook.update({
-      where: { id: bookId },
-      data: {
-        stock: {
-          decrement: quantity,
-        },
-      },
-    });
+    // Email Carrito Fallback
+    try {
+      const user = await prisma.user.findUnique({ where: { id: userId }, select: { email: true } });
+      if (user?.email) {
+        const emailItems = order.items.map(item => ({
+          title: item.catalogBook.title,
+          quantity: item.quantity,
+          price: (typeof item.price === 'object' && 'toNumber' in item.price 
+            ? item.price.toNumber() 
+            : Number(item.price)) * item.quantity,
+          coverUrl: item.catalogBook.coverUrl
+        }));
 
-      // Enviar correo de confirmación
-      try {
-        const user = await prisma.user.findUnique({
-          where: { id: userId },
-          select: { email: true },
+        const emailHtml = generateOrderConfirmationEmail(
+          order.id.toString(), 
+          Number(order.totalAmount), 
+          emailItems
+        );
+        
+        await mailService.sendEmail({ 
+          to: user.email, 
+          subject: `Pedido #${order.id} confirmado`, 
+          html: emailHtml 
         });
-
-        if (user?.email) {
-          const emailItems = [{
-            title: book.title,
-            quantity: quantity,
-            price: priceNumber * quantity,
-          }];
-
-          const emailHtml = generateOrderConfirmationEmail(
-            order.id.toString(),
-            totalAmount,
-            emailItems
-          );
-
-          await mailService.sendEmail({
-            to: user.email,
-            subject: `Confirmación de pedido #${order.id} - BookMatch`,
-            html: emailHtml,
-          });
-
-          console.log(`✅ Correo de confirmación enviado a ${user.email} para pedido #${order.id} (fallback)`);
-        }
-      } catch (emailError) {
-        console.error('❌ Error enviando correo de confirmación:', emailError);
-        // No lanzar error para no afectar el proceso de pago
+        
+        console.log(`✅ Correo fallback enviado a ${user.email}`);
       }
+    } catch (e) { console.error('Error email fallback cart:', e); }
 
-    console.log(`Order creada desde sesión ${sessionId} para usuario ${userId}`);
     return order;
   } else {
-    throw new Error('Tipo de compra no soportado en fallback');
+    throw new Error('Tipo de compra desconocido');
   }
 }

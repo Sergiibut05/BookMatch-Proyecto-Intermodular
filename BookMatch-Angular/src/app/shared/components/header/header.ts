@@ -1,19 +1,20 @@
 import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '@core/services/auth.service';
+import { CartService } from '@core/services/cart.service';
 
 @Component({
   selector: 'app-header',
-  imports: [CommonModule],
+  imports: [CommonModule, RouterLink],
   templateUrl: './header.html',
   styleUrl: './header.scss',
 })
 export class Header {
   authService = inject(AuthService);
+  cartService = inject(CartService);
   private router = inject(Router);
 
-  // Signal para controlar si el menú está abierto
   isMenuOpen = signal(false);
 
   toggleMenu(): void {
@@ -31,5 +32,4 @@ export class Header {
       }
     });
   }
-
 }
