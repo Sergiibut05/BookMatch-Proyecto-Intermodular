@@ -32,4 +32,12 @@ export class Header {
     });
   }
 
+  goProfile(){
+    this.router.navigate(['/profile'])
+  }
+
+  goHome(){
+    this.router.navigate(['/home'])
+  }
+
 }

@@ -59,9 +59,9 @@
         </button>
         
         <!-- Logo y texto BookMatch (oculto en móvil) -->
-        <div class="hidden md:flex items-center">
+        <div class="hidden md:flex items-center cursor-pointer" (click)="goHome()">
           <img 
-            src="favicon.png" 
+            src="assets/bookMatch-logo-transparent.png" 
             alt="BookMatch Logo" 
             class="h-10 w-10 lg:h-12 lg:w-12 mr-2" 
           />
@@ -96,23 +96,30 @@
         
         <!-- Texto Bienvenido (solo desktop) -->
         <span 
-          class="hidden lg:block text-sm whitespace-nowrap" 
+          class="hidden lg:block text-base whitespace-nowrap" 
           style="color: #45332D;"
         >
           Bienvenido, <span class="font-semibold">{{ authService.currentUser()?.displayName }}</span>
         </span>
+
+        @if (authService.currentUser()?.photoURL==null) {
+          <!-- Icono de perfil -->
+          <button class="flex items-center justify-center p-1.5 md:p-2 hover:bg-gray-100 rounded-lg transition-colors" (click)="goProfile()">
+            <svg class="w-6 h-6 md:w-8 md:h-8" style="color: #45332D;" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a9 9 0 1 0-11.963 0m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+            </svg>
+          </button>
+        } @else {
+          <div class="flex items-center justify-center p-1.5 md:p-2 hover:bg-gray-100 rounded-lg transition-colors" (click)="goProfile()">
+            <img src="{{authService.currentUser()?.photoURL}}" alt="">
+          </div>
+        }
+        
         
         <!-- Icono de carrito -->
         <button class="flex items-center justify-center p-1.5 md:p-2 hover:bg-gray-100 rounded-lg transition-colors">
-          <svg class="w-5 h-5 md:w-6 md:h-6" style="color: #45332D;" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <svg class="w-5 h-5 md:w-7 md:h-7" style="color: #45332D;" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
-          </svg>
-        </button>
-        
-        <!-- Icono de perfil -->
-        <button class="flex items-center justify-center p-1.5 md:p-2 hover:bg-gray-100 rounded-lg transition-colors">
-          <svg class="w-5 h-5 md:w-6 md:h-6" style="color: #45332D;" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
           </svg>
         </button>
         

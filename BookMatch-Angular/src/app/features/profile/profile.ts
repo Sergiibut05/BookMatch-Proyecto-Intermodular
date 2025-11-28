@@ -4,6 +4,7 @@ import { StorageService } from '@core/services/storage';
 import { UsersService, UserProfile } from '@core/services/users.service';
 import { AuthService } from '@core/services/auth.service';
 import { Header } from '@shared/components/header/header';
+import { UpdateProfileData } from '@core/services/users.service';
 
 @Component({
   selector: 'app-profile',
