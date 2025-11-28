@@ -22,17 +22,13 @@ export async function loginCtrl(req: Request, res: Response) {
   }
 }
 
-// 2. AÑADE ESTA NUEVA FUNCIÓN AL FINAL
 export async function forgotPasswordCtrl(req: Request, res: Response) {
   try {
     const { email } = req.body;
-    // Llamamos al servicio que envía el correo bonito
     await sendPasswordReset(email);
     
-    // Respondemos OK siempre (por seguridad, para no revelar si el email existe o no)
     res.status(200).json({ message: 'Si el correo existe, recibirás instrucciones.' });
   } catch (e: any) {
-    // Si falla el envío del correo (error interno)
     res.status(500).json({ message: 'Error al procesar la solicitud' });
   }
 }

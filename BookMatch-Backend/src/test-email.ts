@@ -8,7 +8,6 @@ import {
 async function main() {
   console.log('🚀 Iniciando TEST INTEGRAL de Plantillas...');
   
-  // 1. Verificamos conexión primero
   try {
     await mailService.verifyConnection();
     console.log('✅ SMTP Conectado.');
@@ -17,11 +16,8 @@ async function main() {
     return;
   }
 
-  const miCorreo = 'bookmatch3@gmail.com'; // <--- ¡PON TU EMAIL AQUÍ!
+  const miCorreo = 'bookmatch3@gmail.com';
 
-  // ---------------------------------------------------------
-  // ESCENARIO 1: Email de Bienvenida
-  // ---------------------------------------------------------
   console.log('\n📨 1. Enviando Email de Bienvenida...');
   const htmlWelcome = generateWelcomeEmail('Sergio');
   
@@ -31,10 +27,6 @@ async function main() {
     html: htmlWelcome
   });
 
-
-  // ---------------------------------------------------------
-  // ESCENARIO 2: Reset de Contraseña
-  // ---------------------------------------------------------
   console.log('📨 2. Enviando Reset de Contraseña...');
   const htmlReset = generatePasswordResetEmail('https://bookmatch-app.com/reset-password?token=123456');
   
@@ -44,13 +36,8 @@ async function main() {
     html: htmlReset
   });
 
-
-  // ---------------------------------------------------------
-  // ESCENARIO 3: Confirmación de Pedido
-  // ---------------------------------------------------------
   console.log('📨 3. Enviando Confirmación de Pedido...');
   
-  // Datos falsos de un pedido
   const itemsPedido = [
     { title: 'El Nombre del Viento', quantity: 1, price: 24.90 },
     { title: '1984 (Edición Bolsillo)', quantity: 2, price: 9.50 },

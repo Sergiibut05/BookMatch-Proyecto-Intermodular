@@ -1,7 +1,3 @@
-// src/utils/email-templates.ts
-
-// --- 1. UTILIDADES Y ESTILOS COMUNES ---
-
 const formatCurrency = (amount: number): string => {
     return new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(amount);
 };
@@ -20,9 +16,6 @@ const styles = {
     totalRow: 'font-weight: bold; font-size: 18px; color: #4A90E2; text-align: right; padding-top: 15px;'
 };
 
-/**
- * Plantilla Base: Envuelve el contenido en la estructura visual de BookMatch
- */
 const baseEmailLayout = (contentHtml: string): string => `
     <!DOCTYPE html>
     <html>
@@ -53,8 +46,6 @@ const baseEmailLayout = (contentHtml: string): string => `
     </html>
     `;
 
-    // --- 2. PLANTILLAS ESPECÍFICAS ---
-
     export const generateWelcomeEmail = (name: string): string => {
     const content = `
         <h1 style="${styles.h1}">¡Bienvenido, ${name}! 👋</h1>
@@ -80,8 +71,6 @@ const baseEmailLayout = (contentHtml: string): string => `
     return baseEmailLayout(content);
 };
 
-// He adaptado tu función simple para que use la estructura bonita
-// (Aunque recuerda que tienes la versión "Super Pro" con fotos que hicimos antes si prefieres usar esa)
 export const generateOrderConfirmationEmail = (
     orderId: string, 
     total: number, // Cambiado a number para formatear bien

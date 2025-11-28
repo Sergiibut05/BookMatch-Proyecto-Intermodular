@@ -1,8 +1,6 @@
 import { z } from 'zod';
 
-// Esquema para validar cada línea del pedido
 const orderItemSchema = z.object({
-  // Quitamos el objeto de dentro de number() para evitar conflictos de tipos
     catalogBookId: z.number()
         .int('El ID del libro debe ser un entero')
         .positive('El ID del libro debe ser positivo'),
@@ -15,7 +13,6 @@ const orderItemSchema = z.object({
         .nonnegative('El precio no puede ser negativo'),
 });
 
-// Esquema principal
 export const createOrderSchema = z.object({
     totalAmount: z.number()
         .nonnegative('El total no puede ser negativo'),
