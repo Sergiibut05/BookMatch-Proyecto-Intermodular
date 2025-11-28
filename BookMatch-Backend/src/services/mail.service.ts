@@ -51,6 +51,4 @@ export class MailService {
     }
 }
 
-// --- ESTA LÍNEA ES LA MÁS IMPORTANTE ---
-// Exportamos una instancia ya creada para usarla directamente
 export const mailService = new MailService();

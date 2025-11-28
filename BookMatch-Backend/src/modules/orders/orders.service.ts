@@ -1,8 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import { mailService } from '../../services/mail.service.js';
 import { generateOrderConfirmationEmail } from '../../utils/email-templates.js';
-
-const prisma = new PrismaClient();
+import { prisma } from '../../config/db.js';
 
 interface CreateOrderDto {
     userId: number;
@@ -49,8 +48,10 @@ export const createOrder = async (data: CreateOrderDto) => {
         title: item.catalogBook.title,
         quantity: item.quantity,
         price: Number(item.price),
-        coverUrl: item.catalogBook.coverUrl,
+        coverUrl: item.catalogBook.coverUrl
         }));
+
+        console.log("🔍 DATOS PARA EL EMAIL:", JSON.stringify(itemsForEmail, null, 2));
 
         const htmlContent = generateOrderConfirmationEmail(
         newOrder.id.toString(),

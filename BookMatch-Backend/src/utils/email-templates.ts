@@ -1,5 +1,3 @@
-// src/utils/email-templates.ts
-
 const formatCurrency = (amount: number): string => {
     return new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(amount);
 };
@@ -79,26 +77,50 @@ export const generateOrderConfirmationEmail = (
     items: Array<{ title: string; quantity: number; price: number; coverUrl?: string | null }>
 ): string => {
     
-    const itemsHtml = items.map(item => `
+    const itemsHtml = items.map(item => {
+        let imageSrc = item.coverUrl || 'https://placehold.co/50x75/png?text=Sin+Foto';
+
+        // --- SOLUCIÓN MAESTRA PARA CLOUDINARY ---
+        // Inyectamos parámetros de transformación en la URL.
+        // Esto obliga a Cloudinary a generar una imagen nueva, pequeña y en JPG puro.
+        if (imageSrc.includes('cloudinary.com') && imageSrc.includes('/upload/')) {
+            // Buscamos '/upload/' y le añadimos las instrucciones justo después:
+            // w_100: Ancho 100px (carga instantánea)
+            // f_jpg: Forzar formato JPG (Vital para Outlook/Gmail)
+            // c_pad: Ajustar sin cortar
+            // b_white: Fondo blanco si la imagen no llena el espacio
+            imageSrc = imageSrc.replace('/upload/', '/upload/w_100,f_jpg,c_pad,b_white/');
+        }
+
+        return `
         <tr>
-            <td style="padding: 10px 0; border-bottom: 1px solid #eee; width: 60px;">
-                <img src="${item.coverUrl || 'https://via.placeholder.com/50x75?text=Sin+Foto'}" 
+            <td width="60" style="padding: 10px 0; border-bottom: 1px solid #eee; vertical-align: top;">
+                <img src="${imageSrc}" 
                         alt="${item.title}" 
-                        style="width: 50px; height: auto; border-radius: 4px; display: block;">
+                        width="50" 
+                        height="75"
+                        border="0"
+                        style="display: block; width: 50px; height: 75px; object-fit: cover; border-radius: 4px;">
             </td>
             <td style="padding: 10px; border-bottom: 1px solid #eee; vertical-align: middle;">
-                <div style="font-weight: bold; color: #333; font-size: 14px;">${item.title}</div>
-                <div style="color: #999; font-size: 12px;">Cantidad: ${item.quantity}</div>
+                <p style="margin: 0; font-family: sans-serif; font-weight: bold; color: #333; font-size: 14px; line-height: 1.4;">
+                    ${item.title}
+                </p>
+                <p style="margin: 4px 0 0; font-family: sans-serif; color: #888; font-size: 12px;">
+                    Cantidad: ${item.quantity}
+                </p>
             </td>
-            <td style="padding: 10px 0; border-bottom: 1px solid #eee; text-align: right; vertical-align: middle; color: #333;">
+            <td width="80" style="padding: 10px 0; border-bottom: 1px solid #eee; text-align: right; vertical-align: middle; color: #333; font-family: sans-serif; font-weight: bold;">
                 ${formatCurrency(item.price)}
             </td>
         </tr>
-    `).join('');
+        `;
+    }).join('');
 
+    // ... (El resto del código con 'const content = ...' sigue igual)
     const content = `
         <h1 style="${styles.h1}">Pedido Confirmado ✅</h1>
-        <p style="${styles.text}">¡Gracias por tu compra! Tu pedido <strong>#${orderId}</strong> ha sido recibido y lo estamos preparando con cuidado.</p>
+        <p style="${styles.text}">¡Gracias por tu compra! Tu pedido <strong>#${orderId}</strong> ha sido recibido correctamente.</p>
         
         <h3 style="border-bottom: 2px solid #eee; padding-bottom: 10px; margin-top: 30px; color: #D99D5B;">Resumen del pedido</h3>
         
