@@ -11,7 +11,12 @@
   [class.menu-open]="isMenuOpen()"
 >
   <div class="side-menu-header">
-    <h2 class="text-xl font-bold" style="color: #45332D;">Menú</h2>
+    <img 
+            src="assets/bookMatch-logo-transparent.png" 
+            alt="BookMatch Logo" 
+            class="h-10 w-10 lg:h-12 lg:w-12 mr-2" 
+          />
+    <h2 class="text-xl font-bold" style="color: #45332D;">BookMatch</h2>
     <button 
       (click)="closeMenu()" 
       class="close-button"
@@ -24,17 +29,29 @@
   </div>
   <div class="side-menu-content">
     <!-- Aquí puedes agregar los elementos del menú -->
-    <div class="menu-item">
-      <a href="#" class="menu-link">Inicio</a>
+    <div class="menu-item w-full"> 
+      <a href="home" class="menu-link flex items-center justify-start gap-3 w-full p-2">
+      <span class="material-symbols-outlined text-xl">home</span>
+      <span class="font-medium">Inicio</span>
+      </a>
     </div>
-    <div class="menu-item">
-      <a href="#" class="menu-link">Catálogo</a>
+    <div class="menu-item w-full"> 
+      <a href="home" class="menu-link flex items-center justify-start gap-3 w-full p-2">
+      <span class="material-symbols-outlined text-xl">menu_book</span>
+      <span class="font-medium">Catálogo</span>
+      </a>
     </div>
-    <div class="menu-item">
-      <a href="#" class="menu-link">Categorías</a>
+    <div class="menu-item w-full"> 
+      <a href="home" class="menu-link flex items-center justify-start gap-3 w-full p-2">
+      <span class="material-symbols-outlined text-xl">shelves</span>
+      <span class="font-medium">Categorías</span>
+      </a>
     </div>
-    <div class="menu-item">
-      <a href="#" class="menu-link">Mi Perfil</a>
+    <div class="menu-item w-full"> 
+      <a href="profile" class="menu-link flex items-center justify-start gap-3 w-full p-2">
+      <span class="material-symbols-outlined text-xl">account_circle</span>
+      <span class="font-medium">Perfil</span>
+      </a>
     </div>
   </div>
 </div>
