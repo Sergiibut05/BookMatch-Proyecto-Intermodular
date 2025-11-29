@@ -1,4 +1,3 @@
-import { PrismaClient } from '@prisma/client';
 import { mailService } from '../../services/mail.service.js';
 import { generateOrderConfirmationEmail } from '../../utils/email-templates.js';
 import { prisma } from '../../config/db.js';
@@ -67,4 +66,23 @@ export const createOrder = async (data: CreateOrderDto) => {
     }
 
     return newOrder;
+};
+
+// --- NUEVA FUNCIÓN PARA EL HISTORIAL ---
+export const getUserOrders = async (userId: number) => {
+    return await prisma.order.findMany({
+        where: {
+        userId: userId
+        },
+        include: {
+        items: {
+            include: {
+            catalogBook: true // Incluimos el libro para mostrar título y foto
+            }
+        }
+        },
+        orderBy: {
+        createdAt: 'desc' // Los más recientes primero
+        }
+    });
 };
