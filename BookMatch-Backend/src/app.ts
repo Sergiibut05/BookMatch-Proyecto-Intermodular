@@ -11,6 +11,7 @@ import authRoutes from './modules/auth/auth.routes.js';
 import usersRoutes from './modules/users/users.routes.js';
 import catalogBooksRoutes from './modules/catalog-books/catalog-books.routes.js';
 import paymentsRoutes from './modules/payments/payments.routes.js';
+import ordersRoutes from './modules/orders/orders.routes.js';
 import { stripeWebhookCtrl } from './modules/payments/payments.controller.js';
 
 const app = express();
@@ -20,8 +21,6 @@ app.use(helmet({
 }));
 app.use(cors());
 
-// Webhook de Stripe debe estar ANTES del middleware de JSON parsing
-// porque necesita el body raw para verificar la firma
 app.post('/api/payments/webhook', express.raw({ type: 'application/json' }), stripeWebhookCtrl);
 
 app.use(express.json({ limit: '10mb' }));
@@ -44,8 +43,8 @@ if (env.NODE_ENV !== 'test') {
 app.use('/api/users', usersRoutes);
 app.use('/api/catalog-books', catalogBooksRoutes);
 app.use('/api/payments', paymentsRoutes);
+app.use('/api/orders', ordersRoutes);
 
 app.use(errorHandler);
 
 export default app;
-
