@@ -2,6 +2,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { PaymentService } from '@core/services/payment.service';
+import { CartService } from '@core/services/cart.service'; // <--- 1. IMPORTAR SERVICIO
 import { Header } from '@shared/components/header/header';
 
 @Component({
@@ -14,6 +15,7 @@ export class PaymentSuccessComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private paymentService = inject(PaymentService);
+  private cartService = inject(CartService); // <--- 2. INYECTAR SERVICIO
 
   sessionId: string | null = null;
   isLoading = true;
@@ -44,6 +46,10 @@ export class PaymentSuccessComponent implements OnInit {
       next: (response) => {
         this.paymentStatus = response.paymentStatus;
         this.isLoading = false;
+        
+        // <--- 3. LIMPIAR EL CARRITO AQUÍ
+        // Si el backend confirma que el pago está OK, borramos el carrito local
+        this.cartService.clearCart(); 
       },
       error: (err) => {
         console.error('Error verificando pago:', err);
@@ -58,7 +64,7 @@ export class PaymentSuccessComponent implements OnInit {
   }
 
   goToOrders(): void {
-    // TODO: Navegar a página de pedidos cuando se implemente
-    this.router.navigate(['/home']);
+    // Te recomiendo redirigir a 'profile' si ya tienes esa página
+    this.router.navigate(['/profile']); 
   }
 }
