@@ -81,42 +81,20 @@
 
           <!-- Profile info section -->
           <div class="border-t pt-6" style="border-color: #E9E1D1;">
-            <h2 class="text-xl font-semibold mb-4" style="color: #45332D;">Información del perfil</h2>
-            
-            <div class="space-y-4">
-              <div>
-                <p class="text-sm font-medium mb-1" style="color: #45332D;">Nombre completo</p>
-                <p class="text-base" style="color: #4E6A6A;">
-                  {{ profile()!.fullName || 'No especificado' }}
-                </p>
-              </div>
-
-              <div>
-                <p class="text-sm font-medium mb-1" style="color: #45332D;">Email</p>
-                <p class="text-base" style="color: #4E6A6A;">
-                  {{ profile()!.email }}
-                </p>
-              </div>
-
-              @if (profile()!.phone) {
-                <div>
-                  <p class="text-sm font-medium mb-1" style="color: #45332D;">Teléfono</p>
-                  <p class="text-base" style="color: #4E6A6A;">
-                    {{ profile()!.phone }}
-                  </p>
-                </div>
-              }
-
-              <div>
-                <p class="text-sm font-medium mb-1" style="color: #45332D;">Miembro desde</p>
-                <p class="text-base" style="color: #4E6A6A;">
-                  {{ profile()!.createdAt | date:'longDate' }}
-                </p>
-              </div>
-            </div>
+            @if (profile()) {
+              <app-profile-edit 
+                [profile]="profile()!" 
+                (profileUpdated)="onProfileUpdated($event)">
+              </app-profile-edit>
+            }
           </div>
 
         </div>
+      </div>
+
+      <!-- Purchase History Section -->
+      <div class="mt-8">
+        <app-purchase-history></app-purchase-history>
       </div>
     }
 

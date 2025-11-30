@@ -4,11 +4,12 @@ import { StorageService } from '@core/services/storage';
 import { UsersService, UserProfile } from '@core/services/users.service';
 import { AuthService } from '@core/services/auth.service';
 import { Header } from '@shared/components/header/header';
-import { UpdateProfileData } from '@core/services/users.service';
+import { PurchaseHistoryComponent } from '../purchase-history/purchase-history.component';
+import { ProfileEditComponent } from '../profile-edit/profile-edit.component';
 
 @Component({
   selector: 'app-profile',
-  imports: [CommonModule, Header],
+  imports: [CommonModule, Header, PurchaseHistoryComponent, ProfileEditComponent],
   templateUrl: './profile.html',
   styleUrl: './profile.scss',
 })
@@ -41,6 +42,10 @@ export class Profile implements OnInit {
         this.isLoading.set(false);
       }
     });
+  }
+
+  onProfileUpdated(updatedProfile: UserProfile): void {
+    this.profile.set(updatedProfile);
   }
 
   async changePhoto(): Promise<void> {

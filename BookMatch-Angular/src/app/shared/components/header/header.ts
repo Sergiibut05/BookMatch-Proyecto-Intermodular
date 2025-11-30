@@ -41,4 +41,8 @@ export class Header {
     this.router.navigate(['/home'])
   }
 
+  goCart(){
+    this.router.navigate(['/cart'])
+  }
+
 }
