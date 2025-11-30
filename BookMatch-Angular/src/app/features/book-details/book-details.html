@@ -3,7 +3,6 @@
 <div class="min-h-screen" style="background-color: #FCF5E2;">
   <div class="max-w-[1414px] mx-auto px-4 py-8">
     
-    <!-- Loading state -->
     @if (!book()) {
       <div class="flex items-center justify-center min-h-[60vh]">
         <div class="text-center">
@@ -13,14 +12,11 @@
       </div>
     }
 
-    <!-- Book details content -->
     @if (book()) {
       <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 p-6 md:p-8 lg:p-12">
           
-          <!-- Left column: Images -->
           <div class="space-y-4 flex flex-col items-center">
-            <!-- Main image -->
             <div class="relative rounded-xl overflow-hidden bg-white shadow-md max-w-xs w-full mx-auto" style="border: 2px solid #E9E1D1;">
               @if (getMainImageUrl()) {
                 <img 
@@ -36,7 +32,6 @@
               }
             </div>
 
-            <!-- Image gallery (if multiple images) -->
             @if (book()!.imageUrls && book()!.imageUrls.length > 1) {
               <div class="grid grid-cols-4 gap-3">
                 @for (imageUrl of book()!.imageUrls; track $index) {
@@ -56,10 +51,8 @@
             }
           </div>
 
-          <!-- Right column: Book information -->
           <div class="flex flex-col space-y-6">
             
-            <!-- Title and Author -->
             <div>
               <h1 class="text-3xl md:text-4xl font-bold mb-3" style="color: #45332D;">{{ book()!.title }}</h1>
               <p class="text-xl md:text-2xl mb-2" style="color: #4E6A6A; opacity: 0.9;">{{ book()!.author }}</p>
@@ -68,7 +61,6 @@
               }
             </div>
 
-            <!-- Categories -->
             @if (book()!.categories && book()!.categories!.length > 0) {
               <div class="flex flex-wrap gap-2">
                 @for (category of book()!.categories!; track category.id) {
@@ -80,7 +72,6 @@
               </div>
             }
 
-            <!-- Price section -->
             <div class="py-4 border-t border-b" style="border-color: #E9E1D1;">
               <div class="flex items-baseline gap-3">
                 <span class="text-4xl md:text-5xl font-bold" style="color: #E0A15E;">{{ book()!.price | number:'1.2-2' }}€</span>
@@ -89,7 +80,6 @@
               </div>
             </div>
 
-            <!-- Stock status -->
             <div class="flex items-center gap-2">
               @if (book()!.stock > 0) {
                 <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium" 
@@ -106,7 +96,6 @@
               }
             </div>
 
-            <!-- Description -->
             @if (book()!.description) {
               <div class="py-4">
                 <h2 class="text-xl font-semibold mb-3" style="color: #45332D;">Descripción</h2>
@@ -114,7 +103,6 @@
               </div>
             }
 
-            <!-- Reviews section -->
             <div class="py-4 border-t" style="border-color: #E9E1D1;">
               <h2 class="text-xl font-semibold mb-4" style="color: #45332D;">Reseñas</h2>
               @if (reviews() && reviews()!.length > 0) {
@@ -140,21 +128,25 @@
               }
             </div>
 
-            <!-- Action buttons -->
             <div class="flex flex-col sm:flex-row gap-4 pt-4">
-              <!-- Add to cart button -->
+              
               <button 
-                [disabled]="book()!.stock === 0"
-                class="flex-1 px-6 py-4 rounded-xl font-semibold text-lg transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                style="background-color: #E0A15E; color: #FCF5E2;"
-                onmouseover="if(!this.disabled) this.style.backgroundColor='#B88B65'"
-                onmouseout="if(!this.disabled) this.style.backgroundColor='#E0A15E'"
+                [disabled]="book()!.stock === 0 || isAddedToCart()"
+                class="flex-1 px-6 py-4 rounded-xl font-semibold text-lg transition-all duration-300 flex items-center justify-center gap-2 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                [style.background-color]="isAddedToCart() ? '#10B981' : '#E0A15E'"
+                [style.color]="'#FCF5E2'"
+                [style.transform]="isAddedToCart() ? 'scale(1.02)' : 'scale(1)'"
                 (click)="onAddToCart()">
-                <span class="material-symbols-outlined">shopping_cart</span>
-                Añadir a la cesta
+                
+                @if (isAddedToCart()) {
+                  <span class="text-xl">✓</span>
+                  <span>¡Añadido!</span>
+                } @else {
+                  <span class="material-symbols-outlined">shopping_cart</span>
+                  <span>Añadir a la cesta</span>
+                }
               </button>
 
-              <!-- Buy now button -->
               <button 
                 [disabled]="book()!.stock === 0"
                 class="flex-1 px-6 py-4 rounded-xl font-semibold text-lg transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -167,7 +159,6 @@
               </button>
             </div>
 
-            <!-- Stripe payment button -->
             <button 
               [disabled]="book()!.stock === 0 || isProcessingPayment()"
               class="w-full px-6 py-4 rounded-xl font-semibold text-lg transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -186,7 +177,6 @@
               }
             </button>
 
-            <!-- Additional info -->
             <div class="pt-4 border-t" style="border-color: #E9E1D1;">
               <div class="grid grid-cols-2 gap-4 text-sm">
                 <div>
@@ -211,7 +201,6 @@
       </div>
     }
 
-    <!-- Error state -->
     @if (book() === null && bookId()) {
       <div class="flex items-center justify-center min-h-[60vh]">
         <div class="text-center bg-white rounded-xl shadow-md p-8">
