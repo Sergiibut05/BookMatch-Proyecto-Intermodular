@@ -20,7 +20,28 @@ export const createCatalogBookSchema = baseCatalogBookSchema.extend({
 
 export const updateCatalogBookSchema = baseCatalogBookSchema.partial();
 
+// --- NUEVO: Esquema para los filtros de búsqueda (GET) ---
+export const getCatalogBooksQuerySchema = z.object({
+  page: z.coerce.number().int().positive().default(1),
+  limit: z.coerce.number().int().positive().max(100).default(20),
+  
+  search: z.string().optional(),
+  
+  minPrice: z.coerce.number().nonnegative().optional(),
+  maxPrice: z.coerce.number().nonnegative().optional(),
+  
+  categoryId: z.coerce.number().int().positive().optional(),
+  inStock: z.enum(['true', 'false']).optional(),
+  minRating: z.coerce.number().min(1).max(5).optional(),
+  
+  sortBy: z.enum([
+    'newest', 
+    'price_asc', 
+    'price_desc', 
+    'alphabetical'
+  ]).default('newest'),
+});
+
 export type CreateCatalogBookInput = z.infer<typeof createCatalogBookSchema>;
 export type UpdateCatalogBookInput = z.infer<typeof updateCatalogBookSchema>;
-
-
+export type GetCatalogBooksQuery = z.infer<typeof getCatalogBooksQuerySchema>;

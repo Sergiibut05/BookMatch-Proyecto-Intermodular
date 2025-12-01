@@ -6,7 +6,7 @@ import {
   updateCatalogBookSchema,
 } from './catalog-books.schema.js';
 import {
-  listCatalogBooksCtrl,
+  getCatalogBooksCtrl, // <--- NUEVO NOMBRE (listCatalogBooksCtrl ya no existe)
   getCatalogBookCtrl,
   createCatalogBookCtrl,
   updateCatalogBookCtrl,
@@ -15,7 +15,7 @@ import {
 
 const router = Router();
 
-router.use(auth);
+// NOTA: No usamos router.use(auth) global para dejar el GET público
 
 /**
  * @swagger
@@ -28,61 +28,56 @@ router.use(auth);
  * @swagger
  * /api/catalog-books:
  *   get:
- *     summary: Lista libros del catálogo
+ *     summary: Lista libros del catálogo con filtros avanzados
  *     tags: [CatalogBooks]
  *     security:
  *       - bearerAuth: []
  *     parameters:
  *       - in: query
- *         name: categoryIds
- *         schema:
- *           type: string
- *         description: Lista de IDs de categoría separados por coma
- *       - in: query
- *         name: categoryNames
- *         schema:
- *           type: string
- *         description: Lista de nombres de categoría separados por coma
- *       - in: query
  *         name: page
  *         schema:
  *           type: integer
- *         description: Página (1-based). Por defecto 1
+ *         description: Página (default: 1)
  *       - in: query
  *         name: limit
  *         schema:
  *           type: integer
- *         description: Tamaño de página. Por defecto 10
+ *         description: Tamaño página (default: 20)
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: Buscar por título, autor o ISBN
+ *       - in: query
+ *         name: minPrice
+ *         schema:
+ *           type: number
+ *       - in: query
+ *         name: maxPrice
+ *         schema:
+ *           type: number
+ *       - in: query
+ *         name: minRating
+ *         schema:
+ *           type: number
+ *           minimum: 1
+ *           maximum: 5
+ *       - in: query
+ *         name: categoryId
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: sortBy
+ *         schema:
+ *           type: string
+ *           enum: [newest, price_asc, price_desc, alphabetical]
  *     responses:
  *       200:
- *         description: Lista de libros (paginada)
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 total:
- *                   type: integer
- *                 page:
- *                   type: integer
- *                 limit:
- *                   type: integer
- *                 previousPage:
- *                   oneOf:
- *                     - type: integer
- *                     - type: 'null'
- *                 nextPage:
- *                   oneOf:
- *                     - type: integer
- *                     - type: 'null'
- *                 items:
- *                   type: array
- *                   items:
- *                     $ref: '#/components/schemas/CatalogBook'
- *       401:
- *         description: No autorizado
+ *         description: Lista de libros
+ *       400:
+ *         description: Filtros inválidos
  */
-router.get('/', listCatalogBooksCtrl);
+router.get('/', getCatalogBooksCtrl);
 
 /**
  * @swagger
@@ -101,107 +96,15 @@ router.get('/', listCatalogBooksCtrl);
  *     responses:
  *       200:
  *         description: Libro encontrado
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/CatalogBook'
- *       401:
- *         description: No autorizado
  *       404:
  *         description: Libro no encontrado
  */
 router.get('/:id', getCatalogBookCtrl);
 
-/**
- * @swagger
- * /api/catalog-books:
- *   post:
- *     summary: Crea un nuevo libro en el catálogo
- *     tags: [CatalogBooks]
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/CreateCatalogBookInput'
- *     responses:
- *       201:
- *         description: Libro creado
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/CatalogBook'
- *       400:
- *         description: Datos inválidos
- *       401:
- *         description: No autorizado
- *       409:
- *         description: ISBN duplicado
- */
-router.post('/', validate(createCatalogBookSchema), createCatalogBookCtrl);
+// --- RUTAS PROTEGIDAS ---
 
-/**
- * @swagger
- * /api/catalog-books/{id}:
- *   patch:
- *     summary: Actualiza un libro del catálogo
- *     tags: [CatalogBooks]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/UpdateCatalogBookInput'
- *     responses:
- *       200:
- *         description: Libro actualizado
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/CatalogBook'
- *       400:
- *         description: Datos inválidos
- *       401:
- *         description: No autorizado
- *       404:
- *         description: Libro no encontrado
- */
-router.patch('/:id', validate(updateCatalogBookSchema), updateCatalogBookCtrl);
-
-/**
- * @swagger
- * /api/catalog-books/{id}:
- *   delete:
- *     summary: Elimina un libro del catálogo
- *     tags: [CatalogBooks]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *     responses:
- *       204:
- *         description: Libro eliminado
- *       401:
- *         description: No autorizado
- *       404:
- *         description: Libro no encontrado
- */
-router.delete('/:id', deleteCatalogBookCtrl);
+router.post('/', auth, validate(createCatalogBookSchema), createCatalogBookCtrl);
+router.patch('/:id', auth, validate(updateCatalogBookSchema), updateCatalogBookCtrl);
+router.delete('/:id', auth, deleteCatalogBookCtrl);
 
 export default router;
-
-

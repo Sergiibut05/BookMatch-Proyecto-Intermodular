@@ -1,40 +1,22 @@
 import { Prisma } from '@prisma/client';
 import { prisma } from '../../config/db.js';
-import type { CreateCatalogBookInput, UpdateCatalogBookInput } from './catalog-books.schema.js';
+import type { CreateCatalogBookInput, UpdateCatalogBookInput, GetCatalogBooksQuery } from './catalog-books.schema.js';
+
+// --- TUS HELPERS ORIGINALES (INTACTOS) ---
 
 const catalogBookWithCategories = Prisma.validator<Prisma.CatalogBookDefaultArgs>()({
   select: {
-    id: true,
-    title: true,
-    author: true,
-    isbn: true,
-    description: true,
-    coverUrl: true,
-    imageUrls: true,
-    price: true,
-    stock: true,
-    createdAt: true,
-    updatedAt: true,
+    id: true, title: true, author: true, isbn: true, description: true,
+    coverUrl: true, imageUrls: true, price: true, stock: true,
+    createdAt: true, updatedAt: true,
     categories: {
       select: {
-        category: {
-          select: {
-            id: true,
-            name: true,
-            slug: true,
-            type: true,
-          },
-        },
+        category: { select: { id: true, name: true, slug: true, type: true } },
       },
     },
     reviews: {
       select: {
-        id: true,
-        catalogBookId: true,
-        userId: true,
-        rating: true,
-        comment: true,
-        createdAt: true,
+        id: true, catalogBookId: true, userId: true, rating: true, comment: true, createdAt: true,
       },
     },
   },
@@ -46,6 +28,7 @@ function mapCatalogBook(record: CatalogBookRecord) {
   const { categories, reviews, ...rest } = record;
   return {
     ...rest,
+    price: Number(rest.price), // Asegurar Number
     categories: categories.map((entry) => entry.category),
     reviews: (reviews || []).map((review) => ({
       ...review,
@@ -74,74 +57,76 @@ async function ensureCategoriesExist(categoryIds: number[] | undefined) {
   }
 }
 
-type ListFilters = { categoryIds?: number[]; categoryNames?: string[] };
-type Pagination = { page: number; limit: number };
+// --- NUEVA FUNCIÓN DE FILTRADO (REEMPLAZA A listCatalogBooks) ---
 
-export async function listCatalogBooks(filters: ListFilters = {}, pagination?: Pagination) {
-  const where: Prisma.CatalogBookWhereInput = {};
+export const getCatalogBooks = async (query: GetCatalogBooksQuery) => {
+  const { page, limit, search, minPrice, maxPrice, categoryId, inStock, sortBy, minRating } = query;
 
-  // Construimos cláusulas AND a nivel superior para combinar múltiples condiciones "some"
-  const andClauses: Prisma.CatalogBookWhereInput[] = [];
-  if (filters.categoryIds && filters.categoryIds.length > 0) {
-    andClauses.push({
-      categories: {
-        some: {
-          categoryId: { in: filters.categoryIds },
-        },
-      },
+  // 1. Lógica de Rating
+  let ratingBookIds: number[] | undefined;
+  if (minRating) {
+    const groupedReviews = await prisma.review.groupBy({
+      by: ['catalogBookId'],
+      _avg: { rating: true },
+      having: { rating: { _avg: { gte: minRating } } }
     });
+    ratingBookIds = groupedReviews.map(r => r.catalogBookId);
   }
-  if (filters.categoryNames && filters.categoryNames.length > 0) {
-    andClauses.push({
-      categories: {
-        some: {
-          category: {
-            name: { in: filters.categoryNames },
-          },
-        },
+
+  // 2. Construir WHERE
+  const where: Prisma.CatalogBookWhereInput = {
+    AND: [
+      search ? {
+        OR: [
+          { title: { contains: search, mode: 'insensitive' } },
+          { author: { contains: search, mode: 'insensitive' } },
+          { isbn: { contains: search, mode: 'insensitive' } },
+        ],
+      } : {},
+      {
+        price: {
+          ...(minPrice !== undefined ? { gte: minPrice } : {}),
+          ...(maxPrice !== undefined ? { lte: maxPrice } : {}),
+        }
       },
-    });
-  }
-  if (andClauses.length > 0) {
-    where.AND = andClauses;
-  }
-
-  const skip = pagination ? (pagination.page - 1) * pagination.limit : undefined;
-  const take = pagination ? pagination.limit : undefined;
-
-  const total = await prisma.catalogBook.count({ where });
-
-  const findArgs: Prisma.CatalogBookFindManyArgs = {
-    where,
-    ...catalogBookWithCategories,
-    orderBy: { id: 'asc' },
+      categoryId ? { categories: { some: { categoryId } } } : {},
+      inStock === 'true' ? { stock: { gt: 0 } } : {},
+      minRating ? { id: { in: ratingBookIds && ratingBookIds.length > 0 ? ratingBookIds : [0] } } : {}
+    ]
   };
-  if (skip !== undefined) findArgs.skip = skip;
-  if (take !== undefined) findArgs.take = take;
 
-  const books = (await prisma.catalogBook.findMany(findArgs)) as unknown as CatalogBookRecord[];
-
-  const items = books.map(mapCatalogBook);
-
-  if (!pagination) {
-    // Compatibilidad si se llama sin paginación
-    return items;
+  // 3. Construir ORDER BY
+  let orderBy: Prisma.CatalogBookOrderByWithRelationInput = { createdAt: 'desc' };
+  switch (sortBy) {
+    case 'price_asc': orderBy = { price: 'asc' }; break;
+    case 'price_desc': orderBy = { price: 'desc' }; break;
+    case 'alphabetical': orderBy = { title: 'asc' }; break;
+    case 'newest': default: orderBy = { createdAt: 'desc' }; break;
   }
 
-  const { page, limit } = pagination;
-  const maxPage = Math.max(1, Math.ceil(total / limit));
-  const previousPage = page > 1 ? page - 1 : null;
-  const nextPage = page < maxPage ? page + 1 : null;
+  // 4. Ejecutar consulta (Usando tu validador original)
+  const [total, books] = await prisma.$transaction([
+    prisma.catalogBook.count({ where }),
+    prisma.catalogBook.findMany({
+      where,
+      orderBy,
+      skip: (page - 1) * limit,
+      take: limit,
+      ...catalogBookWithCategories, // <--- USAMOS TU ESTRUCTURA SELECT ORIGINAL
+    }),
+  ]);
 
   return {
+    // Casteamos a tu tipo Record para que TypeScript no se queje del mapeo
+    items: (books as unknown as CatalogBookRecord[]).map(mapCatalogBook),
     total,
     page,
     limit,
-    previousPage,
-    nextPage,
-    items,
+    totalPages: Math.ceil(total / limit),
   };
-}
+};
+
+// --- TUS FUNCIONES CRUD ORIGINALES (INTACTAS) ---
 
 export async function findCatalogBookById(id: number) {
   const book = await prisma.catalogBook.findUnique({
@@ -151,6 +136,9 @@ export async function findCatalogBookById(id: number) {
 
   return book ? mapCatalogBook(book) : null;
 }
+
+// Alias para compatibilidad
+export const getCatalogBookById = findCatalogBookById;
 
 export async function createCatalogBook(input: CreateCatalogBookInput) {
   await ensureCategoriesExist(input.categoryIds);
@@ -195,7 +183,9 @@ export async function createCatalogBook(input: CreateCatalogBookInput) {
 }
 
 export async function updateCatalogBook(id: number, input: UpdateCatalogBookInput) {
-  await ensureCategoriesExist(input.categoryIds);
+  if (input.categoryIds) {
+    await ensureCategoriesExist(input.categoryIds);
+  }
 
   const {
     categoryIds,
@@ -242,5 +232,3 @@ export async function updateCatalogBook(id: number, input: UpdateCatalogBookInpu
 export async function deleteCatalogBook(id: number) {
   await prisma.catalogBook.delete({ where: { id } });
 }
-
-
