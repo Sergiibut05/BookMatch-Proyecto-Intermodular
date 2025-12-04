@@ -5,6 +5,7 @@ import {
   createCatalogBook,
   updateCatalogBook,
   deleteCatalogBook,
+  getAllCategories,
 } from './catalog-books.service.js';
 import {
   createCatalogBookSchema,

@@ -232,3 +232,20 @@ export async function updateCatalogBook(id: number, input: UpdateCatalogBookInpu
 export async function deleteCatalogBook(id: number) {
   await prisma.catalogBook.delete({ where: { id } });
 }
+
+export async function getAllCategories() {
+  // Busca todas las categorías en la base de datos
+  const categories = await prisma.category.findMany({
+    orderBy: {
+      name: 'asc', // Opcional: Para que te lleguen ordenadas alfabéticamente al frontend
+    },
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      type: true, // Asumo que tienes este campo basado en tu código anterior
+    }
+  });
+
+  return categories;
+}

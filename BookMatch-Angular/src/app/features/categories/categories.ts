@@ -4,10 +4,11 @@ import { CatalogService } from '@core/services/catalog.service';
 import { Header } from '@shared/components/header/header';
 import { CatalogBook } from '@shared/models';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-categories',
-  imports: [Header, CommonModule],
+  imports: [Header, CommonModule, FormsModule],
   templateUrl: './categories.html',
   styleUrl: './categories.scss',
 })
@@ -18,24 +19,57 @@ export class Categories implements OnInit {
   
   category = signal<string>('');
   books = signal<CatalogBook[]>([]);
+  
   page = signal<number>(1);
   limit = signal<number>(10);
   total = signal<number>(0);
   onGrid = signal<boolean>(true);
+
+  // --- TODOS LOS FILTROS ---
+  minPrice = signal<number | null>(null);
+  maxPrice = signal<number | null>(null);
+  sortBy = signal<string>('newest');
+  minRating = signal<number | null>(null); // Nuevo
+  inStock = signal<boolean>(false);        // Nuevo
+
+  showMobileFilters = signal<boolean>(false);
 
   ngOnInit(): void {
     this.route.paramMap.subscribe((params) => {
       const categoriaParam = params.get('categoria');
       if (categoriaParam) {
         this.category.set(categoriaParam);
-        this.loadbooks();
+        
+        // Leemos TODOS los parámetros de la URL
+        this.route.queryParamMap.subscribe((queryParams) => {
+          this.page.set(Number(queryParams.get('page')) || 1);
+          this.limit.set(Number(queryParams.get('limit')) || 10);
+          this.minPrice.set(queryParams.get('minPrice') ? Number(queryParams.get('minPrice')) : null);
+          this.maxPrice.set(queryParams.get('maxPrice') ? Number(queryParams.get('maxPrice')) : null);
+          this.sortBy.set(queryParams.get('sortBy') || 'newest');
+          
+          // Nuevos filtros
+          this.minRating.set(queryParams.get('minRating') ? Number(queryParams.get('minRating')) : null);
+          this.inStock.set(queryParams.get('inStock') === 'true');
+          
+          this.loadbooks();
+        });
       }
     });
   }
 
   private loadbooks() {
     if(this.category()) {
-      this.catalogService.getBooksByCategoryName(this.category().toString(), this.page(), this.limit()).subscribe({
+      this.catalogService.getBooksByCategoryName(
+        this.category().toString(), 
+        this.page(), 
+        this.limit(),
+        this.minPrice(),
+        this.maxPrice(),
+        this.sortBy(),
+        this.minRating(), // Enviamos al servicio
+        this.inStock()    // Enviamos al servicio
+      ).subscribe({
         next: (res: any) => {
           const items = res?.items ?? [];
           this.books.set(items);
@@ -46,6 +80,68 @@ export class Categories implements OnInit {
     }
   }
 
+  updateParams() {
+    const queryParams: any = {
+      page: this.page(),
+      limit: this.limit(),
+      sortBy: this.sortBy(),
+    };
+
+    if (this.minPrice()) queryParams.minPrice = this.minPrice();
+    if (this.maxPrice()) queryParams.maxPrice = this.maxPrice();
+    
+    // Agregamos los nuevos a la URL
+    if (this.minRating()) queryParams.minRating = this.minRating();
+    if (this.inStock()) queryParams.inStock = 'true';
+    else queryParams.inStock = null; // Para borrarlo de la URL si es false
+
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: queryParams,
+      queryParamsHandling: 'merge',
+    });
+    
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    this.showMobileFilters.set(false);
+  }
+
+  applyFilters() {
+    this.page.set(1);
+    this.updateParams();
+  }
+
+  onSortChange(event: Event) {
+    const target = event.target as HTMLSelectElement;
+    this.sortBy.set(target.value);
+    this.page.set(1);
+    this.updateParams();
+  }
+
+  // Nuevo helper para las estrellas
+  setRating(stars: number) {
+    if (this.minRating() === stars) {
+      this.minRating.set(null); // Deseleccionar si ya estaba
+    } else {
+      this.minRating.set(stars);
+    }
+    this.applyFilters();
+  }
+
+  clearFilters() {
+    this.minPrice.set(null);
+    this.maxPrice.set(null);
+    this.sortBy.set('newest');
+    this.minRating.set(null);
+    this.inStock.set(false);
+    this.page.set(1);
+    this.updateParams();
+  }
+
+  toggleMobileFilters() {
+    this.showMobileFilters.update(v => !v);
+  }
+
+  // --- GETTERS & HELPERS ---
   get totalPages(): number {
     return Math.ceil(this.total() / this.limit());
   }
@@ -61,8 +157,7 @@ export class Categories implements OnInit {
   goToPage(pageNumber: number) {
     if (pageNumber >= 1 && pageNumber <= this.totalPages) {
       this.page.set(pageNumber);
-      this.loadbooks();
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      this.updateParams();
     }
   }
 
@@ -82,8 +177,7 @@ export class Categories implements OnInit {
     const target = event.target as HTMLSelectElement;
     this.limit.set(Number(target.value));
     this.page.set(1);
-    this.loadbooks();
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    this.updateParams();
   }
 
   toggleView() {
@@ -91,13 +185,13 @@ export class Categories implements OnInit {
   }
 
   getDiscountedPrice(price: number): number {
-    return price * 1.05;
+    return Number(price) * 1.05;
   }
 
   onBuyClick() {
-    // Placeholder para futura funcionalidad
     console.log('Botón de comprar clickeado');
   }
+  
   onBookClick(book: CatalogBook): void {
     this.router.navigate(['/book-details', book.id]);
   }
@@ -106,40 +200,25 @@ export class Categories implements OnInit {
     const currentPage = this.page();
     const total = this.totalPages;
     const pages: (number | string)[] = [];
-
     if (total <= 7) {
-      // Si hay 7 o menos páginas, mostrar todas
-      for (let i = 1; i <= total; i++) {
-        pages.push(i);
-      }
+      for (let i = 1; i <= total; i++) pages.push(i);
     } else {
-      // Si hay más de 7 páginas, mostrar con elipsis
       if (currentPage <= 3) {
-        // Al inicio: 1, 2, 3, 4, ..., total
-        for (let i = 1; i <= 4; i++) {
-          pages.push(i);
-        }
+        for (let i = 1; i <= 4; i++) pages.push(i);
         pages.push('...');
         pages.push(total);
       } else if (currentPage >= total - 2) {
-        // Al final: 1, ..., total-3, total-2, total-1, total
         pages.push(1);
         pages.push('...');
-        for (let i = total - 3; i <= total; i++) {
-          pages.push(i);
-        }
+        for (let i = total - 3; i <= total; i++) pages.push(i);
       } else {
-        // En el medio: 1, ..., current-1, current, current+1, ..., total
         pages.push(1);
         pages.push('...');
-        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
-          pages.push(i);
-        }
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) pages.push(i);
         pages.push('...');
         pages.push(total);
       }
     }
-
     return pages;
   }
 }
