@@ -29,6 +29,8 @@
     "@angular/forms": "^20.3.0",
     "@angular/platform-browser": "^20.3.0",
     "@angular/router": "^20.3.0",
+    "@ngx-translate/core": "^17.0.0",
+    "@ngx-translate/http-loader": "^17.0.0",
     "@capacitor/camera": "^7.0.2",
     "@capacitor/core": "^7.4.4",
     "@stripe/stripe-js": "^8.5.3",

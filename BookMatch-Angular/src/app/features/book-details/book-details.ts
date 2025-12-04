@@ -6,10 +6,11 @@ import { PaymentService } from '@core/services/payment.service';
 import { CartService } from '@core/services/cart.service'; // Importamos el carrito
 import { Header } from '@shared/components/header/header';
 import { CatalogBook, Review } from '@shared/models';
+import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-book-details',
-  imports: [Header, CommonModule],
+  imports: [Header, CommonModule, TranslateModule],
   templateUrl: './book-details.html',
   styleUrl: './book-details.scss',
 })
@@ -25,7 +26,7 @@ export class BookDetails implements OnInit {
   selectedImageUrl = signal<string | null>(null);
   reviews = signal<Review[] | null>(null);
   isProcessingPayment = signal<boolean>(false);
-  
+
   // Nueva señal para la animación del botón
   isAddedToCart = signal<boolean>(false);
 
@@ -38,7 +39,7 @@ export class BookDetails implements OnInit {
       }
     });
   }
-  
+
   loadBook(): void {
     this.catalogService.getBookById(Number(this.bookId())).subscribe((book) => {
       this.book.set(book);
@@ -69,7 +70,7 @@ export class BookDetails implements OnInit {
     if (currentBook) {
       // 1. Añadir al servicio
       this.cartService.addToCart(currentBook);
-      
+
       // 2. Activar estado visual (botón verde)
       this.isAddedToCart.set(true);
 

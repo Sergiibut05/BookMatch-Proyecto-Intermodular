@@ -1,0 +1,14 @@
+<div class="flex gap-2 items-center">
+    <button (click)="changeLanguage('es')" [class.bg-blue-500]="currentLang === 'es'"
+        [class.text-white]="currentLang === 'es'" [class.bg-gray-200]="currentLang !== 'es'"
+        [class.text-gray-700]="currentLang !== 'es'"
+        class="px-3 py-1 text-sm font-medium transition-colors hover:opacity-80">
+        ES
+    </button>
+    <button (click)="changeLanguage('en')" [class.bg-blue-500]="currentLang === 'en'"
+        [class.text-white]="currentLang === 'en'" [class.bg-gray-200]="currentLang !== 'en'"
+        [class.text-gray-700]="currentLang !== 'en'"
+        class="px-3 py-1 text-sm font-medium transition-colors hover:opacity-80">
+        EN
+    </button>
+</div>
