@@ -37,17 +37,17 @@ const router = Router();
  *         name: page
  *         schema:
  *           type: integer
- *         description: Página (default: 1)
+ *         description: "Página (default: 1)"
  *       - in: query
  *         name: limit
  *         schema:
  *           type: integer
- *         description: Tamaño página (default: 20)
+ *         description: "Tamaño página (default: 20)"
  *       - in: query
  *         name: search
  *         schema:
  *           type: string
- *         description: Buscar por título, autor o ISBN
+ *         description: "Buscar por título, autor o ISBN"
  *       - in: query
  *         name: minPrice
  *         schema:
