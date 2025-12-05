@@ -34,48 +34,87 @@ export class Categories implements OnInit {
 
   showMobileFilters = signal<boolean>(false);
 
+  // Señal para guardar las categorías y poder buscar ID por Slug
+  categoriesList = signal<any[]>([]); 
+
   ngOnInit(): void {
-    this.route.paramMap.subscribe((params) => {
-      const categoriaParam = params.get('categoria');
-      if (categoriaParam) {
-        this.category.set(categoriaParam);
+    // 1. Cargamos las categorías primero para poder traducir Slug -> ID
+    this.catalogService.getCategories().subscribe({
+      next: (cats) => {
+        this.categoriesList.set(cats);
         
-        // Leemos TODOS los parámetros de la URL
-        this.route.queryParamMap.subscribe((queryParams) => {
-          this.page.set(Number(queryParams.get('page')) || 1);
-          this.limit.set(Number(queryParams.get('limit')) || 10);
-          this.minPrice.set(queryParams.get('minPrice') ? Number(queryParams.get('minPrice')) : null);
-          this.maxPrice.set(queryParams.get('maxPrice') ? Number(queryParams.get('maxPrice')) : null);
-          this.sortBy.set(queryParams.get('sortBy') || 'newest');
-          
-          // Nuevos filtros
-          this.minRating.set(queryParams.get('minRating') ? Number(queryParams.get('minRating')) : null);
-          this.inStock.set(queryParams.get('inStock') === 'true');
-          
-          this.loadbooks();
+        // 2. Nos suscribimos a los cambios de ruta una vez tenemos las categorías
+        this.route.paramMap.subscribe((params) => {
+          const categoriaParam = params.get('categoria');
+          if (categoriaParam) {
+            this.category.set(categoriaParam);
+            
+            this.route.queryParamMap.subscribe((queryParams) => {
+              this.page.set(Number(queryParams.get('page')) || 1);
+              this.limit.set(Number(queryParams.get('limit')) || 10);
+              this.minPrice.set(queryParams.get('minPrice') ? Number(queryParams.get('minPrice')) : null);
+              this.maxPrice.set(queryParams.get('maxPrice') ? Number(queryParams.get('maxPrice')) : null);
+              this.sortBy.set(queryParams.get('sortBy') || 'newest');
+              this.minRating.set(queryParams.get('minRating') ? Number(queryParams.get('minRating')) : null);
+              this.inStock.set(queryParams.get('inStock') === 'true');
+              
+              this.loadbooks();
+            });
+          }
         });
-      }
+      },
+      error: (err) => console.error('Error cargando lista de categorías:', err)
     });
   }
 
   private loadbooks() {
-    if(this.category()) {
+    const term = this.category();
+    if (!term) return;
+
+    // CASO ESPECIAL: NOVEDADES
+    if (term === 'novedades') {
+      this.catalogService.getNewArrivals(this.limit()).subscribe({
+        next: (res) => {
+          this.books.set(res.items || []);
+          this.total.set(res.total || 0);
+        },
+        error: (err) => console.error('Error loading new arrivals:', err)
+      });
+      return;
+    }
+
+    // CASO NORMAL: BUSCAR ID POR SLUG
+    // Buscamos la categoría en la lista que cargamos al inicio
+    const foundCat = this.categoriesList().find(c => c.slug === term || c.name.toLowerCase() === term.toLowerCase());
+    
+    if (foundCat) {
+      // SI ENCONTRAMOS ID, USAMOS FILTRADO ESTRICTO POR ID
+      this.catalogService.getBooksByCategoryId(foundCat.id, this.page(), this.limit()).subscribe({
+        next: (res) => {
+          this.books.set(res.items || []);
+          this.total.set(res.total || 0);
+        },
+        error: (err) => console.error('Error loading category by ID:', err)
+      });
+    } else {
+      // FALLBACK (POR SI ACASO): Usamos el método antiguo por nombre, aunque no sea ideal
+      console.warn(`Categoría '${term}' no encontrada en la lista, usando fallback por nombre.`);
       this.catalogService.getBooksByCategoryName(
-        this.category().toString(), 
+        term, 
         this.page(), 
         this.limit(),
         this.minPrice(),
         this.maxPrice(),
         this.sortBy(),
-        this.minRating(), // Enviamos al servicio
-        this.inStock()    // Enviamos al servicio
+        this.minRating(), 
+        this.inStock()    
       ).subscribe({
         next: (res: any) => {
           const items = res?.items ?? [];
           this.books.set(items);
           this.total.set(res?.total ?? 0);
         },
-        error: (error) => console.error('Error al obtener los libros:', error),
+        error: (error) => console.error('Error al obtener los libros (fallback):', error),
       });
     }
   }

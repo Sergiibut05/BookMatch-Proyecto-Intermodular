@@ -94,7 +94,7 @@ export class Carousel implements OnInit {
   // --- MODIFICACIÓN IMPORTANTE: RESTAURAMOS LA RUTA ANTIGUA ---
   onSeeMore(): void {
     if (this.isNewArrivals) {
-      this.router.navigate(['/catalog'], { queryParams: { sortBy: 'newest' } });
+      this.router.navigate(['/categories', 'novedades'], { queryParams: { sortBy: 'newest' } });
     } 
     // SI TENEMOS NOMBRE, USAMOS LA RUTA ANTIGUA (/categories/nombre)
     else if (this.categoryName || this.categoryUrl) {
