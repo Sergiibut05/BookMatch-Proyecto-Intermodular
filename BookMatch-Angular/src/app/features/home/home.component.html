@@ -1,9 +1,7 @@
-<!-- BookMatch-Angular/src/app/features/home/home.component.html -->
 <app-header></app-header>
 
 <div class="min-h-screen" style="background-color: #FCF5E2;">
 
-  <!-- Banner -->
   <div class="w-full pt-8 md:pt-12 mb-12 md:mb-16 px-4 md:px-6">
     <div class="max-w-7xl mx-auto bg-[#212b44] rounded-2xl">
       <img src="assets/banner-bookmatch.png" alt="BookMatch Banner"
@@ -11,11 +9,9 @@
     </div>
   </div>
 
-  <!-- Sección de características -->
   <div class="max-w-[1414px] mx-auto px-4 mb-12">
     <div class="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12">
 
-      <!-- Compra & Venta -->
       <div class="text-center">
         <div class="flex justify-center mb-4">
           <div class="w-16 h-16 md:w-20 md:h-20 rounded-full flex items-center justify-center"
@@ -34,7 +30,6 @@
         </p>
       </div>
 
-      <!-- Trueque Digital -->
       <div class="text-center">
         <div class="flex justify-center mb-4">
           <div class="w-16 h-16 md:w-20 md:h-20 rounded-full flex items-center justify-center"
@@ -53,7 +48,6 @@
         </p>
       </div>
 
-      <!-- Recomendaciones IA -->
       <div class="text-center">
         <div class="flex justify-center mb-4">
           <div class="w-16 h-16 md:w-20 md:h-20 rounded-full flex items-center justify-center"
@@ -75,40 +69,71 @@
     </div>
   </div>
 
-  <!-- Carousel de Novedades -->
   <div class="max-w-[1414px] mx-auto px-4 pb-12">
-    <app-carousel categoryTitle="{{ 'CATEGORIES.NEW_ARRIVALS_TITLE' | translate }}" categoryUrl="novedades"
-      categoryName="{{ 'CATEGORIES.NEW_ARRIVALS' | translate }}"></app-carousel>
+    <app-carousel 
+      categoryTitle="{{ 'CATEGORIES.NEW_ARRIVALS' | translate }}" 
+      [isNewArrivals]="true">
+    </app-carousel>
   </div>
 
-  <div class="max-w-[1414px] mx-auto px-4 pb-12">
-    <app-carousel categoryTitle="{{ 'CATEGORIES.SCI_FI_TITLE' | translate }}" categoryUrl="ciencia-ficcion"
-      categoryName="{{ 'CATEGORIES.SCI_FI' | translate }}"></app-carousel>
-  </div>
+  @if (getCategoryId('ciencia-ficcion')) {
+    <div class="max-w-[1414px] mx-auto px-4 pb-12">
+      <app-carousel 
+        categoryTitle="{{ 'CATEGORIES.SCI_FI' | translate }}" 
+        categoryName="ciencia-ficcion"
+        [categoryId]="getCategoryId('ciencia-ficcion')">
+      </app-carousel>
+    </div>
+  }
 
-  <div class="max-w-[1414px] mx-auto px-4 pb-12">
-    <app-carousel categoryTitle="{{ 'CATEGORIES.FANTASY_TITLE' | translate }}" categoryUrl="fantasia"
-      categoryName="{{ 'CATEGORIES.FANTASY' | translate }}"></app-carousel>
-  </div>
+  @if (getCategoryId('fantasia')) {
+    <div class="max-w-[1414px] mx-auto px-4 pb-12">
+      <app-carousel 
+        categoryTitle="{{ 'CATEGORIES.FANTASY' | translate }}" 
+        categoryName="fantasia"
+        [categoryId]="getCategoryId('fantasia')">
+      </app-carousel>
+    </div>
+  }
 
-  <div class="max-w-[1414px] mx-auto px-4 pb-12">
-    <app-carousel categoryTitle="{{ 'CATEGORIES.ROMANCE_TITLE' | translate }}" categoryUrl="romance"
-      categoryName="{{ 'CATEGORIES.ROMANCE' | translate }}"></app-carousel>
-  </div>
+  @if (getCategoryId('romance')) {
+    <div class="max-w-[1414px] mx-auto px-4 pb-12">
+      <app-carousel 
+        categoryTitle="{{ 'CATEGORIES.ROMANCE' | translate }}" 
+        categoryName="romance"
+        [categoryId]="getCategoryId('romance')">
+      </app-carousel>
+    </div>
+  }
 
-  <div class="max-w-[1414px] mx-auto px-4 pb-12">
-    <app-carousel categoryTitle="{{ 'CATEGORIES.MYSTERY_THRILLER_TITLE' | translate }}" categoryUrl="misterio-thriller"
-      categoryName="{{ 'CATEGORIES.MYSTERY_THRILLER' | translate }}"></app-carousel>
-  </div>
+  @if (getCategoryId('misterio-thriller')) {
+    <div class="max-w-[1414px] mx-auto px-4 pb-12">
+      <app-carousel 
+        categoryTitle="{{ 'CATEGORIES.MYSTERY_THRILLER' | translate }}" 
+        categoryName="misterio-thriller"
+        [categoryId]="getCategoryId('misterio-thriller')">
+      </app-carousel>
+    </div>
+  }
 
-  <div class="max-w-[1414px] mx-auto px-4 pb-12">
-    <app-carousel categoryTitle="{{ 'CATEGORIES.YOUNG_ADULT_TITLE' | translate }}" categoryUrl="juvenil"
-      categoryName="{{ 'CATEGORIES.YOUNG_ADULT' | translate }}"></app-carousel>
-  </div>
+  @if (getCategoryId('juvenil')) {
+    <div class="max-w-[1414px] mx-auto px-4 pb-12">
+      <app-carousel 
+        categoryTitle="{{ 'CATEGORIES.YOUNG_ADULT' | translate }}" 
+        categoryName="juvenil"
+        [categoryId]="getCategoryId('juvenil')">
+      </app-carousel>
+    </div>
+  }
 
-  <div class="max-w-[1414px] mx-auto px-4 pb-12">
-    <app-carousel categoryTitle="{{ 'CATEGORIES.COMIC_MANGA_TITLE' | translate }}" categoryUrl="comic-manga"
-      categoryName="{{ 'CATEGORIES.COMIC_MANGA' | translate }}"></app-carousel>
-  </div>
+  @if (getCategoryId('comic-manga')) {
+    <div class="max-w-[1414px] mx-auto px-4 pb-12">
+      <app-carousel 
+        categoryTitle="{{ 'CATEGORIES.COMIC_MANGA' | translate }}" 
+        categoryName="comic-manga"
+        [categoryId]="getCategoryId('comic-manga')">
+      </app-carousel>
+    </div>
+  }
 </div>
 <app-footer></app-footer>

@@ -1,7 +1,5 @@
-<!-- Overlay (fondo oscuro cuando el menú está abierto) -->
 <div *ngIf="isMenuOpen()" class="menu-overlay" (click)="closeMenu()"></div>
 
-<!-- Menú lateral deslizante -->
 <div class="side-menu" [class.menu-open]="isMenuOpen()">
   <div class="side-menu-header">
     <img src="assets/bookMatch-logo-transparent.png" alt="BookMatch Logo" class="h-10 w-10 lg:h-12 lg:w-12 mr-2" />
@@ -14,7 +12,6 @@
     </button>
   </div>
   <div class="side-menu-content">
-    <!-- Aquí puedes agregar los elementos del menú -->
     <div class="menu-item w-full">
       <a href="home" class="menu-link flex items-center justify-start gap-3 w-full p-2">
         <span class="material-symbols-outlined text-xl">home</span>
@@ -45,15 +42,11 @@
   </div>
 </div>
 
-<!-- Navbar -->
 <nav class="bg-white shadow-md sticky top-0 z-50 border-b" style="border-color: #E9E1D1;">
   <div class="container mx-auto px-2 sm:px-4 py-2 md:py-3 lg:py-4">
-    <!-- Layout para móvil: una sola fila compacta -->
     <div class="flex items-center justify-between gap-2 md:gap-4">
 
-      <!-- Sección izquierda: Menú hamburguesa (siempre visible) + Logo y texto (solo desktop) -->
       <div class="flex items-center gap-2 md:gap-3">
-        <!-- Icono de menú hamburguesa -->
         <button (click)="toggleMenu()"
           class="flex items-center justify-center p-2 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0"
           aria-label="Abrir menú">
@@ -63,7 +56,6 @@
           </svg>
         </button>
 
-        <!-- Logo y texto BookMatch (oculto en móvil) -->
         <div class="hidden md:flex items-center cursor-pointer" (click)="goHome()">
           <img src="assets/bookMatch-logo-transparent.png" alt="BookMatch Logo"
             class="h-10 w-10 lg:h-12 lg:w-12 mr-2" />
@@ -71,7 +63,6 @@
         </div>
       </div>
 
-      <!-- Barra de búsqueda (centro) - Responsive -->
       <div class="flex-1 max-w-xs sm:max-w-md md:max-w-lg lg:max-w-2xl mx-2 md:mx-4">
         <div class="relative">
           <input type="text" placeholder="{{ 'HEADER.SEARCH_PLACEHOLDER' | translate }}"
@@ -86,35 +77,30 @@
         </div>
       </div>
 
-      <!-- Sección derecha: Iconos y botón cerrar sesión -->
       <div class="flex items-center gap-1 sm:gap-2 md:gap-4 flex-shrink-0">
 
-        <!-- Texto Bienvenido (solo desktop) -->
         <span class="hidden lg:block text-base whitespace-nowrap" style="color: #45332D;">
-          {{ 'HEADER.WELCOME' | translate }} <span class="font-semibold">{{ authService.currentUser()?.displayName
-            }}</span>
+          {{ 'HEADER.WELCOME' | translate }} 
+          <span class="font-semibold">{{ authService.currentUser()?.fullName || '...' }}</span>
         </span>
 
-        @if (authService.currentUser()?.photoURL==null) {
-        <!-- Icono de perfil -->
-        <button class="flex items-center justify-center p-1.5 md:p-2 hover:bg-gray-100 rounded-lg transition-colors"
-          (click)="goProfile()">
-          <svg class="w-6 h-6 md:w-8 md:h-8" style="color: #45332D;" xmlns="http://www.w3.org/2000/svg" fill="none"
-            viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round"
-              d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a9 9 0 1 0-11.963 0m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-          </svg>
-        </button>
+        @if (!authService.currentUser()?.avatarUrl) {
+          <button class="flex items-center justify-center p-1.5 md:p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            (click)="goProfile()">
+            <svg class="w-6 h-6 md:w-8 md:h-8" style="color: #45332D;" xmlns="http://www.w3.org/2000/svg" fill="none"
+              viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a9 9 0 1 0-11.963 0m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+            </svg>
+          </button>
         } @else {
-        <div class="flex items-center justify-center p-1.5 md:p-2 hover:bg-gray-100 rounded-lg transition-colors"
-          (click)="goProfile()">
-          <img src="{{authService.currentUser()?.photoURL}}" alt=""
-            class="w-6 h-6 md:w-8 md:h-8 rounded-full object-cover">
-        </div>
+          <div class="flex items-center justify-center p-1.5 md:p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            (click)="goProfile()">
+            <img [src]="authService.currentUser()?.avatarUrl" alt="Avatar"
+              class="w-6 h-6 md:w-8 md:h-8 rounded-full object-cover">
+          </div>
         }
 
-
-        <!-- Icono de carrito -->
         <a routerLink="/cart"
           class="relative flex items-center justify-center p-1.5 md:p-2 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer">
           <svg class="w-5 h-5 md:w-7 md:h-7" style="color: #45332D;" fill="none" stroke="currentColor"
@@ -129,7 +115,6 @@
           </span>
         </a>
 
-        <!-- Botón Cerrar Sesión (oculto en móvil, visible desde tablet) -->
         <button (click)="logout()"
           class="hidden sm:block px-2 py-1.5 md:px-3 lg:px-4 md:py-2 rounded-lg transition-colors duration-200 font-medium whitespace-nowrap text-xs sm:text-sm md:text-base"
           style="background-color: #E0A15E; color: #FCF5E2;" onmouseover="this.style.backgroundColor='#B88B65'"

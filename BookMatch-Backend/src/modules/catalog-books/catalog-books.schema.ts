@@ -20,7 +20,7 @@ export const createCatalogBookSchema = baseCatalogBookSchema.extend({
 
 export const updateCatalogBookSchema = baseCatalogBookSchema.partial();
 
-// --- NUEVO: Esquema para los filtros de búsqueda (GET) ---
+// --- Esquema para los filtros de búsqueda (GET) ---
 export const getCatalogBooksQuerySchema = z.object({
   page: z.coerce.number().int().positive().default(1),
   limit: z.coerce.number().int().positive().max(100).default(20),
@@ -42,6 +42,14 @@ export const getCatalogBooksQuerySchema = z.object({
   ]).default('newest'),
 });
 
+// --- NUEVO: Esquema para crear una Reseña ---
+export const createReviewSchema = z.object({
+  rating: z.number().int().min(1).max(5, 'La valoración debe ser entre 1 y 5 estrellas'),
+  comment: z.string().max(500, 'El comentario no puede exceder los 500 caracteres').optional(),
+});
+
 export type CreateCatalogBookInput = z.infer<typeof createCatalogBookSchema>;
 export type UpdateCatalogBookInput = z.infer<typeof updateCatalogBookSchema>;
 export type GetCatalogBooksQuery = z.infer<typeof getCatalogBooksQuerySchema>;
+// Exportamos el tipo de la reseña para usarlo en el servicio
+export type CreateReviewInput = z.infer<typeof createReviewSchema>;

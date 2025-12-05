@@ -3,6 +3,7 @@ import { auth } from '../../middleware/auth.js';
 import { validate } from '../../middleware/validate.js';
 import { updateUserSchema, updateProfileSchema } from './users.schema.js';
 import { listUsersCtrl, getUserCtrl, meCtrl, updateUserCtrl, deleteUserCtrl, updateProfileCtrl } from './users.controller.js';
+import { getProfile } from './users.controller.js';
 
 const router = Router();
 
@@ -92,6 +93,8 @@ router.get('/', auth, listUsersCtrl);
  */
 router.get('/me', auth, meCtrl);
 router.patch('/me', auth, validate(updateProfileSchema), updateProfileCtrl);
+
+router.get('/profile', auth, getProfile);
 
 /**
  * @swagger
