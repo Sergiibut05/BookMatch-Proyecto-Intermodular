@@ -1,8 +1,13 @@
 import { Prisma } from '@prisma/client';
 import { prisma } from '../../config/db.js';
-import type { CreateCatalogBookInput, UpdateCatalogBookInput, GetCatalogBooksQuery } from './catalog-books.schema.js';
+import type { 
+  CreateCatalogBookInput, 
+  UpdateCatalogBookInput, 
+  GetCatalogBooksQuery,
+  CreateReviewInput 
+} from './catalog-books.schema.js';
 
-// --- TUS HELPERS ORIGINALES (INTACTOS) ---
+// --- HELPERS Y MAPEOS (INTACTOS) ---
 
 const catalogBookWithCategories = Prisma.validator<Prisma.CatalogBookDefaultArgs>()({
   select: {
@@ -28,7 +33,7 @@ function mapCatalogBook(record: CatalogBookRecord) {
   const { categories, reviews, ...rest } = record;
   return {
     ...rest,
-    price: Number(rest.price), // Asegurar Number
+    price: Number(rest.price),
     categories: categories.map((entry) => entry.category),
     reviews: (reviews || []).map((review) => ({
       ...review,
@@ -57,7 +62,7 @@ async function ensureCategoriesExist(categoryIds: number[] | undefined) {
   }
 }
 
-// --- NUEVA FUNCIÓN DE FILTRADO (REEMPLAZA A listCatalogBooks) ---
+// --- FUNCIONES DE LECTURA (INTACTAS) ---
 
 export const getCatalogBooks = async (query: GetCatalogBooksQuery) => {
   const { page, limit, search, minPrice, maxPrice, categoryId, inStock, sortBy, minRating } = query;
@@ -104,7 +109,6 @@ export const getCatalogBooks = async (query: GetCatalogBooksQuery) => {
     case 'newest': default: orderBy = { createdAt: 'desc' }; break;
   }
 
-  // 4. Ejecutar consulta (Usando tu validador original)
   const [total, books] = await prisma.$transaction([
     prisma.catalogBook.count({ where }),
     prisma.catalogBook.findMany({
@@ -112,12 +116,11 @@ export const getCatalogBooks = async (query: GetCatalogBooksQuery) => {
       orderBy,
       skip: (page - 1) * limit,
       take: limit,
-      ...catalogBookWithCategories, // <--- USAMOS TU ESTRUCTURA SELECT ORIGINAL
+      ...catalogBookWithCategories,
     }),
   ]);
 
   return {
-    // Casteamos a tu tipo Record para que TypeScript no se queje del mapeo
     items: (books as unknown as CatalogBookRecord[]).map(mapCatalogBook),
     total,
     page,
@@ -125,8 +128,6 @@ export const getCatalogBooks = async (query: GetCatalogBooksQuery) => {
     totalPages: Math.ceil(total / limit),
   };
 };
-
-// --- TUS FUNCIONES CRUD ORIGINALES (INTACTAS) ---
 
 export async function findCatalogBookById(id: number) {
   const book = await prisma.catalogBook.findUnique({
@@ -137,33 +138,31 @@ export async function findCatalogBookById(id: number) {
   return book ? mapCatalogBook(book) : null;
 }
 
-// Alias para compatibilidad
 export const getCatalogBookById = findCatalogBookById;
+
+export async function getAllCategories() {
+  const categories = await prisma.category.findMany({
+    orderBy: { name: 'asc' },
+    select: { id: true, name: true, slug: true, type: true }
+  });
+  return categories;
+}
+
+// --- FUNCIONES CRUD (INTACTAS) ---
 
 export async function createCatalogBook(input: CreateCatalogBookInput) {
   await ensureCategoriesExist(input.categoryIds);
 
   const {
-    categoryIds = [],
-    price,
-    stock = 0,
-    imageUrls = [],
-    description,
-    coverUrl,
-    title,
-    author,
-    isbn,
+    categoryIds = [], price, stock = 0, imageUrls = [], description, coverUrl, title, author, isbn,
   } = input;
 
   const data: Prisma.CatalogBookCreateInput = {
-    title,
-    author,
-    isbn,
+    title, author, isbn,
     description: description ?? null,
     coverUrl: coverUrl ?? null,
     price: new Prisma.Decimal(price),
-    stock,
-    imageUrls,
+    stock, imageUrls,
   };
 
   if (categoryIds.length) {
@@ -188,15 +187,7 @@ export async function updateCatalogBook(id: number, input: UpdateCatalogBookInpu
   }
 
   const {
-    categoryIds,
-    price,
-    imageUrls,
-    description,
-    coverUrl,
-    stock,
-    title,
-    author,
-    isbn,
+    categoryIds, price, imageUrls, description, coverUrl, stock, title, author, isbn,
   } = input;
 
   const data: Prisma.CatalogBookUpdateInput = {};
@@ -233,19 +224,60 @@ export async function deleteCatalogBook(id: number) {
   await prisma.catalogBook.delete({ where: { id } });
 }
 
-export async function getAllCategories() {
-  // Busca todas las categorías en la base de datos
-  const categories = await prisma.category.findMany({
-    orderBy: {
-      name: 'asc', // Opcional: Para que te lleguen ordenadas alfabéticamente al frontend
-    },
-    select: {
-      id: true,
-      name: true,
-      slug: true,
-      type: true, // Asumo que tienes este campo basado en tu código anterior
-    }
+// --- NUEVA FUNCIÓN PARA RESEÑAS (SOLUCIÓN DEFINITIVA) ---
+
+export async function addReview(bookId: number, userId: number, input: CreateReviewInput) {
+  // 1. Verificar si el libro existe
+  const book = await prisma.catalogBook.findUnique({
+    where: { id: bookId },
+    select: { id: true }
   });
 
-  return categories;
+  if (!book) {
+    const error = new Error('Libro no encontrado');
+    (error as any).code = 'BOOK_NOT_FOUND';
+    throw error;
+  }
+
+  // 2. Crear la reseña usando 'UncheckedCreateInput'
+  const review = await prisma.review.create({
+    data: {
+      rating: input.rating,
+      comment: input.comment,
+      catalogBookId: bookId, 
+      userId: userId,        
+    } as Prisma.ReviewUncheckedCreateInput 
+  });
+
+  return {
+    ...review,
+    createdAt: review.createdAt.toISOString()
+  };
 }
+
+// --- MODIFICACIÓN: FUNCIÓN PARA BORRAR RESEÑA ---
+export async function deleteReview(reviewId: number, userId: number) {
+  // 1. Buscamos la reseña
+  const review = await prisma.review.findUnique({
+    where: { id: reviewId },
+  });
+
+  if (!review) {
+    const error: any = new Error('Reseña no encontrada');
+    error.code = 'REVIEW_NOT_FOUND';
+    throw error;
+  }
+
+  // 2. Verificamos que el usuario sea el dueño
+  if (review.userId !== userId) {
+    const error: any = new Error('No tienes permiso para borrar esta reseña');
+    error.code = 'UNAUTHORIZED';
+    throw error;
+  }
+
+  // 3. Borramos
+  return await prisma.review.delete({
+    where: { id: reviewId },
+  });
+}
+// <--- FIN MODIFICACIÓN

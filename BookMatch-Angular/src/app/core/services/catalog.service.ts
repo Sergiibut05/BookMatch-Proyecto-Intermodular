@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable, from } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
-import { CatalogBook, CreateCatalogBookDto } from '@shared/models';
+import { CatalogBook, CreateCatalogBookDto, Review } from '@shared/models';
 import { AuthService } from './auth.service';
 
 @Injectable({
@@ -52,7 +52,6 @@ export class CatalogService {
     );
   }
 
-  // --- FUNCIÓN COMPLETA CON TODOS LOS FILTROS DEL BACKEND ---
   getBooksByCategoryName(
     name: string, 
     page = 1, 
@@ -60,8 +59,8 @@ export class CatalogService {
     minPrice?: number | null, 
     maxPrice?: number | null, 
     sortBy?: string,
-    minRating?: number | null, // <--- Nuevo
-    inStock?: boolean          // <--- Nuevo
+    minRating?: number | null,
+    inStock?: boolean
   ) {
     return this.authHeaders().pipe(
       switchMap(headers => {
@@ -74,15 +73,33 @@ export class CatalogService {
         if (maxPrice) params = params.set('maxPrice', maxPrice.toString());
         if (sortBy) params = params.set('sortBy', sortBy);
         
-        // Agregamos los filtros extra de la Tarea 1
         if (minRating) params = params.set('minRating', minRating.toString());
-        if (inStock) params = params.set('inStock', 'true'); // El backend espera string 'true'
+        if (inStock) params = params.set('inStock', 'true');
 
         return this.http.get<{ total: number; page: number; limit: number; items: CatalogBook[] }>(
           this.apiUrl,
           { headers, params }
         );
       })
+    );
+  }
+
+  // --- FUNCIÓN PARA ENVIAR RESEÑA ---
+  addReview(bookId: number, data: { rating: number; comment?: string }): Observable<Review> {
+    return this.authHeaders().pipe(
+      switchMap(headers => 
+        this.http.post<Review>(`${this.apiUrl}/${bookId}/reviews`, data, { headers })
+      )
+    );
+  }
+
+  // --- MODIFICACIÓN: NUEVA FUNCIÓN PARA BORRAR RESEÑA ---
+  deleteReview(reviewId: number): Observable<any> {
+    return this.authHeaders().pipe(
+      switchMap(headers => 
+        // Llamada DELETE a /api/catalog-books/reviews/:id
+        this.http.delete(`${this.apiUrl}/reviews/${reviewId}`, { headers })
+      )
     );
   }
 }
