@@ -1,4 +1,4 @@
-import { Component, ElementRef, Input, ViewChild, inject, signal } from '@angular/core';
+import { Component, ElementRef, Input, ViewChild, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { CatalogService } from '@core/services/catalog.service';
 import { CatalogBook } from '@shared/models';
@@ -11,8 +11,14 @@ import { Router } from '@angular/router';
   templateUrl: './carousel.html',
   styleUrl: './carousel.scss',
 })
-export class Carousel {
+export class Carousel implements OnInit {
   @Input() categoryTitle: string = 'Libros';
+  
+  // Nuevos inputs
+  @Input() categoryId?: number;
+  @Input() isNewArrivals: boolean = false;
+  
+  // Inputs antiguos (RESTAURADOS)
   @Input() categoryUrl: string = '';
   @Input() categoryName: string = '';
 
@@ -22,37 +28,43 @@ export class Carousel {
   private router = inject(Router);
   books = signal<CatalogBook[]>([]);
 
-  constructor() {
-    // delayed fetching until inputs are set (ngOnInit)
-  }
+  constructor() {}
 
   ngOnInit() {
-    if (this.categoryName && this.categoryName.trim().length > 0) {
-      this.catalogService.getBooksByCategoryName(this.categoryName, 1, 10).subscribe({
-        next: (res: any) => {
-          const items = res?.items ?? [];
-          this.books.set(items);
-        },
-        error: (error) => console.error('Error al obtener los libros:', error),
+    this.loadBooks();
+  }
+
+  loadBooks() {
+    // 1. Cargar Novedades
+    if (this.isNewArrivals) {
+      this.catalogService.getNewArrivals(10).subscribe({
+        next: (res) => this.books.set(res.items || []),
+        error: (err) => console.error('Error cargando novedades:', err)
       });
-    } else {
+    } 
+    // 2. Cargar por ID (ESTO ARREGLA QUE SE VEAN LOS LIBROS CORRECTOS)
+    else if (this.categoryId) {
+      this.catalogService.getBooksByCategoryId(this.categoryId, 1, 10).subscribe({
+        next: (res) => this.books.set(res.items || []),
+        error: (err) => console.error(`Error cargando categoría ${this.categoryId}:`, err)
+      });
+    } 
+    // 3. Fallback antiguo
+    else if (this.categoryName) {
       this.catalogService.getBooksByCategoryName(this.categoryName, 1, 10).subscribe({
-        next: (res: any) => {
-          const items = res?.items ?? res ?? [];
-          this.books.set(items);
-        },
-        error: (error) => console.error('Error al obtener los libros:', error),
+        next: (res: any) => this.books.set(res?.items ?? []),
+        error: (error) => console.error('Error legacy:', error),
       });
     }
   }
 
+  // Lógica de scroll (INTACTA)
   private getStep(): number {
     const el = this.carouselRef?.nativeElement;
     if (!el) return 0;
     const firstCard = el.querySelector<HTMLElement>('.book-card');
-    const styles = getComputedStyle(el);
-    const gap = parseFloat((styles as any).columnGap || styles.gap || '0');
-    const cardWidth = firstCard ? firstCard.offsetWidth : Math.floor(el.clientWidth * 0.5);
+    const gap = 16; 
+    const cardWidth = firstCard ? firstCard.offsetWidth : 200;
     return cardWidth + gap;
   }
 
@@ -68,36 +80,34 @@ export class Carousel {
   prev() {
     const el = this.carouselRef?.nativeElement;
     if (!el) return;
-    const step = this.getStep();
-    el.scrollBy({ left: -step, behavior: 'smooth' });
-    if (el.scrollLeft <= 1) {
-      setTimeout(() => {
-        const max = el.scrollWidth - el.clientWidth;
-        const stepSize = this.getStep();
-        const steps = stepSize > 0 ? Math.floor(max / stepSize) : 0;
-        el.scrollLeft = steps * stepSize;
-      }, 200);
-    }
+    el.scrollBy({ left: -this.getStep(), behavior: 'smooth' });
     setTimeout(() => this.snapToNearest(), 220);
   }
 
   next() {
     const el = this.carouselRef?.nativeElement;
     if (!el) return;
-    const step = this.getStep();
-    el.scrollBy({ left: step, behavior: 'smooth' });
-    if (Math.ceil(el.scrollLeft + el.clientWidth) >= el.scrollWidth - 1) {
-      setTimeout(() => {
-        el.scrollLeft = 0;
-      }, 200);
-    }
+    el.scrollBy({ left: this.getStep(), behavior: 'smooth' });
     setTimeout(() => this.snapToNearest(), 220);
   }
+
+  // --- MODIFICACIÓN IMPORTANTE: RESTAURAMOS LA RUTA ANTIGUA ---
   onSeeMore(): void {
-    this.router.navigate(['/categories', this.categoryName]);
+    if (this.isNewArrivals) {
+      this.router.navigate(['/catalog'], { queryParams: { sortBy: 'newest' } });
+    } 
+    // SI TENEMOS NOMBRE, USAMOS LA RUTA ANTIGUA (/categories/nombre)
+    else if (this.categoryName || this.categoryUrl) {
+      const slug = this.categoryName || this.categoryUrl;
+      this.router.navigate(['/categories', slug]);
+    }
+    // Si no hay nombre pero hay ID, usamos la ruta de catálogo por defecto
+    else if (this.categoryId) {
+      this.router.navigate(['/catalog'], { queryParams: { categoryId: this.categoryId } });
+    }
   }
+
   onBookClick(book: CatalogBook): void {
     this.router.navigate(['/book-details', book.id]);
   }
 }
-

@@ -1,14 +1,18 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, signal, effect } from '@angular/core';
+import { Component, OnInit, signal, effect, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { LoaderComponent } from './shared/components/loader/loader.component';
+import { TranslationService } from './core/services/translation.service';
+
 @Component({
   selector: 'app-root',
   imports: [RouterOutlet, CommonModule, LoaderComponent],
   templateUrl: './app.html',
   styleUrl: './app.scss'
 })
-export class App implements OnInit{
+export class App implements OnInit {
+  private translationService = inject(TranslationService);
+
   protected readonly title = signal('BookMatch-Angular');
   showLoader = signal(true);
 
@@ -17,7 +21,7 @@ export class App implements OnInit{
     if (typeof document !== 'undefined') {
       document.body.classList.add('loader-active');
     }
-    
+
     // Agregar o remover clase al body cuando el loader cambia
     effect(() => {
       const loaderVisible = this.showLoader();

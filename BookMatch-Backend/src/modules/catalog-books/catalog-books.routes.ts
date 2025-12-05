@@ -14,7 +14,7 @@ import {
   deleteCatalogBookCtrl,
   getCategoriesCtrl,
   addReviewCtrl,
-  deleteReviewCtrl, // <--- MODIFICACIÓN: Importamos el nuevo controlador
+  deleteReviewCtrl,
 } from './catalog-books.controller.js';
 
 const router = Router();
@@ -25,7 +25,7 @@ const router = Router();
  * @swagger
  * tags:
  *   name: CatalogBooks
- *   description: Gestión de libros del catálogo
+ *   description: Gestión de libros del catálogo y reseñas
  */
 
 /**
@@ -35,42 +35,42 @@ const router = Router();
  *     summary: Lista libros del catálogo con filtros avanzados
  *     tags: [CatalogBooks]
  *     security:
- *        - bearerAuth: []
+ *       - bearerAuth: []
  *     parameters:
- *        - in: query
+ *       - in: query
  *         name: page
  *         schema:
  *           type: integer
- *         description: Página (default: 1)
- *        - in: query
+ *         description: Página (default 1)
+ *       - in: query
  *         name: limit
  *         schema:
  *           type: integer
- *         description: Tamaño página (default: 20)
- *        - in: query
+ *         description: Tamaño página (default 20)
+ *       - in: query
  *         name: search
  *         schema:
  *           type: string
  *         description: Buscar por título, autor o ISBN
- *        - in: query
+ *       - in: query
  *         name: minPrice
  *         schema:
  *           type: number
- *        - in: query
+ *       - in: query
  *         name: maxPrice
  *         schema:
  *           type: number
- *        - in: query
+ *       - in: query
  *         name: minRating
  *         schema:
  *           type: number
  *           minimum: 1
  *           maximum: 5
- *        - in: query
+ *       - in: query
  *         name: categoryId
  *         schema:
  *           type: integer
- *        - in: query
+ *       - in: query
  *         name: sortBy
  *         schema:
  *           type: string
@@ -83,20 +83,19 @@ const router = Router();
  */
 router.get('/', auth, getCatalogBooksCtrl);
 
-// --- Recuperando ruta de categorías (Tarea 1) ---
-// Debe ir ANTES de /:id para que no confunda "categories" con un ID
+// --- Recuperando ruta de categorías ---
 router.get('/categories', auth, getCategoriesCtrl);
 
 /**
  * @swagger
  * /api/catalog-books/{id}:
  *   get:
- *     summary: Obtiene un libro por ID
+ *     summary: Obtiene un libro por ID (incluyendo reseñas)
  *     tags: [CatalogBooks]
  *     security:
- *        - bearerAuth: []
+ *       - bearerAuth: []
  *     parameters:
- *        - in: path
+ *       - in: path
  *         name: id
  *         required: true
  *         schema:
@@ -114,11 +113,66 @@ router.get('/:id', auth, getCatalogBookCtrl);
 router.post('/', auth, validate(createCatalogBookSchema), createCatalogBookCtrl);
 router.patch('/:id', auth, validate(updateCatalogBookSchema), updateCatalogBookCtrl);
 router.delete('/:id', auth, deleteCatalogBookCtrl);
+
+/**
+ * @swagger
+ * /api/catalog-books/{id}/reviews:
+ *   post:
+ *     summary: Añadir una reseña a un libro
+ *     tags: [CatalogBooks]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID del libro
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               rating:
+ *                 type: integer
+ *                 minimum: 1
+ *                 maximum: 5
+ *               comment:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Reseña creada
+ *       409:
+ *         description: El usuario ya ha reseñado este libro
+ */
 router.post('/:id/reviews', auth, validate(createReviewSchema), addReviewCtrl);
 
-// --- MODIFICACIÓN: RUTA PARA BORRAR RESEÑA ---
-// Usamos :id para el ID de la reseña
-// La ruta será: DELETE /api/catalog-books/reviews/:id
+/**
+ * @swagger
+ * /api/catalog-books/reviews/{id}:
+ *   delete:
+ *     summary: Eliminar una reseña propia
+ *     tags: [CatalogBooks]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID de la reseña (NO del libro)
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Reseña eliminada correctamente
+ *       403:
+ *         description: No tienes permiso para borrar esta reseña
+ *       404:
+ *         description: Reseña no encontrada
+ */
 router.delete('/reviews/:id', auth, deleteReviewCtrl);
 
 export default router;

@@ -1,0 +1,133 @@
+{
+    "HEADER": {
+        "HOME": "Home",
+        "CATALOG": "Catalog",
+        "CATEGORIES": "Categories",
+        "PROFILE": "Profile",
+        "SEARCH_PLACEHOLDER": "Search...",
+        "WELCOME": "Welcome,",
+        "LOGOUT": "Logout",
+        "LOGOUT_SHORT": "Exit"
+    },
+    "LOGIN": {
+        "SUBTITLE": "Sign in to continue",
+        "EMAIL_LABEL": "Email",
+        "EMAIL_PLACEHOLDER": "you@email.com",
+        "EMAIL_ERROR": "Please enter a valid email",
+        "PASSWORD_LABEL": "Password",
+        "PASSWORD_ERROR": "Password must be at least 6 characters",
+        "SUBMIT_BUTTON": "Sign In",
+        "OR_CONTINUE_WITH": "Or continue with",
+        "NO_ACCOUNT": "Don't have an account?",
+        "REGISTER_LINK": "Register here",
+        "ERRORS": {
+            "USER_NOT_FOUND": "No account found with this email.",
+            "WRONG_PASSWORD": "Wrong password.",
+            "INVALID_EMAIL": "Invalid email.",
+            "USER_DISABLED": "This account has been disabled.",
+            "TOO_MANY_REQUESTS": "Too many requests. Try again later.",
+            "POPUP_CLOSED": "Sign in cancelled.",
+            "DEFAULT": "Error signing in. Try again."
+        }
+    },
+    "REGISTER": {
+        "SUBTITLE": "Create your account",
+        "NAME_LABEL": "Name",
+        "NAME_PLACEHOLDER": "your name",
+        "SURNAME_LABEL": "Last Name",
+        "SURNAME_PLACEHOLDER": "your last name",
+        "EMAIL_LABEL": "Email",
+        "EMAIL_PLACEHOLDER": "you@email.com",
+        "PASSWORD_LABEL": "Password",
+        "CONFIRM_PASSWORD_LABEL": "Confirm Password",
+        "SUBMIT_BUTTON": "Create Account",
+        "OR_CONTINUE_WITH": "Or continue with",
+        "ALREADY_HAVE_ACCOUNT": "Already have an account?",
+        "LOGIN_LINK": "Log in here",
+        "SUCCESS_MESSAGE": "Account created successfully. Redirecting...",
+        "ERRORS": {
+            "NAME_REQUIRED": "*Name is required",
+            "MIN_LENGTH_3": "*Must be at least 3 characters",
+            "SURNAME_REQUIRED": "*Last name is required",
+            "EMAIL_REQUIRED": "*Email is required",
+            "EMAIL_INVALID": "*Invalid email",
+            "PASSWORD_REQUIRED": "*Password is required",
+            "PASSWORD_PATTERN": "*At least one uppercase, one lowercase, one number and 8 characters",
+            "PASSWORD_MISMATCH": "*Passwords do not match",
+            "EMAIL_IN_USE": "Email is already in use",
+            "INVALID_EMAIL": "Invalid email",
+            "WEAK_PASSWORD": "Password is too weak",
+            "OPERATION_NOT_ALLOWED": "Operation not allowed",
+            "POPUP_CLOSED": "Authentication window closed",
+            "DEFAULT": "An error occurred. Try again"
+        }
+    },
+    "HOME": {
+        "FEATURES": {
+            "BUY_SELL": {
+                "TITLE": "Buy & Sell",
+                "DESCRIPTION": "Buy and sell books easily and securely. Find the titles you are looking for or give a second life to your favorite books."
+            },
+            "SWAP": {
+                "TITLE": "Digital Swap",
+                "DESCRIPTION": "Swap your books with other users easily. A sustainable way to discover new readings without spending money."
+            },
+            "AI": {
+                "TITLE": "AI Recommendations",
+                "DESCRIPTION": "Discover your next favorite reading thanks to our artificial intelligence that learns from your tastes and preferences."
+            }
+        }
+    },
+    "CATEGORIES": {
+        "NEW_ARRIVALS": "New Arrivals",
+        "SCI_FI": "Science Fiction",
+        "FANTASY": "Fantasy",
+        "ROMANCE": "Romance",
+        "MYSTERY_THRILLER": "Mystery / Thriller",
+        "YOUNG_ADULT": "Young Adult",
+        "COMIC_MANGA": "Comic / Manga"
+    },
+    "BOOK_DETAILS": {
+        "LOADING": "Loading book...",
+        "IN_STOCK": "In stock ({{stock}} available)",
+        "OUT_OF_STOCK": "Out of stock",
+        "DESCRIPTION_TITLE": "Description",
+        "REVIEWS_TITLE": "Reviews",
+        "NO_REVIEWS": "No reviews yet for this book.",
+        "ADDED_TO_CART": "Added!",
+        "ADD_TO_CART": "Add to cart",
+        "BUY_NOW": "Buy now",
+        "PROCESSING": "Processing...",
+        "BUY_WITH_STRIPE": "Buy with Stripe",
+        "AVAILABILITY": "Availability",
+        "IMMEDIATE_SHIPPING": "Immediate shipping",
+        "NO_STOCK_LABEL": "Out of stock",
+        "FORMAT": "Format",
+        "PAPERBACK": "Paperback",
+        "NOT_FOUND_TITLE": "Book not found",
+        "NOT_FOUND_DESC": "The book you are looking for is not available."
+    },
+    "CART": {
+        "TITLE": "Your Cart",
+        "SUBTITLE": "{{count}} books ready to read",
+        "CLEAR_CART": "Clear Cart",
+        "EMPTY_TITLE": "Your cart is empty",
+        "EMPTY_DESC": "It looks like you haven't added any stories to your collection yet.",
+        "EXPLORE_CATALOG": "Explore Catalog",
+        "REMOVE_ITEM": "Remove",
+        "ORDER_SUMMARY": "Order Summary",
+        "SUBTOTAL": "Subtotal",
+        "ESTIMATED_SHIPPING": "Estimated Shipping",
+        "FREE": "Free",
+        "TOTAL": "Total",
+        "TAX_INCLUDED": "Tax included",
+        "CHECKOUT": "Checkout",
+        "SECURE_PAYMENT": "Secure payment processed by Stripe",
+        "MODAL": {
+            "TITLE": "Clear cart?",
+            "DESC": "Are you sure you want to remove all books? This action cannot be undone.",
+            "CANCEL": "Cancel",
+            "CONFIRM": "Yes, clear"
+        }
+    }
+}

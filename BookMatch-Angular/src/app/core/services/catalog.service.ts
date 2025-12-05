@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable, from } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
-import { CatalogBook, CreateCatalogBookDto, Review } from '@shared/models';
+import { CatalogBook, CreateCatalogBookDto, Review, Category } from '@shared/models';
 import { AuthService } from './auth.service';
 
 @Injectable({
@@ -24,6 +24,52 @@ export class CatalogService {
       })
     );
   }
+
+  // --- NUEVOS MÉTODOS PARA EL FILTRADO CORRECTO ---
+
+  // 1. Obtener lista maestra de categorías (para saber sus IDs)
+  getCategories(): Observable<Category[]> {
+    return this.authHeaders().pipe(
+      switchMap(headers => 
+        this.http.get<Category[]>(`${this.apiUrl}/categories`, { headers })
+      )
+    );
+  }
+
+  // 2. Filtrar libros por ID de categoría (Lo que pide tu backend)
+  getBooksByCategoryId(categoryId: number, page = 1, limit = 10) {
+    return this.authHeaders().pipe(
+      switchMap(headers => {
+        let params = new HttpParams()
+          .set('categoryId', categoryId.toString())
+          .set('page', page.toString())
+          .set('limit', limit.toString());
+
+        return this.http.get<{ total: number; page: number; limit: number; items: CatalogBook[] }>(
+          this.apiUrl,
+          { headers, params }
+        );
+      })
+    );
+  }
+
+  // 3. Filtro de Novedades (ordenado por fecha)
+  getNewArrivals(limit = 10) {
+    return this.authHeaders().pipe(
+      switchMap(headers => {
+        const params = new HttpParams()
+          .set('sortBy', 'newest')
+          .set('limit', limit.toString());
+
+        return this.http.get<{ total: number; items: CatalogBook[] }>(
+          this.apiUrl, 
+          { headers, params }
+        );
+      })
+    );
+  }
+
+  // --- MÉTODOS EXISTENTES (INTACTOS) ---
 
   getAllBooks(page = 1, limit = 10) {
     return this.authHeaders().pipe(
@@ -52,6 +98,8 @@ export class CatalogService {
     );
   }
 
+  // Este método buscaba por nombre, pero el backend lo ignora. 
+  // Lo mantenemos para no romper código antiguo, pero deberías usar getBooksByCategoryId.
   getBooksByCategoryName(
     name: string, 
     page = 1, 
@@ -84,7 +132,6 @@ export class CatalogService {
     );
   }
 
-  // --- FUNCIÓN PARA ENVIAR RESEÑA ---
   addReview(bookId: number, data: { rating: number; comment?: string }): Observable<Review> {
     return this.authHeaders().pipe(
       switchMap(headers => 
@@ -93,11 +140,9 @@ export class CatalogService {
     );
   }
 
-  // --- MODIFICACIÓN: NUEVA FUNCIÓN PARA BORRAR RESEÑA ---
   deleteReview(reviewId: number): Observable<any> {
     return this.authHeaders().pipe(
       switchMap(headers => 
-        // Llamada DELETE a /api/catalog-books/reviews/:id
         this.http.delete(`${this.apiUrl}/reviews/${reviewId}`, { headers })
       )
     );

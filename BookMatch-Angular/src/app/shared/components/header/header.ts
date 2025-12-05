@@ -4,9 +4,12 @@ import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '@core/services/auth.service';
 import { CartService } from '@core/services/cart.service';
 
+import { TranslateModule } from '@ngx-translate/core';
+import { LanguageSelectorComponent } from '../language-selector/language-selector';
+
 @Component({
   selector: 'app-header',
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, LanguageSelectorComponent, TranslateModule],
   templateUrl: './header.html',
   styleUrl: './header.scss',
 })
@@ -33,15 +36,15 @@ export class Header {
     });
   }
 
-  goProfile(){
+  goProfile() {
     this.router.navigate(['/profile'])
   }
 
-  goHome(){
+  goHome() {
     this.router.navigate(['/home'])
   }
 
-  goCart(){
+  goCart() {
     this.router.navigate(['/cart'])
   }
 

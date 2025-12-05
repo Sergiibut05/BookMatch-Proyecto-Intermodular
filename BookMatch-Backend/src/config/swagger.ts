@@ -292,7 +292,7 @@ const options: swaggerJsdoc.Options = {
     ],
   },
   apis: [join(__dirname, '../modules/**/*.routes.js'),
-    join(__dirname, '../modules/**/*.routes.ts'),
+        join(__dirname, '../modules/**/*.routes.ts')
   ],
 };
 

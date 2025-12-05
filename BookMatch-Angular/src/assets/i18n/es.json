@@ -1,0 +1,133 @@
+{
+    "HEADER": {
+        "HOME": "Inicio",
+        "CATALOG": "Catálogo",
+        "CATEGORIES": "Categorías",
+        "PROFILE": "Perfil",
+        "SEARCH_PLACEHOLDER": "Buscar...",
+        "WELCOME": "Bienvenido,",
+        "LOGOUT": "Cerrar Sesión",
+        "LOGOUT_SHORT": "Salir"
+    },
+    "LOGIN": {
+        "SUBTITLE": "Inicia sesión para continuar",
+        "EMAIL_LABEL": "Correo electrónico",
+        "EMAIL_PLACEHOLDER": "tu@email.com",
+        "EMAIL_ERROR": "Por favor, introduce un email válido",
+        "PASSWORD_LABEL": "Contraseña",
+        "PASSWORD_ERROR": "La contraseña debe tener al menos 6 caracteres",
+        "SUBMIT_BUTTON": "Iniciar Sesión",
+        "OR_CONTINUE_WITH": "O continúa con",
+        "NO_ACCOUNT": "¿No tienes cuenta?",
+        "REGISTER_LINK": "Regístrate aquí",
+        "ERRORS": {
+            "USER_NOT_FOUND": "No existe una cuenta con este correo.",
+            "WRONG_PASSWORD": "Contraseña incorrecta.",
+            "INVALID_EMAIL": "Correo electrónico inválido.",
+            "USER_DISABLED": "Esta cuenta ha sido deshabilitada.",
+            "TOO_MANY_REQUESTS": "Demasiados intentos. Intenta más tarde.",
+            "POPUP_CLOSED": "Inicio de sesión cancelado.",
+            "DEFAULT": "Error al iniciar sesión. Intenta de nuevo."
+        }
+    },
+    "REGISTER": {
+        "SUBTITLE": "Crea tu cuenta",
+        "NAME_LABEL": "Nombre",
+        "NAME_PLACEHOLDER": "tu nombre",
+        "SURNAME_LABEL": "Apellidos",
+        "SURNAME_PLACEHOLDER": "tus apellidos",
+        "EMAIL_LABEL": "Correo electrónico",
+        "EMAIL_PLACEHOLDER": "tu@email.com",
+        "PASSWORD_LABEL": "Contraseña",
+        "CONFIRM_PASSWORD_LABEL": "Confirmar contraseña",
+        "SUBMIT_BUTTON": "Crear Cuenta",
+        "OR_CONTINUE_WITH": "O continúa con",
+        "ALREADY_HAVE_ACCOUNT": "¿Ya tienes cuenta?",
+        "LOGIN_LINK": "Inicia sesión aquí",
+        "SUCCESS_MESSAGE": "Cuenta creada exitosamente. Redirigiendo...",
+        "ERRORS": {
+            "NAME_REQUIRED": "*El campo nombre es requerido",
+            "MIN_LENGTH_3": "*Debe introducir al menos 3 caracteres",
+            "SURNAME_REQUIRED": "*El campo apellidos es requerido",
+            "EMAIL_REQUIRED": "*El campo email es requerido",
+            "EMAIL_INVALID": "*El email no es correcto",
+            "PASSWORD_REQUIRED": "*El campo password es requerido",
+            "PASSWORD_PATTERN": "*Al menos una mayúscula, una minúscula, un número y 8 caracteres",
+            "PASSWORD_MISMATCH": "*Las contraseñas no coinciden",
+            "EMAIL_IN_USE": "El email ya está en uso",
+            "INVALID_EMAIL": "El email no es válido",
+            "WEAK_PASSWORD": "La contraseña es demasiado débil",
+            "OPERATION_NOT_ALLOWED": "Operación no permitida",
+            "POPUP_CLOSED": "La ventana de autenticación se cerró",
+            "DEFAULT": "Ha ocurrido un error. Inténtalo de nuevo"
+        }
+    },
+    "HOME": {
+        "FEATURES": {
+            "BUY_SELL": {
+                "TITLE": "Compra & Venta",
+                "DESCRIPTION": "Compra y vende libros de forma fácil y segura. Encuentra los títulos que buscas o dale una segunda vida a tus libros favoritos."
+            },
+            "SWAP": {
+                "TITLE": "Trueque Digital",
+                "DESCRIPTION": "Intercambia tus libros con otros usuarios de manera sencilla. Una forma sostenible de descubrir nuevas lecturas sin gastar dinero."
+            },
+            "AI": {
+                "TITLE": "Recomendaciones IA",
+                "DESCRIPTION": "Descubre tu próxima lectura favorita gracias a nuestra inteligencia artificial que aprende de tus gustos y preferencias."
+            }
+        }
+    },
+    "CATEGORIES": {
+        "NEW_ARRIVALS": "Novedades",
+        "SCI_FI": "Ciencia Ficción",
+        "FANTASY": "Fantasía",
+        "ROMANCE": "Romance",
+        "MYSTERY_THRILLER": "Misterio / Thriller",
+        "YOUNG_ADULT": "Juvenil",
+        "COMIC_MANGA": "Cómic / Manga"
+    },
+    "BOOK_DETAILS": {
+        "LOADING": "Cargando libro...",
+        "IN_STOCK": "En stock ({{stock}} disponibles)",
+        "OUT_OF_STOCK": "Agotado",
+        "DESCRIPTION_TITLE": "Descripción",
+        "REVIEWS_TITLE": "Reseñas",
+        "NO_REVIEWS": "Aún no hay reseñas para este libro.",
+        "ADDED_TO_CART": "¡Añadido!",
+        "ADD_TO_CART": "Añadir a la cesta",
+        "BUY_NOW": "Comprar ahora",
+        "PROCESSING": "Procesando...",
+        "BUY_WITH_STRIPE": "Comprar con Stripe",
+        "AVAILABILITY": "Disponibilidad",
+        "IMMEDIATE_SHIPPING": "Envío inmediato",
+        "NO_STOCK_LABEL": "Sin stock",
+        "FORMAT": "Formato",
+        "PAPERBACK": "Tapa blanda",
+        "NOT_FOUND_TITLE": "Libro no encontrado",
+        "NOT_FOUND_DESC": "El libro que buscas no está disponible."
+    },
+    "CART": {
+        "TITLE": "Tu Carrito",
+        "SUBTITLE": "{{count}} libros listos para leer",
+        "CLEAR_CART": "Vaciar Carrito",
+        "EMPTY_TITLE": "Tu carrito está vacío",
+        "EMPTY_DESC": "Parece que aún no has añadido ninguna historia a tu colección.",
+        "EXPLORE_CATALOG": "Explorar Catálogo",
+        "REMOVE_ITEM": "Eliminar",
+        "ORDER_SUMMARY": "Resumen del Pedido",
+        "SUBTOTAL": "Subtotal",
+        "ESTIMATED_SHIPPING": "Envío estimado",
+        "FREE": "Gratis",
+        "TOTAL": "Total",
+        "TAX_INCLUDED": "Impuestos incluidos",
+        "CHECKOUT": "Finalizar Compra",
+        "SECURE_PAYMENT": "Pago seguro procesado por Stripe",
+        "MODAL": {
+            "TITLE": "¿Vaciar el carrito?",
+            "DESC": "¿Estás seguro de que quieres eliminar todos los libros? Esta acción no se puede deshacer.",
+            "CANCEL": "Cancelar",
+            "CONFIRM": "Sí, vaciar"
+        }
+    }
+}

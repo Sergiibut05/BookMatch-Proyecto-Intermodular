@@ -7,7 +7,9 @@
       <div class="flex items-center justify-center min-h-[60vh]">
         <div class="text-center">
           <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-t-transparent" style="border-color: #E0A15E;"></div>
-          <p class="mt-4 text-lg" style="color: #45332D;">Cargando libro...</p>
+          <p class="mt-4 text-lg" style="color: #45332D;">
+            {{ 'BOOK_DETAILS.LOADING' | translate }}...
+          </p>
         </div>
       </div>
     }
@@ -56,14 +58,24 @@
                 <span class="px-2 py-0.5 rounded text-xs font-bold uppercase tracking-wide" style="background-color: #E9E1D1; color: #45332D;">
                   {{ book()!.categories?.[0]?.name || 'Libro' }}
                 </span>
+                
                 @if (book()!.stock > 0) {
                   <span class="text-xs font-medium text-green-600 flex items-center gap-1">
-                    <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span> En stock
+                    <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span> 
+                    {{ 'BOOK_DETAILS.IN_STOCK' | translate:{ stock: book()!.stock } }}
+                  </span>
+                } @else {
+                   <span class="text-xs font-medium text-red-600 flex items-center gap-1">
+                    <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>
+                    {{ 'BOOK_DETAILS.OUT_OF_STOCK' | translate }}
                   </span>
                 }
               </div>
               <h1 class="text-3xl md:text-5xl font-extrabold mb-2 leading-tight" style="color: #45332D;">{{ book()!.title }}</h1>
               <p class="text-xl md:text-2xl font-medium" style="color: #4E6A6A;">{{ book()!.author }}</p>
+              @if (book()!.isbn) {
+                 <p class="text-sm" style="color: #4E6A6A; opacity: 0.7;">ISBN: {{ book()!.isbn }}</p>
+              }
             </div>
 
             <div class="flex flex-col gap-4 p-6 rounded-xl" style="background-color: #FCF5E2;">
@@ -83,9 +95,9 @@
                   [style.color]="'#FCF5E2'"
                   (click)="onAddToCart()">
                   @if (isAddedToCart()) {
-                    <span>✓ Añadido</span>
+                    <span>{{ 'BOOK_DETAILS.ADDED_TO_CART' | translate }}</span>
                   } @else {
-                    <span class="material-symbols-outlined">shopping_cart</span> Añadir
+                    <span class="material-symbols-outlined">shopping_cart</span> {{ 'BOOK_DETAILS.ADD_TO_CART' | translate }}
                   }
                 </button>
                 <button 
@@ -105,20 +117,20 @@
                 @if (isProcessingPayment()) {
                   <div class="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
                 } @else {
-                  <span>Comprar con Stripe</span>
+                  <span>{{ 'BOOK_DETAILS.BUY_WITH_STRIPE' | translate }}</span>
                 }
               </button>
             </div>
 
             @if (book()!.description) {
               <div class="prose prose-stone max-w-none">
-                <h3 class="text-lg font-bold mb-2" style="color: #45332D;">Sinopsis</h3>
+                <h3 class="text-lg font-bold mb-2" style="color: #45332D;">{{ 'BOOK_DETAILS.DESCRIPTION_TITLE' | translate }}</h3>
                 <p class="leading-relaxed text-gray-600">{{ book()!.description }}</p>
               </div>
             }
 
             <div class="pt-10 mt-6 border-t" style="border-color: #E9E1D1;">
-              <h2 class="text-2xl font-bold mb-8" style="color: #45332D;">Opiniones de clientes</h2>
+              <h2 class="text-2xl font-bold mb-8" style="color: #45332D;">{{ 'BOOK_DETAILS.REVIEWS_TITLE' | translate }}</h2>
               
               <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-10">
                 <div class="md:col-span-1 flex flex-col justify-center items-center md:items-start">
@@ -163,17 +175,17 @@
                   @if (reviews() && reviews()!.length > 0) {
                     <div class="grid grid-cols-1 gap-6"> @for (review of reviews()!; track review.id) {
                         <div class="bg-gray-50 rounded-xl p-6 border transition-all hover:shadow-md relative" style="border-color: #E9E1D1;">
-                          
                           @if (currentUserId() && currentUserId() === review.userId) {
                             <button 
                               (click)="onDeleteReview(review.id)"
                               [disabled]="isDeletingReview()"
-                              class="absolute top-4 right-4 text-gray-400 hover:text-red-500 transition-colors p-1 rounded-full hover:bg-red-50"
+                              class="absolute top-4 right-4 text-gray-400 hover:text-red-500 transition-colors p-1 rounded-full hover:bg-red-50 z-10"
                               title="Eliminar mi reseña">
                               <span class="material-symbols-outlined text-xl">delete</span>
                             </button>
                           }
-                          <div class="flex justify-between items-start mb-4 pr-8"> <div class="flex items-center gap-3">
+                          <div class="flex justify-between items-start mb-4 pr-8">
+                            <div class="flex items-center gap-3">
                               <div class="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-white shadow-sm" style="background-color: #B88B65;">
                                 {{ getUserInitial(review.userId) }}
                               </div>
@@ -195,12 +207,6 @@
                             </div>
                           </div>
                           
-                          <div class="flex items-center gap-2 mb-3">
-                            <span class="text-[#E0A15E] text-xs font-bold px-2 py-0.5 rounded bg-[#FCF5E2] border border-[#E0A15E]">
-                              Compra verificada
-                            </span>
-                          </div>
-
                           @if (review.comment) {
                             <p class="text-gray-700 text-sm leading-relaxed italic">"{{ review.comment }}"</p>
                           }
@@ -210,7 +216,7 @@
                   } @else {
                     <div class="text-center py-10 bg-gray-50 rounded-xl border border-dashed" style="border-color: #D4C9B9;">
                       <span class="material-symbols-outlined text-4xl text-gray-300 mb-2">rate_review</span>
-                      <p class="text-gray-500">Este libro aún no tiene reseñas.</p>
+                      <p class="text-gray-500">{{ 'BOOK_DETAILS.NO_REVIEWS' | translate }}</p>
                       <p class="text-sm text-[#E0A15E] font-medium">¡Sé el primero en compartir tu opinión abajo!</p>
                     </div>
                   }
@@ -273,7 +279,12 @@
     @if (book() === null && bookId()) {
       <div class="flex items-center justify-center min-h-[60vh]">
         <div class="text-center bg-white rounded-xl shadow-md p-8">
-            <p class="text-xl font-semibold mb-2" style="color: #45332D;">Libro no encontrado</p>
+            <p class="text-xl font-semibold mb-2" style="color: #45332D;">
+                {{ 'BOOK_DETAILS.NOT_FOUND_TITLE' | translate }}
+            </p>
+            <p class="text-base" style="color: #4E6A6A; opacity: 0.8;">
+                {{ 'BOOK_DETAILS.NOT_FOUND_DESC' | translate }}
+            </p>
         </div>
       </div>
     }

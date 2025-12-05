@@ -12,6 +12,8 @@ import usersRoutes from './modules/users/users.routes.js';
 import catalogBooksRoutes from './modules/catalog-books/catalog-books.routes.js';
 import paymentsRoutes from './modules/payments/payments.routes.js';
 import ordersRoutes from './modules/orders/orders.routes.js';
+import forumsRoutes from './modules/forums/forums.routes.js';
+import commentsRoutes from './modules/comments/comments.routes.js';
 import { stripeWebhookCtrl } from './modules/payments/payments.controller.js';
 
 const app = express();
@@ -44,6 +46,8 @@ app.use('/api/users', usersRoutes);
 app.use('/api/catalog-books', catalogBooksRoutes);
 app.use('/api/payments', paymentsRoutes);
 app.use('/api/orders', ordersRoutes);
+app.use('/api/forums', forumsRoutes);
+app.use('/api/comments', commentsRoutes);
 
 app.use(errorHandler);
 

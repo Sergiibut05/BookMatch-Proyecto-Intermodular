@@ -5,11 +5,12 @@ import { Header } from '@shared/components/header/header';
 import { Footer } from '@shared/components/footer/footer';
 import { CartService } from '../../core/services/cart.service';
 import { PaymentService } from '../../core/services/payment.service';
+import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
     selector: 'app-cart-view',
     standalone: true,
-    imports: [CommonModule, RouterLink, Header, Footer],
+    imports: [CommonModule, RouterLink, Header, Footer, TranslateModule],
     templateUrl: './cart-view.component.html',
     styleUrl: './cart-view.component.scss'
 })
@@ -22,7 +23,7 @@ export class CartViewComponent {
     totalItems = this.cartService.totalItems;
 
     isLoading = false;
-    
+
     // 1. SEÑAL PARA EL MODAL (Inicialmente oculta)
     showClearModal = signal(false);
 
@@ -32,9 +33,9 @@ export class CartViewComponent {
 
     decreaseQuantity(bookId: number, currentQty: number) {
         if (currentQty > 1) {
-        this.cartService.updateQuantity(bookId, currentQty - 1);
+            this.cartService.updateQuantity(bookId, currentQty - 1);
         } else {
-        this.removeItem(bookId);
+            this.removeItem(bookId);
         }
     }
 
@@ -60,7 +61,7 @@ export class CartViewComponent {
         this.showClearModal.set(false); // Cierra el modal
     }
 
-  // --- Checkout ---
+    // --- Checkout ---
     onCheckout() {
         if (this.cartItems().length === 0) return;
 
@@ -68,18 +69,18 @@ export class CartViewComponent {
         const itemsForBackend = this.cartService.getItemsForCheckout();
 
         this.paymentService.createCheckoutSessionCart(itemsForBackend).subscribe({
-        next: (response) => {
-            if (response.url) {
-            window.location.href = response.url;
-            } else {
-            this.isLoading = false;
+            next: (response) => {
+                if (response.url) {
+                    window.location.href = response.url;
+                } else {
+                    this.isLoading = false;
+                }
+            },
+            error: (err) => {
+                console.error(err);
+                alert('Error al iniciar el pago.');
+                this.isLoading = false;
             }
-        },
-        error: (err) => {
-            console.error(err);
-            alert('Error al iniciar el pago.');
-            this.isLoading = false;
-        }
         });
     }
 }
