@@ -4,10 +4,11 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { PaymentService } from '@core/services/payment.service';
 import { CartService } from '@core/services/cart.service'; // <--- 1. IMPORTAR SERVICIO
 import { Header } from '@shared/components/header/header';
+import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-payment-success',
-  imports: [CommonModule, Header],
+  imports: [CommonModule, Header, TranslateModule],
   templateUrl: './payment.success.component.html',
   styleUrl: './payment.success.component.scss',
 })

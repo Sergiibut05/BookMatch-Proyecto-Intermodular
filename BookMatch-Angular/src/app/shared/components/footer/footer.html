@@ -11,23 +11,22 @@
           style="color: #45332D;"
           onmouseover="this.style.opacity='0.8'"
           onmouseout="this.style.opacity='1'">
-          Sobre Nosotros
+          {{ 'FOOTER.ABOUT_US' | translate }}
         </a>
         <p class="text-sm mb-4" style="color: #45332D; opacity: 0.8;">
-          BookMatch es tu librería online de confianza. Encuentra los mejores libros y disfruta de una experiencia de compra única.
+          {{ 'FOOTER.DESCRIPTION' | translate }}
         </p>
         <div class="mt-4">
-          <p class="text-sm font-semibold mb-2" style="color: #45332D;">Ubicación:</p>
+          <p class="text-sm font-semibold mb-2" style="color: #45332D;">{{ 'FOOTER.LOCATION' | translate }}</p>
           <p class="text-sm" style="color: #45332D; opacity: 0.8;">
-            Av. Juan López de Peñalver, 21<br>
-            Campanillas, 29590 Málaga
+            {{ 'FOOTER.REAL_LOCATION' | translate }}
           </p>
         </div>
       </div>
 
       <!-- Sección: Enlaces Legales -->
       <div>
-        <h3 class="text-lg font-bold mb-4" style="color: #45332D;">Información Legal</h3>
+        <h3 class="text-lg font-bold mb-4" style="color: #45332D;">{{ 'FOOTER.LEGAL_INFO' | translate }}</h3>
         <ul class="space-y-2">
           <li>
             <a 
@@ -36,7 +35,7 @@
               style="color: #45332D; opacity: 0.8;"
               onmouseover="this.style.opacity='1'"
               onmouseout="this.style.opacity='0.8'">
-              Política de Privacidad
+              {{ 'FOOTER.PRIVACY_POLICY' | translate }}
             </a>
           </li>
           <li>
@@ -46,7 +45,7 @@
               style="color: #45332D; opacity: 0.8;"
               onmouseover="this.style.opacity='1'"
               onmouseout="this.style.opacity='0.8'">
-              Política de Cookies
+              {{ 'FOOTER.COOKIES_POLICY' | translate }}
             </a>
           </li>
           <li>
@@ -56,7 +55,7 @@
               style="color: #45332D; opacity: 0.8;"
               onmouseover="this.style.opacity='1'"
               onmouseout="this.style.opacity='0.8'">
-              Política de Devoluciones y Reembolsos
+              {{ 'FOOTER.REFUND_POLICY' | translate }}
             </a>
           </li>
           <li>
@@ -66,7 +65,7 @@
               style="color: #45332D; opacity: 0.8;"
               onmouseover="this.style.opacity='1'"
               onmouseout="this.style.opacity='0.8'">
-              Términos y Condiciones
+              {{ 'FOOTER.TERMS' | translate }}
             </a>
           </li>
         </ul>
@@ -74,7 +73,7 @@
 
       <!-- Sección: Atención al Cliente -->
       <div>
-        <h3 class="text-lg font-bold mb-4" style="color: #45332D;">Atención al Cliente</h3>
+        <h3 class="text-lg font-bold mb-4" style="color: #45332D;">{{ 'FOOTER.CLIENT_ATTENTION' | translate }}</h3>
         <ul class="space-y-2">
           <li>
             <a 
@@ -83,7 +82,7 @@
               style="color: #45332D; opacity: 0.8;"
               onmouseover="this.style.opacity='1'"
               onmouseout="this.style.opacity='0.8'">
-              Preguntas Frecuentes
+              {{ 'FOOTER.QUESTIONS' | translate }}
             </a>
           </li>
           <li>
@@ -93,7 +92,7 @@
               style="color: #45332D; opacity: 0.8;"
               onmouseover="this.style.opacity='1'"
               onmouseout="this.style.opacity='0.8'">
-              Contacto
+              {{ 'FOOTER.CONTACT' | translate }}
             </a>
           </li>
           <li>
@@ -103,7 +102,7 @@
               style="color: #45332D; opacity: 0.8;"
               onmouseover="this.style.opacity='1'"
               onmouseout="this.style.opacity='0.8'">
-              Envíos y Entregas
+              {{ 'FOOTER.SHIPPING' | translate }}
             </a>
           </li>
           <li>
@@ -113,7 +112,7 @@
               style="color: #45332D; opacity: 0.8;"
               onmouseover="this.style.opacity='1'"
               onmouseout="this.style.opacity='0.8'">
-              Métodos de Pago
+              {{ 'FOOTER.PAY_METHODS' | translate }}
             </a>
           </li>
         </ul>
@@ -121,7 +120,7 @@
 
       <!-- Sección: Redes Sociales y Newsletter -->
       <div>
-        <h3 class="text-lg font-bold mb-4" style="color: #45332D;">Síguenos</h3>
+        <h3 class="text-lg font-bold mb-4" style="color: #45332D;">{{ 'FOOTER.FOLLOW_US' | translate }}</h3>
         <div class="flex space-x-4 mb-6">
           <a 
             href="#" 
@@ -164,7 +163,7 @@
     <div class="border-t pt-6" style="border-color: #E9E1D1;">
       <div class="flex flex-col md:flex-row justify-between items-center gap-4">
         <p class="text-sm text-center md:text-left" style="color: #45332D; opacity: 0.7;">
-          © {{ currentYear }} BookMatch. Todos los derechos reservados.
+          © {{ currentYear }} {{ 'FOOTER.COPY' | translate }}
         </p>
         <div class="flex items-center gap-2">
           <img 

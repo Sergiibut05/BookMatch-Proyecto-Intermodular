@@ -5,10 +5,11 @@ import { Header } from '@shared/components/header/header';
 import { CatalogBook } from '@shared/models';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-categories',
-  imports: [Header, CommonModule, FormsModule],
+  imports: [Header, CommonModule, FormsModule, TranslateModule],
   templateUrl: './categories.html',
   styleUrl: './categories.scss',
 })

@@ -10,7 +10,7 @@
               class="md:hidden flex items-center gap-2 px-4 py-2 rounded-lg font-medium shadow-sm"
               style="background-color: white; color: #45332D; border: 1px solid #E9E1D1;">
         <span class="material-symbols-outlined">tune</span>
-        Filtrar y Ordenar
+        {{ 'CATEGORIES.FILTER_ORDER' | translate }}
       </button>
     </div>
 
@@ -29,9 +29,9 @@
           <div class="md:bg-white md:p-6 md:rounded-xl md:shadow-sm md:border" style="border-color: #E9E1D1;">
             
             <div class="flex justify-between items-center mb-6 md:hidden">
-              <h2 class="text-xl font-bold" style="color: #45332D;">Filtros</h2>
+              <h2 class="text-xl font-bold" style="color: #45332D;">{{ 'CATEGORIES.FILTERS' | translate }}</h2>
               <button (click)="toggleMobileFilters()" class="p-1">
-                <span class="material-symbols-outlined">close</span>
+                <span class="material-symbols-outlined">{{ 'CATEGORIES.CLOSE' | translate }}</span>
               </button>
             </div>
 
@@ -41,7 +41,7 @@
                       class="w-5 h-5 rounded border-2 cursor-pointer transition-colors focus:ring-2 focus:ring-offset-1"
                       style="accent-color: #E0A15E; border-color: #D4C9B9;">
                 <span class="text-sm font-medium transition-colors group-hover:text-[#E0A15E]" style="color: #45332D;">
-                  Solo productos en Stock
+                  {{ 'CATEGORIES.ONLY_INSTOCK' | translate }}
                 </span>
               </label>
             </div>
@@ -49,31 +49,31 @@
             <hr class="mb-6" style="border-color: #E9E1D1;">
 
             <div class="mb-6">
-              <h3 class="text-sm font-bold uppercase mb-3" style="color: #4E6A6A; letter-spacing: 0.05em;">Ordenar por</h3>
+              <h3 class="text-sm font-bold uppercase mb-3" style="color: #4E6A6A; letter-spacing: 0.05em;">{{ 'CATEGORIES.ORDERBY' | translate }}</h3>
               <select [ngModel]="sortBy()" (change)="onSortChange($event)"
                 class="w-full px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-offset-2"
                 style="border-color: #E9E1D1; background-color: white; color: #45332D;">
-                <option value="newest">Más recientes</option>
-                <option value="price_asc">Precio: Menor a Mayor</option>
-                <option value="price_desc">Precio: Mayor a Menor</option>
-                <option value="alphabetical">Alfabético (A-Z)</option>
+                <option value="newest">{{ 'CATEGORIES.MORE_RECENT' | translate }}</option>
+                <option value="price_asc">{{ 'CATEGORIES.LESS_TO_MORE' | translate }}</option>
+                <option value="price_desc">{{ 'CATEGORIES.MORE_TO_LESS' | translate }}</option>
+                <option value="alphabetical">{{ 'CATEGORIES.ALPHABETIC' | translate }}</option>
               </select>
             </div>
 
             <hr class="mb-6" style="border-color: #E9E1D1;">
 
             <div class="mb-6">
-              <h3 class="text-sm font-bold uppercase mb-3" style="color: #4E6A6A; letter-spacing: 0.05em;">Precio</h3>
+              <h3 class="text-sm font-bold uppercase mb-3" style="color: #4E6A6A; letter-spacing: 0.05em;">{{ 'CATEGORIES.PRICE' | translate }}</h3>
               <div class="flex items-center gap-2 mb-4">
                 <div class="relative w-full">
-                  <span class="absolute left-3 top-2 text-sm" style="color: #D4C9B9;">€</span>
+                  <span class="absolute left-3 top-2 text-sm" style="color: #D4C9B9;">{{ 'CATEGORIES.MONEY' | translate }}</span>
                   <input type="number" [(ngModel)]="minPrice" placeholder="Min" min="0"
                     class="w-full pl-6 pr-2 py-2 rounded-lg border text-sm focus:outline-none focus:ring-2"
                     style="border-color: #E9E1D1; background-color: white; color: #45332D;">
                 </div>
                 <span style="color: #45332D;">-</span>
                 <div class="relative w-full">
-                  <span class="absolute left-3 top-2 text-sm" style="color: #D4C9B9;">€</span>
+                  <span class="absolute left-3 top-2 text-sm" style="color: #D4C9B9;">{{ 'CATEGORIES.MONEY' | translate }}</span>
                   <input type="number" [(ngModel)]="maxPrice" placeholder="Max" min="0"
                     class="w-full pl-6 pr-2 py-2 rounded-lg border text-sm focus:outline-none focus:ring-2"
                     style="border-color: #E9E1D1; background-color: white; color: #45332D;">
@@ -82,28 +82,29 @@
               <button (click)="applyFilters()" 
                       class="w-full py-2 rounded-lg font-medium transition-colors"
                       style="background-color: #45332D; color: #FCF5E2;">
-                Aplicar Precio
+                      {{ 'CATEGORIES.APLIE_PRICE' | translate }}
               </button>
             </div>
 
             <hr class="mb-6" style="border-color: #E9E1D1;">
 
             <div class="mb-6">
-              <h3 class="text-sm font-bold uppercase mb-3" style="color: #4E6A6A; letter-spacing: 0.05em;">Valoración mínima</h3>
+              <h3 class="text-sm font-bold uppercase mb-3" style="color: #4E6A6A; letter-spacing: 0.05em;">{{ 'CATEGORIES.MINIM_VALORATION' | translate }}</h3>
               <div class="flex flex-col gap-2">
                 @for (star of [5, 4, 3, 2, 1]; track star) {
                   <button (click)="setRating(star)" 
                           class="flex items-center gap-2 p-1 rounded hover:bg-[#FCF5E2] w-full group transition-colors">
                     <div class="flex text-[#E0A15E]">
                       @for (i of [1,2,3,4,5]; track i) {
-                        <span class="material-symbols-outlined text-lg">
-                          {{ i <= star ? 'star' : 'star_border' }}
+                        <span class="material-symbols-outlined text-lg"
+                          [style.font-variation-settings]="i <= star ? '\'FILL\' 1' : '\'FILL\' 0'">
+                           star
                         </span>
                       }
                     </div>
                     <span class="text-sm" [style.font-weight]="minRating() === star ? 'bold' : 'normal'"
                           [style.color]="minRating() === star ? '#E0A15E' : '#45332D'">
-                      {{ star }} estrellas o más
+                      {{ star }} {{ 'CATEGORIES.STARS_OR_MORE' | translate }}
                     </span>
                   </button>
                 }
@@ -114,7 +115,7 @@
               <button (click)="clearFilters()" 
                       class="w-full py-2 text-sm underline transition-colors"
                       style="color: #E0A15E;">
-                Limpiar todos los filtros
+                      {{ 'CATEGORIES.CLEAN_FILTERS' | translate }}
               </button>
             }
 
@@ -125,12 +126,12 @@
       <main class="flex-1 w-full">
         <div class="flex items-center justify-between mb-6 pb-4 border-b" style="border-color: #E9E1D1;">
           <div class="text-sm font-medium hidden sm:block" style="color: #4E6A6A;">
-            {{ total() }} resultados encontrados
+            {{ total() }} {{ 'CATEGORIES.RESULTS_FOUND' | translate }}
           </div>
 
           <div class="flex items-center gap-4 ml-auto">
             <div class="flex items-center gap-2">
-              <label for="limit-select" class="text-sm hidden sm:block" style="color: #45332D;">Mostrar:</label>
+              <label for="limit-select" class="text-sm hidden sm:block" style="color: #45332D;">{{ 'CATEGORIES.SHOW' | translate }}</label>
               <select id="limit-select" [value]="limit()" (change)="onLimitChange($event)"
                 class="px-2 py-1 rounded-lg border focus:outline-none text-sm"
                 style="border-color: #E9E1D1; background-color: white; color: #45332D;">
@@ -176,8 +177,8 @@
               <p class="text-xs mb-2 truncate" style="color: #4E6A6A;">{{ book.author }}</p>
               <div class="flex items-center justify-between mt-2">
                 <div class="flex flex-col">
-                  <span class="text-xs line-through" style="color: #D4C9B9;">{{ getDiscountedPrice(book.price) | number:'1.2-2' }}€</span>
-                  <span class="text-lg font-bold" style="color: #E0A15E;">{{ book.price | number:'1.2-2' }}€</span>
+                  <span class="text-xs line-through" style="color: #D4C9B9;">{{ getDiscountedPrice(book.price) | number:'1.2-2' }}{{ 'CATEGORIES.MONEY' | translate }}</span>
+                  <span class="text-lg font-bold" style="color: #E0A15E;">{{ book.price | number:'1.2-2' }}{{ 'CATEGORIES.MONEY' | translate }}</span>
                 </div>
                 <button class="p-2 rounded-full hover:bg-gray-100 transition-colors" 
                         style="color: #45332D;" (click)="$event.stopPropagation(); onBuyClick()">
@@ -212,12 +213,12 @@
               </div>
               <div class="flex justify-between items-end mt-4">
                 <div class="flex flex-col">
-                  <span class="text-xs line-through" style="color: #D4C9B9;">{{ getDiscountedPrice(book.price) | number:'1.2-2' }}€</span>
-                  <span class="text-xl font-bold" style="color: #E0A15E;">{{ book.price | number:'1.2-2' }}€</span>
+                  <span class="text-xs line-through" style="color: #D4C9B9;">{{ getDiscountedPrice(book.price) | number:'1.2-2' }}{{ 'CATEGORIES.MONEY' | translate }}</span>
+                  <span class="text-xl font-bold" style="color: #E0A15E;">{{ book.price | number:'1.2-2' }}{{ 'CATEGORIES.MONEY' | translate }}</span>
                 </div>
                 <button class="px-4 py-2 rounded-lg text-sm font-medium"
                   style="background-color: #E0A15E; color: #FCF5E2;" (click)="$event.stopPropagation(); onBuyClick()">
-                  Comprar
+                  {{ 'CATEGORIES.BUY' | translate }}
                 </button>
               </div>
             </div>
@@ -229,8 +230,8 @@
         @if (books().length === 0) {
         <div class="text-center py-12">
           <div class="inline-block p-6 bg-white rounded-xl shadow-sm">
-            <p class="text-lg" style="color: #D4C9B9;">No se encontraron libros con estos filtros.</p>
-            <button (click)="clearFilters()" class="mt-2 font-medium underline" style="color: #E0A15E;">Limpiar filtros</button>
+            <p class="text-lg" style="color: #D4C9B9;">{{ 'CATEGORIES.NOT_FOUND' | translate }}</p>
+            <button (click)="clearFilters()" class="mt-2 font-medium underline" style="color: #E0A15E;">{{ 'CATEGORIES.CLEAN_FILTERS2' | translate }}</button>
           </div>
         </div>
         }
@@ -238,14 +239,14 @@
         @if (total() > 0) {
         <div class="mt-8 flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 border-t" style="border-color: #E9E1D1;">
           <div class="text-sm text-center sm:text-left" style="color: #45332D;">
-            {{ startItem }} - {{ endItem }} de {{ total() }}
+            {{ startItem }} - {{ endItem }} {{ 'CATEGORIES.FROM' | translate }} {{ total() }}
           </div>
           <div class="flex items-center gap-2">
             <button (click)="previousPage()" [disabled]="page() === 1"
               class="px-3 py-1.5 rounded-lg text-sm font-medium disabled:opacity-50"
               [style.background-color]="page() === 1 ? '#E9E1D1' : '#E0A15E'"
               [style.color]="page() === 1 ? '#D4C9B9' : '#FCF5E2'">
-              Ant
+              {{ 'CATEGORIES.LAST' | translate }}
             </button>
             <div class="flex gap-1">
               @for (pageNum of getPageNumbers(); track pageNum) {
@@ -266,7 +267,7 @@
               class="px-3 py-1.5 rounded-lg text-sm font-medium disabled:opacity-50"
               [style.background-color]="page() === totalPages ? '#E9E1D1' : '#E0A15E'"
               [style.color]="page() === totalPages ? '#D4C9B9' : '#FCF5E2'">
-              Sig
+              {{ 'CATEGORIES.NEXT' | translate }}
             </button>
           </div>
         </div>

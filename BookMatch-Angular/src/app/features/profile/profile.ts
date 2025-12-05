@@ -6,10 +6,11 @@ import { AuthService } from '@core/services/auth.service';
 import { Header } from '@shared/components/header/header';
 import { PurchaseHistoryComponent } from '../purchase-history/purchase-history.component';
 import { ProfileEditComponent } from '../profile-edit/profile-edit.component';
+import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-profile',
-  imports: [CommonModule, Header, PurchaseHistoryComponent, ProfileEditComponent],
+  imports: [CommonModule, Header, PurchaseHistoryComponent, ProfileEditComponent, TranslateModule],
   templateUrl: './profile.html',
   styleUrl: './profile.scss',
 })

@@ -2,14 +2,14 @@
   @if (books().length === 0) {
   <div class="text-center py-12">
     <div class="inline-block p-6 bg-white rounded-xl shadow-sm">
-      <p class="text-lg" style="color: #D4C9B9;">Cargando libros...</p>
+      <p class="text-lg" style="color: #D4C9B9;">{{ 'BOOK_DETAILS.LOADING' | translate }}</p>
     </div>
   </div>
   }
   <div class="flex items-center justify-between pr-4 pl-4 pb-4">
     <h2 class="text-2xl font-bold" style="color: #45332D;">{{ categoryTitle }}</h2>
     @if (categoryUrl) {
-    <a class="text-lg cursor-pointer" style="color: #4E6A6A; opacity: 0.7;" (click)="onSeeMore()">Ver más →</a>
+    <a class="text-lg cursor-pointer" style="color: #4E6A6A; opacity: 0.7;" (click)="onSeeMore()">{{ 'BOOK_DETAILS.SEE_MORE' | translate }}</a>
     }
   </div>
 

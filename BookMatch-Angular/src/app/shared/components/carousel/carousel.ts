@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { CatalogService } from '@core/services/catalog.service';
 import { CatalogBook } from '@shared/models';
 import { Router } from '@angular/router';
+import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-carousel',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TranslateModule],
   templateUrl: './carousel.html',
   styleUrl: './carousel.scss',
 })

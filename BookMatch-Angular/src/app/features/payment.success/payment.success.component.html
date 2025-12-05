@@ -8,7 +8,7 @@
       <div class="flex items-center justify-center min-h-[60vh]">
         <div class="text-center">
           <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-t-transparent" style="border-color: #E0A15E;"></div>
-          <p class="mt-4 text-lg" style="color: #45332D;">Verificando pago...</p>
+          <p class="mt-4 text-lg" style="color: #45332D;">{{ 'PAYMENT.VERIFYING' | translate }}</p>
         </div>
       </div>
     }
@@ -25,15 +25,15 @@
           </div>
 
           <!-- Success message -->
-          <h1 class="text-3xl md:text-4xl font-bold mb-4" style="color: #45332D;">¡Pago realizado con éxito!</h1>
+          <h1 class="text-3xl md:text-4xl font-bold mb-4" style="color: #45332D;">{{ 'PAYMENT.SUCCESS' | translate }}</h1>
           <p class="text-lg mb-8" style="color: #4E6A6A; opacity: 0.8;">
-            Tu pedido ha sido procesado correctamente. Recibirás un correo de confirmación en breve.
+            {{ 'PAYMENT.SUCCESS_PAYMENT' | translate }}
           </p>
 
           <!-- Session info -->
           @if (sessionId) {
             <div class="bg-gray-50 rounded-lg p-4 mb-8" style="background-color: #FCF5E2;">
-              <p class="text-sm font-medium mb-2" style="color: #45332D;">ID de sesión:</p>
+              <p class="text-sm font-medium mb-2" style="color: #45332D;"></p>
               <p class="text-xs font-mono break-all" style="color: #4E6A6A; opacity: 0.7;">{{ sessionId }}</p>
             </div>
           }
@@ -46,7 +46,7 @@
               style="background-color: #E0A15E; color: #FCF5E2;"
               onmouseover="this.style.backgroundColor='#B88B65'"
               onmouseout="this.style.backgroundColor='#E0A15E'">
-              Volver al inicio
+              {{ 'PAYMENT.BACKHOME' | translate }}
             </button>
             <button 
               (click)="goToOrders()"
@@ -54,7 +54,7 @@
               style="border-color: #E0A15E; color: #45332D;"
               onmouseover="this.style.backgroundColor='#E9E1D1'"
               onmouseout="this.style.backgroundColor='transparent'">
-              Ver mis pedidos
+              {{ 'PAYMENT.SEE_MY_ORDERS' | translate }}
             </button>
           </div>
         </div>
@@ -73,7 +73,7 @@
           </div>
 
           <!-- Error message -->
-          <h1 class="text-3xl md:text-4xl font-bold mb-4" style="color: #45332D;">Error al verificar el pago</h1>
+          <h1 class="text-3xl md:text-4xl font-bold mb-4" style="color: #45332D;">{{ 'PAYMENT.BACKHOME' | translate }}</h1>
           <p class="text-lg mb-8" style="color: #4E6A6A; opacity: 0.8;">
             {{ error }}
           </p>
@@ -85,7 +85,7 @@
             style="background-color: #E0A15E; color: #FCF5E2;"
             onmouseover="this.style.backgroundColor='#B88B65'"
             onmouseout="this.style.backgroundColor='#E0A15E'">
-            Volver al inicio
+            {{ 'PAYMENT.BACKHOME' | translate }}
           </button>
         </div>
       </div>
@@ -95,9 +95,9 @@
     @if (!isLoading && !error && paymentStatus && paymentStatus !== 'paid') {
       <div class="bg-white rounded-2xl shadow-lg overflow-hidden p-8 md:p-12">
         <div class="text-center">
-          <h1 class="text-3xl md:text-4xl font-bold mb-4" style="color: #45332D;">Pago pendiente</h1>
+          <h1 class="text-3xl md:text-4xl font-bold mb-4" style="color: #45332D;">{{ 'PAYMENT.PAYMENT_LEFT' | translate }}</h1>
           <p class="text-lg mb-8" style="color: #4E6A6A; opacity: 0.8;">
-            Tu pago está siendo procesado. Por favor, espera unos momentos.
+            {{ 'PAYMENT.PAYMENT_IN_PROCESS' | translate }}
           </p>
           <button 
             (click)="goToHome()"
@@ -105,7 +105,7 @@
             style="background-color: #E0A15E; color: #FCF5E2;"
             onmouseover="this.style.backgroundColor='#B88B65'"
             onmouseout="this.style.backgroundColor='#E0A15E'">
-            Volver al inicio
+            {{ 'PAYMENT.BACKHOME' | translate }}
           </button>
         </div>
       </div>

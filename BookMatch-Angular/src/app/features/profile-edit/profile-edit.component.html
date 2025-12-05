@@ -13,7 +13,7 @@
 
   <!-- Título y Botón Editar en la misma línea -->
   <div class="flex items-center justify-between mb-4">
-    <h2 class="text-xl font-semibold" style="color: #45332D;">Información del perfil</h2>
+    <h2 class="text-xl font-semibold" style="color: #45332D;">{{ 'PROFILE.PROFILE_INFORMATION' | translate }}</h2>
     @if (!isEditing()) {
       <button
         (click)="startEditing()"
@@ -25,7 +25,7 @@
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
         </svg>
-        Editar
+        
       </button>
     }
   </div>
@@ -33,7 +33,7 @@
   <div class="space-y-4">
     <!-- Nombre completo -->
     <div>
-      <p class="text-sm font-medium mb-1" style="color: #45332D;">Nombre completo</p>
+      <p class="text-sm font-medium mb-1" style="color: #45332D;">{{ 'PROFILE.FULL_NAME' | translate }}</p>
       @if (isEditing()) {
         <form [formGroup]="editForm" (ngSubmit)="saveName()" class="space-y-2">
           <input
@@ -56,10 +56,10 @@
               @if (isSaving()) {
                 <span class="flex items-center gap-2">
                   <div class="inline-block animate-spin rounded-full h-4 w-4 border-2 border-t-transparent border-white"></div>
-                  Guardando...
+                  {{ 'PROFILE.SAVING' | translate }}
                 </span>
               } @else {
-                Guardar
+                {{ 'PROFILE.SAVE' | translate }}
               }
             </button>
             <button
@@ -70,7 +70,7 @@
               style="border-color: #E9E1D1; color: #45332D; background-color: white;"
               onmouseover="if(!this.disabled) this.style.backgroundColor='#F5F5F5'"
               onmouseout="if(!this.disabled) this.style.backgroundColor='white'">
-              Cancelar
+              {{ 'PROFILE.CANCEL' | translate }}
             </button>
           </div>
         </form>
@@ -83,7 +83,7 @@
 
     <!-- Email (no editable) -->
     <div>
-      <p class="text-sm font-medium mb-1" style="color: #45332D;">Email</p>
+      <p class="text-sm font-medium mb-1" style="color: #45332D;">{{ 'PROFILE.EMAIL' | translate }}</p>
       <p class="text-base" style="color: #4E6A6A;">
         {{ profile.email }}
       </p>
@@ -92,7 +92,7 @@
     <!-- Teléfono (no editable) -->
     @if (profile.phone) {
       <div>
-        <p class="text-sm font-medium mb-1" style="color: #45332D;">Teléfono</p>
+        <p class="text-sm font-medium mb-1" style="color: #45332D;">{{ 'PROFILE.PHONE' | translate }}</p>
         <p class="text-base" style="color: #4E6A6A;">
           {{ profile.phone }}
         </p>
@@ -101,7 +101,7 @@
 
     <!-- Miembro desde (no editable) -->
     <div>
-      <p class="text-sm font-medium mb-1" style="color: #45332D;">Miembro desde</p>
+      <p class="text-sm font-medium mb-1" style="color: #45332D;">{{ 'PROFILE.MEMBER_SINCE' | translate }}</p>
       <p class="text-base" style="color: #4E6A6A;">
         {{ profile.createdAt | date:'longDate' }}
       </p>

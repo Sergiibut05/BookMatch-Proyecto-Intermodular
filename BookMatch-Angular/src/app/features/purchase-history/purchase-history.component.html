@@ -1,5 +1,5 @@
 <div class="purchase-history">
-  <h2 class="text-2xl font-bold mb-6" style="color: #45332D;">Historial de Compras</h2>
+  <h2 class="text-2xl font-bold mb-6" style="color: #45332D;">{{ 'PURCHASE.PURCHASE_HISTORY' | translate }}</h2>
 
   <!-- Loading skeleton -->
   @if (isLoading()) {
@@ -39,7 +39,7 @@
       <svg class="w-24 h-24 mx-auto mb-4" style="color: #E0A15E;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
       </svg>
-      <h3 class="text-xl font-semibold mb-2" style="color: #45332D;">No hay compras aún</h3>
+      <h3 class="text-xl font-semibold mb-2" style="color: #45332D;">{{ 'PURCHASE.NO_PURCHASE_YET' | translate }}</h3>
       <p class="text-base" style="color: #4E6A6A;">Cuando realices tu primera compra, aparecerá aquí.</p>
     </div>
   }
@@ -54,10 +54,10 @@
             <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
               <div>
                 <p class="text-sm font-medium" style="color: #45332D;">
-                  Pedido #{{ order.id }}
+                  {{ 'PURCHASE.ORDER' | translate }}{{ order.id }}
                 </p>
                 <p class="text-xs mt-1" style="color: #4E6A6A;">
-                  {{ order.createdAt | date:'longDate':'es-ES' }} a las {{ order.createdAt | date:'shortTime':'es-ES' }}
+                  {{ order.createdAt | date:'longDate':'es-ES' }} {{ 'PURCHASE.AT' | translate }} {{ order.createdAt | date:'shortTime':'es-ES' }}
                 </p>
               </div>
               <div class="flex items-center gap-4">

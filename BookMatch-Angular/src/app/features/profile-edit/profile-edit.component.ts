@@ -3,10 +3,11 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { UsersService, UserProfile, UpdateProfileData } from '@core/services/users.service';
 import { AuthService } from '@core/services/auth.service';
+import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-profile-edit',
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, TranslateModule],
   templateUrl: './profile-edit.component.html',
   styleUrl: './profile-edit.component.scss',
 })

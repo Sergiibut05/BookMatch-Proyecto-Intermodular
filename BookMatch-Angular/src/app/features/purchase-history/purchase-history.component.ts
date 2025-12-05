@@ -2,10 +2,11 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { OrdersService } from '@core/services/orders.service';
 import { Order } from '@shared/models/orders.model';
+import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-purchase-history',
-  imports: [CommonModule],
+  imports: [CommonModule, TranslateModule],
   templateUrl: './purchase-history.component.html',
   styleUrl: './purchase-history.component.scss',
 })
