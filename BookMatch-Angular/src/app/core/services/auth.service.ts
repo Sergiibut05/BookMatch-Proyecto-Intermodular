@@ -93,11 +93,19 @@ export class AuthService {
     return !!localStorage.getItem(this.TOKEN_KEY);
   }
 
-  async getToken(): Promise<string | null> {
-    if (this.auth.currentUser) {
-      return await this.auth.currentUser.getIdToken();
-    }
-    return localStorage.getItem(this.TOKEN_KEY);
+  getToken(): Observable<string | null> {
+    // Usar el observable user$ en lugar de acceder directamente a currentUser
+    // para evitar el warning de AngularFire sobre el contexto de inyección
+    return this.user$.pipe(
+      switchMap(async (firebaseUser) => {
+        if (firebaseUser) {
+          const token = await firebaseUser.getIdToken();
+          localStorage.setItem(this.TOKEN_KEY, token);
+          return token;
+        }
+        return localStorage.getItem(this.TOKEN_KEY);
+      })
+    );
   }
 
   async updateProfile(profileData: { displayName?: string; photoURL?: string }): Promise<void> {

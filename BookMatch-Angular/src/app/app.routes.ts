@@ -51,6 +51,21 @@ export const routes: Routes = [
         loadComponent: () => import('./features/profile/profile').then(m => m.Profile)
       },
       {
+        path: 'foro',
+        canActivate: [authGuard],
+        loadComponent: () => import('./features/forum-index/forum-index.component').then(m => m.ForumIndexComponent)
+      },
+      {
+        path: 'foro/:id',
+        canActivate: [authGuard],
+        loadComponent: () => import('./features/forum-topic-list/forum-topic-list.component').then(m => m.ForumTopicListComponent)
+      },
+      {
+        path: 'foro/:forumId/tema/:postId',
+        canActivate: [authGuard],
+        loadComponent: () => import('./features/post-detail/post-detail.component').then(m => m.PostDetailComponent)
+      },
+      {
         path: '**',
         redirectTo: '/auth/login'
       }

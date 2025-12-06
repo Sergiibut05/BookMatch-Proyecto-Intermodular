@@ -1,0 +1,37 @@
+<div class="upvote-button flex flex-col items-center gap-1">
+  <!-- Botón de voto arriba -->
+  <button
+    (click)="handleUpvote()"
+    type="button"
+    [disabled]="isVoting()"
+    class="p-1 rounded transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed upvote-btn"
+    [class.upvoted]="userVote() === 'UP'"
+    [style.color]="userVote() === 'UP' ? '#E0A15E' : '#4E6A6A'"
+    title="Votar arriba">
+    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+      <path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z"/>
+    </svg>
+  </button>
+
+  <!-- Score -->
+  <span 
+    class="text-sm font-semibold min-w-[2rem] text-center"
+    [style.color]="currentScore() > 0 ? '#E0A15E' : currentScore() < 0 ? '#EF4444' : '#4E6A6A'">
+    {{ currentScore() }}
+  </span>
+
+  <!-- Botón de voto abajo -->
+  <button
+    (click)="handleDownvote()"
+    type="button"
+    [disabled]="isVoting()"
+    class="p-1 rounded transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed downvote-btn"
+    [class.downvoted]="userVote() === 'DOWN'"
+    [style.color]="userVote() === 'DOWN' ? '#EF4444' : '#4E6A6A'"
+    title="Votar abajo">
+    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+      <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/>
+    </svg>
+  </button>
+</div>
+

@@ -1,0 +1,44 @@
+// Estilos específicos del componente comment-item
+
+.comment-item {
+  // Transición suave para la indentación
+  transition: margin-left 0.2s ease;
+  
+  // Borde izquierdo para comentarios anidados
+  &.border-l-2 {
+    border-left-color: #E0A15E;
+    border-left-width: 2px;
+    padding-left: 1rem;
+  }
+}
+
+.nested-comments {
+  // Espaciado entre comentarios anidados
+  margin-top: 0.5rem;
+}
+
+// Estilo para truncar texto a 2 líneas
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.5;
+  max-height: 3em; // Aproximadamente 2 líneas
+}
+
+// Responsive: reducir indentación en móviles
+@media (max-width: 768px) {
+  .comment-item {
+    // Reducir indentación en móviles
+    [style*="margin-left"] {
+      margin-left: 1rem !important;
+    }
+  }
+  
+  .nested-comments {
+    margin-left: 1rem !important;
+  }
+}
+

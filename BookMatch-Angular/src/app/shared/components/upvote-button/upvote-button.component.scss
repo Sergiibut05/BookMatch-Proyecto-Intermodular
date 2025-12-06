@@ -1,0 +1,34 @@
+.upvote-button {
+  user-select: none;
+
+  button {
+    &:hover:not(:disabled) {
+      transform: scale(1.1);
+    }
+
+    &:active:not(:disabled) {
+      transform: scale(0.95);
+    }
+
+    &.upvoted {
+      background-color: rgba(224, 161, 94, 0.1);
+    }
+
+    &.downvoted {
+      background-color: rgba(239, 68, 68, 0.1);
+    }
+  }
+
+  .upvote-btn:hover:not(:disabled):not(.upvoted) {
+    color: #E0A15E !important;
+  }
+
+  .downvote-btn:hover:not(:disabled):not(.downvoted) {
+    color: #EF4444 !important;
+  }
+
+  span {
+    transition: color 0.2s ease;
+  }
+}
+

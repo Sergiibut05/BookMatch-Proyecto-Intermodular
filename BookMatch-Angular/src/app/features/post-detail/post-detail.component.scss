@@ -1,0 +1,108 @@
+// Estilos específicos del componente post-detail
+
+// Cerrar el menú al hacer clic fuera
+:host {
+  position: relative;
+}
+
+.post-content {
+  // Estilos básicos para el contenido del post
+  line-height: 1.8;
+  word-wrap: break-word;
+  
+  p {
+    margin-bottom: 1rem;
+    
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+  
+  // Estilos para listas si se agregan en el futuro
+  ul, ol {
+    margin-left: 1.5rem;
+    margin-bottom: 1rem;
+    
+    li {
+      margin-bottom: 0.5rem;
+    }
+  }
+  
+  // Estilos para enlaces si se agregan en el futuro
+  a {
+    color: #E0A15E;
+    text-decoration: underline;
+    
+    &:hover {
+      color: #B88B65;
+    }
+  }
+  
+  // Estilos para código si se agrega en el futuro
+  code {
+    background-color: #F5F5F5;
+    padding: 0.2rem 0.4rem;
+    border-radius: 0.25rem;
+    font-family: monospace;
+    font-size: 0.9em;
+  }
+  
+  // Estilos para bloques de código si se agregan en el futuro
+  pre {
+    background-color: #F5F5F5;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    overflow-x: auto;
+    margin-bottom: 1rem;
+    
+    code {
+      background-color: transparent;
+      padding: 0;
+    }
+  }
+  
+  // Estilos para encabezados si se agregan en el futuro
+  h1, h2, h3, h4, h5, h6 {
+    font-weight: bold;
+    margin-top: 1.5rem;
+    margin-bottom: 1rem;
+    color: #45332D;
+  }
+  
+  h1 { font-size: 2rem; }
+  h2 { font-size: 1.75rem; }
+  h3 { font-size: 1.5rem; }
+  h4 { font-size: 1.25rem; }
+  h5 { font-size: 1.1rem; }
+  h6 { font-size: 1rem; }
+  
+  // Estilos para citas si se agregan en el futuro
+  blockquote {
+    border-left: 4px solid #E0A15E;
+    padding-left: 1rem;
+    margin-left: 0;
+    margin-bottom: 1rem;
+    font-style: italic;
+    color: #4E6A6A;
+  }
+  
+  // Estilos para imágenes si se agregan en el futuro
+  img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 0.5rem;
+    margin: 1rem 0;
+  }
+}
+
+// Responsive adjustments
+@media (max-width: 768px) {
+  .post-content {
+    font-size: 0.95rem;
+    
+    h1 { font-size: 1.75rem; }
+    h2 { font-size: 1.5rem; }
+    h3 { font-size: 1.25rem; }
+  }
+}
+

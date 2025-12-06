@@ -32,7 +32,7 @@ export class UsersService {
   private apiUrl = `${environment.apiUrl}/users`;
 
   private authHeaders(): Observable<HttpHeaders> {
-    return from(this.authService.getToken()).pipe(
+    return this.authService.getToken().pipe(
       map(token => {
         let headers = new HttpHeaders();
         if (token) {

@@ -31,6 +31,12 @@
       </a>
     </div>
     <div class="menu-item w-full">
+      <a (click)="goForum(); $event.preventDefault()" class="menu-link flex items-center justify-start gap-3 w-full p-2 cursor-pointer">
+        <span class="material-symbols-outlined text-xl">forum</span>
+        <span class="font-medium">Foro</span>
+      </a>
+    </div>
+    <div class="menu-item w-full">
       <a href="profile" class="menu-link flex items-center justify-start gap-3 w-full p-2">
         <span class="material-symbols-outlined text-xl">account_circle</span>
         <span class="font-medium">{{ 'HEADER.PROFILE' | translate }}</span>

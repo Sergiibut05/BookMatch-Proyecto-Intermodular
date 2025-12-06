@@ -48,4 +48,9 @@ export class Header {
     this.router.navigate(['/cart'])
   }
 
+  goForum() {
+    this.router.navigate(['/foro']);
+    this.closeMenu();
+  }
+
 }

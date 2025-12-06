@@ -24,7 +24,7 @@ export class PaymentService {
   private apiUrl = `${environment.apiUrl}/payments`;
 
   private authHeaders(): Observable<HttpHeaders> {
-    return from(this.authService.getToken()).pipe(
+    return this.authService.getToken().pipe(
       map(token => {
         let headers = new HttpHeaders();
         if (token) {
