@@ -209,5 +209,87 @@
             "CANCEL": "Cancelar",
             "CONFIRM": "Sí, vaciar"
         }
+    },
+    "FAQ": {
+        "TITLE": "Preguntas Frecuentes",
+        "STILL_QUESTIONS": "¿Todavía tienes preguntas?",
+        "CONTACT_US": "Contáctanos",
+        "Q1": "¿Cómo puedo realizar un pedido?",
+        "A1": "Puedes realizar un pedido navegando por nuestro catálogo, añadiendo libros a tu carrito y completando el proceso de compra. Aceptamos pagos seguros a través de Stripe.",
+        "Q2": "¿Cuáles son los métodos de envío disponibles?",
+        "A2": "Ofrecemos envío estándar a toda España. Los tiempos de entrega pueden variar según la ubicación. Para más información, consulta nuestra política de envíos.",
+        "Q3": "¿Puedo devolver un libro?",
+        "A3": "Sí, tenemos una política de devoluciones de 30 días. El libro debe estar en las mismas condiciones en que lo recibiste, sin usar y en su embalaje original. Consulta nuestra política de devoluciones para más detalles.",
+        "Q4": "¿Cómo puedo rastrear mi pedido?",
+        "A4": "Una vez que tu pedido sea enviado, recibirás un correo electrónico con el número de seguimiento y un enlace para rastrear tu paquete en tiempo real.",
+        "Q5": "¿Qué métodos de pago aceptan?",
+        "A5": "Aceptamos pagos seguros a través de Stripe, incluyendo tarjetas de crédito y débito (Visa, Mastercard, American Express). Todos los pagos están encriptados y procesados de forma segura.",
+        "Q6": "¿Ofrecen descuentos o promociones?",
+        "A6": "Sí, ofrecemos promociones especiales y descuentos periódicamente. Suscríbete a nuestro boletín o síguenos en redes sociales para estar al día de nuestras ofertas.",
+        "Q7": "¿Puedo cambiar o cancelar mi pedido?",
+        "A7": "Puedes cancelar tu pedido antes de que sea enviado. Una vez enviado, deberás seguir el proceso de devolución estándar. Contacta con nosotros en bookmatch3@gmail.com para más ayuda.",
+        "Q8": "¿Cómo puedo contactar con el servicio de atención al cliente?",
+        "A8": "Puedes contactarnos por correo electrónico en bookmatch3@gmail.com. Estaremos encantados de ayudarte con cualquier pregunta o problema que puedas tener."
+    },
+    "PAYMENT_METHODS": {
+        "TITLE": "Métodos de Pago",
+        "SUBTITLE": "Aceptamos múltiples métodos de pago seguros para tu comodidad",
+        "QUESTIONS": "¿Tienes preguntas sobre los métodos de pago?",
+        "CONTACT": "Contáctanos",
+        "STRIPE": {
+            "TITLE": "Stripe",
+            "DESCRIPTION": "Procesamos todos los pagos de forma segura a través de Stripe, una de las plataformas de pago más seguras y confiables del mundo.",
+            "FEATURE1": "Pagos encriptados y seguros",
+            "FEATURE2": "Procesamiento instantáneo",
+            "FEATURE3": "Cumplimiento PCI DSS"
+        },
+        "CARDS": {
+            "TITLE": "Tarjetas de Crédito y Débito",
+            "DESCRIPTION": "Aceptamos las principales tarjetas de crédito y débito a través de nuestra plataforma segura."
+        },
+        "SECURITY": {
+            "TITLE": "Seguridad de Pagos",
+            "DESCRIPTION": "Tu seguridad es nuestra prioridad. Todos los pagos están protegidos con:",
+            "FEATURE1": "Encriptación SSL de extremo a extremo",
+            "FEATURE2": "Cumplimiento de estándares PCI DSS",
+            "FEATURE3": "Protección contra fraude en tiempo real"
+        }
+    },
+    "ABOUT_US": {
+        "TITLE": "Sobre Nosotros",
+        "SUBTITLE": "App para comprar libros recomendados y trueque digital",
+        "INTRODUCTION": {
+            "TITLE": "Introducción",
+            "DESCRIPTION": "La propuesta nace de la necesidad de promover la lectura y al mismo tiempo ajustarse a las nuevas tendencias de sostenibilidad. BookMatch es una app móvil que fusiona la compra de libros (tanto nuevos como usados) con un sistema innovador de sugerencias personalizadas a través de inteligencia artificial y una plataforma de intercambio de libros usados entre lectores.",
+            "REASON": "La hemos elegido porque une tres conceptos en auge: digitalización, lectura y economía circular. Se basa en un problema real: los libros se acumulan sin uso y los lectores buscan nuevas lecturas sin gastar de más. Tiene potencial de crecimiento nacional e internacional con una inversión inicial baja.",
+            "CONCEPT1": {
+                "TITLE": "Digitalización",
+                "DESC": "Tecnología moderna y accesible"
+            },
+            "CONCEPT2": {
+                "TITLE": "Lectura",
+                "DESC": "Promoción de la cultura y el conocimiento"
+            },
+            "CONCEPT3": {
+                "TITLE": "Economía Circular",
+                "DESC": "Sostenibilidad y reutilización"
+            }
+        },
+        "TEAM": {
+            "TITLE": "Promotores del Proyecto",
+            "SERGII": {
+                "ROLE": "Desarrollador Multiplataforma",
+                "DESCRIPTION": "Amante de la fantasía épica y lector habitual. Desarrollador de aplicaciones multiplataforma, además, tiene experiencia en animación 3D en aplicaciones como Blender, lo que le permite crear contenido visual para promocionar la app en redes sociales."
+            },
+            "LUCAS": {
+                "ROLE": "Desarrollador Multiplataforma",
+                "DESCRIPTION": "También desarrollador de aplicaciones multiplataforma y con conocimientos en modelado y animación 3D. Gracias a su creatividad, puede aportar un enfoque más visual y con un estilo más único al proyecto, aparte de ayudar en la creación de anuncios."
+            },
+            "SAMUEL": {
+                "ROLE": "Especialista en Bases de Datos",
+                "DESCRIPTION": "Especialista en Bases de datos y en el apartado técnico de la app. Su perfil más técnico asegura que BookMatch vaya a funcionar de forma eficiente y segura."
+            }
+        },
+        "CONCLUSION": "Somos tres estudiantes de segundo Desarrollo de Aplicaciones Multiplataforma del Parque Tecnológico de Málaga, apasionados por la tecnología, la creatividad y la lectura. En conjunto, unimos conocimientos técnicos, creatividad y pasión por la lectura para desarrollar una aplicación innovadora que combina tecnología, sostenibilidad y aprecio por los libros."
     }
 }

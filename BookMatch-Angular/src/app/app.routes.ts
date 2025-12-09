@@ -66,6 +66,34 @@ export const routes: Routes = [
         loadComponent: () => import('./features/post-detail/post-detail.component').then(m => m.PostDetailComponent)
       },
       {
+        path: 'privacy-policy',
+        loadComponent: () => import('./features/footer/privacy-policy/privacy-policy').then(m => m.PrivacyPolicy)
+      },
+      {
+        path: 'cookies-policy',
+        loadComponent: () => import('./features/footer/cookies-policy/cookies-policy').then(m => m.CookiesPolicy)
+      },
+      {
+        path: 'refund-policy',
+        loadComponent: () => import('./features/footer/refund-policy/refund-policy').then(m => m.RefundPolicy)
+      },
+      {
+        path: 'terms-and-conditions',
+        loadComponent: () => import('./features/footer/terms-and-conditions/terms-and-conditions').then(m => m.TermsAndConditions)
+      },
+      {
+        path: 'frequent-questions',
+        loadComponent: () => import('./features/footer/frequent-questions/frequent-questions').then(m => m.FrequentQuestions)
+      },
+      {
+        path: 'payment-methods',
+        loadComponent: () => import('./features/footer/payment-methods/payment-methods').then(m => m.PaymentMethods)
+      },
+      {
+        path: 'about-us',
+        loadComponent: () => import('./features/footer/about-us/about-us').then(m => m.AboutUs)
+      },
+      {
         path: '**',
         redirectTo: '/auth/login'
       }

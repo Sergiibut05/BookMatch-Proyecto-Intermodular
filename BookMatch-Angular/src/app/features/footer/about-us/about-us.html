@@ -1,0 +1,121 @@
+<app-header></app-header>
+
+<div class="about-us-container">
+  <div class="max-w-6xl mx-auto px-4 py-8 md:py-12">
+    <!-- Hero Section -->
+    <div class="text-center mb-12">
+      <h1 class="text-4xl md:text-5xl font-bold mb-6" style="color: #45332D;">
+        {{ 'ABOUT_US.TITLE' | translate }}
+      </h1>
+      <p class="text-lg md:text-xl max-w-3xl mx-auto mb-4" style="color: #45332D; opacity: 0.9;">
+        {{ 'ABOUT_US.SUBTITLE' | translate }}
+      </p>
+    </div>
+
+    <!-- Introduction Section -->
+    <div class="bg-white rounded-2xl shadow-lg p-8 mb-12" style="border: 1px solid #E9E1D1;">
+      <h2 class="text-2xl font-bold mb-6" style="color: #45332D;">
+        {{ 'ABOUT_US.INTRODUCTION.TITLE' | translate }}
+      </h2>
+      <p class="mb-4 leading-relaxed" style="color: #45332D; opacity: 0.9;">
+        {{ 'ABOUT_US.INTRODUCTION.DESCRIPTION' | translate }}
+      </p>
+      <p class="mb-4 leading-relaxed" style="color: #45332D; opacity: 0.9;">
+        {{ 'ABOUT_US.INTRODUCTION.REASON' | translate }}
+      </p>
+      
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+        <div class="text-center p-4 rounded-lg" style="background-color: #FCF5E2;">
+          <div class="text-4xl mb-3">📱</div>
+          <h3 class="font-semibold mb-2" style="color: #45332D;">{{ 'ABOUT_US.INTRODUCTION.CONCEPT1.TITLE' | translate }}</h3>
+          <p class="text-sm" style="color: #45332D; opacity: 0.8;">{{ 'ABOUT_US.INTRODUCTION.CONCEPT1.DESC' | translate }}</p>
+        </div>
+        <div class="text-center p-4 rounded-lg" style="background-color: #FCF5E2;">
+          <div class="text-4xl mb-3">📚</div>
+          <h3 class="font-semibold mb-2" style="color: #45332D;">{{ 'ABOUT_US.INTRODUCTION.CONCEPT2.TITLE' | translate }}</h3>
+          <p class="text-sm" style="color: #45332D; opacity: 0.8;">{{ 'ABOUT_US.INTRODUCTION.CONCEPT2.DESC' | translate }}</p>
+        </div>
+        <div class="text-center p-4 rounded-lg" style="background-color: #FCF5E2;">
+          <div class="text-4xl mb-3">♻️</div>
+          <h3 class="font-semibold mb-2" style="color: #45332D;">{{ 'ABOUT_US.INTRODUCTION.CONCEPT3.TITLE' | translate }}</h3>
+          <p class="text-sm" style="color: #45332D; opacity: 0.8;">{{ 'ABOUT_US.INTRODUCTION.CONCEPT3.DESC' | translate }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Team Section -->
+    <div class="mb-12">
+      <h2 class="text-3xl font-bold text-center mb-12" style="color: #45332D;">
+        {{ 'ABOUT_US.TEAM.TITLE' | translate }}
+      </h2>
+      
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <!-- Sergii -->
+        <div class="team-member-card bg-white rounded-2xl shadow-lg overflow-hidden transition-transform hover:scale-105" style="border: 1px solid #E9E1D1;">
+          <div class="relative flex justify-center items-center pt-6 pb-2">
+            <img 
+              src="assets/sergii.jfif" 
+              alt="Sergii"
+              class="w-32 h-32 object-cover rounded-full border-4"
+              style="border-color: #E9E1D1;"
+              onerror="this.src='https://via.placeholder.com/400x400?text=Sergii'">
+          </div>
+          <div class="p-6">
+            <h3 class="text-2xl font-bold mb-2" style="color: #45332D;">Sergii</h3>
+            <p class="mb-4 text-sm" style="color: #45332D; opacity: 0.8;">{{ 'ABOUT_US.TEAM.SERGII.ROLE' | translate }}</p>
+            <p class="leading-relaxed" style="color: #45332D; opacity: 0.9;">
+              {{ 'ABOUT_US.TEAM.SERGII.DESCRIPTION' | translate }}
+            </p>
+          </div>
+        </div>
+
+        <!-- Lucas -->
+        <div class="team-member-card bg-white rounded-2xl shadow-lg overflow-hidden transition-transform hover:scale-105" style="border: 1px solid #E9E1D1;">
+          <div class="relative flex justify-center items-center pt-6 pb-2">
+            <img 
+              src="assets/lucas.jfif" 
+              alt="Lucas"
+              class="w-32 h-32 object-cover rounded-full border-4"
+              style="border-color: #E9E1D1;"
+              onerror="this.src='https://via.placeholder.com/400x400?text=Lucas'">
+          </div>
+          <div class="p-6">
+            <h3 class="text-2xl font-bold mb-2" style="color: #45332D;">Lucas</h3>
+            <p class="mb-4 text-sm" style="color: #45332D; opacity: 0.8;">{{ 'ABOUT_US.TEAM.LUCAS.ROLE' | translate }}</p>
+            <p class="leading-relaxed" style="color: #45332D; opacity: 0.9;">
+              {{ 'ABOUT_US.TEAM.LUCAS.DESCRIPTION' | translate }}
+            </p>
+          </div>
+        </div>
+
+        <!-- Samuel -->
+        <div class="team-member-card bg-white rounded-2xl shadow-lg overflow-hidden transition-transform hover:scale-105" style="border: 1px solid #E9E1D1;">
+          <div class="relative flex justify-center items-center pt-6 pb-2">
+            <img 
+              src="assets/samuel.jfif" 
+              alt="Samuel"
+              class="w-32 h-32 object-cover rounded-full border-4"
+              style="border-color: #E9E1D1;"
+              onerror="this.src='https://via.placeholder.com/400x400?text=Samuel'">
+          </div>
+          <div class="p-6">
+            <h3 class="text-2xl font-bold mb-2" style="color: #45332D;">Samuel</h3>
+            <p class="mb-4 text-sm" style="color: #45332D; opacity: 0.8;">{{ 'ABOUT_US.TEAM.SAMUEL.ROLE' | translate }}</p>
+            <p class="leading-relaxed" style="color: #45332D; opacity: 0.9;">
+              {{ 'ABOUT_US.TEAM.SAMUEL.DESCRIPTION' | translate }}
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Conclusion Section -->
+    <div class="bg-white rounded-2xl shadow-lg p-8 text-center" style="border: 1px solid #E9E1D1;">
+      <p class="text-lg leading-relaxed max-w-3xl mx-auto" style="color: #45332D; opacity: 0.9;">
+        {{ 'ABOUT_US.CONCLUSION' | translate }}
+      </p>
+    </div>
+  </div>
+</div>
+
+<app-footer></app-footer>

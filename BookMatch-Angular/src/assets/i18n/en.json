@@ -208,5 +208,87 @@
             "CANCEL": "Cancel",
             "CONFIRM": "Yes, clear"
         }
+    },
+    "FAQ": {
+        "TITLE": "Frequently Asked Questions",
+        "STILL_QUESTIONS": "Still have questions?",
+        "CONTACT_US": "Contact Us",
+        "Q1": "How can I place an order?",
+        "A1": "You can place an order by browsing our catalog, adding books to your cart, and completing the checkout process. We accept secure payments through Stripe.",
+        "Q2": "What shipping methods are available?",
+        "A2": "We offer standard shipping throughout Spain. Delivery times may vary depending on location. For more information, check our shipping policy.",
+        "Q3": "Can I return a book?",
+        "A3": "Yes, we have a 30-day return policy. The book must be in the same condition you received it, unused and in its original packaging. Check our return policy for more details.",
+        "Q4": "How can I track my order?",
+        "A4": "Once your order is shipped, you will receive an email with the tracking number and a link to track your package in real-time.",
+        "Q5": "What payment methods do you accept?",
+        "A5": "We accept secure payments through Stripe, including credit and debit cards (Visa, Mastercard, American Express). All payments are encrypted and processed securely.",
+        "Q6": "Do you offer discounts or promotions?",
+        "A6": "Yes, we offer special promotions and discounts periodically. Subscribe to our newsletter or follow us on social media to stay up to date with our offers.",
+        "Q7": "Can I change or cancel my order?",
+        "A7": "You can cancel your order before it is shipped. Once shipped, you will need to follow the standard return process. Contact us at bookmatch3@gmail.com for more help.",
+        "Q8": "How can I contact customer service?",
+        "A8": "You can contact us by email at bookmatch3@gmail.com. We'll be happy to help you with any questions or issues you may have."
+    },
+    "PAYMENT_METHODS": {
+        "TITLE": "Payment Methods",
+        "SUBTITLE": "We accept multiple secure payment methods for your convenience",
+        "QUESTIONS": "Have questions about payment methods?",
+        "CONTACT": "Contact Us",
+        "STRIPE": {
+            "TITLE": "Stripe",
+            "DESCRIPTION": "We process all payments securely through Stripe, one of the world's most secure and reliable payment platforms.",
+            "FEATURE1": "Encrypted and secure payments",
+            "FEATURE2": "Instant processing",
+            "FEATURE3": "PCI DSS compliance"
+        },
+        "CARDS": {
+            "TITLE": "Credit and Debit Cards",
+            "DESCRIPTION": "We accept major credit and debit cards through our secure platform."
+        },
+        "SECURITY": {
+            "TITLE": "Payment Security",
+            "DESCRIPTION": "Your security is our priority. All payments are protected with:",
+            "FEATURE1": "End-to-end SSL encryption",
+            "FEATURE2": "PCI DSS compliance",
+            "FEATURE3": "Real-time fraud protection"
+        }
+    },
+    "ABOUT_US": {
+        "TITLE": "About Us",
+        "SUBTITLE": "App to buy recommended books and digital exchange",
+        "INTRODUCTION": {
+            "TITLE": "Introduction",
+            "DESCRIPTION": "The proposal arises from the need to promote reading while adapting to new sustainability trends. BookMatch is a mobile app that combines the purchase of books (both new and used) with an innovative system of personalized suggestions through artificial intelligence and a platform for exchanging used books between readers.",
+            "REASON": "We chose it because it unites three growing concepts: digitalization, reading, and circular economy. It is based on a real problem: books accumulate unused and readers seek new readings without spending more. It has potential for national and international growth with a low initial investment.",
+            "CONCEPT1": {
+                "TITLE": "Digitalization",
+                "DESC": "Modern and accessible technology"
+            },
+            "CONCEPT2": {
+                "TITLE": "Reading",
+                "DESC": "Promotion of culture and knowledge"
+            },
+            "CONCEPT3": {
+                "TITLE": "Circular Economy",
+                "DESC": "Sustainability and reuse"
+            }
+        },
+        "TEAM": {
+            "TITLE": "Project Promoters",
+            "SERGII": {
+                "ROLE": "Multiplatform Developer",
+                "DESCRIPTION": "Epic fantasy lover and regular reader. Multiplatform application developer, with experience in 3D animation in applications like Blender, which allows him to create visual content to promote the app on social media."
+            },
+            "LUCAS": {
+                "ROLE": "Multiplatform Developer",
+                "DESCRIPTION": "Also a multiplatform application developer with knowledge in 3D modeling and animation. Thanks to his creativity, he can bring a more visual and unique approach to the project, in addition to helping with ad creation."
+            },
+            "SAMUEL": {
+                "ROLE": "Database Specialist",
+                "DESCRIPTION": "Database specialist and technical aspects of the app. His more technical profile ensures that BookMatch will function efficiently and securely."
+            }
+        },
+        "CONCLUSION": "We are three second-year Multiplatform Application Development students from the Málaga Technology Park, passionate about technology, creativity, and reading. Together, we combine technical knowledge, creativity, and passion for reading to develop an innovative application that combines technology, sustainability, and appreciation for books."
     }
 }
