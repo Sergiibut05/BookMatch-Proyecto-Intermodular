@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy, inject, signal, HostListener } from '@ang
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { TranslateModule } from '@ngx-translate/core';
 import { PostsService } from '@core/services/posts.service';
 import { ForumsService } from '@core/services/forums.service';
 import { AuthService } from '@core/services/auth.service';
@@ -15,7 +16,7 @@ import { map, catchError } from 'rxjs/operators';
 
 @Component({
   selector: 'app-forum-topic-list',
-  imports: [CommonModule, Header, ReactiveFormsModule, UpvoteButtonComponent],
+  imports: [CommonModule, Header, ReactiveFormsModule, UpvoteButtonComponent, TranslateModule],
   templateUrl: './forum-topic-list.component.html',
   styleUrl: './forum-topic-list.component.scss',
 })

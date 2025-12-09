@@ -2,13 +2,14 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { TranslateModule } from '@ngx-translate/core';
 import { ForumsService } from '@core/services/forums.service';
 import { Forum, ForumsListResponse, CreateForumDto } from '@shared/models/forums.model';
 import { Header } from '@shared/components/header/header';
 
 @Component({
   selector: 'app-forum-index',
-  imports: [CommonModule, Header, ReactiveFormsModule],
+  imports: [CommonModule, Header, ReactiveFormsModule, TranslateModule],
   templateUrl: './forum-index.component.html',
   styleUrl: './forum-index.component.scss',
 })

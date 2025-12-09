@@ -290,5 +290,118 @@
             }
         },
         "CONCLUSION": "We are three second-year Multiplatform Application Development students from the Málaga Technology Park, passionate about technology, creativity, and reading. Together, we combine technical knowledge, creativity, and passion for reading to develop an innovative application that combines technology, sustainability, and appreciation for books."
+    },
+    "FORUM": {
+        "TITLE": "Discussion Forums",
+        "SUBTITLE": "Explore different categories and join conversations about books",
+        "CREATE_FORUM": "Create Forum",
+        "LOADING": "Loading forums...",
+        "NO_FORUMS": "No forums available",
+        "NO_FORUMS_DESC": "No discussion forums have been created yet.",
+        "NO_DESCRIPTION": "No description",
+        "TOPIC_SINGULAR": "topic",
+        "TOPIC_PLURAL": "topics",
+        "PREVIOUS": "Previous",
+        "NEXT": "Next",
+        "CANCEL": "Cancel",
+        "CREATE_MODAL": {
+            "TITLE": "Create New Forum",
+            "TITLE_LABEL": "Forum Title",
+            "TITLE_PLACEHOLDER": "E.g.: Book Recommendations",
+            "DESCRIPTION_LABEL": "Description (optional)",
+            "DESCRIPTION_PLACEHOLDER": "Describe the topic of this forum...",
+            "CREATING": "Creating...",
+            "CREATE_BUTTON": "Create Forum"
+        }
+    },
+    "FORUM_TOPIC": {
+        "BACK_TO_FORUMS": "Back to Forums",
+        "EDIT_FORUM": "Edit Forum",
+        "DELETE_FORUM": "Delete Forum",
+        "SEARCH_PLACEHOLDER": "Search topics...",
+        "LOADING": "Loading topics...",
+        "NO_TOPICS_FOUND": "No topics found",
+        "NO_TOPICS": "No topics yet",
+        "NO_TOPICS_FOUND_DESC": "Try with other search terms.",
+        "NO_TOPICS_DESC": "Be the first to create a discussion topic.",
+        "COMMENT_SINGULAR": "comment",
+        "COMMENT_PLURAL": "comments",
+        "PREVIOUS": "Previous",
+        "NEXT": "Next",
+        "CREATE_TOPIC": "Create New Topic",
+        "CANCEL": "Cancel",
+        "CREATE_MODAL": {
+            "TITLE": "Create New Topic",
+            "TITLE_LABEL": "Topic Title",
+            "TITLE_PLACEHOLDER": "E.g.: Science fiction book recommendation",
+            "CONTENT_LABEL": "Content",
+            "CONTENT_PLACEHOLDER": "Write your topic content...",
+            "CREATING": "Creating...",
+            "CREATE_BUTTON": "Create Topic"
+        },
+        "EDIT_MODAL": {
+            "TITLE": "Edit Forum",
+            "TITLE_LABEL": "Forum Title",
+            "TITLE_PLACEHOLDER": "Forum title",
+            "DESCRIPTION_LABEL": "Description (optional)",
+            "DESCRIPTION_PLACEHOLDER": "Forum description...",
+            "SAVING": "Saving...",
+            "SAVE_BUTTON": "Save Changes"
+        },
+        "DELETE_MODAL": {
+            "TITLE": "Delete Forum",
+            "MESSAGE": "Are you sure you want to delete this forum? This action will delete all associated topics and comments and cannot be undone.",
+            "DELETING": "Deleting...",
+            "DELETE_BUTTON": "Delete"
+        }
+    },
+    "POST": {
+        "BACK_TO_FORUM": "Back to forum",
+        "LOADING": "Loading post...",
+        "AT_TIME": "at",
+        "COMMENT_SINGULAR": "comment",
+        "COMMENT_PLURAL": "comments",
+        "EDIT": "Edit",
+        "DELETE": "Delete",
+        "CANCEL": "Cancel",
+        "EDIT_MODAL": {
+            "TITLE": "Edit Post",
+            "TITLE_LABEL": "Post Title",
+            "TITLE_PLACEHOLDER": "Post title",
+            "CONTENT_LABEL": "Content",
+            "CONTENT_PLACEHOLDER": "Post content...",
+            "SAVING": "Saving...",
+            "SAVE_BUTTON": "Save Changes"
+        },
+        "DELETE_MODAL": {
+            "TITLE": "Delete Post",
+            "MESSAGE": "Are you sure you want to delete this post? This action cannot be undone.",
+            "DELETING": "Deleting...",
+            "DELETE_BUTTON": "Delete"
+        }
+    },
+    "COMMENTS": {
+        "TITLE": "Comments",
+        "WRITE_COMMENT": "Write a comment",
+        "COMMENT_PLACEHOLDER": "Write your comment...",
+        "PUBLISHING": "Publishing...",
+        "PUBLISH": "Publish",
+        "CANCEL": "Cancel",
+        "LOADING": "Loading comments...",
+        "ERROR_MESSAGE": "You can still try to comment.",
+        "NO_COMMENTS": "No comments yet. Be the first to comment.",
+        "AT_TIME": "at",
+        "REPLIED": "replied",
+        "DELETE": "Delete",
+        "SEE_LESS": "See less",
+        "SEE_MORE": "See more",
+        "REPLY": "Reply",
+        "REPLY_PLACEHOLDER": "Write your reply...",
+        "DELETE_MODAL": {
+            "TITLE": "Delete Comment",
+            "MESSAGE": "Are you sure you want to delete this comment? This action cannot be undone.",
+            "DELETING": "Deleting...",
+            "DELETE_BUTTON": "Delete"
+        }
     }
 }

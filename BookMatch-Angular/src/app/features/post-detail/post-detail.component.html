@@ -13,7 +13,7 @@
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
       </svg>
-      Volver al foro
+      {{ 'POST.BACK_TO_FORUM' | translate }}
     </button>
 
     <!-- Loading state -->
@@ -21,7 +21,7 @@
       <div class="flex items-center justify-center min-h-[60vh]">
         <div class="text-center">
           <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-t-transparent" style="border-color: #E0A15E;"></div>
-          <p class="mt-4 text-lg" style="color: #45332D;">Cargando post...</p>
+          <p class="mt-4 text-lg" style="color: #45332D;">{{ 'POST.LOADING' | translate }}</p>
         </div>
       </div>
     }
@@ -64,14 +64,14 @@
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                   </svg>
-                  <span>{{ post()!.createdAt | date:'longDate':'es-ES' }} a las {{ post()!.createdAt | date:'shortTime':'es-ES' }}</span>
+                  <span>{{ post()!.createdAt | date:'longDate' }} {{ 'POST.AT_TIME' | translate }} {{ post()!.createdAt | date:'shortTime' }}</span>
                 </div>
                 @if (getCommentCount() > 0) {
                   <div class="flex items-center gap-1">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
                     </svg>
-                    <span>{{ getCommentCount() }} {{ getCommentCount() === 1 ? 'comentario' : 'comentarios' }}</span>
+                    <span>{{ getCommentCount() }} {{ (getCommentCount() === 1 ? 'POST.COMMENT_SINGULAR' : 'POST.COMMENT_PLURAL') | translate }}</span>
                   </div>
                 }
               </div>
@@ -103,7 +103,7 @@
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                         </svg>
-                        Editar
+                        {{ 'POST.EDIT' | translate }}
                       </button>
                       <button
                         (click)="openDeleteModal()"
@@ -111,7 +111,7 @@
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                         </svg>
-                        Eliminar
+                        {{ 'POST.DELETE' | translate }}
                       </button>
                     </div>
                   </div>
@@ -153,7 +153,7 @@
     <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" (click)="closeEditModal()">
       <div class="bg-white rounded-xl shadow-2xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto" (click)="$event.stopPropagation()">
         <div class="flex items-center justify-between mb-6">
-          <h2 class="text-2xl font-bold" style="color: #45332D;">Editar Post</h2>
+          <h2 class="text-2xl font-bold" style="color: #45332D;">{{ 'POST.EDIT_MODAL.TITLE' | translate }}</h2>
           <button
             (click)="closeEditModal()"
             class="text-gray-400 hover:text-gray-600 transition-colors">
@@ -177,7 +177,7 @@
         <form [formGroup]="editForm" (ngSubmit)="updatePost()" class="space-y-4">
           <div>
             <label for="edit-title" class="block text-sm font-medium mb-2" style="color: #45332D;">
-              Título del Post <span class="text-red-500">*</span>
+              {{ 'POST.EDIT_MODAL.TITLE_LABEL' | translate }} <span class="text-red-500">*</span>
             </label>
             <input
               id="edit-title"
@@ -185,7 +185,7 @@
               formControlName="title"
               class="w-full px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-opacity-50 text-base"
               style="border-color: #E9E1D1; background-color: #FCF5E2; color: #45332D; focus:ring-color: #E0A15E;"
-              placeholder="Título del post">
+              [placeholder]="'POST.EDIT_MODAL.TITLE_PLACEHOLDER' | translate">
             @if (getFieldError('title')) {
               <p class="text-xs text-red-600 mt-1">{{ getFieldError('title') }}</p>
             }
@@ -193,7 +193,7 @@
 
           <div>
             <label for="edit-content" class="block text-sm font-medium mb-2" style="color: #45332D;">
-              Contenido <span class="text-red-500">*</span>
+              {{ 'POST.EDIT_MODAL.CONTENT_LABEL' | translate }} <span class="text-red-500">*</span>
             </label>
             <textarea
               id="edit-content"
@@ -201,7 +201,7 @@
               rows="8"
               class="w-full px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-opacity-50 text-base resize-none"
               style="border-color: #E9E1D1; background-color: #FCF5E2; color: #45332D; focus:ring-color: #E0A15E;"
-              placeholder="Contenido del post..."></textarea>
+              [placeholder]="'POST.EDIT_MODAL.CONTENT_PLACEHOLDER' | translate"></textarea>
             @if (getFieldError('content')) {
               <p class="text-xs text-red-600 mt-1">{{ getFieldError('content') }}</p>
             }
@@ -218,10 +218,10 @@
               @if (isUpdating()) {
                 <span class="flex items-center justify-center gap-2">
                   <div class="inline-block animate-spin rounded-full h-4 w-4 border-2 border-t-transparent border-white"></div>
-                  Guardando...
+                  {{ 'POST.EDIT_MODAL.SAVING' | translate }}
                 </span>
               } @else {
-                Guardar Cambios
+                {{ 'POST.EDIT_MODAL.SAVE_BUTTON' | translate }}
               }
             </button>
             <button
@@ -232,7 +232,7 @@
               style="border-color: #E9E1D1; color: #45332D; background-color: white;"
               onmouseover="if(!this.disabled) this.style.backgroundColor='#F5F5F5'"
               onmouseout="if(!this.disabled) this.style.backgroundColor='white'">
-              Cancelar
+              {{ 'POST.CANCEL' | translate }}
             </button>
           </div>
         </form>
@@ -245,7 +245,7 @@
     <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" (click)="closeDeleteModal()">
       <div class="bg-white rounded-xl shadow-2xl max-w-md w-full p-6" (click)="$event.stopPropagation()">
         <div class="flex items-center justify-between mb-4">
-          <h2 class="text-2xl font-bold" style="color: #45332D;">Eliminar Post</h2>
+          <h2 class="text-2xl font-bold" style="color: #45332D;">{{ 'POST.DELETE_MODAL.TITLE' | translate }}</h2>
           <button
             (click)="closeDeleteModal()"
             class="text-gray-400 hover:text-gray-600 transition-colors">
@@ -256,7 +256,7 @@
         </div>
 
         <p class="text-base mb-6" style="color: #4E6A6A;">
-          ¿Estás seguro de que quieres eliminar este post? Esta acción no se puede deshacer.
+          {{ 'POST.DELETE_MODAL.MESSAGE' | translate }}
         </p>
 
         <div class="flex gap-3">
@@ -267,10 +267,10 @@
             @if (isDeleting()) {
               <span class="flex items-center justify-center gap-2">
                 <div class="inline-block animate-spin rounded-full h-4 w-4 border-2 border-t-transparent border-white"></div>
-                Eliminando...
+                {{ 'POST.DELETE_MODAL.DELETING' | translate }}
               </span>
             } @else {
-              Eliminar
+              {{ 'POST.DELETE_MODAL.DELETE_BUTTON' | translate }}
             }
           </button>
           <button
@@ -280,7 +280,7 @@
             style="border-color: #E9E1D1; color: #45332D; background-color: white;"
             onmouseover="if(!this.disabled) this.style.backgroundColor='#F5F5F5'"
             onmouseout="if(!this.disabled) this.style.backgroundColor='white'">
-            Cancelar
+            {{ 'POST.CANCEL' | translate }}
           </button>
         </div>
       </div>

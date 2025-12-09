@@ -1,12 +1,13 @@
 import { Component, Input, inject, signal, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { TranslateModule } from '@ngx-translate/core';
 import { Comment } from '@shared/models/comments.model';
 import { AuthService } from '@core/services/auth.service';
 
 @Component({
   selector: 'app-comment-item',
-  imports: [CommonModule, ReactiveFormsModule, CommentItemComponent], // Importa a sí mismo para recursión
+  imports: [CommonModule, ReactiveFormsModule, CommentItemComponent, TranslateModule], // Importa a sí mismo para recursión
   templateUrl: './comment-item.component.html',
   styleUrl: './comment-item.component.scss',
 })

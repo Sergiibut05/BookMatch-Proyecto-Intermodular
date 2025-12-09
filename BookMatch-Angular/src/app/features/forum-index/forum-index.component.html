@@ -6,9 +6,9 @@
     <!-- Header de la página -->
     <div class="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
       <div>
-        <h1 class="text-3xl md:text-4xl font-bold mb-2" style="color: #45332D;">Foros de Discusión</h1>
+        <h1 class="text-3xl md:text-4xl font-bold mb-2" style="color: #45332D;">{{ 'FORUM.TITLE' | translate }}</h1>
         <p class="text-base md:text-lg" style="color: #4E6A6A;">
-          Explora las diferentes categorías y únete a las conversaciones sobre libros
+          {{ 'FORUM.SUBTITLE' | translate }}
         </p>
       </div>
       <button
@@ -20,7 +20,7 @@
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
         </svg>
-        Crear Foro
+        {{ 'FORUM.CREATE_FORUM' | translate }}
       </button>
     </div>
 
@@ -29,7 +29,7 @@
       <div class="flex items-center justify-center min-h-[60vh]">
         <div class="text-center">
           <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-t-transparent" style="border-color: #E0A15E;"></div>
-          <p class="mt-4 text-lg" style="color: #45332D;">Cargando foros...</p>
+          <p class="mt-4 text-lg" style="color: #45332D;">{{ 'FORUM.LOADING' | translate }}</p>
         </div>
       </div>
     }
@@ -52,8 +52,8 @@
         <svg class="w-24 h-24 mx-auto mb-4" style="color: #E0A15E;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
         </svg>
-        <h3 class="text-xl font-semibold mb-2" style="color: #45332D;">No hay foros disponibles</h3>
-        <p class="text-base" style="color: #4E6A6A;">Aún no se han creado foros de discusión.</p>
+        <h3 class="text-xl font-semibold mb-2" style="color: #45332D;">{{ 'FORUM.NO_FORUMS' | translate }}</h3>
+        <p class="text-base" style="color: #4E6A6A;">{{ 'FORUM.NO_FORUMS_DESC' | translate }}</p>
       </div>
     }
 
@@ -74,7 +74,7 @@
                 {{ forum.title }}
               </h3>
               <p class="text-sm line-clamp-2" style="color: #4E6A6A;">
-                {{ forum.description || 'Sin descripción' }}
+                {{ forum.description || ('FORUM.NO_DESCRIPTION' | translate) }}
               </p>
             </div>
 
@@ -107,7 +107,7 @@
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
                   </svg>
-                  <span>{{ getTotalPosts(forum) }} {{ getTotalPosts(forum) === 1 ? 'tema' : 'temas' }}</span>
+                  <span>{{ getTotalPosts(forum) }} {{ (getTotalPosts(forum) === 1 ? 'FORUM.TOPIC_SINGULAR' : 'FORUM.TOPIC_PLURAL') | translate }}</span>
                 </div>
                 <div class="flex items-center gap-1">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -131,7 +131,7 @@
             style="border-color: #E9E1D1; color: #45332D; background-color: white;"
             onmouseover="if(!this.disabled) this.style.backgroundColor='#F5F5F5'"
             onmouseout="if(!this.disabled) this.style.backgroundColor='white'">
-            Anterior
+            {{ 'FORUM.PREVIOUS' | translate }}
           </button>
 
           @if (currentPage() > 3) {
@@ -189,7 +189,7 @@
             style="border-color: #E9E1D1; color: #45332D; background-color: white;"
             onmouseover="if(!this.disabled) this.style.backgroundColor='#F5F5F5'"
             onmouseout="if(!this.disabled) this.style.backgroundColor='white'">
-            Siguiente
+            {{ 'FORUM.NEXT' | translate }}
           </button>
         </div>
       }
@@ -202,7 +202,7 @@
     <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" (click)="closeCreateModal()">
       <div class="bg-white rounded-xl shadow-2xl max-w-md w-full p-6" (click)="$event.stopPropagation()">
         <div class="flex items-center justify-between mb-6">
-          <h2 class="text-2xl font-bold" style="color: #45332D;">Crear Nuevo Foro</h2>
+          <h2 class="text-2xl font-bold" style="color: #45332D;">{{ 'FORUM.CREATE_MODAL.TITLE' | translate }}</h2>
           <button
             (click)="closeCreateModal()"
             class="text-gray-400 hover:text-gray-600 transition-colors">
@@ -226,7 +226,7 @@
         <form [formGroup]="createForm" (ngSubmit)="createForum()" class="space-y-4">
           <div>
             <label for="title" class="block text-sm font-medium mb-2" style="color: #45332D;">
-              Título del Foro <span class="text-red-500">*</span>
+              {{ 'FORUM.CREATE_MODAL.TITLE_LABEL' | translate }} <span class="text-red-500">*</span>
             </label>
             <input
               id="title"
@@ -234,7 +234,7 @@
               formControlName="title"
               class="w-full px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-opacity-50 text-base"
               style="border-color: #E9E1D1; background-color: #FCF5E2; color: #45332D; focus:ring-color: #E0A15E;"
-              placeholder="Ej: Recomendaciones de Libros">
+              [placeholder]="'FORUM.CREATE_MODAL.TITLE_PLACEHOLDER' | translate">
             @if (getFieldError('title')) {
               <p class="text-xs text-red-600 mt-1">{{ getFieldError('title') }}</p>
             }
@@ -242,7 +242,7 @@
 
           <div>
             <label for="description" class="block text-sm font-medium mb-2" style="color: #45332D;">
-              Descripción (opcional)
+              {{ 'FORUM.CREATE_MODAL.DESCRIPTION_LABEL' | translate }}
             </label>
             <textarea
               id="description"
@@ -250,7 +250,7 @@
               rows="4"
               class="w-full px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-opacity-50 text-base resize-none"
               style="border-color: #E9E1D1; background-color: #FCF5E2; color: #45332D; focus:ring-color: #E0A15E;"
-              placeholder="Describe el tema de este foro..."></textarea>
+              [placeholder]="'FORUM.CREATE_MODAL.DESCRIPTION_PLACEHOLDER' | translate"></textarea>
           </div>
 
           <div class="flex gap-3 pt-2">
@@ -264,10 +264,10 @@
               @if (isCreating()) {
                 <span class="flex items-center justify-center gap-2">
                   <div class="inline-block animate-spin rounded-full h-4 w-4 border-2 border-t-transparent border-white"></div>
-                  Creando...
+                  {{ 'FORUM.CREATE_MODAL.CREATING' | translate }}
                 </span>
               } @else {
-                Crear Foro
+                {{ 'FORUM.CREATE_MODAL.CREATE_BUTTON' | translate }}
               }
             </button>
             <button
@@ -278,7 +278,7 @@
               style="border-color: #E9E1D1; color: #45332D; background-color: white;"
               onmouseover="if(!this.disabled) this.style.backgroundColor='#F5F5F5'"
               onmouseout="if(!this.disabled) this.style.backgroundColor='white'">
-              Cancelar
+              {{ 'FORUM.CANCEL' | translate }}
             </button>
           </div>
         </form>

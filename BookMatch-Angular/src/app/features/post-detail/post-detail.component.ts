@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy, inject, signal, HostListener } from '@ang
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { TranslateModule } from '@ngx-translate/core';
 import { PostsService } from '@core/services/posts.service';
 import { AuthService } from '@core/services/auth.service';
 import { Post, UpdatePostDto } from '@shared/models/posts.model';
@@ -10,7 +11,7 @@ import { CommentThreadComponent } from '@shared/components/comment-thread/commen
 
 @Component({
   selector: 'app-post-detail',
-  imports: [CommonModule, Header, ReactiveFormsModule, CommentThreadComponent],
+  imports: [CommonModule, Header, ReactiveFormsModule, CommentThreadComponent, TranslateModule],
   templateUrl: './post-detail.component.html',
   styleUrl: './post-detail.component.scss',
 })

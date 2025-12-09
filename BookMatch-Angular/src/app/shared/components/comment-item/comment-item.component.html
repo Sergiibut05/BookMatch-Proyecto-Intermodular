@@ -21,10 +21,10 @@
           <div class="flex items-center gap-2">
             <span class="font-semibold text-sm" style="color: #45332D;">{{ getAuthorName() }}</span>
             @if (depth > 0) {
-              <span class="text-xs" style="color: #4E6A6A;">respondió</span>
+              <span class="text-xs" style="color: #4E6A6A;">{{ 'COMMENTS.REPLIED' | translate }}</span>
             }
             <span class="text-xs" style="color: #4E6A6A;">
-              {{ comment.createdAt | date:'shortDate' }} a las {{ comment.createdAt | date:'shortTime' }}
+              {{ comment.createdAt | date:'shortDate' }} {{ 'COMMENTS.AT_TIME' | translate }} {{ comment.createdAt | date:'shortTime' }}
             </span>
           </div>
           
@@ -55,7 +55,7 @@
                       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                       </svg>
-                      Eliminar
+                      {{ 'COMMENTS.DELETE' | translate }}
                     </button>
                   </div>
                 </div>
@@ -81,7 +81,7 @@
               style="color: #E0A15E;"
               onmouseover="this.style.color='#B88B65'"
               onmouseout="this.style.color='#E0A15E'">
-              {{ isExpanded() ? 'Ver menos' : 'Ver más' }}
+              {{ (isExpanded() ? 'COMMENTS.SEE_LESS' : 'COMMENTS.SEE_MORE') | translate }}
             </button>
           }
         </div>
@@ -93,7 +93,7 @@
           style="color: #E0A15E;"
           onmouseover="this.style.color='#B88B65'"
           onmouseout="this.style.color='#E0A15E'">
-          Responder
+          {{ 'COMMENTS.REPLY' | translate }}
         </button>
       </div>
     </div>
@@ -119,7 +119,7 @@
               rows="3"
               class="w-full px-3 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-opacity-50 text-sm resize-none"
               style="border-color: #E9E1D1; background-color: #FCF5E2; color: #45332D; focus:ring-color: #E0A15E;"
-              placeholder="Escribe tu respuesta..."></textarea>
+              [placeholder]="'COMMENTS.REPLY_PLACEHOLDER' | translate"></textarea>
             @if (getFieldError(comment.id, 'content')) {
               <p class="text-xs text-red-600">{{ getFieldError(comment.id, 'content') }}</p>
             }
@@ -135,10 +135,10 @@
                 @if (isReplying(comment.id)) {
                   <span class="flex items-center gap-1">
                     <div class="inline-block animate-spin rounded-full h-3 w-3 border-2 border-t-transparent border-white"></div>
-                    Publicando...
+                    {{ 'COMMENTS.PUBLISHING' | translate }}
                   </span>
                 } @else {
-                  Publicar
+                  {{ 'COMMENTS.PUBLISH' | translate }}
                 }
               </button>
               <button
@@ -149,7 +149,7 @@
                 style="border-color: #E9E1D1; color: #45332D; background-color: white;"
                 onmouseover="if(!this.disabled) this.style.backgroundColor='#F5F5F5'"
                 onmouseout="if(!this.disabled) this.style.backgroundColor='white'">
-                Cancelar
+                {{ 'COMMENTS.CANCEL' | translate }}
               </button>
             </div>
           </form>
@@ -186,7 +186,7 @@
     <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" (click)="closeDeleteModal()">
       <div class="bg-white rounded-xl shadow-2xl max-w-md w-full p-6" (click)="$event.stopPropagation()">
         <div class="flex items-center justify-between mb-4">
-          <h2 class="text-xl font-semibold" style="color: #45332D;">Eliminar Comentario</h2>
+          <h2 class="text-xl font-semibold" style="color: #45332D;">{{ 'COMMENTS.DELETE_MODAL.TITLE' | translate }}</h2>
           <button
             (click)="closeDeleteModal()"
             type="button"
@@ -198,7 +198,7 @@
         </div>
 
         <p class="text-base mb-6" style="color: #4E6A6A;">
-          ¿Estás seguro de que quieres eliminar este comentario? Esta acción no se puede deshacer.
+          {{ 'COMMENTS.DELETE_MODAL.MESSAGE' | translate }}
         </p>
 
         <div class="flex gap-3">
@@ -210,10 +210,10 @@
             @if (isDeleting()) {
               <span class="flex items-center justify-center gap-2">
                 <div class="inline-block animate-spin rounded-full h-4 w-4 border-2 border-t-transparent border-white"></div>
-                Eliminando...
+                {{ 'COMMENTS.DELETE_MODAL.DELETING' | translate }}
               </span>
             } @else {
-              Eliminar
+              {{ 'COMMENTS.DELETE_MODAL.DELETE_BUTTON' | translate }}
             }
           </button>
           <button
@@ -224,7 +224,7 @@
             style="border-color: #E9E1D1; color: #45332D; background-color: white;"
             onmouseover="if(!this.disabled) this.style.backgroundColor='#F5F5F5'"
             onmouseout="if(!this.disabled) this.style.backgroundColor='white'">
-            Cancelar
+            {{ 'COMMENTS.CANCEL' | translate }}
           </button>
         </div>
       </div>

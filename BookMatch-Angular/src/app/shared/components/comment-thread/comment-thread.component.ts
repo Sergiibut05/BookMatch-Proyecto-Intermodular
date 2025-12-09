@@ -1,6 +1,7 @@
 import { Component, Input, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { TranslateModule } from '@ngx-translate/core';
 import { CommentsService } from '@core/services/comments.service';
 import { AuthService } from '@core/services/auth.service';
 import { Comment, CreateCommentDto } from '@shared/models/comments.model';
@@ -8,7 +9,7 @@ import { CommentItemComponent } from '../comment-item/comment-item.component';
 
 @Component({
   selector: 'app-comment-thread',
-  imports: [CommonModule, ReactiveFormsModule, CommentItemComponent],
+  imports: [CommonModule, ReactiveFormsModule, CommentItemComponent, TranslateModule],
   templateUrl: './comment-thread.component.html',
   styleUrl: './comment-thread.component.scss',
 })

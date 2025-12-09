@@ -291,5 +291,118 @@
             }
         },
         "CONCLUSION": "Somos tres estudiantes de segundo Desarrollo de Aplicaciones Multiplataforma del Parque Tecnológico de Málaga, apasionados por la tecnología, la creatividad y la lectura. En conjunto, unimos conocimientos técnicos, creatividad y pasión por la lectura para desarrollar una aplicación innovadora que combina tecnología, sostenibilidad y aprecio por los libros."
+    },
+    "FORUM": {
+        "TITLE": "Foros de Discusión",
+        "SUBTITLE": "Explora las diferentes categorías y únete a las conversaciones sobre libros",
+        "CREATE_FORUM": "Crear Foro",
+        "LOADING": "Cargando foros...",
+        "NO_FORUMS": "No hay foros disponibles",
+        "NO_FORUMS_DESC": "Aún no se han creado foros de discusión.",
+        "NO_DESCRIPTION": "Sin descripción",
+        "TOPIC_SINGULAR": "tema",
+        "TOPIC_PLURAL": "temas",
+        "PREVIOUS": "Anterior",
+        "NEXT": "Siguiente",
+        "CANCEL": "Cancelar",
+        "CREATE_MODAL": {
+            "TITLE": "Crear Nuevo Foro",
+            "TITLE_LABEL": "Título del Foro",
+            "TITLE_PLACEHOLDER": "Ej: Recomendaciones de Libros",
+            "DESCRIPTION_LABEL": "Descripción (opcional)",
+            "DESCRIPTION_PLACEHOLDER": "Describe el tema de este foro...",
+            "CREATING": "Creando...",
+            "CREATE_BUTTON": "Crear Foro"
+        }
+    },
+    "FORUM_TOPIC": {
+        "BACK_TO_FORUMS": "Volver a Foros",
+        "EDIT_FORUM": "Editar Foro",
+        "DELETE_FORUM": "Eliminar Foro",
+        "SEARCH_PLACEHOLDER": "Buscar temas...",
+        "LOADING": "Cargando temas...",
+        "NO_TOPICS_FOUND": "No se encontraron temas",
+        "NO_TOPICS": "No hay temas aún",
+        "NO_TOPICS_FOUND_DESC": "Intenta con otros términos de búsqueda.",
+        "NO_TOPICS_DESC": "Sé el primero en crear un tema de discusión.",
+        "COMMENT_SINGULAR": "comentario",
+        "COMMENT_PLURAL": "comentarios",
+        "PREVIOUS": "Anterior",
+        "NEXT": "Siguiente",
+        "CREATE_TOPIC": "Crear Nuevo Tema",
+        "CANCEL": "Cancelar",
+        "CREATE_MODAL": {
+            "TITLE": "Crear Nuevo Tema",
+            "TITLE_LABEL": "Título del Tema",
+            "TITLE_PLACEHOLDER": "Ej: Recomendación de libros de ciencia ficción",
+            "CONTENT_LABEL": "Contenido",
+            "CONTENT_PLACEHOLDER": "Escribe el contenido de tu tema...",
+            "CREATING": "Creando...",
+            "CREATE_BUTTON": "Crear Tema"
+        },
+        "EDIT_MODAL": {
+            "TITLE": "Editar Foro",
+            "TITLE_LABEL": "Título del Foro",
+            "TITLE_PLACEHOLDER": "Título del foro",
+            "DESCRIPTION_LABEL": "Descripción (opcional)",
+            "DESCRIPTION_PLACEHOLDER": "Descripción del foro...",
+            "SAVING": "Guardando...",
+            "SAVE_BUTTON": "Guardar Cambios"
+        },
+        "DELETE_MODAL": {
+            "TITLE": "Eliminar Foro",
+            "MESSAGE": "¿Estás seguro de que quieres eliminar este foro? Esta acción eliminará todos los temas y comentarios asociados y no se puede deshacer.",
+            "DELETING": "Eliminando...",
+            "DELETE_BUTTON": "Eliminar"
+        }
+    },
+    "POST": {
+        "BACK_TO_FORUM": "Volver al foro",
+        "LOADING": "Cargando post...",
+        "AT_TIME": "a las",
+        "COMMENT_SINGULAR": "comentario",
+        "COMMENT_PLURAL": "comentarios",
+        "EDIT": "Editar",
+        "DELETE": "Eliminar",
+        "CANCEL": "Cancelar",
+        "EDIT_MODAL": {
+            "TITLE": "Editar Post",
+            "TITLE_LABEL": "Título del Post",
+            "TITLE_PLACEHOLDER": "Título del post",
+            "CONTENT_LABEL": "Contenido",
+            "CONTENT_PLACEHOLDER": "Contenido del post...",
+            "SAVING": "Guardando...",
+            "SAVE_BUTTON": "Guardar Cambios"
+        },
+        "DELETE_MODAL": {
+            "TITLE": "Eliminar Post",
+            "MESSAGE": "¿Estás seguro de que quieres eliminar este post? Esta acción no se puede deshacer.",
+            "DELETING": "Eliminando...",
+            "DELETE_BUTTON": "Eliminar"
+        }
+    },
+    "COMMENTS": {
+        "TITLE": "Comentarios",
+        "WRITE_COMMENT": "Escribir un comentario",
+        "COMMENT_PLACEHOLDER": "Escribe tu comentario...",
+        "PUBLISHING": "Publicando...",
+        "PUBLISH": "Publicar",
+        "CANCEL": "Cancelar",
+        "LOADING": "Cargando comentarios...",
+        "ERROR_MESSAGE": "Puedes intentar comentar de todas formas.",
+        "NO_COMMENTS": "No hay comentarios aún. Sé el primero en comentar.",
+        "AT_TIME": "a las",
+        "REPLIED": "respondió",
+        "DELETE": "Eliminar",
+        "SEE_LESS": "Ver menos",
+        "SEE_MORE": "Ver más",
+        "REPLY": "Responder",
+        "REPLY_PLACEHOLDER": "Escribe tu respuesta...",
+        "DELETE_MODAL": {
+            "TITLE": "Eliminar Comentario",
+            "MESSAGE": "¿Estás seguro de que quieres eliminar este comentario? Esta acción no se puede deshacer.",
+            "DELETING": "Eliminando...",
+            "DELETE_BUTTON": "Eliminar"
+        }
     }
 }
