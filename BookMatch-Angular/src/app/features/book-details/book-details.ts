@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { FormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 
 // Servicios
 import { CatalogService } from '@core/services/catalog.service';
@@ -11,6 +11,7 @@ import { AuthService } from '@core/services/auth.service';
 
 // Componentes y Modelos
 import { Header } from '@shared/components/header/header';
+import { StarRatingComponent } from '@shared/components/star-rating/star-rating.component';
 import { CatalogBook, Review } from '@shared/models'; // User ya no hace falta importarlo aquí explícitamente
 
 // Módulo de traducción
@@ -19,7 +20,7 @@ import { TranslateModule } from '@ngx-translate/core';
 @Component({
   selector: 'app-book-details',
   standalone: true,
-  imports: [Header, CommonModule, FormsModule, TranslateModule],
+  imports: [Header, CommonModule, ReactiveFormsModule, StarRatingComponent, TranslateModule],
   templateUrl: './book-details.html',
   styleUrl: './book-details.scss',
 })
@@ -29,6 +30,7 @@ export class BookDetails implements OnInit {
   private catalogService = inject(CatalogService);
   private paymentService = inject(PaymentService);
   private cartService = inject(CartService);
+  private fb = inject(FormBuilder);
   
   // Hacemos el servicio público para poder usarlo en el HTML si fuera necesario, 
   // pero sobre todo para acceder a sus señales
@@ -55,10 +57,8 @@ export class BookDetails implements OnInit {
   isSubmittingReview = signal<boolean>(false);
   isDeletingReview = signal<boolean>(false);
 
-  // Señales para el formulario
-  newReviewRating = signal<number>(0);
-  newReviewComment = signal<string>('');
-  hoverRating = signal<number>(0);
+  // Formulario reactivo para reseñas
+  reviewForm!: FormGroup;
 
   // --- COMPUTED SIGNALS ---
   averageRating = computed(() => {
@@ -92,8 +92,13 @@ export class BookDetails implements OnInit {
   });
 
   ngOnInit(): void {
-    // YA NO NECESITAMOS SUSCRIBIRNOS MANUALMENTE AL USUARIO AQUÍ
-    // La señal 'currentUserId' de arriba ya lo hace automáticamente.
+    // Inicializar el formulario reactivo
+    // rating: requerido, mínimo 1, máximo 5
+    // comment: opcional
+    this.reviewForm = this.fb.group({
+      rating: [0, [Validators.required, Validators.min(1), Validators.max(5)]],
+      comment: ['']
+    });
 
     this.route.paramMap.subscribe((params) => {
       const idParam = params.get('id');
@@ -175,14 +180,6 @@ export class BookDetails implements OnInit {
     });
   }
 
-  setRating(stars: number) {
-    this.newReviewRating.set(stars);
-  }
-
-  setHoverRating(stars: number) {
-    this.hoverRating.set(stars);
-  }
-
   getUserInitial(userId: number): string {
     return 'U';
   }
@@ -198,22 +195,34 @@ export class BookDetails implements OnInit {
   }
 
   submitReview() {
-    if (this.newReviewRating() === 0) {
-      alert('Por favor, selecciona una puntuación de estrellas.');
+    // Marcar todos los campos como touched para mostrar errores si los hay
+    if (this.reviewForm.invalid) {
+      this.reviewForm.markAllAsTouched();
+      
+      // Mostrar mensaje específico si falta el rating
+      if (this.reviewForm.get('rating')?.hasError('required') || 
+          this.reviewForm.get('rating')?.value === 0) {
+        alert('Por favor, selecciona una puntuación de estrellas.');
+      }
       return;
     }
 
     this.isSubmittingReview.set(true);
 
+    // Obtener valores del formulario reactivo
+    const formValue = this.reviewForm.value;
     const payload = {
-      rating: this.newReviewRating(),
-      comment: this.newReviewComment()
+      rating: formValue.rating,
+      comment: formValue.comment?.trim() || ''
     };
 
     this.catalogService.addReview(Number(this.bookId()), payload).subscribe({
       next: (review) => {
-        this.newReviewRating.set(0);
-        this.newReviewComment.set('');
+        // Resetear el formulario después de enviar
+        this.reviewForm.reset({
+          rating: 0,
+          comment: ''
+        });
         this.isSubmittingReview.set(false);
         this.loadBook();
       },
@@ -230,6 +239,25 @@ export class BookDetails implements OnInit {
         }
       }
     });
+  }
+
+  /**
+   * Helper para obtener errores de validación del formulario
+   */
+  getFieldError(fieldName: string): string | null {
+    const field = this.reviewForm.get(fieldName);
+    if (!field || !field.touched || !field.errors) return null;
+
+    if (field.errors['required']) {
+      return 'Este campo es requerido';
+    }
+    if (field.errors['min']) {
+      return `El valor mínimo es ${field.errors['min'].min}`;
+    }
+    if (field.errors['max']) {
+      return `El valor máximo es ${field.errors['max'].max}`;
+    }
+    return 'Campo inválido';
   }
 
   onDeleteReview(reviewId: number) {

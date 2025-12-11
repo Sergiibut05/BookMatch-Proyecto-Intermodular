@@ -11,12 +11,13 @@ import { Post, PostsListResponse, CreatePostDto } from '@shared/models/posts.mod
 import { Forum, UpdateForumDto } from '@shared/models/forums.model';
 import { Header } from '@shared/components/header/header';
 import { UpvoteButtonComponent } from '@shared/components/upvote-button/upvote-button.component';
+import { RelativeTimePipe } from '@core/pipes/relative-time.pipe';
 import { forkJoin, of } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 
 @Component({
   selector: 'app-forum-topic-list',
-  imports: [CommonModule, Header, ReactiveFormsModule, UpvoteButtonComponent, TranslateModule],
+  imports: [CommonModule, Header, ReactiveFormsModule, UpvoteButtonComponent, TranslateModule, RelativeTimePipe],
   templateUrl: './forum-topic-list.component.html',
   styleUrl: './forum-topic-list.component.scss',
 })

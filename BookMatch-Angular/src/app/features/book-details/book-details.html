@@ -229,43 +229,48 @@
                       <p class="text-sm text-gray-500">Comparte tu experiencia con este libro para ayudar a otros lectores.</p>
                     </div>
                     
-                    <div class="flex justify-center gap-3 mb-8" (mouseleave)="setHoverRating(0)">
-                      @for (star of [1,2,3,4,5]; track star) {
-                        <button 
-                          type="button"
-                          class="focus:outline-none transition-transform hover:scale-110 active:scale-95 p-1"
-                          (mouseenter)="setHoverRating(star)"
-                          (click)="setRating(star)">
-                          <span class="material-symbols-outlined text-5xl"
-                            [style.color]="star <= (hoverRating() || newReviewRating()) ? '#E0A15E' : '#E5E7EB'"
-                            [style.font-variation-settings]="star <= (hoverRating() || newReviewRating()) ? '\'FILL\' 1' : '\'FILL\' 0'">
-                            star
-                          </span>
-                        </button>
-                      }
-                    </div>
+                    <!-- Formulario reactivo para reseñas -->
+                    <form [formGroup]="reviewForm" (ngSubmit)="submitReview()" class="space-y-6">
+                      <!-- Componente StarRating con formControlName -->
+                      <div class="mb-8">
+                        <label class="block text-sm font-medium mb-4 text-center" style="color: #45332D;">
+                          Tu valoración <span class="text-red-500">*</span>
+                        </label>
+                        <app-star-rating formControlName="rating"></app-star-rating>
+                        @if (getFieldError('rating')) {
+                          <p class="text-xs text-red-600 mt-2 text-center">{{ getFieldError('rating') }}</p>
+                        }
+                      </div>
 
-                    <div class="relative mb-6">
-                      <label class="block text-sm font-medium mb-2" style="color: #45332D;">Tu opinión (Opcional)</label>
-                      <textarea 
-                        [(ngModel)]="newReviewComment"
-                        rows="5"
-                        class="w-full rounded-lg border bg-gray-50 p-4 text-base focus:outline-none focus:ring-2 focus:ring-[#E0A15E] focus:bg-white transition-colors resize-none"
-                        style="border-color: #D4C9B9; color: #45332D;"
-                        placeholder="¿Qué es lo que más te ha gustado? ¿Qué no te gustó?"></textarea>
-                    </div>
-                    
-                    <button 
-                      (click)="submitReview()"
-                      [disabled]="newReviewRating() === 0 || isSubmittingReview()"
-                      class="w-full py-4 rounded-xl font-bold text-base transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-xl hover:-translate-y-0.5"
-                      style="background-color: #45332D; color: #FCF5E2;">
-                      @if (isSubmittingReview()) {
-                        <span class="inline-block animate-pulse">Publicando reseña...</span>
-                      } @else {
-                        Publicar Reseña
-                      }
-                    </button>
+                      <!-- Campo de comentario -->
+                      <div class="relative mb-6">
+                        <label class="block text-sm font-medium mb-2" style="color: #45332D;">
+                          Tu opinión (Opcional)
+                        </label>
+                        <textarea 
+                          formControlName="comment"
+                          rows="5"
+                          class="w-full rounded-lg border bg-gray-50 p-4 text-base focus:outline-none focus:ring-2 focus:ring-[#E0A15E] focus:bg-white transition-colors resize-none"
+                          style="border-color: #D4C9B9; color: #45332D;"
+                          placeholder="¿Qué es lo que más te ha gustado? ¿Qué no te gustó?"></textarea>
+                        @if (getFieldError('comment')) {
+                          <p class="text-xs text-red-600 mt-1">{{ getFieldError('comment') }}</p>
+                        }
+                      </div>
+                      
+                      <!-- Botón de envío -->
+                      <button 
+                        type="submit"
+                        [disabled]="reviewForm.invalid || isSubmittingReview()"
+                        class="w-full py-4 rounded-xl font-bold text-base transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-xl hover:-translate-y-0.5"
+                        style="background-color: #45332D; color: #FCF5E2;">
+                        @if (isSubmittingReview()) {
+                          <span class="inline-block animate-pulse">Publicando reseña...</span>
+                        } @else {
+                          Publicar Reseña
+                        }
+                      </button>
+                    </form>
                   </div>
                 </div>
 

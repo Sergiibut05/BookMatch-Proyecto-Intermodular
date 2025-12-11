@@ -8,10 +8,11 @@ import { AuthService } from '@core/services/auth.service';
 import { Post, UpdatePostDto } from '@shared/models/posts.model';
 import { Header } from '@shared/components/header/header';
 import { CommentThreadComponent } from '@shared/components/comment-thread/comment-thread.component';
+import { RelativeTimePipe } from '@core/pipes/relative-time.pipe';
 
 @Component({
   selector: 'app-post-detail',
-  imports: [CommonModule, Header, ReactiveFormsModule, CommentThreadComponent, TranslateModule],
+  imports: [CommonModule, Header, ReactiveFormsModule, CommentThreadComponent, TranslateModule, RelativeTimePipe],
   templateUrl: './post-detail.component.html',
   styleUrl: './post-detail.component.scss',
 })

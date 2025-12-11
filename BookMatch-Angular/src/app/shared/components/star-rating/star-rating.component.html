@@ -1,0 +1,24 @@
+<div 
+  class="star-rating-container"
+  (mouseleave)="onMouseLeave()"
+  [class.disabled]="isDisabled()">
+  
+  @for (star of stars; track star) {
+    <button 
+      type="button"
+      class="star-button"
+      [class.filled]="isStarFilled(star)"
+      [disabled]="isDisabled()"
+      (click)="onStarClick(star)"
+      (mouseenter)="onStarHover(star)"
+      [attr.aria-label]="'Seleccionar ' + star + ' estrella' + (star > 1 ? 's' : '')"
+      [attr.aria-pressed]="star === getValue()">
+      <span 
+        class="material-symbols-outlined"
+        [style.font-variation-settings]="isStarFilled(star) ? '\'FILL\' 1' : '\'FILL\' 0'">
+        star
+      </span>
+    </button>
+  }
+</div>
+
