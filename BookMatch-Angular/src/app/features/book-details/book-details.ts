@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 
 // Servicios
@@ -11,7 +11,7 @@ import { AuthService } from '@core/services/auth.service';
 
 // Componentes y Modelos
 import { Header } from '@shared/components/header/header';
-import { CatalogBook, Review } from '@shared/models'; // User ya no hace falta importarlo aquí explícitamente
+import { CatalogBook, Review } from '@shared/models'; 
 
 // Módulo de traducción
 import { TranslateModule } from '@ngx-translate/core';
@@ -19,7 +19,7 @@ import { TranslateModule } from '@ngx-translate/core';
 @Component({
   selector: 'app-book-details',
   standalone: true,
-  imports: [Header, CommonModule, FormsModule, TranslateModule],
+  imports: [Header, CommonModule, FormsModule, TranslateModule, RouterLink], 
   templateUrl: './book-details.html',
   styleUrl: './book-details.scss',
 })
@@ -29,10 +29,9 @@ export class BookDetails implements OnInit {
   private catalogService = inject(CatalogService);
   private paymentService = inject(PaymentService);
   private cartService = inject(CartService);
-  
-  // Hacemos el servicio público para poder usarlo en el HTML si fuera necesario, 
-  // pero sobre todo para acceder a sus señales
   public authService = inject(AuthService); 
+
+  isAdmin = this.authService.isAdmin;
 
   // Señales de datos
   bookId = signal<string>('');
@@ -40,14 +39,12 @@ export class BookDetails implements OnInit {
   selectedImageUrl = signal<string | null>(null);
   reviews = signal<Review[] | null>(null);
 
-  // --- CORRECCIÓN CLAVE AQUÍ ---
   // Usamos computed() para "escuchar" automáticamente a la señal del servicio.
   // Cuando authService.currentUser cambie (al cargar el perfil del backend), esto se actualizará solo.
   currentUserId = computed(() => {
     const user = this.authService.currentUser();
     return user ? user.id : null;
   });
-  // -----------------------------
 
   // Señales de estado
   isProcessingPayment = signal<boolean>(false);
@@ -92,9 +89,6 @@ export class BookDetails implements OnInit {
   });
 
   ngOnInit(): void {
-    // YA NO NECESITAMOS SUSCRIBIRNOS MANUALMENTE AL USUARIO AQUÍ
-    // La señal 'currentUserId' de arriba ya lo hace automáticamente.
-
     this.route.paramMap.subscribe((params) => {
       const idParam = params.get('id');
       if (idParam) {
@@ -233,7 +227,7 @@ export class BookDetails implements OnInit {
   }
 
   onDeleteReview(reviewId: number) {
-    if (!confirm('¿Estás seguro de que deseas eliminar tu reseña? Esta acción no se puede deshacer.')) {
+    if (!confirm('¿Estás seguro de que deseas eliminar esta reseña? Esta acción no se puede deshacer.')) {
       return;
     }
 

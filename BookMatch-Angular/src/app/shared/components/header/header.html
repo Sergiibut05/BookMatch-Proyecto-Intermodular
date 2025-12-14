@@ -36,6 +36,15 @@
         <span class="font-medium">Foro</span>
       </a>
     </div>
+
+    @if (authService.isAdmin()) {
+      <div class="menu-item w-full">
+        <a routerLink="/admin/books/create" (click)="closeMenu()" class="menu-link flex items-center justify-start gap-3 w-full p-2 cursor-pointer" style="color: #DC2626;">
+          <span class="material-symbols-outlined text-xl">add_circle</span>
+          <span class="font-bold">Añadir Libro (Admin)</span>
+        </a>
+      </div>
+    }
     <div class="menu-item w-full">
       <a href="profile" class="menu-link flex items-center justify-start gap-3 w-full p-2">
         <span class="material-symbols-outlined text-xl">account_circle</span>
@@ -88,6 +97,12 @@
         <span class="hidden lg:block text-base whitespace-nowrap" style="color: #45332D;">
           {{ 'HEADER.WELCOME' | translate }} 
           <span class="font-semibold">{{ authService.currentUser()?.fullName || '...' }}</span>
+          
+          @if (authService.isAdmin()) {
+            <span class="ml-2 px-2 py-0.5 text-xs font-bold text-white bg-red-500 rounded-full uppercase tracking-wider shadow-sm">
+              ADMIN
+            </span>
+          }
         </span>
 
         @if (!authService.currentUser()?.avatarUrl) {
@@ -107,6 +122,13 @@
           </div>
         }
 
+        @if (authService.isAdmin()) {
+          <a routerLink="/admin/books/create" 
+              class="flex items-center justify-center p-1.5 md:p-2 rounded-lg transition-colors hover:bg-red-50 text-red-600"
+              title="Añadir Libro Nuevo">
+              <span class="material-symbols-outlined">add_circle</span>
+          </a>
+        }
         <a routerLink="/cart"
           class="relative flex items-center justify-center p-1.5 md:p-2 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer">
           <svg class="w-5 h-5 md:w-7 md:h-7" style="color: #45332D;" fill="none" stroke="currentColor"

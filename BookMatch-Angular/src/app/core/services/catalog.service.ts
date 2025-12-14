@@ -98,8 +98,21 @@ export class CatalogService {
     );
   }
 
-  // Este método buscaba por nombre, pero el backend lo ignora. 
-  // Lo mantenemos para no romper código antiguo, pero deberías usar getBooksByCategoryId.
+  // <--- MODIFICACIÓN: Nuevo método para ACTUALIZAR libro (PATCH)
+  updateBook(id: number, book: Partial<CreateCatalogBookDto>): Observable<CatalogBook> {
+    return this.authHeaders().pipe(
+      switchMap(headers => this.http.patch<CatalogBook>(`${this.apiUrl}/${id}`, book, { headers }))
+    );
+  }
+
+  // <--- MODIFICACIÓN: Nuevo método para ELIMINAR libro (DELETE)
+  deleteBook(id: number): Observable<void> {
+    return this.authHeaders().pipe(
+      switchMap(headers => this.http.delete<void>(`${this.apiUrl}/${id}`, { headers }))
+    );
+  }
+  // -------------------------------------------------------------
+
   getBooksByCategoryName(
     name: string, 
     page = 1, 
