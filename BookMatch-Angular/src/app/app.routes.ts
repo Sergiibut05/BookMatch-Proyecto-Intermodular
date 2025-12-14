@@ -66,6 +66,11 @@ export const routes: Routes = [
         loadComponent: () => import('./features/post-detail/post-detail.component').then(m => m.PostDetailComponent)
       },
       {
+        path: 'search-results',
+        canActivate: [authGuard],
+        loadComponent: () => import('./features/search-results/search-results.component').then(m => m.SearchResultsComponent)
+      },
+      {
         path: 'privacy-policy',
         loadComponent: () => import('./features/footer/privacy-policy/privacy-policy').then(m => m.PrivacyPolicy)
       },

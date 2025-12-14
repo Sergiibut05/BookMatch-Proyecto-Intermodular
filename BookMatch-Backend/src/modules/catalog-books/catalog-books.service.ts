@@ -1,5 +1,6 @@
 import { Prisma } from '@prisma/client';
 import { prisma } from '../../config/db.js';
+import { normalizeText } from '../../utils/textUtils.js';
 import type { 
   CreateCatalogBookInput, 
   UpdateCatalogBookInput, 
@@ -78,16 +79,39 @@ export const getCatalogBooks = async (query: GetCatalogBooksQuery) => {
     ratingBookIds = groupedReviews.map(r => r.catalogBookId);
   }
 
-  // 2. Construir WHERE
+  // 2. Si hay búsqueda, usar SQL raw para normalizar ambos lados
+  let searchBookIds: number[] | undefined;
+  if (search) {
+    const normalizedSearch = normalizeText(search);
+    // Usar SQL raw para normalizar tanto el término como los datos de la BD
+    // Usamos una función que normaliza caracteres acentuados comunes en español
+    const searchResults = await prisma.$queryRaw<Array<{ id: number }>>`
+      SELECT id 
+      FROM catalog_books 
+      WHERE 
+        LOWER(
+          TRANSLATE(
+            LOWER(title),
+            'áàäâéèëêíìïîóòöôúùüûñçÁÀÄÂÉÈËÊÍÌÏÎÓÒÖÔÚÙÜÛÑÇ',
+            'aaaaeeeeiiiioooouuuuncAAAAEEEEIIIIOOOOUUUUNC'
+          )
+        ) LIKE ${`%${normalizedSearch}%`}
+        OR LOWER(
+          TRANSLATE(
+            LOWER(author),
+            'áàäâéèëêíìïîóòöôúùüûñçÁÀÄÂÉÈËÊÍÌÏÎÓÒÖÔÚÙÜÛÑÇ',
+            'aaaaeeeeiiiioooouuuuncAAAAEEEEIIIIOOOOUUUUNC'
+          )
+        ) LIKE ${`%${normalizedSearch}%`}
+        OR LOWER(isbn) LIKE ${`%${normalizedSearch}%`}
+    `;
+    searchBookIds = searchResults.map(r => r.id);
+  }
+
+  // 3. Construir WHERE
   const where: Prisma.CatalogBookWhereInput = {
     AND: [
-      search ? {
-        OR: [
-          { title: { contains: search, mode: 'insensitive' } },
-          { author: { contains: search, mode: 'insensitive' } },
-          { isbn: { contains: search, mode: 'insensitive' } },
-        ],
-      } : {},
+      searchBookIds ? { id: { in: searchBookIds.length > 0 ? searchBookIds : [0] } } : {},
       {
         price: {
           ...(minPrice !== undefined ? { gte: minPrice } : {}),

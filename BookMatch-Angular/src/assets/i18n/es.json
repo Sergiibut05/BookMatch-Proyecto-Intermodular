@@ -5,6 +5,8 @@
         "CATEGORIES": "Categorías",
         "PROFILE": "Perfil",
         "SEARCH_PLACEHOLDER": "Buscar...",
+        "SEARCH_BOOKS_PLACEHOLDER": "Buscar por Título, Autor o ISBN...",
+        "SEARCH_FORUMS_PLACEHOLDER": "Buscar en foros...",
         "WELCOME": "Bienvenido,",
         "LOGOUT": "Cerrar Sesión",
         "LOGOUT_SHORT": "Salir"
@@ -404,5 +406,14 @@
             "DELETING": "Eliminando...",
             "DELETE_BUTTON": "Eliminar"
         }
+    },
+    "SEARCH_RESULTS": {
+        "TITLE": "Resultados de Búsqueda",
+        "LOADING": "Buscando...",
+        "NO_RESULTS": "No se encontraron resultados",
+        "NO_RESULTS_DESC": "Intenta con otros términos de búsqueda.",
+        "RESULTS_FOUND": "{{count}} resultados encontrados",
+        "FOR_BOOKS": "para \"{{query}}\"",
+        "FOR_FORUMS": "en foros para \"{{query}}\""
     }
 }

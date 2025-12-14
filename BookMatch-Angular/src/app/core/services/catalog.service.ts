@@ -86,6 +86,26 @@ export class CatalogService {
     );
   }
 
+  searchBooks(searchTerm: string, page = 1, limit = 20) {
+    return this.authHeaders().pipe(
+      switchMap(headers => {
+        const params = new HttpParams()
+          .set('search', searchTerm)
+          .set('page', page.toString())
+          .set('limit', limit.toString());
+
+        return this.http.get<{
+          total: number;
+          page: number;
+          limit: number;
+          previousPage: number | null;
+          nextPage: number | null;
+          items: CatalogBook[];
+        }>(this.apiUrl, { headers, params });
+      })
+    );
+  }
+
   getBookById(id: number): Observable<CatalogBook> {
     return this.authHeaders().pipe(
       switchMap(headers => this.http.get<CatalogBook>(`${this.apiUrl}/${id}`, { headers }))
