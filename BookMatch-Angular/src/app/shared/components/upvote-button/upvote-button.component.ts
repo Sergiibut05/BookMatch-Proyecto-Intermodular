@@ -1,5 +1,5 @@
 import { Component, Input, Output, EventEmitter, OnInit, inject, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { VotesService, VoteType } from '@core/services/votes.service';
 
 export interface UpvoteData {
@@ -10,7 +10,7 @@ export interface UpvoteData {
 
 @Component({
   selector: 'app-upvote-button',
-  imports: [CommonModule],
+  imports: [],
   templateUrl: './upvote-button.component.html',
   styleUrl: './upvote-button.component.scss',
 })

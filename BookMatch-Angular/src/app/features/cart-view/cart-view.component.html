@@ -2,157 +2,156 @@
 
 <div class="min-h-screen flex flex-col" style="background-color: #FCF5E2; color: #45332D;">
 
-    <div class="flex-grow max-w-[1414px] w-full mx-auto px-4 py-8 md:py-12 relative">
+  <div class="flex-grow max-w-[1414px] w-full mx-auto px-4 py-8 md:py-12 relative">
 
-        <div class="mb-8 flex items-center justify-between">
-            <div>
-                <h1 class="text-3xl md:text-4xl font-bold mb-2">{{ 'CART.TITLE' | translate }}</h1>
-                <p class="opacity-80">{{ 'CART.SUBTITLE' | translate:{count: totalItems()} }}</p>
-            </div>
+    <div class="mb-8 flex items-center justify-between">
+      <div>
+        <h1 class="text-3xl md:text-4xl font-bold mb-2">{{ 'CART.TITLE' | translate }}</h1>
+        <p class="opacity-80">{{ 'CART.SUBTITLE' | translate:{count: totalItems()} }}</p>
+      </div>
 
-            <button *ngIf="cartItems().length > 0" (click)="openClearCartModal()"
-                class="text-sm font-medium text-red-500 hover:text-red-700 underline decoration-red-300 transition-colors cursor-pointer">
-                {{ 'CART.CLEAR_CART' | translate }}
-            </button>
-        </div>
+      @if (cartItems().length > 0) {
+        <button (click)="openClearCartModal()"
+          class="text-sm font-medium text-red-500 hover:text-red-700 underline decoration-red-300 transition-colors cursor-pointer">
+          {{ 'CART.CLEAR_CART' | translate }}
+        </button>
+      }
+    </div>
 
-        <div *ngIf="cartItems().length === 0"
-            class="text-center py-20 bg-white/50 backdrop-blur-sm rounded-2xl border border-[#45332D]/10">
-            <div class="text-6xl mb-6">🛒</div>
-            <h2 class="text-2xl font-bold mb-3">{{ 'CART.EMPTY_TITLE' | translate }}</h2>
-            <p class="opacity-70 mb-8 max-w-md mx-auto">{{ 'CART.EMPTY_DESC' | translate }}</p>
-            <a routerLink="/home"
-                class="inline-block px-8 py-3 rounded-xl font-bold text-[#FCF5E2] shadow-md hover:shadow-lg transition-all hover:-translate-y-1"
+    @if (cartItems().length === 0) {
+      <div
+        class="text-center py-20 bg-white/50 backdrop-blur-sm rounded-2xl border border-[#45332D]/10">
+        <div class="text-6xl mb-6">🛒</div>
+        <h2 class="text-2xl font-bold mb-3">{{ 'CART.EMPTY_TITLE' | translate }}</h2>
+        <p class="opacity-70 mb-8 max-w-md mx-auto">{{ 'CART.EMPTY_DESC' | translate }}</p>
+        <a routerLink="/home"
+          class="inline-block px-8 py-3 rounded-xl font-bold text-[#FCF5E2] shadow-md hover:shadow-lg transition-all hover:-translate-y-1"
+          style="background-color: #E0A15E;">
+          {{ 'CART.EXPLORE_CATALOG' | translate }}
+        </a>
+      </div>
+    }
+
+    @if (cartItems().length > 0) {
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <div class="lg:col-span-8 space-y-4">
+          @for (item of cartItems(); track item) {
+            <div
+              class="bg-white p-4 rounded-xl shadow-sm hover:shadow-md transition-shadow border border-[#45332D]/5 flex gap-4 md:gap-6 relative group">
+              <div class="flex-shrink-0 w-20 md:w-24">
+                <img [src]="item.coverUrl || 'assets/images/placeholder-book.png'" [alt]="item.title"
+                  class="w-full h-auto aspect-[2/3] object-cover rounded-lg shadow-sm">
+                </div>
+                <div class="flex-grow flex flex-col justify-between py-1">
+                  <div class="flex justify-between items-start gap-4">
+                    <div>
+                      <h3 class="font-bold text-lg leading-tight mb-1 line-clamp-2">{{ item.title }}</h3>
+                      <p class="text-sm opacity-70">{{ item.author }}</p>
+                    </div>
+                    <div class="font-bold text-lg whitespace-nowrap hidden sm:block">
+                      {{ item.price | currency:'EUR' }}
+                    </div>
+                  </div>
+                  <div class="flex justify-between items-end mt-4">
+                    <div class="flex items-center gap-3 bg-[#FCF5E2] rounded-lg p-1">
+                      <button (click)="decreaseQuantity(item.id, item.quantity)"
+                      class="w-8 h-8 flex items-center justify-center rounded-md bg-white text-[#45332D] shadow-sm hover:bg-[#E0A15E] hover:text-[#FCF5E2] transition-colors font-bold">-</button>
+                      <span class="w-6 text-center font-bold text-sm">{{ item.quantity }}</span>
+                      <button (click)="increaseQuantity(item.id, item.quantity)"
+                      class="w-8 h-8 flex items-center justify-center rounded-md bg-white text-[#45332D] shadow-sm hover:bg-[#E0A15E] hover:text-[#FCF5E2] transition-colors font-bold">+</button>
+                    </div>
+                    <div class="text-right">
+                      <div class="font-bold text-xl text-[#E0A15E] sm:hidden">
+                        {{ (item.price * item.quantity) | currency:'EUR' }}
+                      </div>
+                      <button (click)="removeItem(item.id)"
+                        class="text-xs text-red-400 hover:text-red-600 underline mt-1">
+                        {{ 'CART.REMOVE_ITEM' | translate }}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+          <div class="lg:col-span-4">
+            <div class="bg-white p-6 rounded-2xl shadow-lg border border-[#E0A15E]/20 sticky top-24">
+              <h2 class="text-xl font-bold mb-6 border-b border-[#45332D]/10 pb-4">{{ 'CART.ORDER_SUMMARY' |
+              translate }}</h2>
+              <div class="space-y-3 mb-6 text-sm">
+                <div class="flex justify-between items-center">
+                  <span class="opacity-70">{{ 'CART.SUBTOTAL' | translate }}</span>
+                  <span class="font-medium">{{ totalPrice() | currency:'EUR' }}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                  <span class="opacity-70">{{ 'CART.ESTIMATED_SHIPPING' | translate }}</span>
+                  <span class="text-green-600 font-bold bg-green-50 px-2 py-0.5 rounded">{{ 'CART.FREE' |
+                  translate }}</span>
+                </div>
+              </div>
+              <div class="border-t border-[#45332D]/10 pt-4 mb-8">
+                <div class="flex justify-between items-end">
+                  <span class="font-bold text-lg">{{ 'CART.TOTAL' | translate }}</span>
+                  <span class="font-bold text-3xl text-[#E0A15E]">{{ totalPrice() | currency:'EUR' }}</span>
+                </div>
+                <p class="text-xs text-right opacity-50 mt-1">{{ 'CART.TAX_INCLUDED' | translate }}</p>
+              </div>
+              <button (click)="onCheckout()" [disabled]="isLoading"
+                class="w-full py-4 rounded-xl font-bold text-[#FCF5E2] text-lg shadow-md transition-all hover:shadow-lg hover:-translate-y-0.5 disabled:opacity-70 disabled:cursor-not-allowed flex justify-center items-center gap-2"
                 style="background-color: #E0A15E;">
-                {{ 'CART.EXPLORE_CATALOG' | translate }}
-            </a>
-        </div>
-
-        <div *ngIf="cartItems().length > 0" class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-
-            <div class="lg:col-span-8 space-y-4">
-                <div *ngFor="let item of cartItems()"
-                    class="bg-white p-4 rounded-xl shadow-sm hover:shadow-md transition-shadow border border-[#45332D]/5 flex gap-4 md:gap-6 relative group">
-
-                    <div class="flex-shrink-0 w-20 md:w-24">
-                        <img [src]="item.coverUrl || 'assets/images/placeholder-book.png'" [alt]="item.title"
-                            class="w-full h-auto aspect-[2/3] object-cover rounded-lg shadow-sm">
-                    </div>
-
-                    <div class="flex-grow flex flex-col justify-between py-1">
-                        <div class="flex justify-between items-start gap-4">
-                            <div>
-                                <h3 class="font-bold text-lg leading-tight mb-1 line-clamp-2">{{ item.title }}</h3>
-                                <p class="text-sm opacity-70">{{ item.author }}</p>
-                            </div>
-                            <div class="font-bold text-lg whitespace-nowrap hidden sm:block">
-                                {{ item.price | currency:'EUR' }}
-                            </div>
-                        </div>
-
-                        <div class="flex justify-between items-end mt-4">
-                            <div class="flex items-center gap-3 bg-[#FCF5E2] rounded-lg p-1">
-                                <button (click)="decreaseQuantity(item.id, item.quantity)"
-                                    class="w-8 h-8 flex items-center justify-center rounded-md bg-white text-[#45332D] shadow-sm hover:bg-[#E0A15E] hover:text-[#FCF5E2] transition-colors font-bold">-</button>
-                                <span class="w-6 text-center font-bold text-sm">{{ item.quantity }}</span>
-                                <button (click)="increaseQuantity(item.id, item.quantity)"
-                                    class="w-8 h-8 flex items-center justify-center rounded-md bg-white text-[#45332D] shadow-sm hover:bg-[#E0A15E] hover:text-[#FCF5E2] transition-colors font-bold">+</button>
-                            </div>
-
-                            <div class="text-right">
-                                <div class="font-bold text-xl text-[#E0A15E] sm:hidden">
-                                    {{ (item.price * item.quantity) | currency:'EUR' }}
-                                </div>
-                                <button (click)="removeItem(item.id)"
-                                    class="text-xs text-red-400 hover:text-red-600 underline mt-1">
-                                    {{ 'CART.REMOVE_ITEM' | translate }}
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                @if (!isLoading) {
+                  <span>{{ 'CART.CHECKOUT' | translate }}</span>
+                }
+                @if (isLoading) {
+                  <span class="loader"></span>
+                }
+              </button>
+              <div
+                class="mt-6 flex justify-center items-center gap-2 opacity-50 text-xs border-t border-[#45332D]/10 pt-4">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z">
+                  </path>
+                </svg>
+                <span>{{ 'CART.SECURE_PAYMENT' | translate }}</span>
+              </div>
             </div>
-
-            <div class="lg:col-span-4">
-                <div class="bg-white p-6 rounded-2xl shadow-lg border border-[#E0A15E]/20 sticky top-24">
-                    <h2 class="text-xl font-bold mb-6 border-b border-[#45332D]/10 pb-4">{{ 'CART.ORDER_SUMMARY' |
-                        translate }}</h2>
-
-                    <div class="space-y-3 mb-6 text-sm">
-                        <div class="flex justify-between items-center">
-                            <span class="opacity-70">{{ 'CART.SUBTOTAL' | translate }}</span>
-                            <span class="font-medium">{{ totalPrice() | currency:'EUR' }}</span>
-                        </div>
-                        <div class="flex justify-between items-center">
-                            <span class="opacity-70">{{ 'CART.ESTIMATED_SHIPPING' | translate }}</span>
-                            <span class="text-green-600 font-bold bg-green-50 px-2 py-0.5 rounded">{{ 'CART.FREE' |
-                                translate }}</span>
-                        </div>
-                    </div>
-
-                    <div class="border-t border-[#45332D]/10 pt-4 mb-8">
-                        <div class="flex justify-between items-end">
-                            <span class="font-bold text-lg">{{ 'CART.TOTAL' | translate }}</span>
-                            <span class="font-bold text-3xl text-[#E0A15E]">{{ totalPrice() | currency:'EUR' }}</span>
-                        </div>
-                        <p class="text-xs text-right opacity-50 mt-1">{{ 'CART.TAX_INCLUDED' | translate }}</p>
-                    </div>
-
-                    <button (click)="onCheckout()" [disabled]="isLoading"
-                        class="w-full py-4 rounded-xl font-bold text-[#FCF5E2] text-lg shadow-md transition-all hover:shadow-lg hover:-translate-y-0.5 disabled:opacity-70 disabled:cursor-not-allowed flex justify-center items-center gap-2"
-                        style="background-color: #E0A15E;">
-                        <span *ngIf="!isLoading">{{ 'CART.CHECKOUT' | translate }}</span>
-                        <span *ngIf="isLoading" class="loader"></span>
-                    </button>
-
-                    <div
-                        class="mt-6 flex justify-center items-center gap-2 opacity-50 text-xs border-t border-[#45332D]/10 pt-4">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z">
-                            </path>
-                        </svg>
-                        <span>{{ 'CART.SECURE_PAYMENT' | translate }}</span>
-                    </div>
-                </div>
-            </div>
-
+          </div>
         </div>
+      }
     </div>
 
     <app-footer class="mt-auto"></app-footer>
 
-    <div *ngIf="showClearModal()"
+    @if (showClearModal()) {
+      <div
         class="fixed inset-0 z-[9999] flex items-center justify-center px-4 bg-black/50 backdrop-blur-sm animate-fade-in">
-
         <div
-            class="bg-white rounded-2xl shadow-2xl p-6 max-w-sm w-full transform transition-all scale-100 border border-[#E0A15E]/20">
-
-            <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
-                <svg class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                </svg>
+          class="bg-white rounded-2xl shadow-2xl p-6 max-w-sm w-full transform transition-all scale-100 border border-[#E0A15E]/20">
+          <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
+            <svg class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
             </div>
-
             <div class="text-center">
-                <h3 class="text-lg leading-6 font-bold text-[#45332D]">{{ 'CART.MODAL.TITLE' | translate }}</h3>
-                <p class="text-sm text-gray-500 mt-2">
-                    {{ 'CART.MODAL.DESC' | translate }}
-                </p>
+              <h3 class="text-lg leading-6 font-bold text-[#45332D]">{{ 'CART.MODAL.TITLE' | translate }}</h3>
+              <p class="text-sm text-gray-500 mt-2">
+                {{ 'CART.MODAL.DESC' | translate }}
+              </p>
             </div>
-
             <div class="mt-6 flex gap-3">
-                <button (click)="cancelClearCart()"
-                    class="flex-1 px-4 py-2 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-300">
-                    {{ 'CART.MODAL.CANCEL' | translate }}
-                </button>
-                <button (click)="confirmClearCart()"
-                    class="flex-1 px-4 py-2 bg-red-500 text-white font-medium rounded-lg hover:bg-red-600 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 shadow-sm">
-                    {{ 'CART.MODAL.CONFIRM' | translate }}
-                </button>
+              <button (click)="cancelClearCart()"
+                class="flex-1 px-4 py-2 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-300">
+                {{ 'CART.MODAL.CANCEL' | translate }}
+              </button>
+              <button (click)="confirmClearCart()"
+                class="flex-1 px-4 py-2 bg-red-500 text-white font-medium rounded-lg hover:bg-red-600 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 shadow-sm">
+                {{ 'CART.MODAL.CONFIRM' | translate }}
+              </button>
             </div>
+          </div>
         </div>
-    </div>
+      }
 
-</div>
+    </div>

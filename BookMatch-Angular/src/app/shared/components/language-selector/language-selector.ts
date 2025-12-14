@@ -1,11 +1,11 @@
 import { Component, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { TranslationService } from '../../../core/services/translation.service';
 import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-language-selector',
-  imports: [CommonModule, TranslateModule],
+  imports: [TranslateModule],
   templateUrl: './language-selector.html',
   styleUrl: './language-selector.scss'
 })

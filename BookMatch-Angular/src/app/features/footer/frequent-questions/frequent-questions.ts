@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { TranslateModule } from '@ngx-translate/core';
 import { Header } from '@shared/components/header/header';
 import { Footer } from '@shared/components/footer/footer';
@@ -13,7 +13,7 @@ interface FAQ {
 
 @Component({
   selector: 'app-frequent-questions',
-  imports: [CommonModule, TranslateModule, Header, Footer],
+  imports: [TranslateModule, Header, Footer],
   templateUrl: './frequent-questions.html',
   styleUrl: './frequent-questions.scss',
 })

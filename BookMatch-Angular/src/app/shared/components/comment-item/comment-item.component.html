@@ -24,7 +24,7 @@
               <span class="text-xs" style="color: #4E6A6A;">{{ 'COMMENTS.REPLIED' | translate }}</span>
             }
             <span class="text-xs" style="color: #4E6A6A;">
-              {{ comment.createdAt | date:'shortDate' }} {{ 'COMMENTS.AT_TIME' | translate }} {{ comment.createdAt | date:'shortTime' }}
+              {{ comment.createdAt | relativeTime }}
             </span>
           </div>
           

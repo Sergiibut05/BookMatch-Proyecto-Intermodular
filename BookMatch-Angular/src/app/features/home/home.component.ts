@@ -1,5 +1,5 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { Router } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { CatalogService } from '@core/services/catalog.service'; // <--- Importado
@@ -11,7 +11,7 @@ import { Category } from '@shared/models'; // <--- Importado
 
 @Component({
   selector: 'app-home',
-  imports: [CommonModule, Header, Carousel, Footer, TranslateModule],
+  imports: [Header, Carousel, Footer, TranslateModule],
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss',
 })

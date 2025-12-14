@@ -97,9 +97,27 @@
   flex: 1;
   padding: 1rem;
   overflow-y: auto;
+  display: flex;
+  flex-direction: column;
 
   @media (max-width: 640px) {
     padding: 0.75rem;
+  }
+}
+
+// Wrapper para los items del menú (crece para empujar el selector de idioma abajo)
+.menu-items-wrapper {
+  flex: 1;
+}
+
+// Wrapper para el selector de idioma (pegado abajo)
+.language-selector-wrapper {
+  padding-top: 1rem;
+  border-top: 1px solid #E9E1D1;
+  margin-top: auto;
+  
+  @media (max-width: 640px) {
+    padding-top: 0.75rem;
   }
 }
 

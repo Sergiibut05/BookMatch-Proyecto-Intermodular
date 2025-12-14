@@ -56,7 +56,7 @@
             <div>
               <div class="flex items-center gap-2 mb-2">
                 <span class="px-2 py-0.5 rounded text-xs font-bold uppercase tracking-wide" style="background-color: #E9E1D1; color: #45332D;">
-                  {{ book()!.categories?.[0]?.name || 'Libro' }}
+                  {{ book()!.categories?.[0]?.name || ('BOOK_DETAILS.DEFAULT_CATEGORY' | translate) }}
                 </span>
                 
                 @if (book()!.stock > 0) {
@@ -83,7 +83,7 @@
                 <span class="text-5xl font-bold" style="color: #E0A15E;">{{ book()!.price | number:'1.2-2' }}€</span>
                 <div class="flex flex-col mb-1">
                   <span class="text-sm line-through" style="color: #4E6A6A;">{{ (book()!.price * 1.15) | number:'1.2-2' }}€</span>
-                  <span class="text-xs font-bold text-red-500">Ahorras un 15%</span>
+                  <span class="text-xs font-bold text-red-500">{{ 'BOOK_DETAILS.SAVE_DISCOUNT' | translate }}</span>
                 </div>
               </div>
               
@@ -104,7 +104,7 @@
                   [disabled]="book()!.stock === 0"
                   class="px-4 py-3.5 rounded-lg border-2 font-bold text-lg transition-all hover:bg-white/50"
                   style="border-color: #45332D; color: #45332D;"
-                  title="Añadir a favoritos">
+                  [title]="'BOOK_DETAILS.ADD_TO_FAVORITES' | translate">
                   <span class="material-symbols-outlined">favorite</span>
                 </button>
               </div>
@@ -146,7 +146,7 @@
                       </span>
                     }
                   </div>
-                  <p class="text-sm text-gray-500">{{ reviews()?.length || 0 }} valoraciones globales</p>
+                  <p class="text-sm text-gray-500">{{ reviews()?.length || 0 }} {{ 'BOOK_DETAILS.GLOBAL_RATINGS' | translate }}</p>
                 </div>
 
                 <div class="md:col-span-2 flex flex-col justify-center gap-2">
@@ -169,7 +169,7 @@
                 
                 <div class="space-y-6">
                   <h3 class="font-bold text-lg border-b pb-4" style="color: #45332D; border-color: #E9E1D1;">
-                    Reseñas destacadas
+                    {{ 'BOOK_DETAILS.FEATURED_REVIEWS' | translate }}
                   </h3>
                   
                   @if (reviews() && reviews()!.length > 0) {
@@ -180,20 +180,42 @@
                               (click)="onDeleteReview(review.id)"
                               [disabled]="isDeletingReview()"
                               class="absolute top-4 right-4 text-gray-400 hover:text-red-500 transition-colors p-1 rounded-full hover:bg-red-50 z-10"
-                              title="Eliminar mi reseña">
+                              [title]="'BOOK_DETAILS.DELETE_REVIEW' | translate">
                               <span class="material-symbols-outlined text-xl">delete</span>
                             </button>
                           }
                           <div class="flex justify-between items-start mb-4 pr-8">
                             <div class="flex items-center gap-3">
-                              <div class="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-white shadow-sm" style="background-color: #B88B65;">
-                                {{ getUserInitial(review.userId) }}
+                              
+                              <div class="relative w-10 h-10 min-w-[2.5rem] min-h-[2.5rem]">
+                                @if (getUserAvatar(review) != null) {
+                                  
+                                  <div class="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-white shadow-sm min-w-[2.5rem] min-h-[2.5rem] absolute inset-0 z-0" 
+                                      style="background-color: #B88B65;">
+                                    {{ getUserInitial(review) }}
+                                  </div>
+
+                                  <img 
+                                    [src]="getUserAvatar(review)!" 
+                                    [alt]="getUserName(review)"
+                                    class="w-10 h-10 rounded-full object-cover shadow-sm min-w-[2.5rem] min-h-[2.5rem] relative z-10"
+                                    loading="lazy"
+                                    onerror="this.style.display='none'; this.previousElementSibling.style.zIndex='10';"
+                                  />
+                                } @else {
+                                  
+                                  <div class="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-white shadow-sm min-w-[2.5rem] min-h-[2.5rem]" 
+                                      style="background-color: #B88B65;">
+                                    {{ getUserInitial(review) }}
+                                  </div>
+                                }
                               </div>
+                              
                               <div>
                                 <p class="font-bold text-sm" style="color: #45332D;">
-                                  {{ (currentUserId() && currentUserId() === review.userId) ? 'Tú' : 'Usuario de BookMatch' }}
+                                  {{ getUserName(review) }}
                                 </p>
-                                <p class="text-xs text-gray-500">Revisado el {{ review.createdAt | date:'longDate' }}</p>
+                                <p class="text-xs text-gray-500">{{ 'BOOK_DETAILS.REVIEWED_ON' | translate }} {{ review.createdAt | date:'longDate' }}</p>
                               </div>
                             </div>
                             <div class="flex items-center gap-1 text-[#E0A15E]">
@@ -217,7 +239,7 @@
                     <div class="text-center py-10 bg-gray-50 rounded-xl border border-dashed" style="border-color: #D4C9B9;">
                       <span class="material-symbols-outlined text-4xl text-gray-300 mb-2">rate_review</span>
                       <p class="text-gray-500">{{ 'BOOK_DETAILS.NO_REVIEWS' | translate }}</p>
-                      <p class="text-sm text-[#E0A15E] font-medium">¡Sé el primero en compartir tu opinión abajo!</p>
+                      <p class="text-sm text-[#E0A15E] font-medium">{{ 'BOOK_DETAILS.BE_FIRST_REVIEW' | translate }}</p>
                     </div>
                   }
                 </div>
@@ -225,47 +247,56 @@
                 <div class="w-full max-w-3xl mx-auto mt-4">
                   <div class="bg-white rounded-xl p-8 border shadow-lg" style="border-color: #E9E1D1;">
                     <div class="text-center mb-6">
-                      <h3 class="text-2xl font-bold mb-2" style="color: #45332D;">Escribe tu propia reseña</h3>
-                      <p class="text-sm text-gray-500">Comparte tu experiencia con este libro para ayudar a otros lectores.</p>
+                      <h3 class="text-2xl font-bold mb-2" style="color: #45332D;">{{ 'BOOK_DETAILS.WRITE_REVIEW_TITLE' | translate }}</h3>
+                      <p class="text-sm text-gray-500">{{ 'BOOK_DETAILS.WRITE_REVIEW_DESC' | translate }}</p>
                     </div>
                     
-                    <div class="flex justify-center gap-3 mb-8" (mouseleave)="setHoverRating(0)">
-                      @for (star of [1,2,3,4,5]; track star) {
-                        <button 
-                          type="button"
-                          class="focus:outline-none transition-transform hover:scale-110 active:scale-95 p-1"
-                          (mouseenter)="setHoverRating(star)"
-                          (click)="setRating(star)">
-                          <span class="material-symbols-outlined text-5xl"
-                            [style.color]="star <= (hoverRating() || newReviewRating()) ? '#E0A15E' : '#E5E7EB'"
-                            [style.font-variation-settings]="star <= (hoverRating() || newReviewRating()) ? '\'FILL\' 1' : '\'FILL\' 0'">
-                            star
-                          </span>
-                        </button>
-                      }
-                    </div>
+                    
+                    <form [formGroup]="reviewForm" (ngSubmit)="submitReview()" class="space-y-6">
+                      
+                      <div class="mb-8">
+                        <label class="block text-sm font-medium mb-4 text-center" style="color: #45332D;">
+                          {{ 'BOOK_DETAILS.YOUR_RATING' | translate }} <span class="text-red-500">*</span>
+                        </label>
+                        <app-star-rating formControlName="rating"></app-star-rating>
+                        @if (reviewForm.controls['rating'].touched && reviewForm.controls['rating'].errors) {
+                          <p class="text-xs text-red-600 mt-2 text-center">
+                            {{ getError('rating') }}
+                          </p>
+                        }
+                      </div>
 
-                    <div class="relative mb-6">
-                      <label class="block text-sm font-medium mb-2" style="color: #45332D;">Tu opinión (Opcional)</label>
-                      <textarea 
-                        [(ngModel)]="newReviewComment"
-                        rows="5"
-                        class="w-full rounded-lg border bg-gray-50 p-4 text-base focus:outline-none focus:ring-2 focus:ring-[#E0A15E] focus:bg-white transition-colors resize-none"
-                        style="border-color: #D4C9B9; color: #45332D;"
-                        placeholder="¿Qué es lo que más te ha gustado? ¿Qué no te gustó?"></textarea>
-                    </div>
-                    
-                    <button 
-                      (click)="submitReview()"
-                      [disabled]="newReviewRating() === 0 || isSubmittingReview()"
-                      class="w-full py-4 rounded-xl font-bold text-base transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-xl hover:-translate-y-0.5"
-                      style="background-color: #45332D; color: #FCF5E2;">
-                      @if (isSubmittingReview()) {
-                        <span class="inline-block animate-pulse">Publicando reseña...</span>
-                      } @else {
-                        Publicar Reseña
-                      }
-                    </button>
+                      
+                      <div class="relative mb-6">
+                        <label class="block text-sm font-medium mb-2" style="color: #45332D;">
+                          {{ 'BOOK_DETAILS.YOUR_OPINION' | translate }}
+                        </label>
+                        <textarea 
+                          formControlName="comment"
+                          rows="5"
+                          class="w-full rounded-lg border bg-gray-50 p-4 text-base focus:outline-none focus:ring-2 focus:ring-[#E0A15E] focus:bg-white transition-colors resize-none"
+                          style="border-color: #D4C9B9; color: #45332D;"
+                          [placeholder]="'BOOK_DETAILS.COMMENT_PLACEHOLDER' | translate"></textarea>
+                        @if (reviewForm.controls['comment'].touched && reviewForm.controls['comment'].errors) {
+                          <p class="text-xs text-red-600 mt-1">
+                            {{ getError('comment') }}
+                          </p>
+                        }
+                      </div>
+                      
+                      
+                      <button 
+                        type="submit"
+                        [disabled]="reviewForm.invalid || isSubmittingReview()"
+                        class="w-full py-4 rounded-xl font-bold text-base transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-xl hover:-translate-y-0.5"
+                        style="background-color: #45332D; color: #FCF5E2;">
+                        @if (isSubmittingReview()) {
+                          <span class="inline-block animate-pulse">{{ 'BOOK_DETAILS.PUBLISHING_REVIEW' | translate }}</span>
+                        } @else {
+                          {{ 'BOOK_DETAILS.PUBLISH_REVIEW' | translate }}
+                        }
+                      </button>
+                    </form>
                   </div>
                 </div>
 

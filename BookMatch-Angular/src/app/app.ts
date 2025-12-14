@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { Component, OnInit, signal, effect, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { LoaderComponent } from './shared/components/loader/loader.component';
@@ -6,7 +6,7 @@ import { TranslationService } from './core/services/translation.service';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, CommonModule, LoaderComponent],
+  imports: [RouterOutlet, LoaderComponent],
   templateUrl: './app.html',
   styleUrl: './app.scss'
 })
