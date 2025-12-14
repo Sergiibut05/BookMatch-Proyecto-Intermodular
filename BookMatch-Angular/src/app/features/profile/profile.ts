@@ -1,5 +1,5 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { StorageService } from '@core/services/storage';
 import { UsersService, UserProfile } from '@core/services/users.service';
 import { AuthService } from '@core/services/auth.service';
@@ -10,7 +10,7 @@ import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-profile',
-  imports: [CommonModule, Header, PurchaseHistoryComponent, ProfileEditComponent, TranslateModule],
+  imports: [Header, PurchaseHistoryComponent, ProfileEditComponent, TranslateModule],
   templateUrl: './profile.html',
   styleUrl: './profile.scss',
 })

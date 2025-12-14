@@ -21,7 +21,19 @@ const catalogBookWithCategories = Prisma.validator<Prisma.CatalogBookDefaultArgs
     },
     reviews: {
       select: {
-        id: true, catalogBookId: true, userId: true, rating: true, comment: true, createdAt: true,
+        id: true, 
+        catalogBookId: true, 
+        userId: true, 
+        rating: true, 
+        comment: true, 
+        createdAt: true,
+        user: {
+          select: {
+            id: true,
+            fullName: true,
+            avatarUrl: true,
+          },
+        },
       },
     },
   },
@@ -38,6 +50,11 @@ function mapCatalogBook(record: CatalogBookRecord) {
     reviews: (reviews || []).map((review) => ({
       ...review,
       createdAt: review.createdAt.toISOString(),
+      user: review.user ? {
+        id: review.user.id,
+        fullName: review.user.fullName,
+        avatarUrl: review.user.avatarUrl,
+      } : null,
     })),
   };
 }

@@ -1,5 +1,5 @@
 import { Component, OnInit, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { ActivatedRoute, Router } from '@angular/router';
 import { PaymentService } from '@core/services/payment.service';
 import { CartService } from '@core/services/cart.service'; // <--- 1. IMPORTAR SERVICIO
@@ -8,7 +8,7 @@ import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-payment-success',
-  imports: [CommonModule, Header, TranslateModule],
+  imports: [Header, TranslateModule],
   templateUrl: './payment.success.component.html',
   styleUrl: './payment.success.component.scss',
 })

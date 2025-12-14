@@ -1,5 +1,5 @@
 import { Component, Input, inject, signal, HostListener } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { Comment } from '@shared/models/comments.model';
@@ -8,7 +8,7 @@ import { RelativeTimePipe } from '@core/pipes/relative-time.pipe';
 
 @Component({
   selector: 'app-comment-item',
-  imports: [CommonModule, ReactiveFormsModule, CommentItemComponent, TranslateModule, RelativeTimePipe], // Importa a sí mismo para recursión
+  imports: [ReactiveFormsModule, CommentItemComponent, TranslateModule, RelativeTimePipe], // Importa a sí mismo para recursión
   templateUrl: './comment-item.component.html',
   styleUrl: './comment-item.component.scss',
 })

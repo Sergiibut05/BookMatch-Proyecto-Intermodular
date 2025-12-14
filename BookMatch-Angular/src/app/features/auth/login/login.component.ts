@@ -1,5 +1,5 @@
 import { Component, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
@@ -8,7 +8,7 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-login',
-  imports: [CommonModule, ReactiveFormsModule, RouterModule, TranslateModule],
+  imports: [ReactiveFormsModule, RouterModule, TranslateModule],
   templateUrl: './login.component.html',
   styleUrl: './login.component.scss',
 })

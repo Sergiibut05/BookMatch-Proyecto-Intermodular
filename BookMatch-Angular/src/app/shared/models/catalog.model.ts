@@ -1,6 +1,11 @@
 /**
  * Interfaces para el catálogo de libros
  */
+export interface ReviewAuthor {
+  id: number;
+  fullName: string | null;
+  avatarUrl: string | null;
+}
 
 export interface Category {
     id: number;
@@ -49,4 +54,5 @@ export interface Category {
     rating: number; // 1-5
     comment?: string;
     createdAt: string;
+    user?: ReviewAuthor;
   }

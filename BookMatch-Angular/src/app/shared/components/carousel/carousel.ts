@@ -1,5 +1,5 @@
 import { Component, ElementRef, Input, ViewChild, inject, signal, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { CatalogService } from '@core/services/catalog.service';
 import { CatalogBook } from '@shared/models';
 import { Router } from '@angular/router';
@@ -8,7 +8,7 @@ import { TranslateModule } from '@ngx-translate/core';
 @Component({
   selector: 'app-carousel',
   standalone: true,
-  imports: [CommonModule, TranslateModule],
+  imports: [TranslateModule],
   templateUrl: './carousel.html',
   styleUrl: './carousel.scss',
 })

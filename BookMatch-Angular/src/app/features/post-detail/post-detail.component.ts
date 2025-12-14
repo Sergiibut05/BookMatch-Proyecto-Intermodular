@@ -1,5 +1,5 @@
 import { Component, OnInit, OnDestroy, inject, signal, HostListener } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
@@ -12,7 +12,7 @@ import { RelativeTimePipe } from '@core/pipes/relative-time.pipe';
 
 @Component({
   selector: 'app-post-detail',
-  imports: [CommonModule, Header, ReactiveFormsModule, CommentThreadComponent, TranslateModule, RelativeTimePipe],
+  imports: [Header, ReactiveFormsModule, CommentThreadComponent, TranslateModule, RelativeTimePipe],
   templateUrl: './post-detail.component.html',
   styleUrl: './post-detail.component.scss',
 })

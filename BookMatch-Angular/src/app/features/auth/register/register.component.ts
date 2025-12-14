@@ -1,5 +1,5 @@
 import { Component, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, AbstractControl } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
@@ -18,7 +18,7 @@ function passwordMatchValidator(control: AbstractControl) {
 
 @Component({
   selector: 'app-register',
-  imports: [CommonModule, ReactiveFormsModule, RouterModule, TranslateModule],
+  imports: [ReactiveFormsModule, RouterModule, TranslateModule],
   templateUrl: './register.component.html',
   styleUrl: './register.component.scss',
 })

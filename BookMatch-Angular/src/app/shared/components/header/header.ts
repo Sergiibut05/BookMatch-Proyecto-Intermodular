@@ -1,5 +1,5 @@
 import { Component, inject, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '@core/services/auth.service';
 import { CartService } from '@core/services/cart.service';
@@ -9,7 +9,7 @@ import { LanguageSelectorComponent } from '../language-selector/language-selecto
 
 @Component({
   selector: 'app-header',
-  imports: [CommonModule, RouterLink, LanguageSelectorComponent, TranslateModule],
+  imports: [RouterLink, LanguageSelectorComponent, TranslateModule],
   templateUrl: './header.html',
   styleUrl: './header.scss',
 })

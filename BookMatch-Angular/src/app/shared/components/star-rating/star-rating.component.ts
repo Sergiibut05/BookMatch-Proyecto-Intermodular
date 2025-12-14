@@ -1,37 +1,13 @@
 import { Component, forwardRef, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { ControlValueAccessor, NG_VALUE_ACCESSOR, FormsModule } from '@angular/forms';
+import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 
 /**
- * StarRatingComponent - Componente de selección de estrellas con ControlValueAccessor
- * 
- * ¿Qué es ControlValueAccessor?
- * =============================
- * ControlValueAccessor es una interfaz de Angular que permite que un componente personalizado
- * funcione como un campo de formulario nativo (como <input> o <select>).
- * 
- * ¿Por qué es útil?
- * =================
- * Sin ControlValueAccessor, tendrías que manejar manualmente el valor del rating con signals
- * o eventos. Con ControlValueAccessor, puedes usar el componente directamente en formularios
- * reactivos con formControlName="rating", igual que usarías un <input>.
- * 
- * ¿Cómo funciona?
- * ===============
- * Angular Forms necesita 4 cosas para comunicarse con tu componente:
- * 1. writeValue(value) - Angular te dice: "aquí está el valor inicial"
- * 2. registerOnChange(fn) - Angular te dice: "cuando cambies el valor, llama a esta función"
- * 3. registerOnTouched(fn) - Angular te dice: "cuando el usuario toque el componente, avísame"
- * 4. setDisabledState(isDisabled) - Angular te dice: "deshabilita/habilita el componente"
- * 
- * Implementando estos 4 métodos, tu componente se convierte en un "control de formulario"
- * que Angular puede manejar automáticamente.
+ * StarRatingComponent - Componente de selección de estrellas para formularios reactivos
  */
 
 @Component({
   selector: 'app-star-rating',
   standalone: true,
-  imports: [CommonModule, FormsModule],
   templateUrl: './star-rating.component.html',
   styleUrl: './star-rating.component.scss',
   providers: [
@@ -43,129 +19,84 @@ import { ControlValueAccessor, NG_VALUE_ACCESSOR, FormsModule } from '@angular/f
   ]
 })
 export class StarRatingComponent implements ControlValueAccessor {
-  // Valor interno del rating (0-5)
-  private _value: number = 0;
+  // Signal para el valor del rating (0-5)
+  private readonly rating = signal<number>(0);
   
   // Estado de hover para mostrar preview visual
-  hoverRating = signal<number>(0);
+  readonly hoverRating = signal<number>(0);
+  
+  // Estado de deshabilitado usando signal
+  private readonly disabled = signal<boolean>(false);
   
   // Array para iterar las 5 estrellas
-  readonly stars = [1, 2, 3, 4, 5];
+  readonly stars = [1, 2, 3, 4, 5] as const;
 
-  // ============================================
-  // MÉTODOS REQUERIDOS POR ControlValueAccessor
-  // ============================================
+  // Funciones de callback de Angular Forms
+  private onChange = (value: number) => {};
+  private onTouched = () => {};
 
-  /**
-   * 1. writeValue(value: number)
-   * -----------------------------
-   * Angular llama este método cuando:
-   * - Se inicializa el formulario con un valor
-   * - Se usa setValue() o patchValue() en el FormControl
-   * - El valor del FormControl cambia desde fuera del componente
-   * 
-   * Tu trabajo: Actualizar el valor interno del componente
-   */
+  
+  // IMPLEMENTACIÓN DE ControlValueAccessor (funciones obligatorias para que el componente funcione con ControlValueAccessor)
+
   writeValue(value: number): void {
-    if (value !== undefined && value !== null) {
-      this._value = value;
-    } else {
-      this._value = 0;
-    }
+    const newValue = value !== undefined && value !== null ? value : 0;
+    this.rating.set(newValue);
   }
 
-  /**
-   * 2. registerOnChange(fn: Function)
-   * ---------------------------------
-   * Angular te pasa una función que DEBES llamar cada vez que el usuario
-   * cambie el valor del rating.
-   * 
-   * Guardas esta función para usarla cuando el usuario seleccione estrellas.
-   */
-  private onChange = (value: number) => {};
   
   registerOnChange(fn: (value: number) => void): void {
     this.onChange = fn;
   }
 
-  /**
-   * 3. registerOnTouched(fn: Function)
-   * -----------------------------------
-   * Angular te pasa una función que DEBES llamar cuando el usuario
-   * "toque" o interactúe con el componente (para marcar como touched).
-   * 
-   * Esto es importante para validaciones y estados del formulario.
-   */
-  private onTouched = () => {};
   
   registerOnTouched(fn: () => void): void {
     this.onTouched = fn;
   }
 
-  /**
-   * 4. setDisabledState(isDisabled: boolean)
-   * -----------------------------------------
-   * Angular llama este método cuando el FormControl se deshabilita/habilita.
-   * 
-   * Tu trabajo: Deshabilitar/habilitar la interacción del usuario.
-   */
-  private _disabled = false;
-  
+
   setDisabledState(isDisabled: boolean): void {
-    this._disabled = isDisabled;
+    this.disabled.set(isDisabled);
   }
 
-  // ============================================
   // MÉTODOS DEL COMPONENTE (Lógica de UI)
-  // ============================================
 
   /**
-   * getValue() - Obtiene el valor actual del rating
+   * Obtiene el valor actual del rating
    */
   getValue(): number {
-    return this._value;
+    return this.rating();
   }
 
   /**
-   * isDisabled() - Verifica si el componente está deshabilitado
+   * Verifica si el componente está deshabilitado
    */
   isDisabled(): boolean {
-    return this._disabled;
+    return this.disabled();
   }
 
   /**
-   * onStarClick(rating: number)
-   * ---------------------------
-   * Se ejecuta cuando el usuario hace clic en una estrella.
-   * 
-   * Proceso:
-   * 1. Actualizamos el valor interno
-   * 2. Llamamos a onChange() para notificar a Angular Forms
-   * 3. Llamamos a onTouched() para marcar como "touched"
+   * Al hacer click en una estrella, actualizamos el signal y notificamos a Angular Forms del cambio.
+   * También marcamos como touched para que el formulario se valide.
    */
   onStarClick(rating: number): void {
-    if (this._disabled) return;
+    if (this.disabled()) return;
     
-    this._value = rating;
-    this.onChange(rating); // ← Notifica a Angular Forms del cambio
-    this.onTouched();      // ← Marca el componente como "touched"
+    this.rating.set(rating);
+    
+    this.onChange(rating);
+    
+    this.onTouched();
   }
 
   /**
-   * onStarHover(rating: number)
-   * ----------------------------
-   * Se ejecuta cuando el usuario pasa el mouse sobre una estrella.
-   * Solo actualiza el preview visual, NO cambia el valor real.
+   * Solo actualiza el preview visual, no cambia el valor real.
    */
   onStarHover(rating: number): void {
-    if (this._disabled) return;
+    if (this.disabled()) return;
     this.hoverRating.set(rating);
   }
 
   /**
-   * onMouseLeave()
-   * --------------
-   * Se ejecuta cuando el usuario quita el mouse del componente.
    * Resetea el preview visual.
    */
   onMouseLeave(): void {
@@ -173,16 +104,10 @@ export class StarRatingComponent implements ControlValueAccessor {
   }
 
   /**
-   * isStarFilled(star: number): boolean
-   * ------------------------------------
    * Determina si una estrella debe mostrarse llena o vacía.
-   * 
-   * Prioridad:
-   * 1. Si hay hover, usa el hoverRating (preview)
-   * 2. Si no hay hover, usa el valor actual (_value)
    */
   isStarFilled(star: number): boolean {
-    const displayRating = this.hoverRating() || this._value;
+    const displayRating = this.hoverRating() || this.rating();
     return star <= displayRating;
   }
 }

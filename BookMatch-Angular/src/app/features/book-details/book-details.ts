@@ -12,10 +12,10 @@ import { AuthService } from '@core/services/auth.service';
 // Componentes y Modelos
 import { Header } from '@shared/components/header/header';
 import { StarRatingComponent } from '@shared/components/star-rating/star-rating.component';
-import { CatalogBook, Review } from '@shared/models'; // User ya no hace falta importarlo aquí explícitamente
+import { CatalogBook, Review } from '@shared/models';
 
 // Módulo de traducción
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-book-details',
@@ -25,15 +25,13 @@ import { TranslateModule } from '@ngx-translate/core';
   styleUrl: './book-details.scss',
 })
 export class BookDetails implements OnInit {
+  private translate = inject(TranslateService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private catalogService = inject(CatalogService);
   private paymentService = inject(PaymentService);
   private cartService = inject(CartService);
   private fb = inject(FormBuilder);
-  
-  // Hacemos el servicio público para poder usarlo en el HTML si fuera necesario, 
-  // pero sobre todo para acceder a sus señales
   public authService = inject(AuthService); 
 
   // Señales de datos
@@ -42,14 +40,11 @@ export class BookDetails implements OnInit {
   selectedImageUrl = signal<string | null>(null);
   reviews = signal<Review[] | null>(null);
 
-  // --- CORRECCIÓN CLAVE AQUÍ ---
-  // Usamos computed() para "escuchar" automáticamente a la señal del servicio.
-  // Cuando authService.currentUser cambie (al cargar el perfil del backend), esto se actualizará solo.
+  // Es la Computed Signal encargada de mirar el id del usuario logueado.
   currentUserId = computed(() => {
     const user = this.authService.currentUser();
     return user ? user.id : null;
   });
-  // -----------------------------
 
   // Señales de estado
   isProcessingPayment = signal<boolean>(false);
@@ -60,7 +55,7 @@ export class BookDetails implements OnInit {
   // Formulario reactivo para reseñas
   reviewForm!: FormGroup;
 
-  // --- COMPUTED SIGNALS ---
+  // Es la Computed Signal encargada de calcular la media de las reviews.
   averageRating = computed(() => {
     const currentReviews = this.reviews();
     if (!currentReviews || currentReviews.length === 0) return 0;
@@ -68,6 +63,7 @@ export class BookDetails implements OnInit {
     return sum / currentReviews.length;
   });
 
+  // Es la Computed Signal encargada de calcular el porcentaje de estrellas por cada review basicamente.
   starDistribution = computed(() => {
     const currentReviews = this.reviews() || [];
     const total = currentReviews.length;
@@ -78,7 +74,7 @@ export class BookDetails implements OnInit {
     currentReviews.forEach(r => {
       const rating = Math.round(r.rating);
       if (rating >= 1 && rating <= 5) {
-        distribution[rating]++;
+        distribution[rating] = distribution[rating] + 1;
       }
     });
 
@@ -109,6 +105,7 @@ export class BookDetails implements OnInit {
     });
   }
   
+  /** Esta función es encargada de cargar el libro y las reviews. */
   loadBook(): void {
     this.catalogService.getBookById(Number(this.bookId())).subscribe((book) => {
       this.book.set(book);
@@ -126,19 +123,23 @@ export class BookDetails implements OnInit {
     });
   }
 
+  /** Esta función elige la imagen principal del libro. */
   selectImage(imageUrl: string): void {
     this.selectedImageUrl.set(imageUrl);
   }
 
+  /** Esta función obtiene la URL de la imagen principal del libro. */
   getMainImageUrl(): string | null {
     const currentBook = this.book();
     if (!currentBook) return null;
     return this.selectedImageUrl() || currentBook.coverUrl || (currentBook.imageUrls && currentBook.imageUrls.length > 0 ? currentBook.imageUrls[0] : null);
   }
 
+  /** Esta función es encargada de añadir el libro al carrito,
+   *  y pone un timeout de 2 segundos para que se vea el mensaje de exito. */
   onAddToCart(): void {
     const currentBook = this.book();
-    if (currentBook) {
+    if (currentBook && currentBook.stock > 0 && !this.isAddedToCart()) {
       this.cartService.addToCart(currentBook);
       this.isAddedToCart.set(true);
       setTimeout(() => {
@@ -155,6 +156,7 @@ export class BookDetails implements OnInit {
     }
   }
 
+  /** Esta función es encargada de crear la sesión de pago con Stripe, directamente sin pasar por el carrito. */
   onBuyWithStripe(): void {
     const book = this.book();
     if (!book || book.stock === 0) return;
@@ -167,101 +169,129 @@ export class BookDetails implements OnInit {
           this.paymentService.redirectToCheckout(response.url);
         } catch (error) {
           console.error('Error al redirigir a Stripe:', error);
-          alert('Error al procesar el pago. Por favor, intenta de nuevo.');
+          alert(this.translate.instant('BOOK_DETAILS.ERRORS.PAYMENT_PROCESS_ERROR'));
           this.isProcessingPayment.set(false);
         }
       },
       error: (error) => {
         console.error('Error al crear sesión de pago:', error);
-        const errorMessage = error.error?.message || 'Error al procesar el pago. Por favor, intenta de nuevo.';
+        const errorMessage = error.error?.message || this.translate.instant('BOOK_DETAILS.ERRORS.PAYMENT_PROCESS_ERROR');
         alert(errorMessage);
         this.isProcessingPayment.set(false);
       }
     });
   }
 
-  getUserInitial(userId: number): string {
+  /** Esta función es encargada de obtener la inicial/iniciales del usuario que realizó la review. 
+   * y si no devuelve un 'U' pa asegurar que no haya error.*/
+  getUserInitial(review: Review): string {
+    if (review.user?.fullName) {
+      const names = review.user.fullName.trim().split(/\s+/);
+      if (names.length >= 2) {
+        return (names[0][0] + names[names.length - 1][0]).toUpperCase();
+      } else {
+        return names[0][0].toUpperCase();
+      }
+    }
     return 'U';
   }
 
+  /** La función obtiene el nombre del usuario que realizó la review, 
+   * si no hay devuelve 'Usuario de BookMatch' o su traduccion en el idioma seleccionado. */
+  getUserName(review: Review): string {
+    if (review.userId === this.currentUserId()) {
+      return this.translate.instant('BOOK_DETAILS.YOU');
+    }
+    return review.user?.fullName || this.translate.instant('BOOK_DETAILS.BOOKMATCH_USER') || 'Usuario de BookMatch' ;
+  }
+
+  /** Esta función obtiene la URL del avatar del usuario que realizó la review, si no hay devuelve null
+   * y ya se utilizaría la función de getUserInitial para mostrar la inicial/iniciales del usuario.
+  */
+  getUserAvatar(review: Review): string | null {
+    return review.user?.avatarUrl || null;
+  }
+
+  /** Esta función es encargada de obtener el porcentaje de estrellas por cada review. */
   getStarPercent(star: number): number {
     const dist = this.starDistribution();
     // @ts-ignore
     return dist[star] || 0;
   }
 
+  /** Esta función es encargada de verificar si la estrella debe estar rellena o no. */
   isStarFilled(star: number, rating: number): boolean {
     return star <= Math.round(rating);
   }
 
+  /** Esta función es encargada de enviar la review al backend. */
   submitReview() {
-    // Marcar todos los campos como touched para mostrar errores si los hay
-    if (this.reviewForm.invalid) {
-      this.reviewForm.markAllAsTouched();
+    if (this.reviewForm.valid) {
+      this.isSubmittingReview.set(true);
+
       
-      // Mostrar mensaje específico si falta el rating
-      if (this.reviewForm.get('rating')?.hasError('required') || 
-          this.reviewForm.get('rating')?.value === 0) {
-        alert('Por favor, selecciona una puntuación de estrellas.');
-      }
-      return;
-    }
+      const formValue = this.reviewForm.value;
+      const payload = {
+        rating: formValue.rating,
+        comment: formValue.comment?.trim() || ''
+      };
 
-    this.isSubmittingReview.set(true);
-
-    // Obtener valores del formulario reactivo
-    const formValue = this.reviewForm.value;
-    const payload = {
-      rating: formValue.rating,
-      comment: formValue.comment?.trim() || ''
-    };
-
-    this.catalogService.addReview(Number(this.bookId()), payload).subscribe({
-      next: (review) => {
-        // Resetear el formulario después de enviar
-        this.reviewForm.reset({
-          rating: 0,
-          comment: ''
-        });
-        this.isSubmittingReview.set(false);
-        this.loadBook();
-      },
-      error: (err) => {
-        console.error('Error al enviar reseña:', err);
-        this.isSubmittingReview.set(false);
-        
-        if (err.status === 401) {
-          alert('Debes iniciar sesión para dejar una reseña.');
-          this.router.navigate(['/auth/login']);
-        } else {
-          const serverMessage = err.error?.message || 'Ocurrió un error al guardar tu reseña.';
-          alert(serverMessage);
+      this.catalogService.addReview(Number(this.bookId()), payload).subscribe({
+        next: (review) => {
+          // Resetea el formulario después de enviar
+          this.reviewForm.reset({
+            rating: 0,
+            comment: ''
+          });
+          this.isSubmittingReview.set(false);
+          this.loadBook();
+        },
+        error: (err) => {
+          console.error('Error al enviar reseña:', err);
+          this.isSubmittingReview.set(false);
+          
+          if (err.status === 401) {
+            alert(this.translate.instant('BOOK_DETAILS.ERRORS.LOGIN_REQUIRED'));
+            this.router.navigate(['/auth/login']);
+          } else {
+            const serverMessage = err.error?.message || this.translate.instant('BOOK_DETAILS.ERRORS.SAVE_ERROR');
+            alert(serverMessage);
+          }
         }
-      }
-    });
+      });
+    }
   }
 
   /**
-   * Helper para obtener errores de validación del formulario
+   * Obtener errores de validación del formulario
    */
-  getFieldError(fieldName: string): string | null {
-    const field = this.reviewForm.get(fieldName);
-    if (!field || !field.touched || !field.errors) return null;
-
-    if (field.errors['required']) {
-      return 'Este campo es requerido';
+  getError(control: string): string {
+    switch (control) {
+      case 'rating':
+        if (this.reviewForm.controls['rating'].errors != null &&
+          Object.keys(this.reviewForm.controls['rating'].errors).includes('required'))
+          return this.translate.instant('BOOK_DETAILS.ERRORS.RATING_REQUIRED');
+        else if (this.reviewForm.controls['rating'].errors != null &&
+          Object.keys(this.reviewForm.controls['rating'].errors).includes('min'))
+          return this.translate.instant('BOOK_DETAILS.ERRORS.RATING_MIN');
+        else if (this.reviewForm.controls['rating'].errors != null &&
+          Object.keys(this.reviewForm.controls['rating'].errors).includes('max'))
+          return this.translate.instant('BOOK_DETAILS.ERRORS.RATING_MAX');
+        else if (this.reviewForm.controls['rating'].value === 0)
+          return this.translate.instant('BOOK_DETAILS.ERRORS.RATING_SELECT');
+        break;
+      case 'comment':
+        // Si se quisiera añadir validaciones para el comentario, se podría hacer aquí.
+        break;
+      default:
+        return '';
     }
-    if (field.errors['min']) {
-      return `El valor mínimo es ${field.errors['min'].min}`;
-    }
-    if (field.errors['max']) {
-      return `El valor máximo es ${field.errors['max'].max}`;
-    }
-    return 'Campo inválido';
+    return '';
   }
 
+  /** Esta función es encargada de eliminar la review del backend. */
   onDeleteReview(reviewId: number) {
-    if (!confirm('¿Estás seguro de que deseas eliminar tu reseña? Esta acción no se puede deshacer.')) {
+    if (!confirm(this.translate.instant('BOOK_DETAILS.ERRORS.DELETE_CONFIRM'))) {
       return;
     }
 
@@ -276,7 +306,7 @@ export class BookDetails implements OnInit {
       error: (err) => {
         console.error('Error al borrar reseña:', err);
         this.isDeletingReview.set(false);
-        alert(err.error?.message || 'Error al eliminar la reseña');
+        alert(err.error?.message || this.translate.instant('BOOK_DETAILS.ERRORS.DELETE_ERROR'));
       }
     });
   }

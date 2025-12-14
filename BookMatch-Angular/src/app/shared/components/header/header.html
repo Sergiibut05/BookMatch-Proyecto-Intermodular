@@ -1,4 +1,6 @@
-<div *ngIf="isMenuOpen()" class="menu-overlay" (click)="closeMenu()"></div>
+@if (isMenuOpen()) {
+  <div class="menu-overlay" (click)="closeMenu()"></div>
+}
 
 <div class="side-menu" [class.menu-open]="isMenuOpen()">
   <div class="side-menu-header">
@@ -65,71 +67,73 @@
         <div class="hidden md:flex items-center cursor-pointer" (click)="goHome()">
           <img src="assets/bookMatch-logo-transparent.png" alt="BookMatch Logo"
             class="h-10 w-10 lg:h-12 lg:w-12 mr-2" />
-          <h1 class="text-xl lg:text-2xl font-bold" style="color: #45332D;">BookMatch</h1>
-        </div>
-      </div>
-
-      <div class="flex-1 max-w-xs sm:max-w-md md:max-w-lg lg:max-w-2xl mx-2 md:mx-4">
-        <div class="relative">
-          <input type="text" placeholder="{{ 'HEADER.SEARCH_PLACEHOLDER' | translate }}"
-            class="w-full px-3 py-1.5 md:px-4 md:py-2 pl-8 md:pl-10 pr-3 md:pr-4 rounded-lg border text-sm md:text-base focus:outline-none focus:ring-2 focus:ring-opacity-50"
-            style="border-color: #E9E1D1; background-color: #FCF5E2; color: #45332D;" />
-          <svg class="absolute left-2 md:left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 md:w-5 md:h-5"
-            style="color: #45332D; opacity: 0.6;" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-            xmlns="http://www.w3.org/2000/svg">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-          </svg>
-        </div>
-      </div>
-
-      <div class="flex items-center gap-1 sm:gap-2 md:gap-4 flex-shrink-0">
-
-        <span class="hidden lg:block text-base whitespace-nowrap" style="color: #45332D;">
-          {{ 'HEADER.WELCOME' | translate }} 
-          <span class="font-semibold">{{ authService.currentUser()?.fullName || '...' }}</span>
-        </span>
-
-        @if (!authService.currentUser()?.avatarUrl) {
-          <button class="flex items-center justify-center p-1.5 md:p-2 hover:bg-gray-100 rounded-lg transition-colors"
-            (click)="goProfile()">
-            <svg class="w-6 h-6 md:w-8 md:h-8" style="color: #45332D;" xmlns="http://www.w3.org/2000/svg" fill="none"
-              viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round"
-                d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a9 9 0 1 0-11.963 0m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-            </svg>
-          </button>
-        } @else {
-          <div class="flex items-center justify-center p-1.5 md:p-2 hover:bg-gray-100 rounded-lg transition-colors"
-            (click)="goProfile()">
-            <img [src]="authService.currentUser()?.avatarUrl" alt="Avatar"
-              class="w-6 h-6 md:w-8 md:h-8 rounded-full object-cover">
+            <h1 class="text-xl lg:text-2xl font-bold" style="color: #45332D;">BookMatch</h1>
           </div>
-        }
+        </div>
 
-        <a routerLink="/cart"
-          class="relative flex items-center justify-center p-1.5 md:p-2 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer">
-          <svg class="w-5 h-5 md:w-7 md:h-7" style="color: #45332D;" fill="none" stroke="currentColor"
-            viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z">
-            </path>
-          </svg>
-          <span *ngIf="cartService.totalItems() > 0"
-            class="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center shadow-sm border border-white">
-            {{ cartService.totalItems() }}
-          </span>
-        </a>
+        <div class="flex-1 max-w-xs sm:max-w-md md:max-w-lg lg:max-w-2xl mx-2 md:mx-4">
+          <div class="relative">
+            <input type="text" placeholder="{{ 'HEADER.SEARCH_PLACEHOLDER' | translate }}"
+              class="w-full px-3 py-1.5 md:px-4 md:py-2 pl-8 md:pl-10 pr-3 md:pr-4 rounded-lg border text-sm md:text-base focus:outline-none focus:ring-2 focus:ring-opacity-50"
+              style="border-color: #E9E1D1; background-color: #FCF5E2; color: #45332D;" />
+              <svg class="absolute left-2 md:left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 md:w-5 md:h-5"
+                style="color: #45332D; opacity: 0.6;" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+              </svg>
+            </div>
+          </div>
 
-        <button (click)="logout()"
-          class="hidden sm:block px-2 py-1.5 md:px-3 lg:px-4 md:py-2 rounded-lg transition-colors duration-200 font-medium whitespace-nowrap text-xs sm:text-sm md:text-base"
-          style="background-color: #E0A15E; color: #FCF5E2;" onmouseover="this.style.backgroundColor='#B88B65'"
-          onmouseout="this.style.backgroundColor='#E0A15E'">
-          <span class="hidden md:inline">{{ 'HEADER.LOGOUT' | translate }}</span>
-          <span class="md:hidden">{{ 'HEADER.LOGOUT_SHORT' | translate }}</span>
-        </button>
+          <div class="flex items-center gap-1 sm:gap-2 md:gap-4 flex-shrink-0">
 
-      </div>
-    </div>
-  </div>
-</nav>
+            <span class="hidden lg:block text-base whitespace-nowrap" style="color: #45332D;">
+              {{ 'HEADER.WELCOME' | translate }}
+              <span class="font-semibold">{{ authService.currentUser()?.fullName || '...' }}</span>
+            </span>
+
+            @if (!authService.currentUser()?.avatarUrl) {
+              <button class="flex items-center justify-center p-1.5 md:p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                (click)="goProfile()">
+                <svg class="w-6 h-6 md:w-8 md:h-8" style="color: #45332D;" xmlns="http://www.w3.org/2000/svg" fill="none"
+                  viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a9 9 0 1 0-11.963 0m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                  </svg>
+                </button>
+              } @else {
+                <div class="flex items-center justify-center p-1.5 md:p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                  (click)="goProfile()">
+                  <img [src]="authService.currentUser()?.avatarUrl" alt="Avatar"
+                    class="w-6 h-6 md:w-8 md:h-8 rounded-full object-cover">
+                  </div>
+                }
+
+                <a routerLink="/cart"
+                  class="relative flex items-center justify-center p-1.5 md:p-2 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer">
+                  <svg class="w-5 h-5 md:w-7 md:h-7" style="color: #45332D;" fill="none" stroke="currentColor"
+                    viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z">
+                    </path>
+                  </svg>
+                  @if (cartService.totalItems() > 0) {
+                    <span
+                      class="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center shadow-sm border border-white">
+                      {{ cartService.totalItems() }}
+                    </span>
+                  }
+                </a>
+
+                <button (click)="logout()"
+                  class="hidden sm:block px-2 py-1.5 md:px-3 lg:px-4 md:py-2 rounded-lg transition-colors duration-200 font-medium whitespace-nowrap text-xs sm:text-sm md:text-base"
+                  style="background-color: #E0A15E; color: #FCF5E2;" onmouseover="this.style.backgroundColor='#B88B65'"
+                  onmouseout="this.style.backgroundColor='#E0A15E'">
+                  <span class="hidden md:inline">{{ 'HEADER.LOGOUT' | translate }}</span>
+                  <span class="md:hidden">{{ 'HEADER.LOGOUT_SHORT' | translate }}</span>
+                </button>
+
+              </div>
+            </div>
+          </div>
+        </nav>
