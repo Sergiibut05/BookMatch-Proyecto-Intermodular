@@ -102,10 +102,11 @@
                 </button>
                 <button 
                   [disabled]="book()!.stock === 0"
-                  class="px-4 py-3.5 rounded-lg border-2 font-bold text-lg transition-all hover:bg-white/50"
-                  style="border-color: #45332D; color: #45332D;"
-                  [title]="'BOOK_DETAILS.ADD_TO_FAVORITES' | translate">
-                  <span class="material-symbols-outlined">favorite</span>
+                  class="flex-1 px-6 py-3.5 rounded-lg font-bold text-lg transition-all duration-300 shadow-lg hover:shadow-xl transform active:scale-95 flex justify-center items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  style="background-color: #45332D; color: #FCF5E2;"
+                  (click)="onBuyNow()">
+                  <span class="material-symbols-outlined">shopping_bag</span>
+                  {{ 'BOOK_DETAILS.BUY_NOW' | translate }}
                 </button>
               </div>
               
