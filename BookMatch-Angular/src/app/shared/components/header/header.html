@@ -13,8 +13,9 @@
       </svg>
     </button>
   </div>
+  
   <div class="side-menu-content">
-    <div class="menu-items-wrapper">
+    <div class="menu-items-wrapper w-full">
       <div class="menu-item w-full">
         <a href="home" class="menu-link flex items-center justify-start gap-3 w-full p-2">
           <span class="material-symbols-outlined text-xl">home</span>
@@ -39,6 +40,16 @@
           <span class="font-medium">Foro</span>
         </a>
       </div>
+
+      @if (authService.isAdmin()) {
+        <div class="menu-item w-full">
+          <a routerLink="/admin/books/create" (click)="closeMenu()" class="menu-link flex items-center justify-start gap-3 w-full p-2 cursor-pointer" style="color: #DC2626;">
+            <span class="material-symbols-outlined text-xl">add_circle</span>
+            <span class="font-bold">Añadir Libro (Admin)</span>
+          </a>
+        </div>
+      }
+
       <div class="menu-item w-full">
         <a href="profile" class="menu-link flex items-center justify-start gap-3 w-full p-2">
           <span class="material-symbols-outlined text-xl">account_circle</span>
@@ -46,7 +57,8 @@
         </a>
       </div>
     </div>
-    <div class="language-selector-wrapper">
+
+    <div class="menu-item w-full mt-auto p-4 border-t border-gray-200">
       <app-language-selector></app-language-selector>
     </div>
   </div>
@@ -69,9 +81,9 @@
         <div class="hidden md:flex items-center cursor-pointer" (click)="goHome()">
           <img src="assets/bookMatch-logo-transparent.png" alt="BookMatch Logo"
             class="h-10 w-10 lg:h-12 lg:w-12 mr-2" />
-            <h1 class="text-xl lg:text-2xl font-bold" style="color: #45332D;">BookMatch</h1>
-          </div>
+          <h1 class="text-xl lg:text-2xl font-bold" style="color: #45332D;">BookMatch</h1>
         </div>
+      </div>
 
       <div class="flex-1 max-w-xs sm:max-w-md md:max-w-lg lg:max-w-2xl mx-2 md:mx-4">
         <div class="relative">
@@ -96,55 +108,69 @@
         </div>
       </div>
 
-          <div class="flex items-center gap-1 sm:gap-2 md:gap-4 flex-shrink-0">
+      <div class="flex items-center gap-1 sm:gap-2 md:gap-4 flex-shrink-0">
 
-            <span class="hidden lg:block text-base whitespace-nowrap" style="color: #45332D;">
-              {{ 'HEADER.WELCOME' | translate }}
-              <span class="font-semibold">{{ authService.currentUser()?.fullName || '...' }}</span>
+        <span class="hidden lg:block text-base whitespace-nowrap" style="color: #45332D;">
+          {{ 'HEADER.WELCOME' | translate }} 
+          <span class="font-semibold">{{ authService.currentUser()?.fullName || '...' }}</span>
+          
+          @if (authService.isAdmin()) {
+            <span class="ml-2 px-2 py-0.5 text-xs font-bold text-white bg-red-500 rounded-full uppercase tracking-wider shadow-sm">
+              ADMIN
             </span>
+          }
+        </span>
 
-            @if (!authService.currentUser()?.avatarUrl) {
-              <button class="flex items-center justify-center p-1.5 md:p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                (click)="goProfile()">
-                <svg class="w-6 h-6 md:w-8 md:h-8" style="color: #45332D;" xmlns="http://www.w3.org/2000/svg" fill="none"
-                  viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round"
-                    d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a9 9 0 1 0-11.963 0m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-                  </svg>
-                </button>
-              } @else {
-                <div class="flex items-center justify-center p-1.5 md:p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                  (click)="goProfile()">
-                  <img [src]="authService.currentUser()?.avatarUrl" alt="Avatar"
-                    class="w-6 h-6 md:w-8 md:h-8 rounded-full object-cover">
-                  </div>
-                }
-
-                <a routerLink="/cart"
-                  class="relative flex items-center justify-center p-1.5 md:p-2 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer">
-                  <svg class="w-5 h-5 md:w-7 md:h-7" style="color: #45332D;" fill="none" stroke="currentColor"
-                    viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z">
-                    </path>
-                  </svg>
-                  @if (cartService.totalItems() > 0) {
-                    <span
-                      class="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center shadow-sm border border-white">
-                      {{ cartService.totalItems() }}
-                    </span>
-                  }
-                </a>
-
-                <button (click)="logout()"
-                  class="hidden sm:block px-2 py-1.5 md:px-3 lg:px-4 md:py-2 rounded-lg transition-colors duration-200 font-medium whitespace-nowrap text-xs sm:text-sm md:text-base"
-                  style="background-color: #E0A15E; color: #FCF5E2;" onmouseover="this.style.backgroundColor='#B88B65'"
-                  onmouseout="this.style.backgroundColor='#E0A15E'">
-                  <span class="hidden md:inline">{{ 'HEADER.LOGOUT' | translate }}</span>
-                  <span class="md:hidden">{{ 'HEADER.LOGOUT_SHORT' | translate }}</span>
-                </button>
-
-              </div>
-            </div>
+        @if (!authService.currentUser()?.avatarUrl) {
+          <button class="flex items-center justify-center p-1.5 md:p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            (click)="goProfile()">
+            <svg class="w-6 h-6 md:w-8 md:h-8" style="color: #45332D;" xmlns="http://www.w3.org/2000/svg" fill="none"
+              viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a9 9 0 1 0-11.963 0m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+            </svg>
+          </button>
+        } @else {
+          <div class="flex items-center justify-center p-1.5 md:p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            (click)="goProfile()">
+            <img [src]="authService.currentUser()?.avatarUrl" alt="Avatar"
+              class="w-6 h-6 md:w-8 md:h-8 rounded-full object-cover">
           </div>
-        </nav>
+        }
+
+        @if (authService.isAdmin()) {
+          <a routerLink="/admin/books/create" 
+              class="flex items-center justify-center p-1.5 md:p-2 rounded-lg transition-colors hover:bg-red-50 text-red-600"
+              title="Añadir Libro Nuevo">
+              <span class="material-symbols-outlined">add_circle</span>
+          </a>
+        }
+
+        <a routerLink="/cart"
+          class="relative flex items-center justify-center p-1.5 md:p-2 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer">
+          <svg class="w-5 h-5 md:w-7 md:h-7" style="color: #45332D;" fill="none" stroke="currentColor"
+            viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z">
+            </path>
+          </svg>
+          @if (cartService.totalItems() > 0) {
+            <span
+              class="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center shadow-sm border border-white">
+              {{ cartService.totalItems() }}
+            </span>
+          }
+        </a>
+
+        <button (click)="logout()"
+          class="hidden sm:block px-2 py-1.5 md:px-3 lg:px-4 md:py-2 rounded-lg transition-colors duration-200 font-medium whitespace-nowrap text-xs sm:text-sm md:text-base"
+          style="background-color: #E0A15E; color: #FCF5E2;" onmouseover="this.style.backgroundColor='#B88B65'"
+          onmouseout="this.style.backgroundColor='#E0A15E'">
+          <span class="hidden md:inline">{{ 'HEADER.LOGOUT' | translate }}</span>
+          <span class="md:hidden">{{ 'HEADER.LOGOUT_SHORT' | translate }}</span>
+        </button>
+
+      </div>
+    </div>
+  </div>
+</nav>

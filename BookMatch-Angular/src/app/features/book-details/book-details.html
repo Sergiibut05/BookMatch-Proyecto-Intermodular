@@ -65,7 +65,7 @@
                     {{ 'BOOK_DETAILS.IN_STOCK' | translate:{ stock: book()!.stock } }}
                   </span>
                 } @else {
-                   <span class="text-xs font-medium text-red-600 flex items-center gap-1">
+                    <span class="text-xs font-medium text-red-600 flex items-center gap-1">
                     <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>
                     {{ 'BOOK_DETAILS.OUT_OF_STOCK' | translate }}
                   </span>
@@ -74,11 +74,19 @@
               <h1 class="text-3xl md:text-5xl font-extrabold mb-2 leading-tight" style="color: #45332D;">{{ book()!.title }}</h1>
               <p class="text-xl md:text-2xl font-medium" style="color: #4E6A6A;">{{ book()!.author }}</p>
               @if (book()!.isbn) {
-                 <p class="text-sm" style="color: #4E6A6A; opacity: 0.7;">ISBN: {{ book()!.isbn }}</p>
+                  <p class="text-sm" style="color: #4E6A6A; opacity: 0.7;">ISBN: {{ book()!.isbn }}</p>
               }
             </div>
 
             <div class="flex flex-col gap-4 p-6 rounded-xl" style="background-color: #FCF5E2;">
+              
+              @if (isAdmin()) {
+                <a [routerLink]="['/admin/books/edit', book()!.id]"
+                    class="w-full mb-2 px-4 py-2 rounded-lg font-bold text-center border-2 border-dashed border-red-400 text-red-600 hover:bg-red-50 transition-colors flex items-center justify-center gap-2">
+                    <span class="material-symbols-outlined">edit</span>
+                    Editar este Libro (Admin)
+                </a>
+              }
               <div class="flex items-end gap-3">
                 <span class="text-5xl font-bold" style="color: #E0A15E;">{{ book()!.price | number:'1.2-2' }}€</span>
                 <div class="flex flex-col mb-1">
@@ -176,15 +184,17 @@
                   @if (reviews() && reviews()!.length > 0) {
                     <div class="grid grid-cols-1 gap-6"> @for (review of reviews()!; track review.id) {
                         <div class="bg-gray-50 rounded-xl p-6 border transition-all hover:shadow-md relative" style="border-color: #E9E1D1;">
-                          @if (currentUserId() && currentUserId() === review.userId) {
+                          
+                          @if ((currentUserId() && currentUserId() === review.userId) || isAdmin()) {
                             <button 
                               (click)="onDeleteReview(review.id)"
                               [disabled]="isDeletingReview()"
                               class="absolute top-4 right-4 text-gray-400 hover:text-red-500 transition-colors p-1 rounded-full hover:bg-red-50 z-10"
-                              [title]="'BOOK_DETAILS.DELETE_REVIEW' | translate">
+                              [title]="isAdmin() ? 'Eliminar como Admin' : 'BOOK_DETAILS.DELETE_REVIEW' | translate">
                               <span class="material-symbols-outlined text-xl">delete</span>
                             </button>
                           }
+                          
                           <div class="flex justify-between items-start mb-4 pr-8">
                             <div class="flex items-center gap-3">
                               

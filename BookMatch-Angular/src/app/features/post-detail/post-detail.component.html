@@ -3,7 +3,6 @@
 <div class="min-h-screen" style="background-color: #FCF5E2;">
   <div class="max-w-4xl mx-auto px-4 py-8 md:py-12">
     
-    <!-- Botón volver -->
     <button
       (click)="goBack()"
       class="flex items-center gap-2 text-sm mb-6 transition-colors"
@@ -16,7 +15,6 @@
       {{ 'POST.BACK_TO_FORUM' | translate }}
     </button>
 
-    <!-- Loading state -->
     @if (isLoading()) {
       <div class="flex items-center justify-center min-h-[60vh]">
         <div class="text-center">
@@ -26,7 +24,6 @@
       </div>
     }
 
-    <!-- Error state -->
     @if (!isLoading() && error()) {
       <div class="bg-white rounded-2xl shadow-lg p-6 mb-6">
         <div class="flex items-center gap-3 text-red-600">
@@ -38,10 +35,8 @@
       </div>
     }
 
-    <!-- Contenido del post -->
     @if (!isLoading() && !error() && post()) {
       <article class="bg-white rounded-xl shadow-lg overflow-hidden">
-        <!-- Cabecera con datos del autor -->
         <div class="p-6 border-b bg-white relative" style="border-color: #E9E1D1;">
           <div class="flex items-center gap-4 mb-4">
             @if (getAuthorAvatar()) {
@@ -77,8 +72,7 @@
               </div>
             </div>
             
-            <!-- Menú de tres puntitos (solo para el autor) -->
-            @if (isAuthor()) {
+            @if (canModify()) {
               <div class="relative">
                 <button
                   (click)="toggleMenu()"
@@ -89,7 +83,6 @@
                   </svg>
                 </button>
                 
-                <!-- Dropdown menu -->
                 @if (showMenu()) {
                   <div 
                     class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border z-50"
@@ -112,6 +105,7 @@
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                         </svg>
                         {{ 'POST.DELETE' | translate }}
+                        @if (isAdmin()) { <span class="text-xs ml-auto font-bold">(Admin)</span> }
                       </button>
                     </div>
                   </div>
@@ -121,14 +115,12 @@
           </div>
         </div>
 
-        <!-- Título del post -->
         <div class="p-6 pb-4">
           <h1 class="text-3xl md:text-4xl font-bold mb-6" style="color: #45332D;">
             {{ post()!.title }}
           </h1>
         </div>
 
-        <!-- Contenido del post -->
         <div class="px-6 pb-6">
           <div class="post-content prose prose-lg max-w-none" style="color: #45332D;">
             <p class="whitespace-pre-wrap leading-relaxed text-base md:text-lg">
@@ -138,7 +130,6 @@
         </div>
       </article>
 
-      <!-- Sección de comentarios -->
       <div class="mt-8">
         <app-comment-thread
           [forumId]="forumId()!"
@@ -148,7 +139,6 @@
     }
   </div>
 
-  <!-- Modal para editar post -->
   @if (showEditModal()) {
     <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" (click)="closeEditModal()">
       <div class="bg-white rounded-xl shadow-2xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto" (click)="$event.stopPropagation()">
@@ -240,7 +230,6 @@
     </div>
   }
 
-  <!-- Modal para confirmar borrar -->
   @if (showDeleteModal()) {
     <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" (click)="closeDeleteModal()">
       <div class="bg-white rounded-xl shadow-2xl max-w-md w-full p-6" (click)="$event.stopPropagation()">
@@ -287,5 +276,3 @@
     </div>
   }
 </div>
-
-

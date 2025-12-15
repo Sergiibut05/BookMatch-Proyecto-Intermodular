@@ -1,4 +1,4 @@
-import { Injectable, inject, signal } from '@angular/core';
+import { Injectable, inject, signal, computed } from '@angular/core';
 import { Auth, createUserWithEmailAndPassword, signInWithEmailAndPassword, 
         signInWithPopup, GoogleAuthProvider, signOut, user, User as FirebaseUser, onAuthStateChanged, updateProfile } from '@angular/fire/auth';
 import { Router } from '@angular/router';
@@ -19,6 +19,10 @@ export class AuthService {
 
   // Señal que guarda al usuario con datos combinados
   currentUser = signal<BackendUser | null>(null);
+
+  isAdmin = computed(() => {
+    return this.currentUser()?.role === 'ADMIN';
+  })
   
   user$ = user(this.auth);
 
