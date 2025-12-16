@@ -1,5 +1,5 @@
-import { Component, OnInit, OnDestroy, inject, signal, HostListener, computed } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, OnDestroy, inject, signal, HostListener } from '@angular/core';
+
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
@@ -18,13 +18,10 @@ import { RelativeTimePipe } from '@core/pipes/relative-time.pipe';
 })
 export class PostDetailComponent implements OnInit, OnDestroy {
   private postsService = inject(PostsService);
-  // Hacemos authService público para acceder a isAdmin desde el template
-  public authService = inject(AuthService); 
+  private authService = inject(AuthService);
   private route = inject(ActivatedRoute);
   private fb = inject(FormBuilder);
-  router = inject(Router);
-
-  isAdmin = this.authService.isAdmin;
+  router = inject(Router); // Público para usar en el template
 
   forumId = signal<number | null>(null);
   postId = signal<number | null>(null);
@@ -112,16 +109,10 @@ export class PostDetailComponent implements OnInit, OnDestroy {
     return post?._count?.comments || 0;
   }
 
-  // <--- MODIFICACIÓN: Comprobamos si tiene permisos (Autor o Admin)
-  canModify(): boolean {
+  isAuthor(): boolean {
     const post = this.post();
     const currentUser = this.authService.currentUser();
-    if (!post || !currentUser) return false;
-    
-    const isAuthor = post.authorId === currentUser.id;
-    const isAdmin = this.authService.isAdmin();
-    
-    return isAuthor || isAdmin;
+    return post && currentUser ? post.authorId === currentUser.id : false;
   }
 
   toggleMenu(): void {
@@ -266,3 +257,4 @@ export class PostDetailComponent implements OnInit, OnDestroy {
     // Limpiar cualquier suscripción si es necesario
   }
 }
+

@@ -1,6 +1,9 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -11,11 +14,6 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-enum Role {
-  USER
-  ADMIN
-}
-
 model User {
   id          Int      @id @default(autoincrement())
   firebaseUid String   @unique @map("firebase_uid")
@@ -23,9 +21,6 @@ model User {
   fullName    String?  @map("full_name")
   avatarUrl   String?  @map("avatar_url")
   phone       String?
-  
-  role        Role     @default(USER)
-
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
@@ -36,7 +31,7 @@ model User {
   createdForums Forum[]   @relation("UserForums")
   posts         Post[]
   comments      Comment[]
-  votes         Vote[]
+  votes       Vote[]
 
   @@map("users")
 }
@@ -188,9 +183,11 @@ model Forum {
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
+  // Relación con el usuario creador
   creatorId   Int      @map("creator_id")
   creator     User     @relation("UserForums", fields: [creatorId], references: [id], onDelete: Cascade)
 
+  // Un foro tiene muchas publicaciones
   posts       Post[]
 
   @@map("forums")
@@ -198,7 +195,7 @@ model Forum {
 
 model PostImage {
   id        Int      @id @default(autoincrement())
-  url       String   
+  url       String   // URL de la imagen
   postId    Int      @map("post_id")
   createdAt DateTime @default(now()) @map("created_at")
 
@@ -210,17 +207,21 @@ model PostImage {
 model Post {
   id        Int      @id @default(autoincrement())
   title     String
-  content   String   @db.Text 
+  content   String   @db.Text // @db.Text permite textos largos
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
+  // Relación con el Foro
   forumId   Int      @map("forum_id")
   forum     Forum    @relation(fields: [forumId], references: [id], onDelete: Cascade)
 
+  // Relación con el Usuario creador
   authorId  Int      @map("author_id")
   author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
 
+  // Una publicación tiene muchos comentarios
   comments  Comment[]
+
   images    PostImage[]
 
   score       Int      @default(0)
@@ -238,11 +239,14 @@ model Vote {
   id     Int      @id @default(autoincrement())
   userId Int      @map("user_id")
   postId Int      @map("post_id")
-  type   VoteType 
+  type   VoteType // UP o DOWN
 
   user   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   post   Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+
   
+  // Asegura que un usuario solo tenga UN voto por publicación.
+  // Si intenta votar de nuevo, el sistema te obligará a actualizar este registro
   @@unique([userId, postId])
   
   @@map("votes")
@@ -254,16 +258,22 @@ model Comment {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
+  // Relación con la Publicación (Post)
   postId    Int      @map("post_id")
   post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
 
+  // Relación con el Usuario creador
   authorId  Int      @map("author_id")
   author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
 
+  // --- RELACIÓN RECURSIVA (Respuestas a comentarios) ---
+  // parentId puede ser null si es un comentario principal
   parentId  Int?      @map("parent_id")
   parent    Comment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
   
+  // Hijos (respuestas a este comentario)
   children  Comment[] @relation("CommentReplies")
 
   @@map("comments")
 }
+

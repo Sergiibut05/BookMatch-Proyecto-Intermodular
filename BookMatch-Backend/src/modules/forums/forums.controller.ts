@@ -60,16 +60,13 @@ export async function updateForumCtrl(
     try {
         const id = Number(req.params.id);
         if (Number.isNaN(id)) return res.status(400).json({ message: 'ID inválido' });
-        
-        // Obtenemos usuario y rol
-        const user = (req as any).user; 
-        if (!user) return res.status(401).json({ message: 'No autorizado' });
 
+        // Verificar propiedad (opcional, por ahora solo actualiza)
+        // Idealmente deberíamos verificar si el usuario es el creador antes de actualizar
         const existingForum = await getForumById(id);
         if (!existingForum) return res.status(404).json({ message: 'Foro no encontrado' });
 
-        // MODIFICACIÓN: Permitir si es el creador O si es ADMIN
-        if (existingForum.creatorId !== user.id && user.role !== 'ADMIN') {
+        if (existingForum.creatorId !== req.user?.id) {
             return res.status(403).json({ message: 'No tienes permiso para editar este foro' });
         }
 
@@ -85,15 +82,10 @@ export async function deleteForumCtrl(req: Request, res: Response) {
         const id = Number(req.params.id);
         if (Number.isNaN(id)) return res.status(400).json({ message: 'ID inválido' });
 
-        // Obtenemos usuario y rol
-        const user = (req as any).user;
-        if (!user) return res.status(401).json({ message: 'No autorizado' });
-
         const existingForum = await getForumById(id);
         if (!existingForum) return res.status(404).json({ message: 'Foro no encontrado' });
 
-        // MODIFICACIÓN: Permitir si es el creador O si es ADMIN
-        if (existingForum.creatorId !== user.id && user.role !== 'ADMIN') {
+        if (existingForum.creatorId !== req.user?.id) {
             return res.status(403).json({ message: 'No tienes permiso para eliminar este foro' });
         }
 

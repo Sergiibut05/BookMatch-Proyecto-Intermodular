@@ -265,7 +265,7 @@ export async function deleteCatalogBook(id: number) {
   await prisma.catalogBook.delete({ where: { id } });
 }
 
-// --- NUEVA FUNCIÓN PARA RESEÑAS ---
+// --- NUEVA FUNCIÓN PARA RESEÑAS (SOLUCIÓN DEFINITIVA) ---
 
 export async function addReview(bookId: number, userId: number, input: CreateReviewInput) {
   // 1. Verificar si el libro existe
@@ -296,9 +296,8 @@ export async function addReview(bookId: number, userId: number, input: CreateRev
   };
 }
 
-// --- MODIFICACIÓN: FUNCIÓN PARA BORRAR RESEÑA CON PERMISO ADMIN ---
-// Se ha añadido el parámetro userRole para verificar si es ADMIN
-export async function deleteReview(reviewId: number, userId: number, userRole: string) {
+// --- MODIFICACIÓN: FUNCIÓN PARA BORRAR RESEÑA ---
+export async function deleteReview(reviewId: number, userId: number) {
   // 1. Buscamos la reseña
   const review = await prisma.review.findUnique({
     where: { id: reviewId },
@@ -310,9 +309,8 @@ export async function deleteReview(reviewId: number, userId: number, userRole: s
     throw error;
   }
 
-  // 2. Verificamos permisos:
-  // Permitimos borrar SI: (El usuario es el dueño) O (El rol es ADMIN)
-  if (review.userId !== userId && userRole !== 'ADMIN') {
+  // 2. Verificamos que el usuario sea el dueño
+  if (review.userId !== userId) {
     const error: any = new Error('No tienes permiso para borrar esta reseña');
     error.code = 'UNAUTHORIZED';
     throw error;

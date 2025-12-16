@@ -2,7 +2,6 @@ import { z } from 'zod';
 
 const imageUrlSchema = z.string().url('La URL de la imagen no es válida');
 
-// AÑADIDO: .strict() para rechazar campos no permitidos
 const baseCatalogBookSchema = z.object({
   title: z.string().min(1, 'El título es requerido'),
   author: z.string().min(1, 'El autor es requerido'),
@@ -13,7 +12,7 @@ const baseCatalogBookSchema = z.object({
   price: z.number().nonnegative('El precio debe ser positivo'),
   stock: z.number().int('El stock debe ser un entero').nonnegative('El stock no puede ser negativo').optional(),
   categoryIds: z.array(z.number().int().positive('Los IDs de categoría deben ser enteros positivos')).optional(),
-}).strict(); 
+});
 
 export const createCatalogBookSchema = baseCatalogBookSchema.extend({
   stock: z.number().int().nonnegative().default(0),
@@ -43,7 +42,7 @@ export const getCatalogBooksQuerySchema = z.object({
   ]).default('newest'),
 });
 
-// --- Esquema para crear una Reseña ---
+// --- NUEVO: Esquema para crear una Reseña ---
 export const createReviewSchema = z.object({
   rating: z.number().int().min(1).max(5, 'La valoración debe ser entre 1 y 5 estrellas'),
   comment: z.string().max(500, 'El comentario no puede exceder los 500 caracteres').optional(),
@@ -52,4 +51,5 @@ export const createReviewSchema = z.object({
 export type CreateCatalogBookInput = z.infer<typeof createCatalogBookSchema>;
 export type UpdateCatalogBookInput = z.infer<typeof updateCatalogBookSchema>;
 export type GetCatalogBooksQuery = z.infer<typeof getCatalogBooksQuerySchema>;
+// Exportamos el tipo de la reseña para usarlo en el servicio
 export type CreateReviewInput = z.infer<typeof createReviewSchema>;

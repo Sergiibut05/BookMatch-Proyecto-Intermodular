@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 
 // Servicios
@@ -20,7 +20,7 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 @Component({
   selector: 'app-book-details',
   standalone: true,
-  imports: [Header, CommonModule, ReactiveFormsModule, StarRatingComponent, TranslateModule, RouterLink],
+  imports: [Header, CommonModule, ReactiveFormsModule, StarRatingComponent, TranslateModule],
   templateUrl: './book-details.html',
   styleUrl: './book-details.scss',
 })
@@ -33,8 +33,6 @@ export class BookDetails implements OnInit {
   private cartService = inject(CartService);
   private fb = inject(FormBuilder);
   public authService = inject(AuthService); 
-
-  isAdmin = this.authService.isAdmin;
 
   // Señales de datos
   bookId = signal<string>('');

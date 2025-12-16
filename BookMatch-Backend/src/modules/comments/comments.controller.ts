@@ -48,15 +48,10 @@ export async function updateCommentCtrl(
         const id = Number(req.params.id);
         if (Number.isNaN(id)) return res.status(400).json({ message: 'ID inválido' });
 
-        // Obtenemos usuario y rol
-        const user = (req as any).user;
-        if (!user) return res.status(401).json({ message: 'No autorizado' });
-
         const existingComment = await getCommentById(id);
         if (!existingComment) return res.status(404).json({ message: 'Comentario no encontrado' });
 
-        // MODIFICACIÓN: Permitir si es el autor O si es ADMIN
-        if (existingComment.authorId !== user.id && user.role !== 'ADMIN') {
+        if (existingComment.authorId !== req.user?.id) {
             return res.status(403).json({ message: 'No tienes permiso para editar este comentario' });
         }
 
@@ -72,15 +67,10 @@ export async function deleteCommentCtrl(req: Request, res: Response) {
         const id = Number(req.params.id);
         if (Number.isNaN(id)) return res.status(400).json({ message: 'ID inválido' });
 
-        // Obtenemos usuario y rol
-        const user = (req as any).user;
-        if (!user) return res.status(401).json({ message: 'No autorizado' });
-
         const existingComment = await getCommentById(id);
         if (!existingComment) return res.status(404).json({ message: 'Comentario no encontrado' });
 
-        // MODIFICACIÓN: Permitir si es el autor O si es ADMIN
-        if (existingComment.authorId !== user.id && user.role !== 'ADMIN') {
+        if (existingComment.authorId !== req.user?.id) {
             return res.status(403).json({ message: 'No tienes permiso para eliminar este comentario' });
         }
 

@@ -1,6 +1,5 @@
 import { Router } from 'express';
 import { auth } from '../../middleware/auth.js';
-import { isAdmin } from '../../middleware/isAdmin.js';
 import { validate } from '../../middleware/validate.js';
 import {
   createCatalogBookSchema,
@@ -109,91 +108,11 @@ router.get('/categories', auth, getCategoriesCtrl);
  */
 router.get('/:id', auth, getCatalogBookCtrl);
 
-// --- RUTAS PROTEGIDAS (ADMIN) ---
+// --- RUTAS PROTEGIDAS ---
 
-/**
- * @swagger
- * /api/catalog-books:
- *   post:
- *     summary: Crear un nuevo libro (Solo Admin)
- *     tags: [CatalogBooks]
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *               ref: '#/components/schemas/CreateCatalogBookInput'
- *     responses:
- *       201:
- *         description: Libro creado exitosamente
- *       400:
- *         description: Datos inválidos
- *       401:
- *         description: No autenticado
- *       403:
- *         description: Prohibido (Requiere rol ADMIN)
- */
-router.post('/', auth, isAdmin, validate(createCatalogBookSchema), createCatalogBookCtrl);
-
-/**
- * @swagger
- * /api/catalog-books/{id}:
- *   patch:
- *     summary: Actualizar un libro existente (Solo Admin)
- *     tags: [CatalogBooks]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *               ref: '#/components/schemas/UpdateCatalogBookInput'
- *     responses:
- *       200:
- *         description: Libro actualizado
- *       400:
- *         description: Datos inválidos
- *       403:
- *         description: Prohibido (Requiere rol ADMIN)
- *       404:
- *         description: Libro no encontrado
- */
-router.patch('/:id', auth, isAdmin, validate(updateCatalogBookSchema), updateCatalogBookCtrl);
-
-/**
- * @swagger
- * /api/catalog-books/{id}:
- *   delete:
- *     summary: Eliminar un libro del catálogo (Solo Admin)
- *     tags: [CatalogBooks]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *     responses:
- *       204:
- *         description: Libro eliminado
- *       403:
- *         description: Prohibido (Requiere rol ADMIN)
- *       404:
- *         description: Libro no encontrado
- */
-router.delete('/:id', auth, isAdmin, deleteCatalogBookCtrl);
-
-// --- RUTAS DE RESEÑAS ---
+router.post('/', auth, validate(createCatalogBookSchema), createCatalogBookCtrl);
+router.patch('/:id', auth, validate(updateCatalogBookSchema), updateCatalogBookCtrl);
+router.delete('/:id', auth, deleteCatalogBookCtrl);
 
 /**
  * @swagger
@@ -215,14 +134,14 @@ router.delete('/:id', auth, isAdmin, deleteCatalogBookCtrl);
  *       content:
  *         application/json:
  *           schema:
- *               type: object
- *               properties:
- *                 rating:
- *                   type: integer
- *                   minimum: 1
- *                   maximum: 5
- *                 comment:
- *                   type: string
+ *             type: object
+ *             properties:
+ *               rating:
+ *                 type: integer
+ *                 minimum: 1
+ *                 maximum: 5
+ *               comment:
+ *                 type: string
  *     responses:
  *       201:
  *         description: Reseña creada
@@ -235,7 +154,7 @@ router.post('/:id/reviews', auth, validate(createReviewSchema), addReviewCtrl);
  * @swagger
  * /api/catalog-books/reviews/{id}:
  *   delete:
- *     summary: Eliminar una reseña (Admin o Dueño)
+ *     summary: Eliminar una reseña propia
  *     tags: [CatalogBooks]
  *     security:
  *       - bearerAuth: []

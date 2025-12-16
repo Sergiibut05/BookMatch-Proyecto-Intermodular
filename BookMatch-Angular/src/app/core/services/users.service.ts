@@ -12,7 +12,6 @@ export interface UserProfile {
   fullName: string | null;
   avatarUrl: string | null;
   phone: string | null;
-  role?: 'USER' | 'ADMIN';
   createdAt: string;
   updatedAt: string;
 }

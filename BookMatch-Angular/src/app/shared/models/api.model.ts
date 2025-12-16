@@ -21,7 +21,6 @@ export interface User {
   fullName?: string;
   avatarUrl?: string;
   phone?: string;
-  role?: 'USER' | 'ADMIN';
   createdAt?: string;
   updatedAt?: string;
 }
