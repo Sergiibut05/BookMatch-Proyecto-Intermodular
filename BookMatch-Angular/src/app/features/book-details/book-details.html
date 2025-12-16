@@ -79,6 +79,14 @@
             </div>
 
             <div class="flex flex-col gap-4 p-6 rounded-xl" style="background-color: #FCF5E2;">
+              
+              @if (isAdmin()) {
+                <a [routerLink]="['/admin/books/edit', book()!.id]"
+                    class="w-full mb-2 px-4 py-2 rounded-lg font-bold text-center border-2 border-dashed border-red-400 text-red-600 hover:bg-red-50 transition-colors flex items-center justify-center gap-2">
+                    <span class="material-symbols-outlined">edit</span>
+                    Editar este Libro (Admin)
+                </a>
+              }
               <div class="flex items-end gap-3">
                 <span class="text-5xl font-bold" style="color: #E0A15E;">{{ book()!.price | number:'1.2-2' }}€</span>
                 <div class="flex flex-col mb-1">

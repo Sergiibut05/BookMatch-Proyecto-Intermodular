@@ -12,7 +12,7 @@ const baseCatalogBookSchema = z.object({
   price: z.number().nonnegative('El precio debe ser positivo'),
   stock: z.number().int('El stock debe ser un entero').nonnegative('El stock no puede ser negativo').optional(),
   categoryIds: z.array(z.number().int().positive('Los IDs de categoría deben ser enteros positivos')).optional(),
-});
+}).strict(); 
 
 export const createCatalogBookSchema = baseCatalogBookSchema.extend({
   stock: z.number().int().nonnegative().default(0),

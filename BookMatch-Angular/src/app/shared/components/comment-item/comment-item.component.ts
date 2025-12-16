@@ -37,6 +37,18 @@ export class CommentItemComponent {
   // Estado para expandir/colapsar comentario
   isExpanded = signal<boolean>(false);
 
+  canModify(): boolean {
+    const currentUser = this.authService.currentUser();
+    const isAuthor = currentUser ? this.comment.authorId === currentUser.id : false;
+    const isAdmin = this.authService.isAdmin();
+    return isAuthor || isAdmin;
+  }
+  
+  // <--- MODIFICACIÓN: Alias para el template
+  isAdmin() {
+    return this.authService.isAdmin();
+  }
+
   getAuthorName(): string {
     return this.comment.author?.fullName || 'Usuario';
   }

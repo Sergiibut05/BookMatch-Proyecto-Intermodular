@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject, signal, HostListener } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, signal, HostListener, computed } from '@angular/core';
 
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
@@ -22,6 +22,7 @@ export class PostDetailComponent implements OnInit, OnDestroy {
   private route = inject(ActivatedRoute);
   private fb = inject(FormBuilder);
   router = inject(Router); // Público para usar en el template
+  isAdmin = this.authService.isAdmin;
 
   forumId = signal<number | null>(null);
   postId = signal<number | null>(null);
@@ -113,6 +114,17 @@ export class PostDetailComponent implements OnInit, OnDestroy {
     const post = this.post();
     const currentUser = this.authService.currentUser();
     return post && currentUser ? post.authorId === currentUser.id : false;
+  }
+
+  canModify(): boolean {
+    const post = this.post();
+    const currentUser = this.authService.currentUser();
+    if (!post || !currentUser) return false;
+    
+    const isAuthor = post.authorId === currentUser.id;
+    const isAdmin = this.authService.isAdmin();
+    
+    return isAuthor || isAdmin;
   }
 
   toggleMenu(): void {

@@ -36,6 +36,21 @@ export class CatalogService {
     );
   }
 
+  // <--- MODIFICACIÓN: Nuevo método para ACTUALIZAR libro (PATCH)
+  updateBook(id: number, book: Partial<CreateCatalogBookDto>): Observable<CatalogBook> {
+    return this.authHeaders().pipe(
+      switchMap(headers => this.http.patch<CatalogBook>(`${this.apiUrl}/${id}`, book, { headers }))
+    );
+  }
+
+  // <--- MODIFICACIÓN: Nuevo método para ELIMINAR libro (DELETE)
+  deleteBook(id: number): Observable<void> {
+    return this.authHeaders().pipe(
+      switchMap(headers => this.http.delete<void>(`${this.apiUrl}/${id}`, { headers }))
+    );
+  }
+  // -------------------------------------------------------------
+
   // 2. Filtrar libros por ID de categoría (Lo que pide tu backend)
   getBooksByCategoryId(categoryId: number, page = 1, limit = 10) {
     return this.authHeaders().pipe(

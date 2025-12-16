@@ -8,6 +8,7 @@ const userSelect = {
   fullName: true,
   avatarUrl: true,
   phone: true,
+  role: true,
   createdAt: true,
   updatedAt: true,
 } as const;

@@ -9,6 +9,7 @@ declare global {
         id: number;
         uid: string;
         email: string;
+        role?: string;
       };
     }
   }
@@ -37,6 +38,7 @@ export async function auth(req: Request, res: Response, next: NextFunction) {
       id: user.id,
       uid: user.firebaseUid,
       email: user.email,
+      role: user.role || 'USER',
     };
 
     next();

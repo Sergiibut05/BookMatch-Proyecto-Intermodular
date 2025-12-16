@@ -14,7 +14,7 @@
     </button>
   </div>
   <div class="side-menu-content">
-    <div class="menu-items-wrapper">
+    <div class="menu-items-wrapper w-full">
       <div class="menu-item w-full">
         <a href="home" class="menu-link flex items-center justify-start gap-3 w-full p-2">
           <span class="material-symbols-outlined text-xl">home</span>
@@ -39,6 +39,16 @@
           <span class="font-medium">Foro</span>
         </a>
       </div>
+
+      @if (authService.isAdmin()) {
+        <div class="menu-item w-full">
+          <a routerLink="/admin/books/create" (click)="closeMenu()" class="menu-link flex items-center justify-start gap-3 w-full p-2 cursor-pointer" style="color: #DC2626;">
+            <span class="material-symbols-outlined text-xl">add_circle</span>
+            <span class="font-bold">Añadir Libro (Admin)</span>
+          </a>
+        </div>
+      }
+
       <div class="menu-item w-full">
         <a href="profile" class="menu-link flex items-center justify-start gap-3 w-full p-2">
           <span class="material-symbols-outlined text-xl">account_circle</span>
@@ -101,6 +111,11 @@
             <span class="hidden lg:block text-base whitespace-nowrap" style="color: #45332D;">
               {{ 'HEADER.WELCOME' | translate }}
               <span class="font-semibold">{{ authService.currentUser()?.fullName || '...' }}</span>
+              @if (authService.isAdmin()) {
+                <span class="ml-2 px-2 py-0.5 text-xs font-bold text-white bg-red-500 rounded-full uppercase tracking-wider shadow-sm">
+                  ADMIN
+                </span>
+              }
             </span>
 
             @if (!authService.currentUser()?.avatarUrl) {
@@ -118,6 +133,14 @@
                   <img [src]="authService.currentUser()?.avatarUrl" alt="Avatar"
                     class="w-6 h-6 md:w-8 md:h-8 rounded-full object-cover">
                   </div>
+                }
+                
+                @if (authService.isAdmin()) {
+                  <a routerLink="/admin/books/create" 
+                      class="flex items-center justify-center p-1.5 md:p-2 rounded-lg transition-colors hover:bg-red-50 text-red-600"
+                      title="Añadir Libro Nuevo">
+                      <span class="material-symbols-outlined">add_circle</span>
+                  </a>
                 }
 
                 <a routerLink="/cart"

@@ -26,6 +26,16 @@ export const routes: Routes = [
         loadComponent: () => import('./features/home/home.component').then(m => m.HomeComponent)
       },
       {
+        path: 'admin/books/create',
+        canActivate: [authGuard],
+        loadComponent: () => import('./features/book-form/book-form').then(m => m.BookFormComponent)
+      },
+      {
+        path: 'admin/books/edit/:id',
+        canActivate: [authGuard],
+        loadComponent: () => import('./features/book-form/book-form').then(m => m.BookFormComponent)
+      },
+      {
         path: 'categories/:categoria',
         canActivate: [authGuard], 
         loadComponent: () => import('./features/categories/categories').then(m => m.Categories)
