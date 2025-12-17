@@ -6,26 +6,31 @@ import { logger } from './utils/logger.js';
 export default app;
 
 // Para desarrollo local: iniciar el servidor
-if (process.env.NODE_ENV !== 'production' || process.env.VERCEL !== '1') {
-  const server = app.listen(env.PORT, () => {
-    logger.info(`API escuchando en http://localhost:${env.PORT}`);
-    logger.info(`Entorno: ${env.NODE_ENV}`);
-  });
-
-  process.on('SIGTERM', () => {
-    logger.info('SIGTERM recibido, cerrando servidor...');
-    server.close(() => {
-      logger.info('Servidor cerrado');
-      process.exit(0);
+if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
+  try {
+    const server = app.listen(env.PORT, () => {
+      logger.info(`API escuchando en http://localhost:${env.PORT}`);
+      logger.info(`Entorno: ${env.NODE_ENV}`);
     });
-  });
 
-  process.on('SIGINT', () => {
-    logger.info('SIGINT recibido, cerrando servidor...');
-    server.close(() => {
-      logger.info('Servidor cerrado');
-      process.exit(0);
+    process.on('SIGTERM', () => {
+      logger.info('SIGTERM recibido, cerrando servidor...');
+      server.close(() => {
+        logger.info('Servidor cerrado');
+        process.exit(0);
+      });
     });
-  });
+
+    process.on('SIGINT', () => {
+      logger.info('SIGINT recibido, cerrando servidor...');
+      server.close(() => {
+        logger.info('Servidor cerrado');
+        process.exit(0);
+      });
+    });
+  } catch (error) {
+    logger.error('Error iniciando servidor:', error);
+    process.exit(1);
+  }
 }
 

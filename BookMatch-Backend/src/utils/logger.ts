@@ -27,14 +27,21 @@ const format = winston.format.combine(
   )
 );
 
-const transports = [
+// Solo usar archivos en desarrollo local, no en Vercel
+const transports: winston.transport[] = [
   new winston.transports.Console(),
-  new winston.transports.File({
-    filename: 'logs/error.log',
-    level: 'error',
-  }),
-  new winston.transports.File({ filename: 'logs/all.log' }),
 ];
+
+// Solo agregar archivos si no estamos en Vercel
+if (env.NODE_ENV === 'development' && !process.env.VERCEL) {
+  transports.push(
+    new winston.transports.File({
+      filename: 'logs/error.log',
+      level: 'error',
+    }),
+    new winston.transports.File({ filename: 'logs/all.log' })
+  );
+}
 
 export const logger = winston.createLogger({
   level: env.NODE_ENV === 'development' ? 'debug' : 'warn',
