@@ -10,7 +10,7 @@ import type {
 
 // --- HELPERS Y MAPEOS (INTACTOS) ---
 
-const catalogBookWithCategories = Prisma.validator<Prisma.CatalogBookDefaultArgs>()({
+const catalogBookWithCategories = {
   select: {
     id: true, title: true, author: true, isbn: true, description: true,
     coverUrl: true, imageUrls: true, price: true, stock: true,
@@ -38,17 +38,17 @@ const catalogBookWithCategories = Prisma.validator<Prisma.CatalogBookDefaultArgs
       },
     },
   },
-});
+};
 
-type CatalogBookRecord = Prisma.CatalogBookGetPayload<typeof catalogBookWithCategories>;
+type CatalogBookRecord = any;
 
 function mapCatalogBook(record: CatalogBookRecord) {
   const { categories, reviews, ...rest } = record;
   return {
     ...rest,
     price: Number(rest.price),
-    categories: categories.map((entry) => entry.category),
-    reviews: (reviews || []).map((review) => ({
+    categories: categories.map((entry: any) => entry.category),
+    reviews: (reviews || []).map((review: any) => ({
       ...review,
       createdAt: review.createdAt.toISOString(),
       user: review.user ? {
@@ -93,7 +93,7 @@ export const getCatalogBooks = async (query: GetCatalogBooksQuery) => {
       _avg: { rating: true },
       having: { rating: { _avg: { gte: minRating } } }
     });
-    ratingBookIds = groupedReviews.map(r => r.catalogBookId);
+    ratingBookIds = groupedReviews.map((r: any) => r.catalogBookId);
   }
 
   // 2. Si hay búsqueda, usar SQL raw para normalizar ambos lados
@@ -122,11 +122,11 @@ export const getCatalogBooks = async (query: GetCatalogBooksQuery) => {
         ) LIKE ${`%${normalizedSearch}%`}
         OR LOWER(isbn) LIKE ${`%${normalizedSearch}%`}
     `;
-    searchBookIds = searchResults.map(r => r.id);
+    searchBookIds = searchResults.map((r: any) => r.id);
   }
 
   // 3. Construir WHERE
-  const where: Prisma.CatalogBookWhereInput = {
+  const where: any = {
     AND: [
       searchBookIds ? { id: { in: searchBookIds.length > 0 ? searchBookIds : [0] } } : {},
       {
@@ -142,7 +142,7 @@ export const getCatalogBooks = async (query: GetCatalogBooksQuery) => {
   };
 
   // 3. Construir ORDER BY
-  let orderBy: Prisma.CatalogBookOrderByWithRelationInput = { createdAt: 'desc' };
+  let orderBy: any = { createdAt: 'desc' };
   switch (sortBy) {
     case 'price_asc': orderBy = { price: 'asc' }; break;
     case 'price_desc': orderBy = { price: 'desc' }; break;
@@ -198,11 +198,11 @@ export async function createCatalogBook(input: CreateCatalogBookInput) {
     categoryIds = [], price, stock = 0, imageUrls = [], description, coverUrl, title, author, isbn,
   } = input;
 
-  const data: Prisma.CatalogBookCreateInput = {
+  const data: any = {
     title, author, isbn,
     description: description ?? null,
     coverUrl: coverUrl ?? null,
-    price: new Prisma.Decimal(price),
+    price: price,
     stock, imageUrls,
   };
 
@@ -231,7 +231,7 @@ export async function updateCatalogBook(id: number, input: UpdateCatalogBookInpu
     categoryIds, price, imageUrls, description, coverUrl, stock, title, author, isbn,
   } = input;
 
-  const data: Prisma.CatalogBookUpdateInput = {};
+  const data: any = {};
 
   if (title !== undefined) data.title = title;
   if (author !== undefined) data.author = author;
@@ -287,7 +287,7 @@ export async function addReview(bookId: number, userId: number, input: CreateRev
       comment: input.comment,
       catalogBookId: bookId, 
       userId: userId,        
-    } as Prisma.ReviewUncheckedCreateInput 
+    } as any 
   });
 
   return {

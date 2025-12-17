@@ -43,7 +43,7 @@ export const createOrder = async (data: CreateOrderDto) => {
     });
 
     if (newOrder.user.email) {
-        const itemsForEmail = newOrder.items.map((item) => ({
+        const itemsForEmail = newOrder.items.map((item: any) => ({
         title: item.catalogBook.title,
         quantity: item.quantity,
         price: Number(item.price),

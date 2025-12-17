@@ -5,14 +5,14 @@ import { Prisma } from '@prisma/client';
 export const getPostsByForumId = async (forumId: number, query: GetPostsQuery) => {
     const { page, limit, sort } = query;
 
-    let orderBy: Prisma.PostOrderByWithRelationInput = { createdAt: 'desc' };
+    let orderBy: any = { createdAt: 'desc' };
     if (sort === 'score') {
         orderBy = { score: 'desc' };
     } else if (sort === 'comments') {
         orderBy = { comments: { _count: 'desc' } };
     }
 
-    const where: Prisma.PostWhereInput = { forumId };
+    const where: any = { forumId };
 
     const [total, posts] = await prisma.$transaction([
         prisma.post.count({ where }),

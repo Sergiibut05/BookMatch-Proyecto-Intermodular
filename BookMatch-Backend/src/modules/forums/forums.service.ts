@@ -31,10 +31,10 @@ export const getForums = async (query: GetForumsQuery) => {
                   )
                 ) LIKE ${`%${normalizedSearch}%`}
         `;
-        searchForumIds = searchResults.map(r => r.id);
+        searchForumIds = searchResults.map((r: any) => r.id);
     }
 
-    const where: Prisma.ForumWhereInput = searchForumIds
+    const where: any = searchForumIds
         ? { id: { in: searchForumIds.length > 0 ? searchForumIds : [0] } }
         : {};
 

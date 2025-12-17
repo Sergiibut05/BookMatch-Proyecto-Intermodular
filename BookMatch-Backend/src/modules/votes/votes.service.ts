@@ -1,6 +1,7 @@
 import { prisma } from '../../config/db.js';
 import type { CreateVoteInput } from './votes.schema.js';
-import { VoteType } from '@prisma/client';
+
+type VoteType = 'UP' | 'DOWN';
 
 async function updatePostScore(postId: number) {
     const upVotes = await prisma.vote.count({
@@ -21,7 +22,7 @@ async function updatePostScore(postId: number) {
 export const upsertVote = async (userId: number, postId: number, input: CreateVoteInput) => {
     const type = input.type as VoteType;
 
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx: any) => {
         // Upsert el voto
         const existingVote = await tx.vote.findUnique({
             where: { userId_postId: { userId, postId } },

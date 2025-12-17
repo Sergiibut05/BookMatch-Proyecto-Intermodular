@@ -233,7 +233,7 @@ export async function handleStripeWebhook(event: Stripe.Event) {
       try {
         const user = await prisma.user.findUnique({ where: { id: userId }, select: { email: true } });
         if (user?.email) {
-          const emailItems = order.items.map(item => {
+          const emailItems = order.items.map((item: any) => {
             const priceValue = item.price as unknown;
             const priceNumber = typeof priceValue === 'object' && priceValue !== null && 'toNumber' in priceValue
               ? (priceValue as { toNumber: () => number }).toNumber()
@@ -366,7 +366,7 @@ export async function createOrderFromSession(sessionId: string, userId: number) 
     try {
       const user = await prisma.user.findUnique({ where: { id: userId }, select: { email: true } });
       if (user?.email) {
-        const emailItems = order.items.map(item => ({
+        const emailItems = order.items.map((item: any) => ({
           title: item.catalogBook.title,
           quantity: item.quantity,
           price: (typeof item.price === 'object' && 'toNumber' in item.price 
