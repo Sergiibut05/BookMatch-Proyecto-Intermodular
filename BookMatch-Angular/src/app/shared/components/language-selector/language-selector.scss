@@ -1,0 +1,33 @@
+.language-selector {
+  width: 100%;
+}
+
+.language-button {
+  flex: 1;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  border-radius: 0.5rem;
+  border: 2px solid #E9E1D1;
+  background-color: #FCF5E2;
+  color: #45332D;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  
+  &:hover {
+    background-color: rgba(224, 161, 94, 0.2);
+    border-color: #E0A15E;
+  }
+  
+  &.active {
+    background-color: #E0A15E;
+    border-color: #E0A15E;
+    color: #FCF5E2;
+    
+    &:hover {
+      background-color: #B88B65;
+      border-color: #B88B65;
+    }
+  }
+}
+

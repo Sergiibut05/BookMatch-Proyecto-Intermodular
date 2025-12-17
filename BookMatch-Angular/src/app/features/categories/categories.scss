@@ -1,0 +1,61 @@
+// Estilos para Material Symbols
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
+}
+
+// Estilos para la vista Grid
+.book-card-grid {
+  &:hover {
+    transform: scale(1.05);
+    background-color: rgba(255, 255, 255, 0.95) !important;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15) !important;
+    
+    .book-image-grid {
+      transform: scale(1.0);
+    }
+    
+    .book-content-grid {
+      opacity: 0.9;
+    }
+  }
+}
+
+.book-image-grid {
+  display: block;
+  transform: scale(0.95);
+  
+}
+
+// Estilos para la vista List
+.book-card-list {
+  &:hover {
+    transform: scale(1.02);
+    background-color: rgba(255, 255, 255, 0.95) !important;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15) !important;
+    
+    .book-image-list {
+      transform: scale(1.05);
+    }
+    
+    .book-content-list {
+      opacity: 0.9;
+    }
+  }
+}
+
+.book-image-list {
+  display: block;
+}
+

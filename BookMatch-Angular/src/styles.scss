@@ -3,8 +3,89 @@
 @tailwind components;
 @tailwind utilities;
 
-body{
+body {
     margin: 0;
     top: 0;
     left: 0;
+}
+
+/* styles.css */
+
+/* 1. Fondo corporativo para evitar parpadeos blancos */
+::view-transition {
+    background: linear-gradient(135deg, #ffebb4 0%, #dd9c57 100%);
+}
+
+/* 2. Configuración Global de la animación */
+::view-transition-group(root) {
+    /* Duración más lenta para elegancia */
+    animation-duration: 0.8s;
+    /* Curva profesional: Rápida al inicio, aterrizaje muy suave al final (sin rebotes) */
+    animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Desactivar animación cuando el loader está activo */
+body.loader-active ::view-transition-group(root) {
+    animation: none !important;
+}
+
+/* 3. La página ACTUAL (se va): Se aleja, se oscurece y desliza a la izquierda */
+::view-transition-old(root) {
+    animation-name: proExit;
+    transform-origin: center left;
+    z-index: 1;
+    /* Se queda al fondo */
+}
+
+/* Desactivar animación de salida cuando el loader está activo */
+body.loader-active ::view-transition-old(root) {
+    animation: none !important;
+}
+
+/* 4. La página NUEVA (entra): Aparece por derecha, crece y aterriza */
+::view-transition-new(root) {
+    animation-name: proEnter;
+    transform-origin: center;
+    z-index: 2;
+    /* Pasa por delante */
+    /* Sombra suave para separarla del fondo */
+    box-shadow: -15px 0 40px rgba(0, 0, 0, 0.15);
+}
+
+/* Desactivar animación de entrada cuando el loader está activo */
+body.loader-active ::view-transition-new(root) {
+    animation: none !important;
+}
+
+/* --- KEYFRAMES --- */
+
+@keyframes proExit {
+    from {
+        transform: translateX(0) scale(1);
+        opacity: 1;
+        filter: brightness(1);
+    }
+
+    to {
+        /* Se desplaza solo un 30% a la izquierda para no recorrer toda la pantalla,
+       simulando que la nueva la "tapa" mientras esta se aleja al fondo */
+        transform: translateX(-30%) scale(0.85);
+        opacity: 0;
+        filter: brightness(0.7);
+        /* Se oscurece un poco */
+    }
+}
+
+@keyframes proEnter {
+    from {
+        /* Empieza fuera a la derecha y un poco más pequeña (0.9) */
+        transform: translateX(100%) scale(0.9);
+        opacity: 0;
+    }
+
+    to {
+        /* Termina en el centro y a tamaño real (1) */
+        transform: translateX(0) scale(1);
+        opacity: 1;
+    }
 }

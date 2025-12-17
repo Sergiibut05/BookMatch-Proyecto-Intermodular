@@ -1,0 +1,234 @@
+<div class="comment-item" [class]="getBorderClass()" [style.margin-left.px]="depth * 24">
+  <div class="bg-white rounded-lg p-4 mb-3 border" style="border-color: #E9E1D1;">
+    <!-- Cabecera del comentario -->
+    <div class="flex items-start gap-3 mb-3">
+      @if (getAuthorAvatar()) {
+        <img 
+          [src]="getAuthorAvatar()!" 
+          [alt]="getAuthorName()"
+          class="w-8 h-8 rounded-full object-cover border flex-shrink-0"
+          style="border-color: #E0A15E;">
+      } @else {
+        <div class="w-8 h-8 rounded-full flex items-center justify-center border flex-shrink-0" style="background-color: #E9E1D1; border-color: #E0A15E;">
+          <svg class="w-5 h-5" style="color: #E0A15E;" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+          </svg>
+        </div>
+      }
+      
+      <div class="flex-1 min-w-0">
+        <div class="flex items-center justify-between mb-1">
+          <div class="flex items-center gap-2">
+            <span class="font-semibold text-sm" style="color: #45332D;">{{ getAuthorName() }}</span>
+            @if (depth > 0) {
+              <span class="text-xs" style="color: #4E6A6A;">{{ 'COMMENTS.REPLIED' | translate }}</span>
+            }
+            <span class="text-xs" style="color: #4E6A6A;">
+              {{ comment.createdAt | relativeTime }}
+            </span>
+          </div>
+          
+          <!-- Menú de tres puntos (solo para el autor) -->
+          @if (isAuthor()) {
+            <div class="relative comment-menu-container">
+              <button
+                (click)="toggleMenu(); $event.stopPropagation()"
+                type="button"
+                class="p-1 rounded-full hover:bg-gray-100 transition-colors"
+                style="color: #4E6A6A;">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
+                </svg>
+              </button>
+              
+              <!-- Dropdown menu -->
+              @if (showMenu()) {
+                <div
+                  class="absolute right-0 mt-2 w-40 bg-white rounded-lg shadow-lg border z-50"
+                  style="border-color: #E9E1D1;"
+                  (click)="$event.stopPropagation()">
+                  <div class="py-1">
+                    <button
+                      (click)="openDeleteModal()"
+                      type="button"
+                      class="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 transition-colors flex items-center gap-2 text-red-600">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                      </svg>
+                      {{ 'COMMENTS.DELETE' | translate }}
+                    </button>
+                  </div>
+                </div>
+              }
+            </div>
+          }
+        </div>
+        
+        <!-- Contenido del comentario -->
+        <div class="mb-3">
+          <p 
+            class="text-sm whitespace-pre-wrap" 
+            style="color: #45332D;"
+            [class.line-clamp-2]="!isExpanded() && isLongComment()"
+            [class.overflow-hidden]="!isExpanded() && isLongComment()">
+            {{ comment.content }}
+          </p>
+          @if (isLongComment()) {
+            <button
+              (click)="toggleExpand()"
+              type="button"
+              class="text-xs font-medium mt-1 transition-colors"
+              style="color: #E0A15E;"
+              onmouseover="this.style.color='#B88B65'"
+              onmouseout="this.style.color='#E0A15E'">
+              {{ (isExpanded() ? 'COMMENTS.SEE_LESS' : 'COMMENTS.SEE_MORE') | translate }}
+            </button>
+          }
+        </div>
+        
+        <!-- Botón Responder -->
+        <button
+          (click)="onReply(comment.id)"
+          class="text-xs font-medium transition-colors"
+          style="color: #E0A15E;"
+          onmouseover="this.style.color='#B88B65'"
+          onmouseout="this.style.color='#E0A15E'">
+          {{ 'COMMENTS.REPLY' | translate }}
+        </button>
+      </div>
+    </div>
+
+    <!-- Formulario de respuesta (aparece al hacer clic en Responder) -->
+    @if (isShowingReplyInput(comment.id)) {
+      <div class="mt-3 pt-3 border-t" style="border-color: #E9E1D1;">
+        @if (getReplyError(comment.id)) {
+          <div class="bg-red-50 border border-red-200 rounded-lg p-2 mb-3">
+            <div class="flex items-center gap-2 text-red-600">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+              <p class="text-xs">{{ getReplyError(comment.id) }}</p>
+            </div>
+          </div>
+        }
+
+        @if (getReplyForm(comment.id)) {
+          <form [formGroup]="getReplyForm(comment.id)!" (ngSubmit)="onSubmitReply(comment.id)" class="space-y-2">
+            <textarea
+              formControlName="content"
+              rows="3"
+              class="w-full px-3 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-opacity-50 text-sm resize-none"
+              style="border-color: #E9E1D1; background-color: #FCF5E2; color: #45332D; focus:ring-color: #E0A15E;"
+              [placeholder]="'COMMENTS.REPLY_PLACEHOLDER' | translate"></textarea>
+            @if (getFieldError(comment.id, 'content')) {
+              <p class="text-xs text-red-600">{{ getFieldError(comment.id, 'content') }}</p>
+            }
+
+            <div class="flex gap-2">
+              <button
+                type="submit"
+                [disabled]="isReplying(comment.id) || getReplyForm(comment.id)!.invalid"
+                class="px-3 py-1.5 rounded-lg transition-colors duration-200 font-medium text-xs disabled:opacity-50 disabled:cursor-not-allowed"
+                style="background-color: #E0A15E; color: #FCF5E2;"
+                onmouseover="if(!this.disabled) this.style.backgroundColor='#B88B65'"
+                onmouseout="if(!this.disabled) this.style.backgroundColor='#E0A15E'">
+                @if (isReplying(comment.id)) {
+                  <span class="flex items-center gap-1">
+                    <div class="inline-block animate-spin rounded-full h-3 w-3 border-2 border-t-transparent border-white"></div>
+                    {{ 'COMMENTS.PUBLISHING' | translate }}
+                  </span>
+                } @else {
+                  {{ 'COMMENTS.PUBLISH' | translate }}
+                }
+              </button>
+              <button
+                type="button"
+                (click)="onReply(comment.id)"
+                [disabled]="isReplying(comment.id)"
+                class="px-3 py-1.5 rounded-lg border transition-colors duration-200 font-medium text-xs disabled:opacity-50 disabled:cursor-not-allowed"
+                style="border-color: #E9E1D1; color: #45332D; background-color: white;"
+                onmouseover="if(!this.disabled) this.style.backgroundColor='#F5F5F5'"
+                onmouseout="if(!this.disabled) this.style.backgroundColor='white'">
+                {{ 'COMMENTS.CANCEL' | translate }}
+              </button>
+            </div>
+          </form>
+        }
+      </div>
+    }
+  </div>
+
+  <!-- Comentarios anidados (respuestas) - Renderizado recursivo -->
+  @if (hasChildren()) {
+    <div class="nested-comments" [style.margin-left.px]="24">
+      @for (child of getChildren(); track child.id) {
+        <app-comment-item
+          [comment]="child"
+          [forumId]="forumId"
+          [postId]="postId"
+          [depth]="depth + 1"
+          [onReply]="onReply"
+          [onSubmitReply]="onSubmitReply"
+          [isShowingReplyInput]="isShowingReplyInput"
+          [isReplying]="isReplying"
+          [getReplyForm]="getReplyForm"
+          [getFieldError]="getFieldError"
+          [getReplyError]="getReplyError"
+          [onReload]="onReload"
+          [onDelete]="onDelete">
+        </app-comment-item>
+      }
+    </div>
+  }
+
+  <!-- Modal para confirmar eliminación -->
+  @if (showDeleteModal()) {
+    <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" (click)="closeDeleteModal()">
+      <div class="bg-white rounded-xl shadow-2xl max-w-md w-full p-6" (click)="$event.stopPropagation()">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-xl font-semibold" style="color: #45332D;">{{ 'COMMENTS.DELETE_MODAL.TITLE' | translate }}</h2>
+          <button
+            (click)="closeDeleteModal()"
+            type="button"
+            class="text-gray-400 hover:text-gray-600 transition-colors">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+
+        <p class="text-base mb-6" style="color: #4E6A6A;">
+          {{ 'COMMENTS.DELETE_MODAL.MESSAGE' | translate }}
+        </p>
+
+        <div class="flex gap-3">
+          <button
+            (click)="deleteComment()"
+            type="button"
+            [disabled]="isDeleting()"
+            class="flex-1 px-4 py-2 rounded-lg transition-colors duration-200 font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed bg-red-600 text-white hover:bg-red-700">
+            @if (isDeleting()) {
+              <span class="flex items-center justify-center gap-2">
+                <div class="inline-block animate-spin rounded-full h-4 w-4 border-2 border-t-transparent border-white"></div>
+                {{ 'COMMENTS.DELETE_MODAL.DELETING' | translate }}
+              </span>
+            } @else {
+              {{ 'COMMENTS.DELETE_MODAL.DELETE_BUTTON' | translate }}
+            }
+          </button>
+          <button
+            type="button"
+            (click)="closeDeleteModal()"
+            [disabled]="isDeleting()"
+            class="px-4 py-2 rounded-lg border transition-colors duration-200 font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+            style="border-color: #E9E1D1; color: #45332D; background-color: white;"
+            onmouseover="if(!this.disabled) this.style.backgroundColor='#F5F5F5'"
+            onmouseout="if(!this.disabled) this.style.backgroundColor='white'">
+            {{ 'COMMENTS.CANCEL' | translate }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>
+

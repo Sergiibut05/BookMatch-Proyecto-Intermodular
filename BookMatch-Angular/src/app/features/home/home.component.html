@@ -1,18 +1,169 @@
-<!-- BookMatch-Angular/src/app/features/home/home.component.html -->
 <app-header></app-header>
 
 <div class="min-h-screen" style="background-color: #FCF5E2;">
 
-  <div class="max-w-[1414px] mx-auto px-4 py-8 text-center">
-    <h2 class="text-4xl font-bold mb-4" style="color: #45332D;">¡Bienvenido a BookMatch!</h2>
-    <p class="text-lg mb-8" style="color: #4E6A6A; opacity: 0.7;">Tu plataforma para comprar, intercambiar y descubrir libros.</p>
+  <!-- BANNER HERO: Promoción de Libros -->
+  <div class="w-full pt-4 md:pt-8 lg:pt-12 mb-8 md:mb-12 lg:mb-16 px-4 md:px-6">
+    <div class="max-w-7xl mx-auto relative overflow-hidden rounded-xl md:rounded-2xl shadow-2xl">
+      <!-- Video de fondo con blur -->
+      <div class="relative h-80 sm:h-96 md:h-[450px] lg:h-[500px] overflow-hidden">
+        <video 
+          autoplay 
+          muted 
+          loop 
+          playsinline
+          class="absolute inset-0 w-full h-full object-cover blur-sm scale-110">
+          <source src="assets/header.mp4" type="video/mp4">
+        </video>
+        
+        <!-- Overlay con gradiente -->
+        <div class="absolute inset-0 bg-gradient-to-r from-[#45332D]/80 via-[#4E6A6A]/80 to-[#45332D]/80"></div>
+        
+        <!-- Patrón decorativo opcional -->
+        <div class="absolute inset-0 opacity-10">
+          <div class="absolute inset-0" style="background-image: url('data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%23ffffff\' fill-opacity=\'0.4\'%3E%3Cpath d=\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E');"></div>
+        </div>
+        
+        <!-- Contenido del banner -->
+        <div class="relative h-full z-10 flex flex-col items-center justify-center text-center px-4 sm:px-6 md:px-12 py-10 sm:py-12 md:py-16">
+          <h1 class="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold mb-3 md:mb-4 lg:mb-6 text-white drop-shadow-lg leading-tight px-2">
+            {{ 'HOME.HERO.TITLE' | translate }}
+          </h1>
+          <p class="text-sm sm:text-base md:text-lg lg:text-xl mb-6 md:mb-8 text-white/90 max-w-2xl drop-shadow-md px-2">
+            {{ 'HOME.HERO.SUBTITLE' | translate }}
+          </p>
+          <button 
+            (click)="navigateToCatalog()"
+            class="px-6 py-3 md:px-8 md:py-4 rounded-lg md:rounded-xl font-bold text-base md:text-lg transition-all transform hover:scale-105 hover:shadow-xl active:scale-95"
+            style="background-color: #E0A15E; color: #FCF5E2;">
+            {{ 'HOME.HERO.CTA' | translate }}
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 
-  <div class="max-w-[1414px] mx-auto px-4 pb-12">
-    <app-carousel
-      categoryTitle="Novedades"
-      categoryUrl=""
-      categoryName="Novedades"
-    ></app-carousel>
+  <div class="max-w-[1414px] mx-auto px-4 mb-12">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12">
+
+      <div class="text-center">
+        <div class="flex justify-center mb-4">
+          <div class="w-16 h-16 md:w-20 md:h-20 rounded-full flex items-center justify-center"
+            style="background-color: #E0A15E;">
+            <svg class="w-8 h-8 md:w-10 md:h-10" style="color: #FCF5E2;" fill="none" stroke="currentColor"
+              viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+            </svg>
+          </div>
+        </div>
+        <h3 class="text-xl md:text-2xl font-bold mb-3" style="color: #45332D;">{{ 'HOME.FEATURES.BUY_SELL.TITLE' |
+          translate }}</h3>
+        <p class="text-sm md:text-base" style="color: #45332D; opacity: 0.8;">
+          {{ 'HOME.FEATURES.BUY_SELL.DESCRIPTION' | translate }}
+        </p>
+      </div>
+
+      <div class="text-center">
+        <div class="flex justify-center mb-4">
+          <div class="w-16 h-16 md:w-20 md:h-20 rounded-full flex items-center justify-center"
+            style="background-color: #E0A15E;">
+            <svg class="w-8 h-8 md:w-10 md:h-10" style="color: #FCF5E2;" fill="none" stroke="currentColor"
+              viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+          </div>
+        </div>
+        <h3 class="text-xl md:text-2xl font-bold mb-3" style="color: #45332D;">{{ 'HOME.FEATURES.SWAP.TITLE' | translate
+          }}</h3>
+        <p class="text-sm md:text-base" style="color: #45332D; opacity: 0.8;">
+          {{ 'HOME.FEATURES.SWAP.DESCRIPTION' | translate }}
+        </p>
+      </div>
+
+      <div class="text-center">
+        <div class="flex justify-center mb-4">
+          <div class="w-16 h-16 md:w-20 md:h-20 rounded-full flex items-center justify-center"
+            style="background-color: #E0A15E;">
+            <svg class="w-8 h-8 md:w-10 md:h-10" style="color: #FCF5E2;" fill="none" stroke="currentColor"
+              viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+            </svg>
+          </div>
+        </div>
+        <h3 class="text-xl md:text-2xl font-bold mb-3" style="color: #45332D;">{{ 'HOME.FEATURES.AI.TITLE' | translate
+          }}</h3>
+        <p class="text-sm md:text-base" style="color: #45332D; opacity: 0.8;">
+          {{ 'HOME.FEATURES.AI.DESCRIPTION' | translate }}
+        </p>
+      </div>
+
+    </div>
   </div>
+
+  <!-- Carrusel de Novedades -->
+  <div class="max-w-[1414px] mx-auto px-4 pb-8 md:pb-12">
+    <app-carousel 
+      categoryTitle="{{ 'CATEGORIES.NEW_ARRIVALS' | translate }}" 
+      [isNewArrivals]="true">
+    </app-carousel>
+  </div>
+
+  <!-- Carruseles de categorías principales (primeras 3-4) -->
+  @for (category of getMainCategories().slice(0, 4); track category.id) {
+    <div class="max-w-[1414px] mx-auto px-4 pb-8 md:pb-12">
+      <app-carousel 
+        [categoryTitle]="category.name" 
+        [categoryName]="category.slug"
+        [categoryId]="category.id">
+      </app-carousel>
+    </div>
+  }
+
+  <!-- BANNER PROMOCIONAL DEL FORO -->
+  <div class="w-full py-12 md:py-16 lg:py-20 px-4 md:px-6 mb-8 md:mb-12">
+    <div class="max-w-7xl mx-auto relative overflow-hidden rounded-xl md:rounded-2xl shadow-xl">
+      <div class="relative h-auto min-h-[320px] sm:min-h-[400px] md:h-80 lg:h-96 bg-gradient-to-r from-[#45332D] via-[#E0A15E] to-[#45332D]">
+        <!-- Patrón decorativo -->
+        <div class="absolute inset-0 opacity-10">
+          <div class="absolute inset-0" style="background-image: url('data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%23ffffff\' fill-opacity=\'0.4\'%3E%3Cpath d=\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E');"></div>
+        </div>
+        
+        <!-- Contenido del banner del foro -->
+        <div class="relative h-full z-10 flex flex-col items-center justify-center text-center px-4 sm:px-6 md:px-12 py-12 sm:py-14 md:py-16">
+          <div class="mb-4 sm:mb-5 md:mb-6">
+            <svg class="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 mx-auto text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z" />
+            </svg>
+          </div>
+          <h2 class="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-4 sm:mb-5 md:mb-6 text-white drop-shadow-lg leading-tight px-2">
+            {{ 'HOME.FORUM_BANNER.TITLE' | translate }}
+          </h2>
+          <p class="text-sm sm:text-base md:text-lg lg:text-xl mb-6 sm:mb-7 md:mb-8 text-white/90 max-w-2xl drop-shadow-md px-2">
+            {{ 'HOME.FORUM_BANNER.SUBTITLE' | translate }}
+          </p>
+          <button 
+            (click)="navigateToForum()"
+            class="px-6 py-3 md:px-8 md:py-4 rounded-lg md:rounded-xl font-bold text-base md:text-lg transition-all transform hover:scale-105 hover:shadow-xl active:scale-95 bg-white"
+            style="color: #4E6A6A;">
+            {{ 'HOME.FORUM_BANNER.CTA' | translate }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Resto de carruseles de categorías -->
+  @for (category of getMainCategories().slice(4); track category.id) {
+    <div class="max-w-[1414px] mx-auto px-4 pb-8 md:pb-12">
+      <app-carousel 
+        [categoryTitle]="category.name" 
+        [categoryName]="category.slug"
+        [categoryId]="category.id">
+      </app-carousel>
+    </div>
+  }
 </div>
+<app-footer></app-footer>

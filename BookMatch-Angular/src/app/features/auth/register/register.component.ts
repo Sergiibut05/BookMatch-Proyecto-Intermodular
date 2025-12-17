@@ -1,15 +1,16 @@
 import { Component, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, AbstractControl } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 function passwordMatchValidator(control: AbstractControl) {
   const password = control.get('password');
   const confirmPassword = control.get('confirmPassword');
 
-  if(!password || !confirmPassword) return null;
-  if(password.value !== confirmPassword.value) {
+  if (!password || !confirmPassword) return null;
+  if (password.value !== confirmPassword.value) {
     return { passwordMismatch: true };
   }
   return null;
@@ -17,15 +18,16 @@ function passwordMatchValidator(control: AbstractControl) {
 
 @Component({
   selector: 'app-register',
-  imports: [CommonModule, ReactiveFormsModule, RouterModule],
+  imports: [ReactiveFormsModule, RouterModule, TranslateModule],
   templateUrl: './register.component.html',
   styleUrl: './register.component.scss',
 })
 export class RegisterComponent {
   returnUrl: string = '/dashboard';
-  builder:FormBuilder = inject(FormBuilder);
+  builder: FormBuilder = inject(FormBuilder);
   private authService = inject(AuthService);
   private router = inject(Router);
+  private translate = inject(TranslateService);
 
   formRegister: FormGroup;
   loading = false;
@@ -34,8 +36,8 @@ export class RegisterComponent {
 
   constructor(private route: ActivatedRoute) {
     this.formRegister = this.builder.group({
-      name:['',[Validators.required, Validators.minLength(3)]],
-      surname:['',[Validators.required, Validators.minLength(3)]],
+      name: ['', [Validators.required, Validators.minLength(3)]],
+      surname: ['', [Validators.required, Validators.minLength(3)]],
       email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, Validators.minLength(6)]],
       confirmPassword: ['', Validators.required]
@@ -52,12 +54,12 @@ export class RegisterComponent {
       this.loading = true;
       this.errorMessage = '';
       this.successMessage = '';
-      
+
       const { email, password, name, surname } = this.formRegister.value;
-      
+
       this.authService.register(email, password, name, surname).subscribe({
         next: () => {
-          this.successMessage = 'Cuenta creada exitosamente. Redirigiendo...';
+          this.successMessage = this.translate.instant('REGISTER.SUCCESS_MESSAGE');
           setTimeout(() => {
             this.router.navigate([this.returnUrl]);
           }, 1500);
@@ -73,7 +75,7 @@ export class RegisterComponent {
   loginWithGoogle(): void {
     this.loading = true;
     this.errorMessage = '';
-    
+
     this.authService.loginWithGoogle().subscribe({
       next: () => {
         this.router.navigate([this.returnUrl]);
@@ -88,67 +90,67 @@ export class RegisterComponent {
   private getErrorMessage(code: string): string {
     switch (code) {
       case 'auth/email-already-in-use':
-        return 'El email ya está en uso';
+        return this.translate.instant('REGISTER.ERRORS.EMAIL_IN_USE');
       case 'auth/invalid-email':
-        return 'El email no es válido';
+        return this.translate.instant('REGISTER.ERRORS.INVALID_EMAIL');
       case 'auth/weak-password':
-        return 'La contraseña es demasiado débil';
+        return this.translate.instant('REGISTER.ERRORS.WEAK_PASSWORD');
       case 'auth/operation-not-allowed':
-        return 'Operación no permitida';
+        return this.translate.instant('REGISTER.ERRORS.OPERATION_NOT_ALLOWED');
       case 'auth/popup-closed-by-user':
-        return 'La ventana de autenticación se cerró';
+        return this.translate.instant('REGISTER.ERRORS.POPUP_CLOSED');
       default:
-        return 'Ha ocurrido un error. Inténtalo de nuevo';
+        return this.translate.instant('REGISTER.ERRORS.DEFAULT');
     }
   }
 
-  getError(control:string){
-       
-    switch(control){
+  getError(control: string) {
+
+    switch (control) {
       case 'name':
-        if(this.formRegister.controls['name'].errors!=null && 
-           Object.keys(this.formRegister.controls['name'].errors).includes('required'))
-           return "*El campo nombre es requerido";
-        else if(this.formRegister.controls['name'].errors!=null && 
-           Object.keys(this.formRegister.controls['name'].errors).includes('minlength'))
-           return "*Debe introducir al menos 3 caracteres";
-        
+        if (this.formRegister.controls['name'].errors != null &&
+          Object.keys(this.formRegister.controls['name'].errors).includes('required'))
+          return this.translate.instant('REGISTER.ERRORS.NAME_REQUIRED');
+        else if (this.formRegister.controls['name'].errors != null &&
+          Object.keys(this.formRegister.controls['name'].errors).includes('minlength'))
+          return this.translate.instant('REGISTER.ERRORS.MIN_LENGTH_3');
+
         break;
       case 'surname':
-        if(this.formRegister.controls['surname'].errors!=null && 
-           Object.keys(this.formRegister.controls['surname'].errors).includes('required'))
-           return "*El campo apellidos es requerido";
-        else if(this.formRegister.controls['surname'].errors!=null && 
-           Object.keys(this.formRegister.controls['surname'].errors).includes('minlength'))
-           return "*Debe introducir al menos 3 caracteres";
-        
+        if (this.formRegister.controls['surname'].errors != null &&
+          Object.keys(this.formRegister.controls['surname'].errors).includes('required'))
+          return this.translate.instant('REGISTER.ERRORS.SURNAME_REQUIRED');
+        else if (this.formRegister.controls['surname'].errors != null &&
+          Object.keys(this.formRegister.controls['surname'].errors).includes('minlength'))
+          return this.translate.instant('REGISTER.ERRORS.MIN_LENGTH_3');
+
         break;
       case 'email':
-        if(this.formRegister.controls['email'].errors!=null && 
-           Object.keys(this.formRegister.controls['email'].errors).includes('required'))
-           return "*El campo email es requerido";
-        else if(this.formRegister.controls['email'].errors!=null && 
-           Object.keys(this.formRegister.controls['email'].errors).includes('email'))
-           return "*El email no es correcto";
-        
+        if (this.formRegister.controls['email'].errors != null &&
+          Object.keys(this.formRegister.controls['email'].errors).includes('required'))
+          return this.translate.instant('REGISTER.ERRORS.EMAIL_REQUIRED');
+        else if (this.formRegister.controls['email'].errors != null &&
+          Object.keys(this.formRegister.controls['email'].errors).includes('email'))
+          return this.translate.instant('REGISTER.ERRORS.EMAIL_INVALID');
+
         break;
-      case 'password': 
-        if(this.formRegister.controls['password'].errors!=null && 
-           Object.keys(this.formRegister.controls['password'].errors).includes('required'))
-           return "*El campo password es requerido";
-        else if(this.formRegister.controls['password'].errors!=null && 
-           Object.keys(this.formRegister.controls['password'].errors).includes('pattern'))
-           return "*Al menos una mayúscula, una minúscula, un número y 8 caracteres";
+      case 'password':
+        if (this.formRegister.controls['password'].errors != null &&
+          Object.keys(this.formRegister.controls['password'].errors).includes('required'))
+          return this.translate.instant('REGISTER.ERRORS.PASSWORD_REQUIRED');
+        else if (this.formRegister.controls['password'].errors != null &&
+          Object.keys(this.formRegister.controls['password'].errors).includes('pattern'))
+          return this.translate.instant('REGISTER.ERRORS.PASSWORD_PATTERN');
         break;
-      case 'confirmPassword': 
-        if(this.formRegister.controls['confirmPassword'].errors!=null && 
-           Object.keys(this.formRegister.controls['confirmPassword'].errors).includes('required'))
-           return "*El campo password es requerido";
-        if(this.formRegister.controls['confirmPassword'].errors!=null && 
-           Object.keys(this.formRegister.controls['confirmPassword'].errors).includes('passwordMatch'))
-           return "*Las contranseñas no coinciden";
+      case 'confirmPassword':
+        if (this.formRegister.controls['confirmPassword'].errors != null &&
+          Object.keys(this.formRegister.controls['confirmPassword'].errors).includes('required'))
+          return this.translate.instant('REGISTER.ERRORS.PASSWORD_REQUIRED');
+        if (this.formRegister.controls['confirmPassword'].errors != null &&
+          Object.keys(this.formRegister.controls['confirmPassword'].errors).includes('passwordMatch'))
+          return this.translate.instant('REGISTER.ERRORS.PASSWORD_MISMATCH');
         break;
-      default:return "";
+      default: return "";
     }
     return "";
   }

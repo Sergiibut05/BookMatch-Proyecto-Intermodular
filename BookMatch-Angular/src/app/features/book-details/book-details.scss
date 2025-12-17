@@ -1,0 +1,23 @@
+// Aseguramos que los iconos de Google Fonts se comporten bien
+.material-symbols-outlined {
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    user-select: none; // Evita que se seleccione el texto al hacer click rápido
+}
+
+// Clase para las estrellas rellenas
+.star-filled {
+    font-variation-settings: 'FILL' 1;
+}
+
+// Scroll suave para el contenedor de imágenes
+.overflow-x-auto {
+    scrollbar-width: thin;
+    scrollbar-color: #E0A15E transparent;
+    &::-webkit-scrollbar {
+        height: 4px;
+    }
+    &::-webkit-scrollbar-thumb {
+        background-color: #E0A15E;
+        border-radius: 4px;
+    }
+}

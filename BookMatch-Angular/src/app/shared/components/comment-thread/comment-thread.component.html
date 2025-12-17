@@ -1,0 +1,131 @@
+<div class="comment-thread">
+  <!-- Título de la sección -->
+  <div class="mb-6">
+    <h2 class="text-2xl font-bold" style="color: #45332D;">{{ 'COMMENTS.TITLE' | translate }}</h2>
+  </div>
+
+  <!-- Formulario para comentario principal-->
+  <div class="mb-6">
+    @if (!showMainInput()) {
+      <button
+        (click)="toggleMainInput()"
+        type="button"
+        class="flex items-center gap-2 px-4 py-2 rounded-lg transition-colors duration-200 font-medium text-sm"
+        style="background-color: #E0A15E; color: #FCF5E2;"
+        onmouseover="this.style.backgroundColor='#B88B65'"
+        onmouseout="this.style.backgroundColor='#E0A15E'">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+        </svg>
+        {{ 'COMMENTS.WRITE_COMMENT' | translate }}
+      </button>
+    } @else {
+      <div class="bg-white rounded-lg p-4 border" style="border-color: #E9E1D1;">
+        @if (mainCommentError()) {
+          <div class="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
+            <div class="flex items-center gap-2 text-red-600">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+              <p class="text-sm">{{ mainCommentError() }}</p>
+            </div>
+          </div>
+        }
+
+        <form [formGroup]="mainCommentForm" (ngSubmit)="submitMainComment()" class="space-y-3">
+          <textarea
+            formControlName="content"
+            rows="4"
+            class="w-full px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-opacity-50 text-base resize-none"
+            style="border-color: #E9E1D1; background-color: #FCF5E2; color: #45332D; focus:ring-color: #E0A15E;"
+            [placeholder]="'COMMENTS.COMMENT_PLACEHOLDER' | translate"></textarea>
+          @if (getFieldError('main', 'content')) {
+            <p class="text-xs text-red-600">{{ getFieldError('main', 'content') }}</p>
+          }
+
+          <div class="flex gap-2">
+            <button
+              type="submit"
+              [disabled]="isSubmittingMain() || mainCommentForm.invalid"
+              class="px-4 py-2 rounded-lg transition-colors duration-200 font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              style="background-color: #E0A15E; color: #FCF5E2;"
+              onmouseover="if(!this.disabled) this.style.backgroundColor='#B88B65'"
+              onmouseout="if(!this.disabled) this.style.backgroundColor='#E0A15E'">
+              @if (isSubmittingMain()) {
+                <span class="flex items-center gap-2">
+                  <div class="inline-block animate-spin rounded-full h-4 w-4 border-2 border-t-transparent border-white"></div>
+                  {{ 'COMMENTS.PUBLISHING' | translate }}
+                </span>
+              } @else {
+                {{ 'COMMENTS.PUBLISH' | translate }}
+              }
+            </button>
+            <button
+              type="button"
+              (click)="toggleMainInput()"
+              [disabled]="isSubmittingMain()"
+              class="px-4 py-2 rounded-lg border transition-colors duration-200 font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              style="border-color: #E9E1D1; color: #45332D; background-color: white;"
+              onmouseover="if(!this.disabled) this.style.backgroundColor='#F5F5F5'"
+              onmouseout="if(!this.disabled) this.style.backgroundColor='white'">
+              {{ 'COMMENTS.CANCEL' | translate }}
+            </button>
+          </div>
+        </form>
+      </div>
+    }
+  </div>
+
+  <!-- Loading state -->
+  @if (isLoading()) {
+    <div class="flex items-center justify-center py-8">
+      <div class="text-center">
+        <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-t-transparent" style="border-color: #E0A15E;"></div>
+        <p class="mt-2 text-sm" style="color: #4E6A6A;">{{ 'COMMENTS.LOADING' | translate }}</p>
+      </div>
+    </div>
+  }
+
+  <!-- Error state -->
+  @if (!isLoading() && error()) {
+    <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+      <div class="flex items-center gap-2 text-red-600">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+        <p class="text-sm">{{ error() }}</p>
+      </div>
+      <p class="text-xs mt-2" style="color: #4E6A6A;">{{ 'COMMENTS.ERROR_MESSAGE' | translate }}</p>
+    </div>
+  }
+
+  <!-- Lista de comentarios -->
+  @if (!isLoading() && !error()) {
+    @if (comments().length === 0) {
+      <div class="text-center py-8">
+        <p class="text-base" style="color: #4E6A6A;">{{ 'COMMENTS.NO_COMMENTS' | translate }}</p>
+      </div>
+    } @else {
+      <div class="space-y-4">
+        @for (comment of comments(); track comment.id) {
+          <app-comment-item
+            [comment]="comment"
+            [forumId]="forumId"
+            [postId]="postId"
+            [depth]="0"
+            [onReply]="toggleReplyInput.bind(this)"
+            [onSubmitReply]="submitReply.bind(this)"
+            [isShowingReplyInput]="isShowingReplyInput.bind(this)"
+            [isReplying]="isReplyingTo.bind(this)"
+            [getReplyForm]="getReplyForm.bind(this)"
+            [getFieldError]="getFieldError.bind(this)"
+            [getReplyError]="getReplyError.bind(this)"
+            [onReload]="loadComments.bind(this)"
+            [onDelete]="deleteComment.bind(this)">
+          </app-comment-item>
+        }
+      </div>
+    }
+  }
+</div>
+

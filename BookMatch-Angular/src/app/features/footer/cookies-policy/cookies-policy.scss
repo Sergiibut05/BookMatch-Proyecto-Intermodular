@@ -1,0 +1,57 @@
+.cookies-policy-container {
+  min-height: 100vh;
+  background-color: #FCF5E2;
+  padding: 2rem 0;
+}
+
+.policy-content {
+  line-height: 1.8;
+}
+
+.policy-content section {
+  margin-bottom: 2rem;
+}
+
+.policy-content h2 {
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid #E9E1D1;
+}
+
+.policy-content h3 {
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.policy-content ul {
+  margin-left: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.policy-content li {
+  margin-bottom: 0.5rem;
+}
+
+.policy-content a {
+  transition: color 0.2s ease;
+}
+
+.policy-content a:hover {
+  color: #B88B65 !important;
+}
+
+@media (max-width: 768px) {
+  .cookies-policy-container {
+    padding: 1rem 0;
+  }
+  
+  .policy-content h2 {
+    font-size: 1.5rem;
+  }
+  
+  .policy-content h3 {
+    font-size: 1.25rem;
+  }
+}
+

@@ -1,0 +1,289 @@
+<app-header></app-header>
+
+<div class="min-h-screen" style="background-color: #FCF5E2;">
+  <div class="max-w-7xl mx-auto px-4 py-8 md:py-12">
+    
+    <!-- Header de la página -->
+    <div class="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div>
+        <h1 class="text-3xl md:text-4xl font-bold mb-2" style="color: #45332D;">{{ 'FORUM.TITLE' | translate }}</h1>
+        <p class="text-base md:text-lg" style="color: #4E6A6A;">
+          {{ 'FORUM.SUBTITLE' | translate }}
+        </p>
+      </div>
+      <button
+        (click)="openCreateModal()"
+        class="flex items-center gap-2 px-6 py-3 rounded-lg transition-colors duration-200 font-medium text-base whitespace-nowrap"
+        style="background-color: #E0A15E; color: #FCF5E2;"
+        onmouseover="this.style.backgroundColor='#B88B65'"
+        onmouseout="this.style.backgroundColor='#E0A15E'">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+        </svg>
+        {{ 'FORUM.CREATE_FORUM' | translate }}
+      </button>
+    </div>
+
+    <!-- Loading state -->
+    @if (isLoading()) {
+      <div class="flex items-center justify-center min-h-[60vh]">
+        <div class="text-center">
+          <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-t-transparent" style="border-color: #E0A15E;"></div>
+          <p class="mt-4 text-lg" style="color: #45332D;">{{ 'FORUM.LOADING' | translate }}</p>
+        </div>
+      </div>
+    }
+
+    <!-- Error state -->
+    @if (!isLoading() && error()) {
+      <div class="bg-white rounded-2xl shadow-lg p-6 mb-6">
+        <div class="flex items-center gap-3 text-red-600">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+          <p>{{ error() }}</p>
+        </div>
+      </div>
+    }
+
+    <!-- Empty state -->
+    @if (!isLoading() && !error() && forums().length === 0) {
+      <div class="bg-white rounded-xl shadow-md p-12 text-center">
+        <svg class="w-24 h-24 mx-auto mb-4" style="color: #E0A15E;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+        </svg>
+        <h3 class="text-xl font-semibold mb-2" style="color: #45332D;">{{ 'FORUM.NO_FORUMS' | translate }}</h3>
+        <p class="text-base" style="color: #4E6A6A;">{{ 'FORUM.NO_FORUMS_DESC' | translate }}</p>
+      </div>
+    }
+
+    <!-- Forums Grid -->
+    @if (!isLoading() && !error() && forums().length > 0) {
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        @for (forum of forums(); track forum.id) {
+          <div 
+            (click)="goToForum(forum.id)"
+            class="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-200 cursor-pointer overflow-hidden border border-transparent hover:border-opacity-50"
+            style="border-color: #E0A15E;"
+            onmouseover="this.style.transform='translateY(-4px)'"
+            onmouseout="this.style.transform='translateY(0)'">
+            
+            <!-- Header de la tarjeta -->
+            <div class="p-6 border-b" style="border-color: #E9E1D1;">
+              <h3 class="text-xl font-bold mb-2" style="color: #45332D;">
+                {{ forum.title }}
+              </h3>
+              <p class="text-sm line-clamp-2" style="color: #4E6A6A;">
+                {{ forum.description || ('FORUM.NO_DESCRIPTION' | translate) }}
+              </p>
+            </div>
+
+            <!-- Footer con metadatos -->
+            <div class="p-4 bg-gray-50">
+              <div class="flex items-center justify-between mb-3">
+                <!-- Creador -->
+                <div class="flex items-center gap-2">
+                  @if (getCreatorAvatar(forum)) {
+                    <img 
+                      [src]="getCreatorAvatar(forum)!" 
+                      [alt]="getCreatorName(forum)"
+                      class="w-8 h-8 rounded-full object-cover">
+                  } @else {
+                    <div class="w-8 h-8 rounded-full flex items-center justify-center" style="background-color: #E9E1D1;">
+                      <svg class="w-5 h-5" style="color: #45332D;" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                      </svg>
+                    </div>
+                  }
+                  <span class="text-xs font-medium" style="color: #45332D;">
+                    {{ getCreatorName(forum) }}
+                  </span>
+                </div>
+              </div>
+
+              <!-- Metadatos -->
+              <div class="flex items-center justify-between text-xs" style="color: #4E6A6A;">
+                <div class="flex items-center gap-1">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                  </svg>
+                  <span>{{ getTotalPosts(forum) }} {{ (getTotalPosts(forum) === 1 ? 'FORUM.TOPIC_SINGULAR' : 'FORUM.TOPIC_PLURAL') | translate }}</span>
+                </div>
+                <div class="flex items-center gap-1">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                  <span>{{ forum.updatedAt | date:'shortDate' }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Paginación -->
+      @if (totalPages() > 1) {
+        <div class="flex items-center justify-center gap-2 mt-8 flex-wrap">
+          <button
+            (click)="goToPage(currentPage() - 1)"
+            [disabled]="currentPage() === 1"
+            class="px-4 py-2 rounded-lg border transition-colors duration-200 font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+            style="border-color: #E9E1D1; color: #45332D; background-color: white;"
+            onmouseover="if(!this.disabled) this.style.backgroundColor='#F5F5F5'"
+            onmouseout="if(!this.disabled) this.style.backgroundColor='white'">
+            {{ 'FORUM.PREVIOUS' | translate }}
+          </button>
+
+          @if (currentPage() > 3) {
+            <button
+              (click)="goToPage(1)"
+              class="px-4 py-2 rounded-lg border transition-colors duration-200 font-medium text-sm"
+              style="border-color: #E9E1D1; color: #45332D; background-color: white;"
+              onmouseover="this.style.backgroundColor='#F5F5F5'"
+              onmouseout="this.style.backgroundColor='white'">
+              1
+            </button>
+            @if (currentPage() > 4) {
+              <span class="px-2" style="color: #4E6A6A;">...</span>
+            }
+          }
+
+          @for (page of getPageNumbers(); track page) {
+            @if (page === currentPage()) {
+              <button
+                class="px-4 py-2 rounded-lg font-medium text-sm"
+                style="background-color: #E0A15E; color: #FCF5E2;"
+                disabled>
+                {{ page }}
+              </button>
+            } @else {
+              <button
+                (click)="goToPage(page)"
+                class="px-4 py-2 rounded-lg border transition-colors duration-200 font-medium text-sm"
+                style="border-color: #E9E1D1; color: #45332D; background-color: white;"
+                onmouseover="this.style.backgroundColor='#F5F5F5'"
+                onmouseout="this.style.backgroundColor='white'">
+                {{ page }}
+              </button>
+            }
+          }
+
+          @if (currentPage() < totalPages() - 2) {
+            @if (currentPage() < totalPages() - 3) {
+              <span class="px-2" style="color: #4E6A6A;">...</span>
+            }
+            <button
+              (click)="goToPage(totalPages())"
+              class="px-4 py-2 rounded-lg border transition-colors duration-200 font-medium text-sm"
+              style="border-color: #E9E1D1; color: #45332D; background-color: white;"
+              onmouseover="this.style.backgroundColor='#F5F5F5'"
+              onmouseout="this.style.backgroundColor='white'">
+              {{ totalPages() }}
+            </button>
+          }
+
+          <button
+            (click)="goToPage(currentPage() + 1)"
+            [disabled]="currentPage() === totalPages()"
+            class="px-4 py-2 rounded-lg border transition-colors duration-200 font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+            style="border-color: #E9E1D1; color: #45332D; background-color: white;"
+            onmouseover="if(!this.disabled) this.style.backgroundColor='#F5F5F5'"
+            onmouseout="if(!this.disabled) this.style.backgroundColor='white'">
+            {{ 'FORUM.NEXT' | translate }}
+          </button>
+        </div>
+      }
+    }
+
+  </div>
+
+  <!-- Modal para crear foro -->
+  @if (showCreateModal()) {
+    <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" (click)="closeCreateModal()">
+      <div class="bg-white rounded-xl shadow-2xl max-w-md w-full p-6" (click)="$event.stopPropagation()">
+        <div class="flex items-center justify-between mb-6">
+          <h2 class="text-2xl font-bold" style="color: #45332D;">{{ 'FORUM.CREATE_MODAL.TITLE' | translate }}</h2>
+          <button
+            (click)="closeCreateModal()"
+            class="text-gray-400 hover:text-gray-600 transition-colors">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+
+        @if (createError()) {
+          <div class="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
+            <div class="flex items-center gap-2 text-red-600">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+              <p class="text-sm">{{ createError() }}</p>
+            </div>
+          </div>
+        }
+
+        <form [formGroup]="createForm" (ngSubmit)="createForum()" class="space-y-4">
+          <div>
+            <label for="title" class="block text-sm font-medium mb-2" style="color: #45332D;">
+              {{ 'FORUM.CREATE_MODAL.TITLE_LABEL' | translate }} <span class="text-red-500">*</span>
+            </label>
+            <input
+              id="title"
+              type="text"
+              formControlName="title"
+              class="w-full px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-opacity-50 text-base"
+              style="border-color: #E9E1D1; background-color: #FCF5E2; color: #45332D; focus:ring-color: #E0A15E;"
+              [placeholder]="'FORUM.CREATE_MODAL.TITLE_PLACEHOLDER' | translate">
+            @if (getFieldError('title')) {
+              <p class="text-xs text-red-600 mt-1">{{ getFieldError('title') }}</p>
+            }
+          </div>
+
+          <div>
+            <label for="description" class="block text-sm font-medium mb-2" style="color: #45332D;">
+              {{ 'FORUM.CREATE_MODAL.DESCRIPTION_LABEL' | translate }}
+            </label>
+            <textarea
+              id="description"
+              formControlName="description"
+              rows="4"
+              class="w-full px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-opacity-50 text-base resize-none"
+              style="border-color: #E9E1D1; background-color: #FCF5E2; color: #45332D; focus:ring-color: #E0A15E;"
+              [placeholder]="'FORUM.CREATE_MODAL.DESCRIPTION_PLACEHOLDER' | translate"></textarea>
+          </div>
+
+          <div class="flex gap-3 pt-2">
+            <button
+              type="submit"
+              [disabled]="isCreating() || createForm.invalid"
+              class="flex-1 px-4 py-2 rounded-lg transition-colors duration-200 font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              style="background-color: #E0A15E; color: #FCF5E2;"
+              onmouseover="if(!this.disabled) this.style.backgroundColor='#B88B65'"
+              onmouseout="if(!this.disabled) this.style.backgroundColor='#E0A15E'">
+              @if (isCreating()) {
+                <span class="flex items-center justify-center gap-2">
+                  <div class="inline-block animate-spin rounded-full h-4 w-4 border-2 border-t-transparent border-white"></div>
+                  {{ 'FORUM.CREATE_MODAL.CREATING' | translate }}
+                </span>
+              } @else {
+                {{ 'FORUM.CREATE_MODAL.CREATE_BUTTON' | translate }}
+              }
+            </button>
+            <button
+              type="button"
+              (click)="closeCreateModal()"
+              [disabled]="isCreating()"
+              class="px-4 py-2 rounded-lg border transition-colors duration-200 font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              style="border-color: #E9E1D1; color: #45332D; background-color: white;"
+              onmouseover="if(!this.disabled) this.style.backgroundColor='#F5F5F5'"
+              onmouseout="if(!this.disabled) this.style.backgroundColor='white'">
+              {{ 'FORUM.CANCEL' | translate }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+</div>
+

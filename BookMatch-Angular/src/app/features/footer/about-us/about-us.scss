@@ -1,0 +1,32 @@
+.about-us-container {
+  min-height: 100vh;
+  background-color: #FCF5E2;
+  padding: 2rem 0;
+}
+
+.team-member-card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.team-member-card:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.team-member-card img {
+  transition: transform 0.3s ease;
+}
+
+.team-member-card:hover img {
+  transform: scale(1.1);
+}
+
+@media (max-width: 768px) {
+  .about-us-container {
+    padding: 1rem 0;
+  }
+  
+  .team-member-card {
+    margin-bottom: 1.5rem;
+  }
+}
+

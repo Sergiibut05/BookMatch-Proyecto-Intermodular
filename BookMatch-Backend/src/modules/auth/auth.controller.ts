@@ -1,5 +1,5 @@
 import type { Request, Response } from 'express';
-import { authenticateWithFirebase } from './auth.service.js';
+import { authenticateWithFirebase, sendPasswordReset } from './auth.service.js';
 import { firebaseAuthSchema } from '../users/users.schema.js';
 
 export async function registerCtrl(req: Request, res: Response) {
@@ -22,3 +22,13 @@ export async function loginCtrl(req: Request, res: Response) {
   }
 }
 
+export async function forgotPasswordCtrl(req: Request, res: Response) {
+  try {
+    const { email } = req.body;
+    await sendPasswordReset(email);
+    
+    res.status(200).json({ message: 'Si el correo existe, recibirás instrucciones.' });
+  } catch (e: any) {
+    res.status(500).json({ message: 'Error al procesar la solicitud' });
+  }
+}

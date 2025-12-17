@@ -1,0 +1,14 @@
+<div class="language-selector flex gap-2 items-center justify-center w-full">
+    <button 
+        (click)="changeLanguage('es')" 
+        [class.active]="currentLang === 'es'"
+        class="language-button">
+        ES
+    </button>
+    <button 
+        (click)="changeLanguage('en')" 
+        [class.active]="currentLang === 'en'"
+        class="language-button">
+        EN
+    </button>
+</div>

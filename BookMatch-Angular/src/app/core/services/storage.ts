@@ -1,0 +1,150 @@
+import { Injectable, inject } from '@angular/core';
+import { Storage as FirebaseStorage, ref, uploadBytes, getDownloadURL, deleteObject } from '@angular/fire/storage';
+import { Camera, CameraResultType, CameraSource, Photo } from '@capacitor/camera';
+import { Capacitor } from '@capacitor/core';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class StorageService {
+  private storage = inject(FirebaseStorage);
+
+  /**
+   * @returns Promise con la foto tomada o null si se cancela
+   */
+  async takePhoto(): Promise<Photo | null> {
+    try {
+      // En web, usar input file nativo
+      if (Capacitor.getPlatform() === 'web') {
+        return await this.takePhotoWeb();
+      }
+
+      // En móvil, usar Capacitor Camera
+      const image = await Camera.getPhoto({
+        quality: 90,
+        allowEditing: true,
+        resultType: CameraResultType.DataUrl,
+        source: CameraSource.Prompt, // Permite elegir entre cámara y galería
+      });
+
+      return image;
+    } catch (error) {
+      return null;
+    }
+  }
+
+  private async takePhotoWeb(): Promise<Photo | null> {
+    return new Promise((resolve) => {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'image/*';
+      input.capture = 'user'; // Para cámara frontal en móvil
+
+      input.onchange = async (event: any) => {
+        const file = event.target.files[0];
+        if (!file) {
+          resolve(null);
+          return;
+        }
+
+        // Convertir File a DataUrl para compatibilidad con Photo
+        const reader = new FileReader();
+        reader.onload = () => {
+          resolve({
+            dataUrl: reader.result as string,
+            format: file.type.split('/')[1],
+            saved: false,
+          } as Photo);
+        };
+        reader.onerror = () => resolve(null);
+        reader.readAsDataURL(file);
+      };
+
+      input.click();
+    });
+  }
+
+  /**
+   * @param photo Foto a subir
+   * @param userId ID del usuario
+   * @param oldPhotoUrl URL de la foto anterior a eliminar
+   * @returns Promise con la URL de la imagen subida
+   */
+  async uploadPhoto(photo: Photo, userId: string, oldPhotoUrl?: string | null): Promise<string> {
+    try {
+      // Eliminar foto anterior si existe
+      if (oldPhotoUrl) {
+        await this.deletePhoto(oldPhotoUrl);
+      }
+
+      // Convertir DataUrl a Blob
+      const blob = await this.dataUrlToBlob(photo.dataUrl!);
+
+      // Crear referencia en Firebase Storage
+      const fileName = `avatars/${userId}_${Date.now()}.${photo.format || 'jpg'}`;
+      const storageRef = ref(this.storage, fileName);
+
+      // Subir imagen
+      await uploadBytes(storageRef, blob);
+
+      // Obtener URL de descarga
+      const downloadURL = await getDownloadURL(storageRef);
+      return downloadURL;
+    } catch (error) {
+      throw new Error('Error al subir la imagen');
+    }
+  }
+
+  /**
+   * @param photo Foto a subir
+   * @param userId ID del usuario
+   * @returns Promise con la URL de la imagen subida
+   */
+  async uploadPostImage(photo: Photo, userId: string): Promise<string> {
+    try {
+      // Convertir DataUrl a Blob
+      const blob = await this.dataUrlToBlob(photo.dataUrl!);
+
+      // Crear referencia en Firebase Storage
+      const fileName = `posts/${userId}_${Date.now()}.${photo.format || 'jpg'}`;
+      const storageRef = ref(this.storage, fileName);
+
+      // Subir imagen
+      await uploadBytes(storageRef, blob);
+
+      // Obtener URL de descarga
+      const downloadURL = await getDownloadURL(storageRef);
+      return downloadURL;
+    } catch (error) {
+      throw new Error('Error al subir la imagen del post');
+    }
+  }
+
+  /**
+   * @param photoUrl URL de la foto a eliminar
+   */
+  async deletePhoto(photoUrl: string): Promise<void> {
+    try {
+      const url = new URL(photoUrl);
+      const pathMatch = url.pathname.match(/\/o\/(.+)\?/);
+      
+      if (!pathMatch) {
+        return;
+      }
+
+      const decodedPath = decodeURIComponent(pathMatch[1]);
+      const storageRef = ref(this.storage, decodedPath);
+
+      await deleteObject(storageRef);
+    } catch (error: any) {
+      if (error.code !== 'storage/object-not-found') {
+        // Error silencioso si el archivo no existe
+      }
+    }
+  }
+
+  private async dataUrlToBlob(dataUrl: string): Promise<Blob> {
+    const response = await fetch(dataUrl);
+    return await response.blob();
+  }
+}

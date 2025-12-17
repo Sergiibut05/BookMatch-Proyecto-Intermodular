@@ -1,0 +1,115 @@
+<app-header></app-header>
+
+<div class="min-h-screen" style="background-color: #FCF5E2;">
+  <div class="max-w-4xl mx-auto px-4 py-12">
+    
+    <!-- Loading state -->
+    @if (isLoading) {
+      <div class="flex items-center justify-center min-h-[60vh]">
+        <div class="text-center">
+          <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-t-transparent" style="border-color: #E0A15E;"></div>
+          <p class="mt-4 text-lg" style="color: #45332D;">{{ 'PAYMENT.VERIFYING' | translate }}</p>
+        </div>
+      </div>
+    }
+
+    <!-- Success state -->
+    @if (!isLoading && !error && paymentStatus === 'paid') {
+      <div class="bg-white rounded-2xl shadow-lg overflow-hidden p-8 md:p-12">
+        <div class="text-center">
+          
+          <div class="mx-auto w-20 h-20 rounded-full flex items-center justify-center mb-6" style="background-color: #E0A15E;">
+            <svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+          </div>
+
+          
+          <h1 class="text-3xl md:text-4xl font-bold mb-4" style="color: #45332D;">{{ 'PAYMENT.SUCCESS' | translate }}</h1>
+          <p class="text-lg mb-8" style="color: #4E6A6A; opacity: 0.8;">
+            {{ 'PAYMENT.SUCCESS_PAYMENT' | translate }}
+          </p>
+
+          
+          @if (sessionId) {
+            <div class="bg-gray-50 rounded-lg p-4 mb-8" style="background-color: #FCF5E2;">
+              <p class="text-sm font-medium mb-2" style="color: #45332D;"></p>
+              <p class="text-xs font-mono break-all" style="color: #4E6A6A; opacity: 0.7;">{{ sessionId }}</p>
+            </div>
+          }
+
+         
+          <div class="flex flex-col sm:flex-row gap-4 justify-center">
+            <button 
+              (click)="goToHome()"
+              class="px-6 py-3 rounded-xl font-semibold transition-all duration-200"
+              style="background-color: #E0A15E; color: #FCF5E2;"
+              onmouseover="this.style.backgroundColor='#B88B65'"
+              onmouseout="this.style.backgroundColor='#E0A15E'">
+              {{ 'PAYMENT.BACKHOME' | translate }}
+            </button>
+            <button 
+              (click)="goToOrders()"
+              class="px-6 py-3 rounded-xl font-semibold transition-all duration-200 border-2"
+              style="border-color: #E0A15E; color: #45332D;"
+              onmouseover="this.style.backgroundColor='#E9E1D1'"
+              onmouseout="this.style.backgroundColor='transparent'">
+              {{ 'PAYMENT.SEE_MY_ORDERS' | translate }}
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Error state -->
+    @if (!isLoading && error) {
+      <div class="bg-white rounded-2xl shadow-lg overflow-hidden p-8 md:p-12">
+        <div class="text-center">
+          
+          <div class="mx-auto w-20 h-20 rounded-full flex items-center justify-center mb-6" style="background-color: #D4C9B9;">
+            <svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </div>
+
+          
+          <h1 class="text-3xl md:text-4xl font-bold mb-4" style="color: #45332D;">{{ 'PAYMENT.BACKHOME' | translate }}</h1>
+          <p class="text-lg mb-8" style="color: #4E6A6A; opacity: 0.8;">
+            {{ error }}
+          </p>
+
+          
+          <button 
+            (click)="goToHome()"
+            class="px-6 py-3 rounded-xl font-semibold transition-all duration-200"
+            style="background-color: #E0A15E; color: #FCF5E2;"
+            onmouseover="this.style.backgroundColor='#B88B65'"
+            onmouseout="this.style.backgroundColor='#E0A15E'">
+            {{ 'PAYMENT.BACKHOME' | translate }}
+          </button>
+        </div>
+      </div>
+    }
+
+    <!-- Pending state -->
+    @if (!isLoading && !error && paymentStatus && paymentStatus !== 'paid') {
+      <div class="bg-white rounded-2xl shadow-lg overflow-hidden p-8 md:p-12">
+        <div class="text-center">
+          <h1 class="text-3xl md:text-4xl font-bold mb-4" style="color: #45332D;">{{ 'PAYMENT.PAYMENT_LEFT' | translate }}</h1>
+          <p class="text-lg mb-8" style="color: #4E6A6A; opacity: 0.8;">
+            {{ 'PAYMENT.PAYMENT_IN_PROCESS' | translate }}
+          </p>
+          <button 
+            (click)="goToHome()"
+            class="px-6 py-3 rounded-xl font-semibold transition-all duration-200"
+            style="background-color: #E0A15E; color: #FCF5E2;"
+            onmouseover="this.style.backgroundColor='#B88B65'"
+            onmouseout="this.style.backgroundColor='#E0A15E'">
+            {{ 'PAYMENT.BACKHOME' | translate }}
+          </button>
+        </div>
+      </div>
+    }
+
+  </div>
+</div>

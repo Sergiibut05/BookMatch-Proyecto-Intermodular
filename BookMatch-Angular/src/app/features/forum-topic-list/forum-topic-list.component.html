@@ -1,0 +1,548 @@
+<app-header></app-header>
+
+<div class="min-h-screen" style="background-color: #FCF5E2;">
+  <div class="max-w-4xl mx-auto px-4 py-8 md:py-12">
+    
+    <!-- Header del foro -->
+    @if (forum()) {
+      <div class="mb-8">
+        <button
+          (click)="router.navigate(['/foro'])"
+          class="flex items-center gap-2 text-sm mb-4 transition-colors"
+          style="color: #4E6A6A;"
+          onmouseover="this.style.color='#45332D'"
+          onmouseout="this.style.color='#4E6A6A'">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+          </svg>
+          {{ 'FORUM_TOPIC.BACK_TO_FORUMS' | translate }}
+        </button>
+        <div class="flex items-start justify-between gap-4">
+          <div class="flex-1">
+            <h1 class="text-3xl md:text-4xl font-bold mb-2" style="color: #45332D;">{{ forum()!.title }}</h1>
+            @if (forum()!.description) {
+              <p class="text-base md:text-lg" style="color: #4E6A6A;">
+                {{ forum()!.description }}
+              </p>
+            }
+          </div>
+          
+          <!-- Menú de tres puntitos (solo para el creador) -->
+          @if (isForumCreator()) {
+            <div class="relative forum-menu-container">
+              <button
+                (click)="toggleForumMenu()"
+                class="p-2 rounded-full hover:bg-gray-100 transition-colors flex-shrink-0"
+                (click)="$event.stopPropagation()">
+                <svg class="w-5 h-5" style="color: #4E6A6A;" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
+                </svg>
+              </button>
+              
+              <!-- Dropdown menu -->
+              @if (showForumMenu()) {
+                <div 
+                  class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border z-50"
+                  style="border-color: #E9E1D1;"
+                  (click)="$event.stopPropagation()">
+                  <div class="py-1">
+                    <button
+                      (click)="openEditForumModal()"
+                      class="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 transition-colors flex items-center gap-2"
+                      style="color: #45332D;">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                      </svg>
+                      {{ 'FORUM_TOPIC.EDIT_FORUM' | translate }}
+                    </button>
+                    <button
+                      (click)="openDeleteForumModal()"
+                      class="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 transition-colors flex items-center gap-2 text-red-600">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                      </svg>
+                      {{ 'FORUM_TOPIC.DELETE_FORUM' | translate }}
+                    </button>
+                  </div>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- Buscador -->
+    <div class="mb-6">
+      <div class="relative">
+        <input
+          type="text"
+          [value]="searchQuery()"
+          (input)="onSearchChange($any($event.target).value)"
+          [placeholder]="'FORUM_TOPIC.SEARCH_PLACEHOLDER' | translate"
+          class="w-full px-4 py-3 pl-12 rounded-lg border focus:outline-none focus:ring-2 focus:ring-opacity-50 text-base"
+          style="border-color: #E9E1D1; background-color: white; color: #45332D; focus:ring-color: #E0A15E;">
+        <svg class="w-5 h-5 absolute left-4 top-1/2 transform -translate-y-1/2" style="color: #4E6A6A;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Loading state -->
+    @if (isLoading()) {
+      <div class="flex items-center justify-center min-h-[60vh]">
+        <div class="text-center">
+          <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-t-transparent" style="border-color: #E0A15E;"></div>
+          <p class="mt-4 text-lg" style="color: #45332D;">{{ 'FORUM_TOPIC.LOADING' | translate }}</p>
+        </div>
+      </div>
+    }
+
+    <!-- Error state -->
+    @if (!isLoading() && error()) {
+      <div class="bg-white rounded-2xl shadow-lg p-6 mb-6">
+        <div class="flex items-center gap-3 text-red-600">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+          <p>{{ error() }}</p>
+        </div>
+      </div>
+    }
+
+    <!-- Empty state -->
+    @if (!isLoading() && !error() && filteredPosts().length === 0) {
+      <div class="bg-white rounded-xl shadow-md p-12 text-center">
+        <svg class="w-24 h-24 mx-auto mb-4" style="color: #E0A15E;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+        </svg>
+        <h3 class="text-xl font-semibold mb-2" style="color: #45332D;">
+          @if (searchQuery()) {
+            {{ 'FORUM_TOPIC.NO_TOPICS_FOUND' | translate }}
+          } @else {
+            {{ 'FORUM_TOPIC.NO_TOPICS' | translate }}
+          }
+        </h3>
+        <p class="text-base mb-4" style="color: #4E6A6A;">
+          @if (searchQuery()) {
+            {{ 'FORUM_TOPIC.NO_TOPICS_FOUND_DESC' | translate }}
+          } @else {
+            {{ 'FORUM_TOPIC.NO_TOPICS_DESC' | translate }}
+          }
+        </p>
+      </div>
+    }
+
+    <!-- Lista de posts -->
+    @if (!isLoading() && !error() && filteredPosts().length > 0) {
+      <div class="space-y-4 mb-8">
+        @for (post of filteredPosts(); track post.id) {
+          <div
+            (click)="goToPost(post.id)"
+            class="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-200 cursor-pointer overflow-hidden border border-transparent hover:border-opacity-50"
+            style="border-color: #E0A15E;"
+            onmouseover="this.style.transform='translateY(-2px)'"
+            onmouseout="this.style.transform='translateY(0)'">
+            
+            <div class="p-6 flex gap-4">
+              <!-- Botón de upvote -->
+              @if (forumId() && post.id) {
+                <div (click)="$event.stopPropagation()">
+                  <app-upvote-button
+                    [item]="{ id: post.id, score: post.score || 0, userVote: post.userVote || null }"
+                    [forumId]="forumId()!"
+                    [postId]="post.id"
+                    (scoreUpdated)="onScoreUpdated(post.id, $event)">
+                  </app-upvote-button>
+                </div>
+              }
+
+              <!-- Contenido del post -->
+              <div class="flex-1">
+                <!-- Título y contenido -->
+                <h3 class="text-xl font-bold mb-2" style="color: #45332D;">
+                  {{ post.title }}
+                </h3>
+                <p class="text-sm line-clamp-2 mb-4" style="color: #4E6A6A;">
+                  {{ post.content }}
+                </p>
+
+                <!-- Footer con metadatos -->
+                <div class="flex items-center justify-between flex-wrap gap-4">
+                <!-- Autor -->
+                <div class="flex items-center gap-2">
+                  @if (getAuthorAvatar(post)) {
+                    <img 
+                      [src]="getAuthorAvatar(post)!" 
+                      [alt]="getAuthorName(post)"
+                      class="w-8 h-8 rounded-full object-cover">
+                  } @else {
+                    <div class="w-8 h-8 rounded-full flex items-center justify-center" style="background-color: #E9E1D1;">
+                      <svg class="w-5 h-5" style="color: #E0A15E;" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                      </svg>
+                    </div>
+                  }
+                  <span class="text-sm font-medium" style="color: #45332D;">{{ getAuthorName(post) }}</span>
+                </div>
+
+                <!-- Metadatos -->
+                <div class="flex items-center gap-4 text-sm" style="color: #4E6A6A;">
+                  <div class="flex items-center gap-1">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                    </svg>
+                    <span>{{ getCommentCount(post) }} {{ (getCommentCount(post) === 1 ? 'FORUM_TOPIC.COMMENT_SINGULAR' : 'FORUM_TOPIC.COMMENT_PLURAL') | translate }}</span>
+                  </div>
+                  <div class="flex items-center gap-1">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <span>{{ post.createdAt | relativeTime }}</span>
+                  </div>
+                </div>
+              </div>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Paginación -->
+      @if (totalPages() > 1 && !searchQuery()) {
+        <div class="flex items-center justify-center gap-2">
+          <button
+            (click)="goToPage(currentPage() - 1)"
+            [disabled]="currentPage() === 1"
+            class="px-4 py-2 rounded-lg border transition-colors duration-200 font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+            style="border-color: #E9E1D1; color: #45332D; background-color: white;"
+            onmouseover="if(!this.disabled) this.style.backgroundColor='#F5F5F5'"
+            onmouseout="if(!this.disabled) this.style.backgroundColor='white'">
+            {{ 'FORUM_TOPIC.PREVIOUS' | translate }}
+          </button>
+
+          @for (page of getPageNumbers(); track $index) {
+            @if (page === currentPage()) {
+              <button
+                class="px-4 py-2 rounded-lg font-medium text-sm"
+                style="background-color: #E0A15E; color: #FCF5E2;"
+                disabled>
+                {{ page }}
+              </button>
+            } @else {
+              <button
+                (click)="goToPage(page)"
+                class="px-4 py-2 rounded-lg border transition-colors duration-200 font-medium text-sm"
+                style="border-color: #E9E1D1; color: #45332D; background-color: white;"
+                onmouseover="if(!this.disabled) this.style.backgroundColor='#F5F5F5'"
+                onmouseout="if(!this.disabled) this.style.backgroundColor='white'">
+                {{ page }}
+              </button>
+            }
+          }
+
+          <button
+            (click)="goToPage(currentPage() + 1)"
+            [disabled]="currentPage() === totalPages()"
+            class="px-4 py-2 rounded-lg border transition-colors duration-200 font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+            style="border-color: #E9E1D1; color: #45332D; background-color: white;"
+            onmouseover="if(!this.disabled) this.style.backgroundColor='#F5F5F5'"
+            onmouseout="if(!this.disabled) this.style.backgroundColor='white'">
+            {{ 'FORUM_TOPIC.NEXT' | translate }}
+          </button>
+        </div>
+      }
+    }
+  </div>
+
+  <!-- Botón flotante para crear post -->
+  <button
+    (click)="openCreateModal()"
+    class="fixed bottom-8 right-8 w-14 h-14 rounded-full shadow-lg transition-all duration-200 flex items-center justify-center z-40"
+    style="background-color: #E0A15E; color: #FCF5E2;"
+    onmouseover="this.style.transform='scale(1.1)'; this.style.backgroundColor='#B88B65'"
+    onmouseout="this.style.transform='scale(1)'; this.style.backgroundColor='#E0A15E'"
+    [title]="'FORUM_TOPIC.CREATE_TOPIC' | translate">
+    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+    </svg>
+  </button>
+
+  <!-- Modal para crear post -->
+  @if (showCreateModal()) {
+    <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" (click)="closeCreateModal()">
+      <div class="bg-white rounded-xl shadow-2xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto" (click)="$event.stopPropagation()">
+        <div class="flex items-center justify-between mb-6">
+          <h2 class="text-2xl font-bold" style="color: #45332D;">{{ 'FORUM_TOPIC.CREATE_MODAL.TITLE' | translate }}</h2>
+          <button
+            (click)="closeCreateModal()"
+            class="text-gray-400 hover:text-gray-600 transition-colors">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+
+        @if (createError()) {
+          <div class="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
+            <div class="flex items-center gap-2 text-red-600">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+              <p class="text-sm">{{ createError() }}</p>
+            </div>
+          </div>
+        }
+
+        <form [formGroup]="createForm" (ngSubmit)="createPost()" class="space-y-4">
+          <div>
+            <label for="title" class="block text-sm font-medium mb-2" style="color: #45332D;">
+              {{ 'FORUM_TOPIC.CREATE_MODAL.TITLE_LABEL' | translate }} <span class="text-red-500">*</span>
+            </label>
+            <input
+              id="title"
+              type="text"
+              formControlName="title"
+              class="w-full px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-opacity-50 text-base"
+              style="border-color: #E9E1D1; background-color: #FCF5E2; color: #45332D; focus:ring-color: #E0A15E;"
+              [placeholder]="'FORUM_TOPIC.CREATE_MODAL.TITLE_PLACEHOLDER' | translate">
+            @if (getFieldError('title')) {
+              <p class="text-xs text-red-600 mt-1">{{ getFieldError('title') }}</p>
+            }
+          </div>
+
+          <div>
+            <label for="content" class="block text-sm font-medium mb-2" style="color: #45332D;">
+              {{ 'FORUM_TOPIC.CREATE_MODAL.CONTENT_LABEL' | translate }} <span class="text-red-500">*</span>
+            </label>
+            <textarea
+              id="content"
+              formControlName="content"
+              rows="8"
+              class="w-full px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-opacity-50 text-base resize-none"
+              style="border-color: #E9E1D1; background-color: #FCF5E2; color: #45332D; focus:ring-color: #E0A15E;"
+              [placeholder]="'FORUM_TOPIC.CREATE_MODAL.CONTENT_PLACEHOLDER' | translate"></textarea>
+            @if (getFieldError('content')) {
+              <p class="text-xs text-red-600 mt-1">{{ getFieldError('content') }}</p>
+            }
+          </div>
+
+          <!-- Imágenes del post -->
+          <div class="space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="block text-sm font-medium" style="color: #45332D;">
+                {{ 'FORUM_TOPIC.CREATE_MODAL.IMAGES_LABEL' | translate : { default: 'Imágenes (opcional)' } }}
+              </span>
+              <button
+                type="button"
+                (click)="addImageToPost()"
+                [disabled]="isUploadingImage()"
+                class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                style="border-color: #E9E1D1; color: #45332D; background-color: white;"
+                onmouseover="if(!this.disabled) this.style.backgroundColor='#F5F5F5'"
+                onmouseout="if(!this.disabled) this.style.backgroundColor='white'">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586A2 2 0 0118.828 12H20M4 6h16a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V8a2 2 0 012-2z"></path>
+                </svg>
+                @if (isUploadingImage()) {
+                  <span>{{ 'FORUM_TOPIC.CREATE_MODAL.IMAGES_UPLOADING' | translate : { default: 'Subiendo...' } }}</span>
+                } @else {
+                  <span>{{ 'FORUM_TOPIC.CREATE_MODAL.IMAGES_ADD_BUTTON' | translate : { default: 'Añadir imagen' } }}</span>
+                }
+              </button>
+            </div>
+
+            @if (uploadImageError()) {
+              <p class="text-xs text-red-600">{{ uploadImageError() }}</p>
+            }
+
+            @if (createImages().length > 0) {
+              <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-2">
+                @for (image of createImages(); track $index) {
+                  <div class="relative group rounded-lg overflow-hidden border" style="border-color: #E9E1D1;">
+                    <img [src]="image" alt="Imagen del post" class="w-full h-28 object-cover">
+                    <button
+                      type="button"
+                      (click)="removeImageFromPost($index)"
+                      class="absolute top-1 right-1 bg-black bg-opacity-60 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                      title="Eliminar imagen">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                      </svg>
+                    </button>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+
+          <div class="flex gap-3 pt-2">
+            <button
+              type="submit"
+              [disabled]="isCreating() || createForm.invalid"
+              class="flex-1 px-4 py-2 rounded-lg transition-colors duration-200 font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              style="background-color: #E0A15E; color: #FCF5E2;"
+              onmouseover="if(!this.disabled) this.style.backgroundColor='#B88B65'"
+              onmouseout="if(!this.disabled) this.style.backgroundColor='#E0A15E'">
+              @if (isCreating()) {
+                <span class="flex items-center justify-center gap-2">
+                  <div class="inline-block animate-spin rounded-full h-4 w-4 border-2 border-t-transparent border-white"></div>
+                  {{ 'FORUM_TOPIC.CREATE_MODAL.CREATING' | translate }}
+                </span>
+              } @else {
+                {{ 'FORUM_TOPIC.CREATE_MODAL.CREATE_BUTTON' | translate }}
+              }
+            </button>
+            <button
+              type="button"
+              (click)="closeCreateModal()"
+              [disabled]="isCreating()"
+              class="px-4 py-2 rounded-lg border transition-colors duration-200 font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              style="border-color: #E9E1D1; color: #45332D; background-color: white;"
+              onmouseover="if(!this.disabled) this.style.backgroundColor='#F5F5F5'"
+              onmouseout="if(!this.disabled) this.style.backgroundColor='white'">
+              {{ 'FORUM_TOPIC.CANCEL' | translate }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+
+  <!-- Modal para editar foro -->
+  @if (showEditForumModal()) {
+    <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" (click)="closeEditForumModal()">
+      <div class="bg-white rounded-xl shadow-2xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto" (click)="$event.stopPropagation()">
+        <div class="flex items-center justify-between mb-6">
+          <h2 class="text-2xl font-bold" style="color: #45332D;">{{ 'FORUM_TOPIC.EDIT_MODAL.TITLE' | translate }}</h2>
+          <button
+            (click)="closeEditForumModal()"
+            class="text-gray-400 hover:text-gray-600 transition-colors">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+
+        @if (updateForumError()) {
+          <div class="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
+            <div class="flex items-center gap-2 text-red-600">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+              <p class="text-sm">{{ updateForumError() }}</p>
+            </div>
+          </div>
+        }
+
+        <form [formGroup]="editForumForm" (ngSubmit)="updateForum()" class="space-y-4">
+          <div>
+            <label for="edit-forum-title" class="block text-sm font-medium mb-2" style="color: #45332D;">
+              {{ 'FORUM_TOPIC.EDIT_MODAL.TITLE_LABEL' | translate }} <span class="text-red-500">*</span>
+            </label>
+            <input
+              id="edit-forum-title"
+              type="text"
+              formControlName="title"
+              class="w-full px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-opacity-50 text-base"
+              style="border-color: #E9E1D1; background-color: #FCF5E2; color: #45332D; focus:ring-color: #E0A15E;"
+              [placeholder]="'FORUM_TOPIC.EDIT_MODAL.TITLE_PLACEHOLDER' | translate">
+            @if (getForumFieldError('title')) {
+              <p class="text-xs text-red-600 mt-1">{{ getForumFieldError('title') }}</p>
+            }
+          </div>
+
+          <div>
+            <label for="edit-forum-description" class="block text-sm font-medium mb-2" style="color: #45332D;">
+              {{ 'FORUM_TOPIC.EDIT_MODAL.DESCRIPTION_LABEL' | translate }}
+            </label>
+            <textarea
+              id="edit-forum-description"
+              formControlName="description"
+              rows="4"
+              class="w-full px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-opacity-50 text-base resize-none"
+              style="border-color: #E9E1D1; background-color: #FCF5E2; color: #45332D; focus:ring-color: #E0A15E;"
+              [placeholder]="'FORUM_TOPIC.EDIT_MODAL.DESCRIPTION_PLACEHOLDER' | translate"></textarea>
+          </div>
+
+          <div class="flex gap-3 pt-2">
+            <button
+              type="submit"
+              [disabled]="isUpdatingForum() || editForumForm.invalid"
+              class="flex-1 px-4 py-2 rounded-lg transition-colors duration-200 font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              style="background-color: #E0A15E; color: #FCF5E2;"
+              onmouseover="if(!this.disabled) this.style.backgroundColor='#B88B65'"
+              onmouseout="if(!this.disabled) this.style.backgroundColor='#E0A15E'">
+              @if (isUpdatingForum()) {
+                <span class="flex items-center justify-center gap-2">
+                  <div class="inline-block animate-spin rounded-full h-4 w-4 border-2 border-t-transparent border-white"></div>
+                  {{ 'FORUM_TOPIC.EDIT_MODAL.SAVING' | translate }}
+                </span>
+              } @else {
+                {{ 'FORUM_TOPIC.EDIT_MODAL.SAVE_BUTTON' | translate }}
+              }
+            </button>
+            <button
+              type="button"
+              (click)="closeEditForumModal()"
+              [disabled]="isUpdatingForum()"
+              class="px-4 py-2 rounded-lg border transition-colors duration-200 font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              style="border-color: #E9E1D1; color: #45332D; background-color: white;"
+              onmouseover="if(!this.disabled) this.style.backgroundColor='#F5F5F5'"
+              onmouseout="if(!this.disabled) this.style.backgroundColor='white'">
+              {{ 'FORUM_TOPIC.CANCEL' | translate }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+
+  <!-- Modal para confirmar borrar foro -->
+  @if (showDeleteForumModal()) {
+    <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" (click)="closeDeleteForumModal()">
+      <div class="bg-white rounded-xl shadow-2xl max-w-md w-full p-6" (click)="$event.stopPropagation()">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-2xl font-bold" style="color: #45332D;">{{ 'FORUM_TOPIC.DELETE_MODAL.TITLE' | translate }}</h2>
+          <button
+            (click)="closeDeleteForumModal()"
+            class="text-gray-400 hover:text-gray-600 transition-colors">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+
+        <p class="text-base mb-6" style="color: #4E6A6A;">
+          {{ 'FORUM_TOPIC.DELETE_MODAL.MESSAGE' | translate }}
+        </p>
+
+        <div class="flex gap-3">
+          <button
+            (click)="deleteForum()"
+            [disabled]="isDeletingForum()"
+            class="flex-1 px-4 py-2 rounded-lg transition-colors duration-200 font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed bg-red-600 text-white hover:bg-red-700">
+            @if (isDeletingForum()) {
+              <span class="flex items-center justify-center gap-2">
+                <div class="inline-block animate-spin rounded-full h-4 w-4 border-2 border-t-transparent border-white"></div>
+                {{ 'FORUM_TOPIC.DELETE_MODAL.DELETING' | translate }}
+              </span>
+            } @else {
+              {{ 'FORUM_TOPIC.DELETE_MODAL.DELETE_BUTTON' | translate }}
+            }
+          </button>
+          <button
+            (click)="closeDeleteForumModal()"
+            [disabled]="isDeletingForum()"
+            class="px-4 py-2 rounded-lg border transition-colors duration-200 font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+            style="border-color: #E9E1D1; color: #45332D; background-color: white;"
+            onmouseover="if(!this.disabled) this.style.backgroundColor='#F5F5F5'"
+            onmouseout="if(!this.disabled) this.style.backgroundColor='white'">
+            {{ 'FORUM_TOPIC.CANCEL' | translate }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>
+

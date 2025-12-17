@@ -1,12 +1,18 @@
 /**
  * Interfaces para el catálogo de libros
  */
+export interface ReviewAuthor {
+  id: number;
+  fullName: string | null;
+  avatarUrl: string | null;
+}
 
 export interface Category {
     id: number;
     name: string;
     slug: string;
     type: 'MAIN' | 'SPECIAL';
+    parentId?: number | null;
     icon?: string;
     description?: string;
   }
@@ -22,6 +28,7 @@ export interface Category {
     price: number;
     stock: number;
     categories?: Category[];
+    reviews?: Review[];
     createdAt?: string;
     updatedAt?: string;
   }
@@ -36,7 +43,17 @@ export interface Category {
     imageUrls?: string[];
     price: number;
     stock: number;
-    categoryIds?: number[]; // IDs de categorías a asignar
+    categoryIds?: number[]; 
   }
   
   export interface UpdateCatalogBookDto extends Partial<CreateCatalogBookDto> {}
+
+  export interface Review {
+    id: number;
+    catalogBookId: number;
+    userId: number;
+    rating: number; // 1-5
+    comment?: string;
+    createdAt: string;
+    user?: ReviewAuthor;
+  }

@@ -1,0 +1,38 @@
+.faq-container {
+  min-height: 100vh;
+  background-color: #FCF5E2;
+  padding: 2rem 0;
+}
+
+.faq-content {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.faq-item {
+  transition: all 0.3s ease;
+}
+
+.faq-item button {
+  cursor: pointer;
+}
+
+.faq-item button:hover {
+  background-color: #FCF5E2 !important;
+}
+
+.faq-item svg {
+  transition: transform 0.3s ease;
+}
+
+@media (max-width: 768px) {
+  .faq-container {
+    padding: 1rem 0;
+  }
+  
+  .faq-item button {
+    padding: 1rem;
+    font-size: 0.95rem;
+  }
+}
+

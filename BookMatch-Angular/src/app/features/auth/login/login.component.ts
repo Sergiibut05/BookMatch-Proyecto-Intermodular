@@ -1,13 +1,14 @@
 import { Component, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 
 @Component({
   selector: 'app-login',
-  imports: [CommonModule, ReactiveFormsModule, RouterModule],
+  imports: [ReactiveFormsModule, RouterModule, TranslateModule],
   templateUrl: './login.component.html',
   styleUrl: './login.component.scss',
 })
@@ -15,6 +16,7 @@ export class LoginComponent {
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
   private router = inject(Router);
+  private translate = inject(TranslateService);
 
   loginForm: FormGroup;
   loading = false;
@@ -31,9 +33,9 @@ export class LoginComponent {
     if (this.loginForm.valid) {
       this.loading = true;
       this.errorMessage = '';
-      
+
       const { email, password } = this.loginForm.value;
-      
+
       this.authService.login(email, password).subscribe({
         next: () => {
           this.router.navigate(['/home']);
@@ -49,7 +51,7 @@ export class LoginComponent {
   loginWithGoogle(): void {
     this.loading = true;
     this.errorMessage = '';
-    
+
     this.authService.loginWithGoogle().subscribe({
       next: () => {
         this.router.navigate(['/home']);
@@ -63,15 +65,16 @@ export class LoginComponent {
 
   private getErrorMessage(errorCode: string): string {
     const errorMessages: { [key: string]: string } = {
-      'auth/user-not-found': 'No existe una cuenta con este correo.',
-      'auth/wrong-password': 'Contraseña incorrecta.',
-      'auth/invalid-email': 'Correo electrónico inválido.',
-      'auth/user-disabled': 'Esta cuenta ha sido deshabilitada.',
-      'auth/too-many-requests': 'Demasiados intentos. Intenta más tarde.',
-      'auth/popup-closed-by-user': 'Inicio de sesión cancelado.',
-      'default': 'Error al iniciar sesión. Intenta de nuevo.'
+      'auth/user-not-found': 'LOGIN.ERRORS.USER_NOT_FOUND',
+      'auth/wrong-password': 'LOGIN.ERRORS.WRONG_PASSWORD',
+      'auth/invalid-email': 'LOGIN.ERRORS.INVALID_EMAIL',
+      'auth/user-disabled': 'LOGIN.ERRORS.USER_DISABLED',
+      'auth/too-many-requests': 'LOGIN.ERRORS.TOO_MANY_REQUESTS',
+      'auth/popup-closed-by-user': 'LOGIN.ERRORS.POPUP_CLOSED',
+      'default': 'LOGIN.ERRORS.DEFAULT'
     };
-    
-    return errorMessages[errorCode] || errorMessages['default'];
+
+    const key = errorMessages[errorCode] || errorMessages['default'];
+    return this.translate.instant(key);
   }
 }

@@ -1,8 +1,9 @@
 import { Router } from 'express';
 import { auth } from '../../middleware/auth.js';
+import { isAdmin } from '../../middleware/isAdmin.js';
 import { validate } from '../../middleware/validate.js';
 import { updateUserSchema, updateProfileSchema } from './users.schema.js';
-import { listUsersCtrl, getUserCtrl, meCtrl, updateUserCtrl, deleteUserCtrl, updateProfileCtrl } from './users.controller.js';
+import { listUsersCtrl, getUserCtrl, meCtrl, updateUserCtrl, deleteUserCtrl, updateProfileCtrl, getProfile } from './users.controller.js';
 
 const router = Router();
 
@@ -10,10 +11,10 @@ const router = Router();
  * @swagger
  * /api/users:
  *   get:
- *     summary: Lista todos los usuarios
+ *     summary: Lista todos los usuarios (Solo Admin)
  *     tags: [Users]
  *     security:
- *       - bearerAuth: []
+ *      - bearerAuth: []
  *     responses:
  *       200:
  *         description: Lista de usuarios
@@ -22,15 +23,17 @@ const router = Router();
  *             schema:
  *               type: array
  *               items:
- *                 $ref: '#/components/schemas/User'
+ *                   ref: '#/components/schemas/User'
  *       401:
  *         description: No autorizado
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/Error'
+ *                 ref: '#/components/schemas/Error'
+ *       403:
+ *         description: Prohibido (Requiere Admin)
  */
-router.get('/', auth, listUsersCtrl);
+router.get('/', auth, isAdmin, listUsersCtrl);
 
 /**
  * @swagger
@@ -39,59 +42,61 @@ router.get('/', auth, listUsersCtrl);
  *     summary: Obtiene el perfil del usuario autenticado
  *     tags: [Users]
  *     security:
- *       - bearerAuth: []
+ *      - bearerAuth: []
  *     responses:
  *       200:
  *         description: Perfil del usuario
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/User'
+ *                 ref: '#/components/schemas/User'
  *       401:
  *         description: No autorizado
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/Error'
+ *                 ref: '#/components/schemas/Error'
  *   patch:
  *     summary: Actualiza el perfil del usuario autenticado
  *     tags: [Users]
  *     security:
- *       - bearerAuth: []
+ *      - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/UpdateProfileInput'
+ *           application/json:
+ *             schema:
+ *                 ref: '#/components/schemas/UpdateProfileInput'
  *     responses:
  *       200:
  *         description: Perfil actualizado
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/User'
+ *                 ref: '#/components/schemas/User'
  *       400:
  *         description: Datos de entrada inválidos
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/Error'
+ *                 ref: '#/components/schemas/Error'
  *       401:
  *         description: No autorizado
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/Error'
+ *                 ref: '#/components/schemas/Error'
  *       409:
  *         description: Email ya en uso
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/Error'
+ *                 ref: '#/components/schemas/Error'
  */
 router.get('/me', auth, meCtrl);
 router.patch('/me', auth, validate(updateProfileSchema), updateProfileCtrl);
+
+router.get('/profile', auth, getProfile);
 
 /**
  * @swagger
@@ -100,100 +105,100 @@ router.patch('/me', auth, validate(updateProfileSchema), updateProfileCtrl);
  *     summary: Obtiene un usuario por ID
  *     tags: [Users]
  *     security:
- *       - bearerAuth: []
+ *      - bearerAuth: []
  *     parameters:
- *       - in: path
- *         name: id
- *         schema:
- *           type: integer
- *         required: true
- *         description: ID del usuario
+ *      - in: path
+ *        name: id
+ *        schema:
+ *          type: integer
+ *        required: true
+ *        description: ID del usuario
  *     responses:
  *       200:
  *         description: Información del usuario
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/User'
+ *                 ref: '#/components/schemas/User'
  *       400:
  *         description: ID inválido
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/Error'
+ *                 ref: '#/components/schemas/Error'
  *       401:
  *         description: No autorizado
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/Error'
+ *                 ref: '#/components/schemas/Error'
  *       404:
  *         description: Usuario no encontrado
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/Error'
+ *                 ref: '#/components/schemas/Error'
  *   patch:
  *     summary: Actualiza un usuario por ID
  *     tags: [Users]
  *     security:
- *       - bearerAuth: []
+ *      - bearerAuth: []
  *     parameters:
- *       - in: path
- *         name: id
- *         schema:
- *           type: integer
- *         required: true
- *         description: ID del usuario a actualizar
+ *      - in: path
+ *        name: id
+ *        schema:
+ *          type: integer
+ *        required: true
+ *        description: ID del usuario a actualizar
  *     requestBody:
  *       required: true
  *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/UpdateProfileInput'
+ *           application/json:
+ *             schema:
+ *                 ref: '#/components/schemas/UpdateProfileInput'
  *     responses:
  *       200:
  *         description: Usuario actualizado
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/User'
+ *                 ref: '#/components/schemas/User'
  *       400:
  *         description: ID inválido o datos de entrada inválidos
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/Error'
+ *                 ref: '#/components/schemas/Error'
  *       401:
  *         description: No autorizado
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/Error'
+ *                 ref: '#/components/schemas/Error'
  *       404:
  *         description: Usuario no encontrado
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/Error'
+ *                 ref: '#/components/schemas/Error'
  *       409:
  *         description: Email ya en uso
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/Error'
+ *                 ref: '#/components/schemas/Error'
  *   delete:
- *     summary: Elimina un usuario por ID
+ *     summary: Elimina un usuario por ID (Solo Admin)
  *     tags: [Users]
  *     security:
- *       - bearerAuth: []
+ *      - bearerAuth: []
  *     parameters:
- *       - in: path
- *         name: id
- *         schema:
- *           type: integer
- *         required: true
- *         description: ID del usuario a eliminar
+ *      - in: path
+ *        name: id
+ *        schema:
+ *          type: integer
+ *        required: true
+ *        description: ID del usuario a eliminar
  *     responses:
  *       204:
  *         description: Usuario eliminado exitosamente
@@ -202,23 +207,24 @@ router.patch('/me', auth, validate(updateProfileSchema), updateProfileCtrl);
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/Error'
+ *                 ref: '#/components/schemas/Error'
  *       401:
  *         description: No autorizado
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/Error'
+ *                 ref: '#/components/schemas/Error'
+ *       403:
+ *         description: Prohibido (Requiere Admin)
  *       404:
  *         description: Usuario no encontrado
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/Error'
+ *                 ref: '#/components/schemas/Error'
  */
 router.get('/:id', auth, getUserCtrl);
 router.patch('/:id', auth, validate(updateUserSchema), updateUserCtrl);
-router.delete('/:id', auth, deleteUserCtrl);
+router.delete('/:id', auth, isAdmin, deleteUserCtrl);
 
 export default router;
-
