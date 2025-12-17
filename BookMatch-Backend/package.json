@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "nodemon src/index.ts",
     "build": "npx prisma generate && tsc -p .",
+    "postinstall": "prisma generate",
     "start": "node dist/index.js",
     "test": "NODE_ENV=test NODE_OPTIONS=--experimental-vm-modules jest",
     "test:watch": "NODE_ENV=test NODE_OPTIONS=--experimental-vm-modules jest --watch",
@@ -34,7 +35,8 @@
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1",
     "winston": "^3.18.3",
-    "zod": "^4.1.12"
+    "zod": "^4.1.12",
+    "prisma": "^6.19.0"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",
@@ -47,7 +49,6 @@
     "@types/swagger-jsdoc": "^6.0.4",
     "jest": "^30.2.0",
     "nodemon": "^3.1.10",
-    "prisma": "^6.19.0",
     "supertest": "^7.1.4",
     "ts-jest": "^29.4.5",
     "ts-node": "^10.9.2",
