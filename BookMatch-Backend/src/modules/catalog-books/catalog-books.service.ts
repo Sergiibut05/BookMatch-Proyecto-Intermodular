@@ -70,7 +70,7 @@ async function ensureCategoriesExist(categoryIds: number[] | undefined) {
     select: { id: true },
   });
 
-  const foundIds = new Set(categories.map((category) => category.id));
+  const foundIds = new Set(categories.map((category: any) => category.id));
   const missing = categoryIds.filter((id) => !foundIds.has(id));
 
   if (missing.length > 0) {

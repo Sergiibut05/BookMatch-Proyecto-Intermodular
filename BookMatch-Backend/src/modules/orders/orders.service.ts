@@ -14,7 +14,7 @@ interface CreateOrderDto {
 }
 
 export const createOrder = async (data: CreateOrderDto) => {
-    const newOrder = await prisma.$transaction(async (tx) => {
+    const newOrder = await prisma.$transaction(async (tx: any) => {
         const order = await tx.order.create({
         data: {
             userId: data.userId,
