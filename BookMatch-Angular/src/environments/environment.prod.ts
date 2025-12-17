@@ -11,5 +11,5 @@ export const environment = {
         measurementId: "G-YD2T0NCDTC"
     },
     stripePublishableKey: 'pk_test_51SXKSE9RfkpN8LkuajmtkGe2fBJNNYiVhepYyANGrlr5xBW9nMJXEm76iUAoJb3iqutIywJviuf4QQJHFNFQQr0d007T7bx4gt',
-    apiUrl: 'https://REEMPLAZAR_CON_URL_DEL_BACKEND.vercel.app/api'
+    apiUrl: 'https://book-match-proyecto-intermodular-5t.vercel.app/'
 };
