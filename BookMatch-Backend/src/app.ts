@@ -18,16 +18,46 @@ import { stripeWebhookCtrl } from './modules/payments/payments.controller.js';
 
 const app = express();
 
+// CORS debe estar antes de todo, incluso antes del webhook
+const allowedOrigins = [
+  env.FRONTEND_URL || 'http://localhost:4200',
+  'https://book-match-proyecto-intermodular-b8.vercel.app',
+  /^https:\/\/book-match-proyecto-intermodular.*\.vercel\.app$/
+];
+
+app.use(cors({
+  origin: (origin, callback) => {
+    // Permitir requests sin origin (mobile apps, Postman, etc.)
+    if (!origin) return callback(null, true);
+    
+    // Verificar si el origin está permitido
+    const isAllowed = allowedOrigins.some(allowed => {
+      if (typeof allowed === 'string') {
+        return origin === allowed;
+      }
+      if (allowed instanceof RegExp) {
+        return allowed.test(origin);
+      }
+      return false;
+    });
+    
+    if (isAllowed) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  exposedHeaders: ['Content-Type', 'Authorization']
+}));
+
 app.use(helmet({
   contentSecurityPolicy: false,
 }));
-app.use(cors({
-  origin: env.FRONTEND_URL || 'http://localhost:4200',
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
 
+// Webhook de Stripe debe estar antes de express.json()
 app.post('/api/payments/webhook', express.raw({ type: 'application/json' }), stripeWebhookCtrl);
 
 app.use(express.json({ limit: '10mb' }));
