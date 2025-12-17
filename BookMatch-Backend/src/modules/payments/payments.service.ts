@@ -7,7 +7,7 @@ import { mailService } from '../../services/mail.service.js';
 import { generateOrderConfirmationEmail } from '../../utils/email-templates.js';
 
 const stripe = new Stripe(env.STRIPE_SECRET_KEY, {
-  apiVersion: '2024-11-20.acacia',
+  apiVersion: '2025-11-17.clover',
   typescript: true,
 });
 
@@ -27,9 +27,10 @@ export async function createCheckoutSession(
 
   const bookImage = book.coverUrl || (book.imageUrls && book.imageUrls.length > 0 ? book.imageUrls[0] : null);
 
-  const priceNumber = typeof book.price === 'object' && 'toNumber' in book.price
-    ? book.price.toNumber()
-    : Number(book.price);
+  const priceValue = book.price as unknown;
+  const priceNumber = typeof priceValue === 'object' && priceValue !== null && 'toNumber' in priceValue
+    ? (priceValue as { toNumber: () => number }).toNumber()
+    : Number(priceValue);
 
   if (isNaN(priceNumber) || priceNumber <= 0) {
     throw new Error('Precio del libro inválido');
@@ -43,7 +44,7 @@ export async function createCheckoutSession(
           product_data: {
             name: book.title,
             description: `${book.author}`,
-            images: bookImage ? [bookImage] : undefined,
+            ...(bookImage ? { images: [bookImage] } : {}),
           },
           unit_amount: Math.round(priceNumber * 100),
         },
@@ -88,9 +89,10 @@ export async function createCheckoutSessionCart(
 
     const bookImage = book.coverUrl || (book.imageUrls && book.imageUrls.length > 0 ? book.imageUrls[0] : null);
 
-    const priceNumber = typeof book.price === 'object' && 'toNumber' in book.price
-      ? book.price.toNumber()
-      : Number(book.price);
+    const priceValue = book.price as unknown;
+    const priceNumber = typeof priceValue === 'object' && priceValue !== null && 'toNumber' in priceValue
+      ? (priceValue as { toNumber: () => number }).toNumber()
+      : Number(priceValue);
 
     if (isNaN(priceNumber) || priceNumber <= 0) {
       throw new Error(`Precio inválido para el libro "${book.title}"`);
@@ -101,7 +103,7 @@ export async function createCheckoutSessionCart(
         currency: 'eur',
         product_data: {
           name: book.title,
-          images: bookImage ? [bookImage] : undefined,
+          ...(bookImage ? { images: [bookImage] } : {}),
         },
         unit_amount: Math.round(priceNumber * 100),
       },
@@ -138,35 +140,42 @@ export async function handleStripeWebhook(event: Stripe.Event) {
     const metadata = session.metadata;
     if (!metadata) throw new Error('Metadata no encontrada');
 
-    const userId = parseInt(metadata.userId, 10);
+    const userIdStr = metadata.userId;
+    if (!userIdStr) throw new Error('userId no encontrado en metadata');
+    const userId = parseInt(userIdStr, 10);
     const type = metadata.type || 'single';
 
     // Obtener dirección común
     let shippingAddress: string | null = null;
-    if (session.shipping_details?.address) {
-        const addr = session.shipping_details.address;
+    const sessionWithShipping = session as Stripe.Checkout.Session & { shipping?: { address?: Stripe.Address } };
+    if (sessionWithShipping.shipping?.address) {
+        const addr = sessionWithShipping.shipping.address;
         shippingAddress = [
           addr.line1, addr.line2, addr.city, addr.postal_code, addr.state, addr.country
         ].filter(Boolean).join(', ');
     }
 
     if (type === 'single') {
-      const bookId = parseInt(metadata.bookId, 10);
-      const quantity = parseInt(metadata.quantity, 10);
+      const bookIdStr = metadata.bookId;
+      const quantityStr = metadata.quantity;
+      if (!bookIdStr || !quantityStr) throw new Error('bookId o quantity no encontrados en metadata');
+      const bookId = parseInt(bookIdStr, 10);
+      const quantity = parseInt(quantityStr, 10);
 
       const book = await findCatalogBookById(bookId);
       if (!book) throw new Error(`Libro no encontrado`);
 
-      const priceNumber = typeof book.price === 'object' && 'toNumber' in book.price
-        ? book.price.toNumber()
-        : Number(book.price);
+      const priceValue = book.price as unknown;
+      const priceNumber = typeof priceValue === 'object' && priceValue !== null && 'toNumber' in priceValue
+        ? (priceValue as { toNumber: () => number }).toNumber()
+        : Number(priceValue);
       
       const order = await prisma.order.create({
         data: {
           userId,
           totalAmount: priceNumber * quantity,
           status: 'PAID',
-          paymentIntentId: session.payment_intent as string,
+          paymentIntentId: (session.payment_intent && typeof session.payment_intent === 'string' ? session.payment_intent : session.id),
           shippingAddress,
           items: { create: { catalogBookId: bookId, quantity, price: book.price } },
         },
@@ -196,7 +205,9 @@ export async function handleStripeWebhook(event: Stripe.Event) {
       return order;
 
     } else if (type === 'cart') {
-      const items = JSON.parse(metadata.items) as Array<{ bookId: number; quantity: number }>;
+      const itemsStr = metadata.items;
+      if (!itemsStr) throw new Error('items no encontrados en metadata');
+      const items = JSON.parse(itemsStr) as Array<{ bookId: number; quantity: number }>;
       const orderItems = [];
 
       for (const item of items) {
@@ -211,7 +222,7 @@ export async function handleStripeWebhook(event: Stripe.Event) {
           userId,
           totalAmount: session.amount_total ? session.amount_total / 100 : 0,
           status: 'PAID',
-          paymentIntentId: session.payment_intent as string,
+          paymentIntentId: (session.payment_intent && typeof session.payment_intent === 'string' ? session.payment_intent : session.id),
           shippingAddress,
           items: { create: orderItems },
         },
@@ -222,14 +233,18 @@ export async function handleStripeWebhook(event: Stripe.Event) {
       try {
         const user = await prisma.user.findUnique({ where: { id: userId }, select: { email: true } });
         if (user?.email) {
-          const emailItems = order.items.map(item => ({
-            title: item.catalogBook.title,
-            quantity: item.quantity,
-            price: (typeof item.price === 'object' && 'toNumber' in item.price 
-              ? item.price.toNumber() 
-              : Number(item.price)) * item.quantity,
-            coverUrl: item.catalogBook.coverUrl
-          }));
+          const emailItems = order.items.map(item => {
+            const priceValue = item.price as unknown;
+            const priceNumber = typeof priceValue === 'object' && priceValue !== null && 'toNumber' in priceValue
+              ? (priceValue as { toNumber: () => number }).toNumber()
+              : Number(priceValue);
+            return {
+              title: item.catalogBook.title,
+              quantity: item.quantity,
+              price: priceNumber * item.quantity,
+              coverUrl: item.catalogBook.coverUrl
+            };
+          });
           const emailHtml = generateOrderConfirmationEmail(order.id.toString(), Number(order.totalAmount), emailItems);
           await mailService.sendEmail({ to: user.email, subject: `Pedido #${order.id} confirmado`, html: emailHtml });
         }
@@ -268,29 +283,34 @@ export async function createOrderFromSession(sessionId: string, userId: number) 
   const type = metadata.type || 'single';
 
   let shippingAddress: string | null = null;
-  if (session.shipping_details?.address) {
-      const addr = session.shipping_details.address;
+  const sessionWithShipping = session as Stripe.Checkout.Session & { shipping?: { address?: Stripe.Address } };
+  if (sessionWithShipping.shipping?.address) {
+      const addr = sessionWithShipping.shipping.address;
       shippingAddress = [addr.line1, addr.line2, addr.city, addr.postal_code, addr.state, addr.country].filter(Boolean).join(', ');
   }
 
   // --- CASO A: FALLBACK SINGLE ---
   if (type === 'single') {
-    const bookId = parseInt(metadata.bookId, 10);
-    const quantity = parseInt(metadata.quantity, 10);
+    const bookIdStr = metadata.bookId;
+    const quantityStr = metadata.quantity;
+    if (!bookIdStr || !quantityStr) throw new Error('bookId o quantity no encontrados en metadata');
+    const bookId = parseInt(bookIdStr, 10);
+    const quantity = parseInt(quantityStr, 10);
 
     const book = await findCatalogBookById(bookId);
     if (!book) throw new Error('Libro no encontrado');
 
-    const priceNumber = typeof book.price === 'object' && 'toNumber' in book.price
-      ? book.price.toNumber()
-      : Number(book.price);
+    const priceValue = book.price as unknown;
+    const priceNumber = typeof priceValue === 'object' && priceValue !== null && 'toNumber' in priceValue
+      ? (priceValue as { toNumber: () => number }).toNumber()
+      : Number(priceValue);
 
     const order = await prisma.order.create({
       data: {
         userId,
         totalAmount: priceNumber * quantity,
         status: 'PAID',
-        paymentIntentId: session.payment_intent as string || session.id,
+        paymentIntentId: (session.payment_intent && typeof session.payment_intent === 'string' ? session.payment_intent : session.id),
         shippingAddress,
         items: { create: { catalogBookId: bookId, quantity, price: book.price } },
       },
@@ -318,7 +338,9 @@ export async function createOrderFromSession(sessionId: string, userId: number) 
 
   // --- CASO B: FALLBACK CART ---
   } else if (type === 'cart') {
-    const items = JSON.parse(metadata.items) as Array<{ bookId: number; quantity: number }>;
+    const itemsStr = metadata.items;
+    if (!itemsStr) throw new Error('items no encontrados en metadata');
+    const items = JSON.parse(itemsStr) as Array<{ bookId: number; quantity: number }>;
     const orderItems = [];
 
     for (const item of items) {
@@ -333,7 +355,7 @@ export async function createOrderFromSession(sessionId: string, userId: number) 
         userId,
         totalAmount: session.amount_total ? session.amount_total / 100 : 0,
         status: 'PAID',
-        paymentIntentId: session.payment_intent as string || session.id,
+        paymentIntentId: (session.payment_intent && typeof session.payment_intent === 'string' ? session.payment_intent : session.id),
         shippingAddress,
         items: { create: orderItems },
       },

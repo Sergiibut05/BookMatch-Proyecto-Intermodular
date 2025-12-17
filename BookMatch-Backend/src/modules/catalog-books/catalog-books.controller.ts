@@ -144,11 +144,11 @@ export async function deleteReviewCtrl(req: Request, res: Response) {
     if (Number.isNaN(reviewId)) return res.status(400).json({ message: 'ID de reseña inválido' });
 
     // Obtenemos el ID del usuario desde el token (inyectado por el middleware de auth)
-    const userId = (req as any).user?.id;
-    if (!userId) return res.status(401).json({ message: 'Usuario no autenticado' });
+    const user = req.user;
+    if (!user) return res.status(401).json({ message: 'Usuario no autenticado' });
 
     // Llamamos a la función del servicio que crearemos a continuación
-    await deleteReview(reviewId, userId);
+    await deleteReview(reviewId, user.id, user.role || 'USER');
     
     res.status(200).json({ message: 'Reseña eliminada correctamente' });
   } catch (error: any) {

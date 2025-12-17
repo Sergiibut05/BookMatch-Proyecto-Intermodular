@@ -14,7 +14,7 @@ import type {
 } from './payments.schema.js';
 
 const stripe = new Stripe(env.STRIPE_SECRET_KEY, {
-  apiVersion: '2024-11-20.acacia',
+  apiVersion: '2025-11-17.clover',
   typescript: true,
 });
 
@@ -126,6 +126,9 @@ export async function stripeWebhookCtrl(req: Request, res: Response) {
 export async function getCheckoutSessionCtrl(req: Request, res: Response) {
   try {
     const { sessionId } = req.params;
+    if (!sessionId) {
+      return res.status(400).json({ message: 'sessionId es requerido' });
+    }
     const session = await getCheckoutSession(sessionId);
     res.json(session);
   } catch (error: any) {
