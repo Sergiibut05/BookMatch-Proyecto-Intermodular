@@ -57,11 +57,9 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 
-// Manejar explícitamente las requests OPTIONS
-app.options('*', cors(corsOptions));
-
 app.use(helmet({
   contentSecurityPolicy: false,
+  crossOriginResourcePolicy: { policy: "cross-origin" }
 }));
 
 // Webhook de Stripe debe estar antes de express.json()
