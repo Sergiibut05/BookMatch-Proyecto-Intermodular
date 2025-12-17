@@ -12,7 +12,8 @@ import { Order } from '@shared/models/orders.model';
 export class OrdersService {
   private http = inject(HttpClient);
   private authService = inject(AuthService);
-  private apiUrl = `${environment.apiUrl}/orders`;
+  private baseUrl = environment.apiUrl.endsWith('/') ? environment.apiUrl.slice(0, -1) : environment.apiUrl;
+  private apiUrl = `${this.baseUrl}/orders`;
 
   private authHeaders(): Observable<HttpHeaders> {
     return this.authService.getToken().pipe(

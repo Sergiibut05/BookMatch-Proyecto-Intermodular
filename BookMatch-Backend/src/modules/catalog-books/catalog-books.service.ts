@@ -238,7 +238,7 @@ export async function updateCatalogBook(id: number, input: UpdateCatalogBookInpu
   if (isbn !== undefined) data.isbn = isbn;
   if (description !== undefined) data.description = description;
   if (coverUrl !== undefined) data.coverUrl = coverUrl;
-  if (price !== undefined) data.price = new Prisma.Decimal(price);
+  if (price !== undefined) data.price = price;
   if (stock !== undefined) data.stock = stock;
   if (imageUrls !== undefined) {
     data.imageUrls = { set: imageUrls };

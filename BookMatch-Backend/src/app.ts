@@ -21,7 +21,12 @@ const app = express();
 app.use(helmet({
   contentSecurityPolicy: false,
 }));
-app.use(cors());
+app.use(cors({
+  origin: env.FRONTEND_URL || 'http://localhost:4200',
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 
 app.post('/api/payments/webhook', express.raw({ type: 'application/json' }), stripeWebhookCtrl);
 

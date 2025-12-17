@@ -12,7 +12,8 @@ import { Forum, ForumsListResponse, CreateForumDto, UpdateForumDto } from '@shar
 export class ForumsService {
   private http = inject(HttpClient);
   private authService = inject(AuthService);
-  private apiUrl = `${environment.apiUrl}/forums`;
+  private baseUrl = environment.apiUrl.endsWith('/') ? environment.apiUrl.slice(0, -1) : environment.apiUrl;
+  private apiUrl = `${this.baseUrl}/forums`;
 
   private authHeaders(): Observable<HttpHeaders> {
     return this.authService.getToken().pipe(

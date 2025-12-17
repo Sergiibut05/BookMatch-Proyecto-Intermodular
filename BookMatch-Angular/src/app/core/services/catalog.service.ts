@@ -12,7 +12,8 @@ import { environment } from '../../../environments/environment';
 export class CatalogService {
   private http = inject(HttpClient);
   private authService = inject(AuthService);
-  private apiUrl = `${environment.apiUrl}/catalog-books`;
+  private baseUrl = environment.apiUrl.endsWith('/') ? environment.apiUrl.slice(0, -1) : environment.apiUrl;
+  private apiUrl = `${this.baseUrl}/catalog-books`;
 
   private authHeaders(): Observable<HttpHeaders> {
     return this.authService.getToken().pipe(
