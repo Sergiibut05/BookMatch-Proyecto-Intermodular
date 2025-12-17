@@ -4,6 +4,7 @@ import { Observable, from } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
 import { CatalogBook, CreateCatalogBookDto, Review, Category } from '@shared/models';
 import { AuthService } from './auth.service';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
@@ -11,7 +12,7 @@ import { AuthService } from './auth.service';
 export class CatalogService {
   private http = inject(HttpClient);
   private authService = inject(AuthService);
-  private apiUrl = 'http://localhost:3000/api/catalog-books';
+  private apiUrl = `${environment.apiUrl}/catalog-books`;
 
   private authHeaders(): Observable<HttpHeaders> {
     return this.authService.getToken().pipe(

@@ -15,7 +15,7 @@ export class AuthService {
   private router = inject(Router);
   private http = inject(HttpClient);
   
-  private readonly API_URL = 'http://localhost:3000/api'; 
+  private readonly API_URL = `${environment.apiUrl}`; 
   private readonly TOKEN_KEY = 'firebase_token';
 
   currentUser = signal<BackendUser | null>(null);

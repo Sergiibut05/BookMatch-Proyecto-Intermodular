@@ -10,7 +10,6 @@ export const environment = {
         databaseURL: "https://bookmatch-522d5-default-rtdb.europe-west1.firebasedatabase.app",
         measurementId: "G-YD2T0NCDTC"
     },
-    // Stripe (LIVE MODE - usar claves de producción)
     stripePublishableKey: 'pk_test_51SXKSE9RfkpN8LkuajmtkGe2fBJNNYiVhepYyANGrlr5xBW9nMJXEm76iUAoJb3iqutIywJviuf4QQJHFNFQQr0d007T7bx4gt',
-    apiUrl: 'https://tu-api.com/api'
+    apiUrl: 'https://REEMPLAZAR_CON_URL_DEL_BACKEND.vercel.app/api'
 };
