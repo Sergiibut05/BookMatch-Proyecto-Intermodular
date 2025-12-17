@@ -9,10 +9,11 @@ import { Post, UpdatePostDto } from '@shared/models/posts.model';
 import { Header } from '@shared/components/header/header';
 import { CommentThreadComponent } from '@shared/components/comment-thread/comment-thread.component';
 import { RelativeTimePipe } from '@core/pipes/relative-time.pipe';
+import { IsAdminDirective } from '@core/directives/is-admin.directive';
 
 @Component({
   selector: 'app-post-detail',
-  imports: [Header, ReactiveFormsModule, CommentThreadComponent, TranslateModule, RelativeTimePipe],
+  imports: [Header, ReactiveFormsModule, CommentThreadComponent, TranslateModule, RelativeTimePipe, IsAdminDirective],
   templateUrl: './post-detail.component.html',
   styleUrl: './post-detail.component.scss',
 })
@@ -21,7 +22,7 @@ export class PostDetailComponent implements OnInit, OnDestroy {
   private authService = inject(AuthService);
   private route = inject(ActivatedRoute);
   private fb = inject(FormBuilder);
-  router = inject(Router); // Público para usar en el template
+  router = inject(Router); 
   isAdmin = this.authService.isAdmin;
 
   forumId = signal<number | null>(null);
@@ -29,6 +30,10 @@ export class PostDetailComponent implements OnInit, OnDestroy {
   post = signal<Post | null>(null);
   isLoading = signal<boolean>(true);
   error = signal<string | null>(null);
+
+  // Modal de imagen ampliada
+  showImageModal = signal<boolean>(false);
+  selectedImageUrl = signal<string | null>(null);
 
   // Menú de opciones
   showMenu = signal<boolean>(false);
@@ -62,6 +67,16 @@ export class PostDetailComponent implements OnInit, OnDestroy {
         this.isLoading.set(false);
       }
     });
+  }
+
+  openImageModal(imageUrl: string): void {
+    this.selectedImageUrl.set(imageUrl);
+    this.showImageModal.set(true);
+  }
+
+  closeImageModal(): void {
+    this.showImageModal.set(false);
+    this.selectedImageUrl.set(null);
   }
 
   loadPost(): void {
@@ -175,13 +190,13 @@ export class PostDetailComponent implements OnInit, OnDestroy {
 
     this.postsService.updatePost(forumId, postId, updateData).subscribe({
       next: (updatedPost) => {
-        console.log('✅ Post actualizado:', updatedPost);
+        
         this.isUpdating.set(false);
         this.closeEditModal();
         this.loadPost(); // Recargar el post actualizado
       },
       error: (err: any) => {
-        console.error('❌ Error actualizando post:', err);
+        console.error('Error actualizando post:', err);
         let errorMessage = 'Error al actualizar el post';
         if (err.status === 401) {
           errorMessage = 'No estás autenticado. Por favor, inicia sesión.';
@@ -216,14 +231,13 @@ export class PostDetailComponent implements OnInit, OnDestroy {
 
     this.postsService.deletePost(forumId, postId).subscribe({
       next: () => {
-        console.log('✅ Post eliminado');
         this.isDeleting.set(false);
         this.closeDeleteModal();
         // Volver al foro después de eliminar
         this.goBack();
       },
       error: (err: any) => {
-        console.error('❌ Error eliminando post:', err);
+        console.error('Error eliminando post:', err);
         let errorMessage = 'Error al eliminar el post';
         if (err.status === 401) {
           errorMessage = 'No estás autenticado. Por favor, inicia sesión.';
@@ -256,7 +270,7 @@ export class PostDetailComponent implements OnInit, OnDestroy {
 
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent): void {
-    // Cerrar el menú si se hace clic fuera
+    
     if (this.showMenu()) {
       const target = event.target as HTMLElement;
       if (!target.closest('.relative')) {
@@ -266,7 +280,7 @@ export class PostDetailComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    // Limpiar cualquier suscripción si es necesario
+    
   }
 }
 

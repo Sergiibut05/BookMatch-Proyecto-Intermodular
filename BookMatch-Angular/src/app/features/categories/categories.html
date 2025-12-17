@@ -37,7 +37,7 @@
 
             <div class="mb-6">
               <label class="flex items-center gap-3 cursor-pointer group">
-                <input type="checkbox" [(ngModel)]="inStock" (change)="applyFilters()" 
+                <input type="checkbox" [(ngModel)]="inStockValue" (change)="applyFilters()" 
                       class="w-5 h-5 rounded border-2 cursor-pointer transition-colors focus:ring-2 focus:ring-offset-1"
                       style="accent-color: #E0A15E; border-color: #D4C9B9;">
                 <span class="text-sm font-medium transition-colors group-hover:text-[#E0A15E]" style="color: #45332D;">
@@ -67,14 +67,14 @@
               <div class="flex items-center gap-2 mb-4">
                 <div class="relative w-full">
                   <span class="absolute left-3 top-2 text-sm" style="color: #D4C9B9;">{{ 'CATEGORIES.MONEY' | translate }}</span>
-                  <input type="number" [(ngModel)]="minPrice" placeholder="Min" min="0"
+                  <input type="number" [(ngModel)]="minPriceValue" placeholder="Min" min="0"
                     class="w-full pl-6 pr-2 py-2 rounded-lg border text-sm focus:outline-none focus:ring-2"
                     style="border-color: #E9E1D1; background-color: white; color: #45332D;">
                 </div>
                 <span style="color: #45332D;">-</span>
                 <div class="relative w-full">
                   <span class="absolute left-3 top-2 text-sm" style="color: #D4C9B9;">{{ 'CATEGORIES.MONEY' | translate }}</span>
-                  <input type="number" [(ngModel)]="maxPrice" placeholder="Max" min="0"
+                  <input type="number" [(ngModel)]="maxPriceValue" placeholder="Max" min="0"
                     class="w-full pl-6 pr-2 py-2 rounded-lg border text-sm focus:outline-none focus:ring-2"
                     style="border-color: #E9E1D1; background-color: white; color: #45332D;">
                 </div>

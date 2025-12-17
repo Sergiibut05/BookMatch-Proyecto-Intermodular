@@ -10,7 +10,7 @@ export class StorageService {
   private storage = inject(FirebaseStorage);
 
   /**
-   * Toma una foto usando Capacitor Camera (móvil) o input file (web)
+   * @returns Promise con la foto tomada o null si se cancela
    */
   async takePhoto(): Promise<Photo | null> {
     try {
@@ -29,14 +29,10 @@ export class StorageService {
 
       return image;
     } catch (error) {
-      console.error('Error tomando foto:', error);
       return null;
     }
   }
 
-  /**
-   * Toma foto en web usando input file
-   */
   private async takePhotoWeb(): Promise<Photo | null> {
     return new Promise((resolve) => {
       const input = document.createElement('input');
@@ -69,11 +65,10 @@ export class StorageService {
   }
 
   /**
-   * Sube una imagen a Firebase Storage
-   * @param photo Foto tomada con Capacitor
+   * @param photo Foto a subir
    * @param userId ID del usuario
-   * @param oldPhotoUrl URL de la foto anterior (opcional, para eliminarla)
-   * @returns URL de descarga de la nueva imagen
+   * @param oldPhotoUrl URL de la foto anterior a eliminar
+   * @returns Promise con la URL de la imagen subida
    */
   async uploadPhoto(photo: Photo, userId: string, oldPhotoUrl?: string | null): Promise<string> {
     try {
@@ -96,43 +91,58 @@ export class StorageService {
       const downloadURL = await getDownloadURL(storageRef);
       return downloadURL;
     } catch (error) {
-      console.error('Error subiendo foto:', error);
       throw new Error('Error al subir la imagen');
     }
   }
 
   /**
-   * Elimina una foto de Firebase Storage
+   * @param photo Foto a subir
+   * @param userId ID del usuario
+   * @returns Promise con la URL de la imagen subida
    */
-  async deletePhoto(photoUrl: string): Promise<void> {
+  async uploadPostImage(photo: Photo, userId: string): Promise<string> {
     try {
-      // Extraer el path de la URL de Firebase Storage
-      // Formato: https://firebasestorage.googleapis.com/v0/b/BUCKET/o/PATH?alt=media&token=TOKEN
-      const url = new URL(photoUrl);
-      const pathMatch = url.pathname.match(/\/o\/(.+)\?/);
-      
-      if (!pathMatch) {
-        console.warn('No se pudo extraer el path de la URL:', photoUrl);
-        return;
-      }
+      // Convertir DataUrl a Blob
+      const blob = await this.dataUrlToBlob(photo.dataUrl!);
 
-      // Decodificar el path (puede estar codificado)
-      const decodedPath = decodeURIComponent(pathMatch[1]);
-      const storageRef = ref(this.storage, decodedPath);
+      // Crear referencia en Firebase Storage
+      const fileName = `posts/${userId}_${Date.now()}.${photo.format || 'jpg'}`;
+      const storageRef = ref(this.storage, fileName);
 
-      // Eliminar archivo
-      await deleteObject(storageRef);
-    } catch (error: any) {
-      // Si el archivo no existe, no es un error crítico
-      if (error.code !== 'storage/object-not-found') {
-        console.error('Error eliminando foto:', error);
-      }
+      // Subir imagen
+      await uploadBytes(storageRef, blob);
+
+      // Obtener URL de descarga
+      const downloadURL = await getDownloadURL(storageRef);
+      return downloadURL;
+    } catch (error) {
+      throw new Error('Error al subir la imagen del post');
     }
   }
 
   /**
-   * Convierte DataUrl a Blob
+   * @param photoUrl URL de la foto a eliminar
    */
+  async deletePhoto(photoUrl: string): Promise<void> {
+    try {
+      const url = new URL(photoUrl);
+      const pathMatch = url.pathname.match(/\/o\/(.+)\?/);
+      
+      if (!pathMatch) {
+        return;
+      }
+
+      const decodedPath = decodeURIComponent(pathMatch[1]);
+      const storageRef = ref(this.storage, decodedPath);
+
+      await deleteObject(storageRef);
+    } catch (error: any) {
+      if (error.code !== 'storage/object-not-found') {
+        // Error silencioso si el archivo no existe
+      }
+    }
+  }
+
   private async dataUrlToBlob(dataUrl: string): Promise<Blob> {
     const response = await fetch(dataUrl);
     return await response.blob();

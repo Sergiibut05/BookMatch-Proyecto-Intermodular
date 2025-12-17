@@ -12,6 +12,7 @@ export interface Category {
     name: string;
     slug: string;
     type: 'MAIN' | 'SPECIAL';
+    parentId?: number | null;
     icon?: string;
     description?: string;
   }
@@ -42,7 +43,7 @@ export interface Category {
     imageUrls?: string[];
     price: number;
     stock: number;
-    categoryIds?: number[]; // IDs de categorías a asignar
+    categoryIds?: number[]; 
   }
   
   export interface UpdateCatalogBookDto extends Partial<CreateCatalogBookDto> {}

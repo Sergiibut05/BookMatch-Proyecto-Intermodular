@@ -28,19 +28,19 @@ export class ProfileEditComponent implements OnInit, OnChanges {
   editForm!: FormGroup;
 
   ngOnInit(): void {
-    // Inicializar formulario vacío
+    
     this.editForm = this.fb.group({
       fullName: ['', [Validators.minLength(2)]]
     });
 
-    // Inicializar con los valores del perfil cuando esté disponible
+
     if (this.profile) {
       this.initializeForm(this.profile);
     }
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    // Si el perfil cambia, actualizar el formulario
+    
     if (changes['profile'] && this.profile && this.editForm) {
       this.initializeForm(this.profile);
     }
@@ -71,7 +71,6 @@ export class ProfileEditComponent implements OnInit, OnChanges {
   cancelEditing(): void {
     this.isEditing.set(false);
     this.error.set(null);
-    // Restaurar valores originales
     if (this.profile && this.editForm) {
       this.initializeForm(this.profile);
     }

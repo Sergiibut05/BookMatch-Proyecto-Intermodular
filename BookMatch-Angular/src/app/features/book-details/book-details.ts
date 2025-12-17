@@ -13,6 +13,7 @@ import { AuthService } from '@core/services/auth.service';
 import { Header } from '@shared/components/header/header';
 import { StarRatingComponent } from '@shared/components/star-rating/star-rating.component';
 import { CatalogBook, Review } from '@shared/models';
+import { IsAdminDirective } from '@core/directives/is-admin.directive';
 
 // Módulo de traducción
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
@@ -20,7 +21,7 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 @Component({
   selector: 'app-book-details',
   standalone: true,
-  imports: [Header, CommonModule, ReactiveFormsModule, StarRatingComponent, TranslateModule, RouterLink],
+  imports: [Header, CommonModule, ReactiveFormsModule, StarRatingComponent, TranslateModule, RouterLink, IsAdminDirective],
   templateUrl: './book-details.html',
   styleUrl: './book-details.scss',
 })

@@ -56,14 +56,13 @@ export class CommentThreadComponent implements OnInit {
 
     this.commentsService.getCommentsByPostId(this.forumId, this.postId).subscribe({
       next: (comments) => {
-        console.log('✅ Comentarios cargados:', comments);
         this.comments.set(comments);
         this.isLoading.set(false);
       },
       error: (err: any) => {
-        console.error('❌ Error cargando comentarios:', err);
-        console.error('❌ Status:', err.status);
-        console.error('❌ Error completo:', JSON.stringify(err, null, 2));
+        console.error('Error cargando comentarios:', err);
+        console.error('Status:', err.status);
+        console.error('Error completo:', JSON.stringify(err, null, 2));
         this.error.set(err.error?.message || 'Error al cargar los comentarios');
         this.isLoading.set(false);
       }
@@ -94,14 +93,13 @@ export class CommentThreadComponent implements OnInit {
 
     this.commentsService.createComment(this.forumId, this.postId, commentData).subscribe({
       next: (newComment) => {
-        console.log('✅ Comentario creado:', newComment);
         this.isSubmittingMain.set(false);
         this.mainCommentForm.reset();
         this.showMainInput.set(false);
-        this.loadComments(); // Recargar comentarios
+        this.loadComments(); 
       },
       error: (err: any) => {
-        console.error('❌ Error creando comentario:', err);
+        console.error('Error creando comentario:', err);
         let errorMessage = 'Error al crear el comentario';
         if (err.status === 401) {
           errorMessage = 'No estás autenticado. Por favor, inicia sesión.';
@@ -122,7 +120,6 @@ export class CommentThreadComponent implements OnInit {
     const isShowing = newMap.get(commentId) || false;
     
     if (!isShowing) {
-      // Crear formulario si no existe
       if (!this.replyForms.has(commentId)) {
         this.replyForms.set(commentId, this.fb.group({
           content: ['', [Validators.required, Validators.minLength(1), Validators.maxLength(1000)]]
@@ -133,7 +130,6 @@ export class CommentThreadComponent implements OnInit {
     newMap.set(commentId, !isShowing);
     this.showReplyInput.set(newMap);
     
-    // Limpiar error
     const errors = new Map(this.replyErrors());
     errors.set(commentId, null);
     this.replyErrors.set(errors);
@@ -165,7 +161,6 @@ export class CommentThreadComponent implements OnInit {
 
     this.commentsService.createComment(this.forumId, this.postId, commentData).subscribe({
       next: (newComment) => {
-        console.log('✅ Respuesta creada:', newComment);
         const replying = new Map(this.isReplying());
         replying.set(parentId, false);
         this.isReplying.set(replying);
@@ -175,10 +170,10 @@ export class CommentThreadComponent implements OnInit {
         showing.set(parentId, false);
         this.showReplyInput.set(showing);
         
-        this.loadComments(); // Recargar comentarios
+        this.loadComments(); 
       },
       error: (err: any) => {
-        console.error('❌ Error creando respuesta:', err);
+        console.error('Error creando respuesta:', err);
         let errorMessage = 'Error al crear la respuesta';
         if (err.status === 401) {
           errorMessage = 'No estás autenticado. Por favor, inicia sesión.';
@@ -251,11 +246,10 @@ export class CommentThreadComponent implements OnInit {
   deleteComment(commentId: number): void {
     this.commentsService.deleteComment(commentId).subscribe({
       next: () => {
-        console.log('✅ Comentario eliminado:', commentId);
-        this.loadComments(); // Recargar comentarios
+        this.loadComments();
       },
       error: (err: any) => {
-        console.error('❌ Error eliminando comentario:', err);
+        console.error('Error eliminando comentario:', err);
         let errorMessage = 'Error al eliminar el comentario';
         if (err.status === 401) {
           errorMessage = 'No estás autenticado. Por favor, inicia sesión.';

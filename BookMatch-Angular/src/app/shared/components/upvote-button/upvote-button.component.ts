@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnInit, inject, signal } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges, inject, signal } from '@angular/core';
 
 import { VotesService, VoteType } from '@core/services/votes.service';
 
@@ -34,6 +34,13 @@ export class UpvoteButtonComponent implements OnInit {
       console.warn('⚠️ UpvoteButtonComponent: item no está definido');
       this.currentScore.set(0);
       this.userVote.set(null);
+    }
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['item'] && this.item) {
+      this.currentScore.set(this.item.score ?? 0);
+      this.userVote.set(this.item.userVote ?? null);
     }
   }
 
@@ -78,21 +85,8 @@ export class UpvoteButtonComponent implements OnInit {
     this.isVoting.set(true);
 
     this.votesService.upsertVote(this.forumId, this.postId, type).subscribe({
-      next: () => {
-        const previousVote = this.userVote();
-        const previousScore = this.currentScore();
-
-        // Calcular nuevo score
-        let newScore = previousScore;
-        if (previousVote === 'UP' && type === 'DOWN') {
-          newScore -= 2; // Cambió de UP a DOWN: -2
-        } else if (previousVote === 'DOWN' && type === 'UP') {
-          newScore += 2; // Cambió de DOWN a UP: +2
-        } else if (previousVote === null && type === 'UP') {
-          newScore += 1; // Nuevo voto UP: +1
-        } else if (previousVote === null && type === 'DOWN') {
-          newScore -= 1; // Nuevo voto DOWN: -1
-        }
+      next: (response) => {
+        const newScore = response.score;
 
         this.userVote.set(type);
         this.currentScore.set(newScore);
@@ -115,17 +109,8 @@ export class UpvoteButtonComponent implements OnInit {
     this.isVoting.set(true);
 
     this.votesService.deleteVote(this.forumId, this.postId).subscribe({
-      next: () => {
-        const previousVote = this.userVote();
-        const previousScore = this.currentScore();
-
-        // Calcular nuevo score
-        let newScore = previousScore;
-        if (previousVote === 'UP') {
-          newScore -= 1; // Eliminar voto UP: -1
-        } else if (previousVote === 'DOWN') {
-          newScore += 1; // Eliminar voto DOWN: +1
-        }
+      next: (response) => {
+        const newScore = response.score;
 
         this.userVote.set(null);
         this.currentScore.set(newScore);

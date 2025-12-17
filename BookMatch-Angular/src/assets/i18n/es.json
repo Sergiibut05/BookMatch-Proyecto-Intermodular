@@ -65,6 +65,11 @@
         }
     },
     "HOME": {
+        "HERO": {
+            "TITLE": "Descubre tu próximo libro favorito",
+            "SUBTITLE": "Explora miles de libros, compra, vende e intercambia con nuestra comunidad de lectores",
+            "CTA": "Explorar Catálogo"
+        },
         "FEATURES": {
             "BUY_SELL": {
                 "TITLE": "Compra & Venta",
@@ -78,6 +83,11 @@
                 "TITLE": "Recomendaciones IA",
                 "DESCRIPTION": "Descubre tu próxima lectura favorita gracias a nuestra inteligencia artificial que aprende de tus gustos y preferencias."
             }
+        },
+        "FORUM_BANNER": {
+            "TITLE": "Únete a nuestra comunidad",
+            "SUBTITLE": "Comparte tus opiniones, descubre recomendaciones y conecta con otros amantes de los libros",
+            "CTA": "Ir al Foro"
         }
     },
     "CATEGORIES": {
@@ -118,6 +128,16 @@
         "FROM": "de",
         "LAST": "Ant",
         "NEXT": "Sig"
+    },
+    "CATEGORIES_SELECTOR": {
+        "TITLE": "Explora todas las categorías",
+        "SUBTITLE": "Descubre libros de todas las categorías disponibles. Haz clic en cualquier categoría para ver los libros disponibles.",
+        "SEARCH_PLACEHOLDER": "Buscar categorías...",
+        "MAIN_CATEGORIES": "Categorías principales",
+        "SPECIAL_CATEGORIES": "Subcategorías",
+        "NO_RESULTS": "No se encontraron categorías",
+        "NO_RESULTS_DESC": "Intenta buscar con otros términos",
+        "RESULTS_FOUND": "categorías encontradas"
     },
     "PAYMENT": {
         "VERIFYING": "Verificando pago...",
@@ -368,7 +388,10 @@
             "CONTENT_LABEL": "Contenido",
             "CONTENT_PLACEHOLDER": "Escribe el contenido de tu tema...",
             "CREATING": "Creando...",
-            "CREATE_BUTTON": "Crear Tema"
+            "CREATE_BUTTON": "Crear Tema",
+            "IMAGES_LABEL": "Imágenes (opcional)",
+            "IMAGES_ADD_BUTTON": "Añadir imagen",
+            "IMAGES_UPLOADING": "Subiendo..."
         },
         "EDIT_MODAL": {
             "TITLE": "Editar Foro",
@@ -443,5 +466,60 @@
         "RESULTS_FOUND": "{{count}} resultados encontrados",
         "FOR_BOOKS": "para \"{{query}}\"",
         "FOR_FORUMS": "en foros para \"{{query}}\""
+    },
+    "BOOK_FORM": {
+        "TITLE_EDIT": "Editar Libro",
+        "TITLE_CREATE": "Añadir Nuevo Libro",
+        "COVER": {
+            "BUTTON": "Subir Portada",
+            "UPLOADING": "Subiendo..."
+        },
+        "FIELDS": {
+            "TITLE": {
+                "LABEL": "Título"
+            },
+            "AUTHOR": {
+                "LABEL": "Autor"
+            },
+            "ISBN": {
+                "LABEL": "ISBN"
+            },
+            "CATEGORY": {
+                "LABEL": "Categoría Principal",
+                "PLACEHOLDER": "Selecciona una categoría"
+            },
+            "PRICE": {
+                "LABEL": "Precio (€)"
+            },
+            "STOCK": {
+                "LABEL": "Stock"
+            },
+            "DESCRIPTION": {
+                "LABEL": "Descripción"
+            }
+        },
+        "BUTTONS": {
+            "SAVING": "Guardando...",
+            "SAVE_CHANGES": "Guardar Cambios",
+            "CREATE": "Crear Libro",
+            "CANCEL": "Cancelar"
+        },
+        "ERRORS": {
+            "ACCESS_DENIED": "Acceso denegado. Solo administradores.",
+            "LOAD_BOOK": "Error al cargar el libro",
+            "UPLOAD_IMAGE": "Error al subir la imagen",
+            "UPDATE_BOOK": "Error al actualizar libro",
+            "CREATE_BOOK": "Error al crear libro"
+        },
+        "SUCCESS": {
+            "UPDATE": "Libro actualizado correctamente",
+            "CREATE": "Libro creado correctamente"
+        },
+        "VALIDATION": {
+            "REQUIRED": "Este campo es obligatorio",
+            "MIN_LENGTH": "Texto demasiado corto",
+            "MIN_VALUE": "El valor debe ser positivo",
+            "INVALID": "Campo inválido"
+        }
     }
 }

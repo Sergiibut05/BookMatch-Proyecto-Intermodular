@@ -11,7 +11,6 @@ export class LoaderComponent {
   fadeOut = false;
 
   ngOnInit(): void {
-    // Simular carga de 2 segundos
     setTimeout(() => {
       this.fadeOut = true;
     }, 2000);

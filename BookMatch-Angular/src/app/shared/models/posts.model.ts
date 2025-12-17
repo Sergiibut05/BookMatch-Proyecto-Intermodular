@@ -10,6 +10,11 @@ export interface PostAuthor {
 
 export type VoteType = 'UP' | 'DOWN';
 
+export interface PostImage {
+  id: number;
+  url: string;
+}
+
 export interface Post {
   id: number;
   title: string;
@@ -20,7 +25,8 @@ export interface Post {
   authorId: number;
   score: number;
   author?: PostAuthor;
-  userVote?: VoteType | null; // Voto del usuario actual para este post
+  images?: PostImage[];
+  userVote?: VoteType | null; 
   _count?: {
     comments: number;
     votes: number;
@@ -38,6 +44,7 @@ export interface PostsListResponse {
 export interface CreatePostDto {
   title: string;
   content: string;
+  images?: string[];
 }
 
 export interface UpdatePostDto {

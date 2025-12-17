@@ -18,6 +18,10 @@ export interface CreateVoteDto {
   type: VoteType;
 }
 
+export interface VoteScoreResponse {
+  score: number;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -39,19 +43,18 @@ export class VotesService {
   }
 
   /**
-   * Obtiene el voto del usuario actual para un post específico
+   * @param forumId ID del foro
+   * @param postId ID del post
+   * @returns Observable con el voto del usuario o null si no ha votado
    */
   getUserVote(forumId: number, postId: number): Observable<Vote | null> {
     return this.authHeaders().pipe(
       switchMap(headers =>
         this.http.get<Vote | null>(`${this.apiUrl}/${forumId}/posts/${postId}/votes`, { headers }).pipe(
           catchError(err => {
-            // Si es 404, significa que no hay voto (no es un error)
             if (err.status === 404) {
               return of(null);
             }
-            // Para otros errores, también retornar null para no bloquear
-            console.warn(`Error obteniendo voto para post ${postId}:`, err);
             return of(null);
           })
         )
@@ -60,9 +63,12 @@ export class VotesService {
   }
 
   /**
-   * Crea o actualiza un voto para un post
+   * @param forumId ID del foro
+   * @param postId ID del post
+   * @param voteType Tipo de voto (UP o DOWN)
+   * @returns Observable con el nuevo score del post
    */
-  upsertVote(forumId: number, postId: number, voteType: VoteType): Observable<void> {
+  upsertVote(forumId: number, postId: number, voteType: VoteType): Observable<VoteScoreResponse> {
     return this.authHeaders().pipe(
       switchMap(headers => {
         const body: CreateVoteDto = {
@@ -70,18 +76,20 @@ export class VotesService {
         };
         const payload = { body };
 
-        return this.http.post<void>(`${this.apiUrl}/${forumId}/posts/${postId}/votes`, payload, { headers });
+        return this.http.post<VoteScoreResponse>(`${this.apiUrl}/${forumId}/posts/${postId}/votes`, payload, { headers });
       })
     );
   }
 
   /**
-   * Elimina el voto del usuario para un post
+   * @param forumId ID del foro
+   * @param postId ID del post
+   * @returns Observable con el nuevo score del post
    */
-  deleteVote(forumId: number, postId: number): Observable<void> {
+  deleteVote(forumId: number, postId: number): Observable<VoteScoreResponse> {
     return this.authHeaders().pipe(
       switchMap(headers =>
-        this.http.delete<void>(`${this.apiUrl}/${forumId}/posts/${postId}/votes`, { headers })
+        this.http.delete<VoteScoreResponse>(`${this.apiUrl}/${forumId}/posts/${postId}/votes`, { headers })
       )
     );
   }

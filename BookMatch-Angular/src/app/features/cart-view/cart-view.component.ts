@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core'; // <--- Importamos signal
+import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { Header } from '@shared/components/header/header';
@@ -24,7 +24,7 @@ export class CartViewComponent {
 
     isLoading = false;
 
-    // 1. SEÑAL PARA EL MODAL (Inicialmente oculta)
+    
     showClearModal = signal(false);
 
     increaseQuantity(bookId: number, currentQty: number) {
@@ -43,25 +43,25 @@ export class CartViewComponent {
         this.cartService.removeFromCart(bookId);
     }
 
-    // --- NUEVA LÓGICA PARA EL MODAL ---
+    
 
-    // Esto es lo que llama el botón "Vaciar Carrito" ahora
+    
     openClearCartModal() {
-        this.showClearModal.set(true); // Muestra tu modal bonito
+        this.showClearModal.set(true); 
     }
 
-    // Esto lo llama el botón "Cancelar" del modal
+    
     cancelClearCart() {
-        this.showClearModal.set(false); // Oculta el modal
+        this.showClearModal.set(false); 
     }
 
-    // Esto lo llama el botón "Sí, vaciar" del modal
+    
     confirmClearCart() {
-        this.cartService.clearCart(); // Borra los datos
-        this.showClearModal.set(false); // Cierra el modal
+        this.cartService.clearCart(); 
+        this.showClearModal.set(false);
     }
 
-    // --- Checkout ---
+    
     onCheckout() {
         if (this.cartItems().length === 0) return;
 

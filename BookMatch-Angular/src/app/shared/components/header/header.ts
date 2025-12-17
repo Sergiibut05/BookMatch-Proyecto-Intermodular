@@ -4,6 +4,7 @@ import { Router, RouterLink, NavigationEnd, ActivatedRoute } from '@angular/rout
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '@core/services/auth.service';
 import { CartService } from '@core/services/cart.service';
+import { IsAdminDirective } from '@core/directives/is-admin.directive';
 
 import { TranslateModule } from '@ngx-translate/core';
 import { LanguageSelectorComponent } from '../language-selector/language-selector';
@@ -12,7 +13,7 @@ import { Subject } from 'rxjs';
 
 @Component({
   selector: 'app-header',
-  imports: [CommonModule, RouterLink, LanguageSelectorComponent, TranslateModule, FormsModule],
+  imports: [CommonModule, RouterLink, LanguageSelectorComponent, TranslateModule, FormsModule, IsAdminDirective],
   templateUrl: './header.html',
   styleUrl: './header.scss',
 })
@@ -28,21 +29,17 @@ export class Header implements OnInit, OnDestroy {
   currentUrl = signal<string>('');
   searchTypeFromParams = signal<'book' | 'forum' | null>(null);
 
-  // Determina si estamos en una ruta de foro o en search-results con type=forum
   isForumRoute = computed(() => {
     const url = this.currentUrl();
     const searchType = this.searchTypeFromParams();
     
-    // Si estamos en search-results, usar el tipo del query param
     if (url.startsWith('/search-results')) {
       return searchType === 'forum';
     }
     
-    // Si no, usar la ruta normal
     return url.startsWith('/foro');
   });
 
-  // Placeholder contextual
   searchPlaceholder = computed(() => {
     return this.isForumRoute() 
       ? 'HEADER.SEARCH_FORUMS_PLACEHOLDER' 
@@ -50,7 +47,6 @@ export class Header implements OnInit, OnDestroy {
   });
 
   ngOnInit(): void {
-    // Suscribirse a cambios de ruta
     this.router.events
       .pipe(
         filter(event => event instanceof NavigationEnd),
@@ -61,11 +57,9 @@ export class Header implements OnInit, OnDestroy {
         this.updateSearchTypeFromUrl();
       });
     
-    // Inicializar con la ruta actual
     this.currentUrl.set(this.router.url);
     this.updateSearchTypeFromUrl();
 
-    // Suscribirse a cambios en query params
     this.router.events
       .pipe(
         filter(event => event instanceof NavigationEnd),
@@ -84,7 +78,6 @@ export class Header implements OnInit, OnDestroy {
   private updateSearchTypeFromUrl(): void {
     const url = this.router.url;
     if (url.startsWith('/search-results')) {
-      // Extraer el query param type de la URL usando el router
       const urlTree = this.router.parseUrl(url);
       const type = urlTree.queryParams['type'];
       this.searchTypeFromParams.set(type === 'forum' ? 'forum' : 'book');
@@ -130,12 +123,10 @@ export class Header implements OnInit, OnDestroy {
     const query = this.searchQuery().trim();
     if (!query) return;
 
-    // Usar el tipo determinado por el contexto (ruta o query params)
     const searchType = this.isForumRoute() ? 'forum' : 'book';
     this.router.navigate(['/search-results'], {
       queryParams: { q: query, type: searchType }
     });
-    // Limpiar el input después de buscar
     this.searchQuery.set('');
   }
 

@@ -45,7 +45,7 @@ export class UsersService {
   }
 
   /**
-   * Obtiene el perfil del usuario autenticado
+   * @returns Observable con el perfil del usuario autenticado
    */
   getMyProfile(): Observable<UserProfile> {
     return this.authHeaders().pipe(
@@ -56,7 +56,8 @@ export class UsersService {
   }
 
   /**
-   * Actualiza el perfil del usuario autenticado
+   * @param data Datos a actualizar
+   * @returns Observable con el perfil actualizado
    */
   updateMyProfile(data: UpdateProfileData): Observable<UserProfile> {
     return this.authHeaders().pipe(
@@ -67,7 +68,8 @@ export class UsersService {
   }
 
   /**
-   * Actualiza solo el avatar del usuario
+   * @param avatarUrl URL del nuevo avatar
+   * @returns Observable con el perfil actualizado
    */
   updateAvatar(avatarUrl: string): Observable<UserProfile> {
     return this.updateMyProfile({ avatarUrl });

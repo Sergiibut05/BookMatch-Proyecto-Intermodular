@@ -36,6 +36,11 @@ export const routes: Routes = [
         loadComponent: () => import('./features/book-form/book-form').then(m => m.BookFormComponent)
       },
       {
+        path: 'categories',
+        canActivate: [authGuard],
+        loadComponent: () => import('./features/categories-selector/categories-selector').then(m => m.CategoriesSelector)
+      },
+      {
         path: 'categories/:categoria',
         canActivate: [authGuard], 
         loadComponent: () => import('./features/categories/categories').then(m => m.Categories)

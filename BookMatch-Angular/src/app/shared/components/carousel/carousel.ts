@@ -15,11 +15,11 @@ import { TranslateModule } from '@ngx-translate/core';
 export class Carousel implements OnInit {
   @Input() categoryTitle: string = 'Libros';
   
-  // Nuevos inputs
+  
   @Input() categoryId?: number;
   @Input() isNewArrivals: boolean = false;
   
-  // Inputs antiguos (RESTAURADOS)
+  
   @Input() categoryUrl: string = '';
   @Input() categoryName: string = '';
 
@@ -36,21 +36,21 @@ export class Carousel implements OnInit {
   }
 
   loadBooks() {
-    // 1. Cargar Novedades
+    
     if (this.isNewArrivals) {
       this.catalogService.getNewArrivals(10).subscribe({
         next: (res) => this.books.set(res.items || []),
         error: (err) => console.error('Error cargando novedades:', err)
       });
     } 
-    // 2. Cargar por ID (ESTO ARREGLA QUE SE VEAN LOS LIBROS CORRECTOS)
+    
     else if (this.categoryId) {
       this.catalogService.getBooksByCategoryId(this.categoryId, 1, 10).subscribe({
         next: (res) => this.books.set(res.items || []),
         error: (err) => console.error(`Error cargando categoría ${this.categoryId}:`, err)
       });
     } 
-    // 3. Fallback antiguo
+    
     else if (this.categoryName) {
       this.catalogService.getBooksByCategoryName(this.categoryName, 1, 10).subscribe({
         next: (res: any) => this.books.set(res?.items ?? []),
@@ -59,7 +59,7 @@ export class Carousel implements OnInit {
     }
   }
 
-  // Lógica de scroll (INTACTA)
+  
   private getStep(): number {
     const el = this.carouselRef?.nativeElement;
     if (!el) return 0;
@@ -92,17 +92,17 @@ export class Carousel implements OnInit {
     setTimeout(() => this.snapToNearest(), 220);
   }
 
-  // --- MODIFICACIÓN IMPORTANTE: RESTAURAMOS LA RUTA ANTIGUA ---
+  
   onSeeMore(): void {
     if (this.isNewArrivals) {
       this.router.navigate(['/categories', 'novedades'], { queryParams: { sortBy: 'newest' } });
     } 
-    // SI TENEMOS NOMBRE, USAMOS LA RUTA ANTIGUA (/categories/nombre)
+    
     else if (this.categoryName || this.categoryUrl) {
       const slug = this.categoryName || this.categoryUrl;
       this.router.navigate(['/categories', slug]);
     }
-    // Si no hay nombre pero hay ID, usamos la ruta de catálogo por defecto
+    
     else if (this.categoryId) {
       this.router.navigate(['/catalog'], { queryParams: { categoryId: this.categoryId } });
     }

@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 import { HttpClient, HttpHeaders } from '@angular/common/http'; 
 import { Observable, from, map, switchMap, of } from 'rxjs';
 import { User as BackendUser } from '@shared/models'; 
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
@@ -17,7 +18,6 @@ export class AuthService {
   private readonly API_URL = 'http://localhost:3000/api'; 
   private readonly TOKEN_KEY = 'firebase_token';
 
-  // Señal que guarda al usuario con datos combinados
   currentUser = signal<BackendUser | null>(null);
   
   isAdmin = computed(() => {
@@ -32,22 +32,17 @@ export class AuthService {
         const token = await firebaseUser.getIdToken();
         localStorage.setItem(this.TOKEN_KEY, token);
 
-        // Llamamos al backend para obtener ID y otros datos
         this.fetchBackendProfile(token).subscribe({
           next: (dbUser) => {
-            // --- FUSIÓN ROBUSTA DE DATOS ---
-            // Usamos los datos de Firebase si los de la BD son null o string vacío ""
             const mergedUser: BackendUser = {
               ...dbUser,
               fullName: dbUser.fullName || firebaseUser.displayName || 'Usuario',
               avatarUrl: dbUser.avatarUrl || firebaseUser.photoURL || undefined
             };
             
-            console.log('✅ Usuario cargado y fusionado:', mergedUser);
             this.currentUser.set(mergedUser); 
           },
           error: (err) => {
-            console.error('❌ Error sincronizando perfil:', err);
             this.currentUser.set(null); 
           }
         });
@@ -63,8 +58,6 @@ export class AuthService {
     const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
     return this.http.get<BackendUser>(`${this.API_URL}/users/profile`, { headers });
   }
-  
-  // --- Resto de métodos (login, register, etc.) SIN CAMBIOS ---
   
   register(email: string, password: string, name: string, surname: string): Observable<any> {
     return from(createUserWithEmailAndPassword(this.auth, email, password)).pipe(
@@ -98,8 +91,6 @@ export class AuthService {
   }
 
   getToken(): Observable<string | null> {
-    // Usar el observable user$ en lugar de acceder directamente a currentUser
-    // para evitar el warning de AngularFire sobre el contexto de inyección
     return this.user$.pipe(
       switchMap(async (firebaseUser) => {
         if (firebaseUser) {

@@ -9,6 +9,7 @@ import { CatalogService } from '@core/services/catalog.service';
 import { AuthService } from '@core/services/auth.service';
 import { StorageService } from '@core/services/storage';
 import { Category, CreateCatalogBookDto } from '@shared/models';
+import { TranslateService } from '@ngx-translate/core';
 
 @Component({
     selector: 'app-book-form',
@@ -26,6 +27,7 @@ export class BookFormComponent implements OnInit {
     private storageService = inject(StorageService);
     private router = inject(Router);
     private route = inject(ActivatedRoute);
+    private translate = inject(TranslateService);
 
     bookForm!: FormGroup;
     categories = signal<Category[]>([]);
@@ -41,7 +43,7 @@ export class BookFormComponent implements OnInit {
 
     ngOnInit(): void {
         if (!this.authService.isAdmin()) {
-        alert('Acceso denegado. Solo administradores.');
+        alert(this.translate.instant('BOOK_FORM.ERRORS.ACCESS_DENIED'));
         this.router.navigate(['/home']);
         return;
         }
@@ -98,7 +100,7 @@ export class BookFormComponent implements OnInit {
             this.isLoading.set(false);
         },
         error: (err) => {
-            this.error.set('Error al cargar el libro');
+            this.error.set(this.translate.instant('BOOK_FORM.ERRORS.LOAD_BOOK'));
             this.isLoading.set(false);
         }
         });
@@ -121,7 +123,7 @@ export class BookFormComponent implements OnInit {
 
         } catch (err: any) {
         console.error('Error subiendo portada:', err);
-        this.error.set('Error al subir la imagen');
+        this.error.set(this.translate.instant('BOOK_FORM.ERRORS.UPLOAD_IMAGE'));
         this.isUploading.set(false);
         }
     }
@@ -150,22 +152,22 @@ export class BookFormComponent implements OnInit {
         if (this.isEditMode() && this.bookId()) {
         this.catalogService.updateBook(this.bookId()!, bookData).subscribe({
             next: () => {
-            alert('Libro actualizado correctamente');
+            alert(this.translate.instant('BOOK_FORM.SUCCESS.UPDATE'));
             this.router.navigate(['/book-details', this.bookId()]);
             },
             error: (err) => {
-            this.error.set(err.error?.message || 'Error al actualizar libro');
+            this.error.set(err.error?.message || this.translate.instant('BOOK_FORM.ERRORS.UPDATE_BOOK'));
             this.isLoading.set(false);
             }
         });
         } else {
         this.catalogService.createBook(bookData).subscribe({
             next: () => {
-            alert('Libro creado correctamente');
+            alert(this.translate.instant('BOOK_FORM.SUCCESS.CREATE'));
             this.router.navigate(['/home']);
             },
             error: (err) => {
-            this.error.set(err.error?.message || 'Error al crear libro');
+            this.error.set(err.error?.message || this.translate.instant('BOOK_FORM.ERRORS.CREATE_BOOK'));
             this.isLoading.set(false);
             }
         });
@@ -175,9 +177,9 @@ export class BookFormComponent implements OnInit {
     getFieldError(fieldName: string): string | null {
         const field = this.bookForm.get(fieldName);
         if (!field || !field.touched || !field.errors) return null;
-        if (field.errors['required']) return 'Este campo es obligatorio';
-        if (field.errors['minlength']) return 'Texto demasiado corto';
-        if (field.errors['min']) return 'El valor debe ser positivo';
-        return 'Campo inválido';
+        if (field.errors['required']) return this.translate.instant('BOOK_FORM.VALIDATION.REQUIRED');
+        if (field.errors['minlength']) return this.translate.instant('BOOK_FORM.VALIDATION.MIN_LENGTH');
+        if (field.errors['min']) return this.translate.instant('BOOK_FORM.VALIDATION.MIN_VALUE');
+        return this.translate.instant('BOOK_FORM.VALIDATION.INVALID');
     }
 }

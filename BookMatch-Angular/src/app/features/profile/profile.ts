@@ -53,10 +53,10 @@ export class Profile implements OnInit {
     try {
       this.error.set(null);
       
-      // Tomar foto
+      
       const photo = await this.storageService.takePhoto();
       if (!photo) {
-        return; // Usuario canceló
+        return; 
       }
 
       this.isUploading.set(true);
@@ -66,21 +66,20 @@ export class Profile implements OnInit {
         throw new Error('Perfil no cargado');
       }
 
-      // Obtenemos el usuario actual (ahora viene del Backend)
+      
       const user = this.authService.currentUser();
       if (!user) {
         throw new Error('Usuario no autenticado');
       }
 
       // Subir foto a Firebase Storage
-      // CORRECCIÓN 1: Usamos 'firebaseUid' en lugar de 'uid'
       const newPhotoUrl = await this.storageService.uploadPhoto(
         photo,
         user.firebaseUid, // <--- CAMBIO AQUÍ
         currentProfile.avatarUrl
       );
 
-      // Actualizar photoURL en Firebase Auth (esto se mantiene igual porque el método espera ese nombre)
+      // Actualizar photoURL en Firebase Auth
       await this.authService.updateProfile({ photoURL: newPhotoUrl });
 
       // Actualizar avatarUrl en la BD
@@ -108,8 +107,7 @@ export class Profile implements OnInit {
       return profile.avatarUrl;
     }
     const user = this.authService.currentUser();
-    // CORRECCIÓN 2: Usamos 'avatarUrl' en lugar de 'photoURL'
-    return user?.avatarUrl || null; // <--- CAMBIO AQUÍ
+    return user?.avatarUrl || null; 
   }
 
   hasPhoto(): boolean {

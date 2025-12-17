@@ -27,7 +27,9 @@ export class CommentsService {
   }
 
   /**
-   * Obtiene todos los comentarios de un post (devuelve árbol jerárquico)
+   * @param forumId ID del foro
+   * @param postId ID del post
+   * @returns Observable con el árbol jerárquico de comentarios
    */
   getCommentsByPostId(forumId: number, postId: number): Observable<Comment[]> {
     return this.authHeaders().pipe(
@@ -38,7 +40,10 @@ export class CommentsService {
   }
 
   /**
-   * Crea un nuevo comentario
+   * @param forumId ID del foro
+   * @param postId ID del post
+   * @param data Datos del comentario
+   * @returns Observable con el comentario creado
    */
   createComment(forumId: number, postId: number, data: CreateCommentDto): Observable<Comment> {
     return this.authHeaders().pipe(
@@ -49,7 +54,6 @@ export class CommentsService {
         if (data.parentId) {
           body.parentId = data.parentId;
         }
-        // El backend espera { body: { content: "...", parentId: ... } }
         const payload = { body };
 
         return this.http.post<Comment>(`${this.apiUrl}/${forumId}/posts/${postId}/comments`, payload, { headers });
@@ -58,7 +62,9 @@ export class CommentsService {
   }
 
   /**
-   * Actualiza un comentario existente
+   * @param commentId ID del comentario
+   * @param data Datos a actualizar
+   * @returns Observable con el comentario actualizado
    */
   updateComment(commentId: number, data: UpdateCommentDto): Observable<Comment> {
     return this.authHeaders().pipe(
@@ -75,7 +81,8 @@ export class CommentsService {
   }
 
   /**
-   * Elimina un comentario
+   * @param commentId ID del comentario a eliminar
+   * @returns Observable vacío cuando se completa la eliminación
    */
   deleteComment(commentId: number): Observable<void> {
     return this.authHeaders().pipe(

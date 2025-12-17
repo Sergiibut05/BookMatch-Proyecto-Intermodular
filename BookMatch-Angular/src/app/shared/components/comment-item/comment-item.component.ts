@@ -8,7 +8,7 @@ import { RelativeTimePipe } from '@core/pipes/relative-time.pipe';
 
 @Component({
   selector: 'app-comment-item',
-  imports: [ReactiveFormsModule, CommentItemComponent, TranslateModule, RelativeTimePipe], // Importa a sí mismo para recursión
+  imports: [ReactiveFormsModule, CommentItemComponent, TranslateModule, RelativeTimePipe], 
   templateUrl: './comment-item.component.html',
   styleUrl: './comment-item.component.scss',
 })
@@ -18,7 +18,7 @@ export class CommentItemComponent {
   @Input() comment!: Comment;
   @Input() forumId!: number;
   @Input() postId!: number;
-  @Input() depth: number = 0; // Profundidad de anidación
+  @Input() depth: number = 0; 
   @Input() onReply!: (commentId: number) => void;
   @Input() onSubmitReply!: (parentId: number) => void;
   @Input() isShowingReplyInput!: (commentId: number) => boolean;
@@ -29,12 +29,10 @@ export class CommentItemComponent {
   @Input() onReload!: () => void;
   @Input() onDelete!: (commentId: number) => void;
 
-  // Estado del menú y modal
   showMenu = signal<boolean>(false);
   showDeleteModal = signal<boolean>(false);
   isDeleting = signal<boolean>(false);
   
-  // Estado para expandir/colapsar comentario
   isExpanded = signal<boolean>(false);
 
   canModify(): boolean {
@@ -44,7 +42,7 @@ export class CommentItemComponent {
     return isAuthor || isAdmin;
   }
   
-  // <--- MODIFICACIÓN: Alias para el template
+
   isAdmin() {
     return this.authService.isAdmin();
   }
@@ -66,13 +64,11 @@ export class CommentItemComponent {
   }
 
   getIndentClass(): string {
-    // Aplicar indentación basada en la profundidad
     if (this.depth === 0) return '';
-    return `ml-${Math.min(this.depth * 4, 16)}`; // Máximo 16 (4rem) de indentación
+    return `ml-${Math.min(this.depth * 4, 16)}`;
   }
 
   getBorderClass(): string {
-    // Agregar borde izquierdo para comentarios anidados
     if (this.depth > 0) {
       return 'border-l-2 pl-4';
     }
@@ -83,7 +79,6 @@ export class CommentItemComponent {
    * Verifica si el comentario es lo suficientemente largo como para necesitar truncamiento
    */
   isLongComment(): boolean {
-    // Consideramos un comentario largo si tiene más de 150 caracteres
     return this.comment.content.length > 150;
   }
 
@@ -141,8 +136,6 @@ export class CommentItemComponent {
     
     this.onDelete(this.comment.id);
     
-    // Cerrar el modal después de un pequeño delay
-    // El componente padre se encargará de recargar los comentarios
     setTimeout(() => {
       this.isDeleting.set(false);
       this.closeDeleteModal();
@@ -151,7 +144,6 @@ export class CommentItemComponent {
 
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent): void {
-    // Cerrar el menú si se hace clic fuera
     if (this.showMenu()) {
       const target = event.target as HTMLElement;
       if (!target.closest('.comment-menu-container')) {

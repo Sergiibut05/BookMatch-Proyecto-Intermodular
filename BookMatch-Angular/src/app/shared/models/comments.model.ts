@@ -17,7 +17,7 @@ export interface Comment {
   authorId: number;
   parentId: number | null;
   author?: CommentAuthor;
-  children?: Comment[]; // Comentarios anidados (respuestas)
+  children?: Comment[]; 
 }
 
 export interface CreateCommentDto {

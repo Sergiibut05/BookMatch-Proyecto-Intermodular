@@ -41,7 +41,7 @@
     <!-- Contenido del post -->
     @if (!isLoading() && !error() && post()) {
       <article class="bg-white rounded-xl shadow-lg overflow-hidden">
-        <!-- Cabecera con datos del autor -->
+        
         <div class="p-6 border-b bg-white relative" style="border-color: #E9E1D1;">
           <div class="flex items-center gap-4 mb-4">
             @if (getAuthorAvatar()) {
@@ -77,7 +77,7 @@
               </div>
             </div>
             
-            <!-- Menú de tres puntitos (solo para el autor) -->
+            
             @if (canModify()) {
               <div class="relative">
                 <button
@@ -89,7 +89,7 @@
                   </svg>
                 </button>
                 
-                <!-- Dropdown menu -->
+                
                 @if (showMenu()) {
                   <div 
                     class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border z-50"
@@ -112,7 +112,7 @@
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                         </svg>
                         {{ 'POST.DELETE' | translate }}
-                        @if (isAdmin()) { <span class="text-xs ml-auto font-bold">(Admin)</span> }
+                        <span *isAdmin class="text-xs ml-auto font-bold">(Admin)</span>
                       </button>
                     </div>
                   </div>
@@ -122,14 +122,34 @@
           </div>
         </div>
 
-        <!-- Título del post -->
-        <div class="p-6 pb-4">
-          <h1 class="text-3xl md:text-4xl font-bold mb-6" style="color: #45332D;">
+        
+        <div class="p-6 pb-2">
+          <h1 class="text-3xl md:text-4xl font-bold mb-4" style="color: #45332D;">
             {{ post()!.title }}
           </h1>
         </div>
 
-        <!-- Contenido del post -->
+        
+        @if (post()!.images && post()!.images!.length > 0) {
+          <div class="px-6 pb-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              @for (image of post()!.images!; track image.id) {
+                <button
+                  type="button"
+                  class="rounded-xl overflow-hidden border group block focus:outline-none focus:ring-2 focus:ring-[#E0A15E]"
+                  style="border-color: #E9E1D1;"
+                  (click)="openImageModal(image.url)">
+                  <img
+                    [src]="image.url"
+                    alt="Imagen del post"
+                    class="w-full h-64 object-cover transition-transform duration-200 group-hover:scale-105">
+                </button>
+              }
+            </div>
+          </div>
+        }
+
+        
         <div class="px-6 pb-6">
           <div class="post-content prose prose-lg max-w-none" style="color: #45332D;">
             <p class="whitespace-pre-wrap leading-relaxed text-base md:text-lg">
@@ -139,7 +159,7 @@
         </div>
       </article>
 
-      <!-- Sección de comentarios -->
+      
       <div class="mt-8">
         <app-comment-thread
           [forumId]="forumId()!"
@@ -287,6 +307,29 @@
       </div>
     </div>
   }
-</div>
 
+  <!-- Modal de imagen ampliada -->
+  @if (showImageModal() && selectedImageUrl()) {
+    <div
+      class="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 p-4"
+      (click)="closeImageModal()">
+      <div
+        class="relative max-w-5xl w-full max-h-[90vh] flex items-center justify-center"
+        (click)="$event.stopPropagation()">
+        <button
+          type="button"
+          (click)="closeImageModal()"
+          class="absolute top-2 right-2 text-white bg-black bg-opacity-60 rounded-full p-2 hover:bg-opacity-80 transition-colors">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+        <img
+          [src]="selectedImageUrl()!"
+          alt="Imagen del post ampliada"
+          class="max-h-[80vh] w-auto max-w-full rounded-lg shadow-2xl object-contain">
+      </div>
+    </div>
+  }
+</div>
 

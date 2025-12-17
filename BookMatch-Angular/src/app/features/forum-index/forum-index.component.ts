@@ -47,12 +47,9 @@ export class ForumIndexComponent implements OnInit {
     this.error.set(null);
     this.currentPage.set(page);
 
-    console.log('🔍 Cargando foros, página:', page);
 
     this.forumsService.getForums(page, this.limit).subscribe({
       next: (response: ForumsListResponse) => {
-        console.log('✅ Respuesta del backend:', response);
-        console.log('📊 Foros recibidos:', response.items?.length || 0);
         
         this.forums.set(response.items || []);
         this.totalPages.set(response.totalPages || 1);
@@ -60,10 +57,10 @@ export class ForumIndexComponent implements OnInit {
         this.isLoading.set(false);
       },
       error: (err: any) => {
-        console.error('❌ Error cargando foros:', err);
-        console.error('❌ Error completo:', JSON.stringify(err, null, 2));
-        console.error('❌ Status:', err.status);
-        console.error('❌ Error message:', err.error);
+        console.error('Error cargando foros:', err);
+        console.error('Error completo:', JSON.stringify(err, null, 2));
+        console.error('Status:', err.status);
+        console.error('Error message:', err.error);
         this.error.set(err.error?.message || err.message || 'Error al cargar los foros');
         this.isLoading.set(false);
       }
@@ -77,7 +74,7 @@ export class ForumIndexComponent implements OnInit {
   goToPage(page: number): void {
     if (page >= 1 && page <= this.totalPages()) {
       this.loadForums(page);
-      // Scroll al inicio de la página
+      
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   }
@@ -99,11 +96,11 @@ export class ForumIndexComponent implements OnInit {
     const current = this.currentPage();
     const total = this.totalPages();
     
-    // Mostrar máximo 5 páginas alrededor de la actual
+    
     let start = Math.max(1, current - 2);
     let end = Math.min(total, current + 2);
     
-    // Ajustar si estamos cerca del inicio o final
+    
     if (end - start < 4) {
       if (start === 1) {
         end = Math.min(total, start + 4);
@@ -142,7 +139,7 @@ export class ForumIndexComponent implements OnInit {
 
     const formValue = this.createForm.value;
     
-    // Construir el payload: solo incluir description si tiene contenido
+    
     const forumData: CreateForumDto = {
       title: formValue.title.trim()
     };
@@ -151,20 +148,20 @@ export class ForumIndexComponent implements OnInit {
       forumData.description = formValue.description.trim();
     }
 
-    console.log('📤 Enviando datos del foro:', forumData);
+    
 
     this.forumsService.createForum(forumData).subscribe({
       next: (newForum) => {
-        console.log('✅ Foro creado:', newForum);
+        
         this.isCreating.set(false);
         this.closeCreateModal();
         // Recargar la lista de foros
         this.loadForums(this.currentPage());
       },
       error: (err: any) => {
-        console.error('❌ Error creando foro:', err);
-        console.error('❌ Status:', err.status);
-        console.error('❌ Error completo:', JSON.stringify(err, null, 2));
+        console.error('Error creando foro:', err);
+        console.error('Status:', err.status);
+        console.error('Error completo:', JSON.stringify(err, null, 2));
         
         let errorMessage = 'Error al crear el foro';
         if (err.status === 401) {

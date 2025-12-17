@@ -36,7 +36,9 @@ export class PaymentService {
   }
 
   /**
-   * Crea una sesión de checkout para un solo libro
+   * @param bookId ID del libro
+   * @param quantity Cantidad
+   * @returns Observable con la sesión de checkout
    */
   createCheckoutSession(bookId: number, quantity: number = 1): Observable<CheckoutSessionResponse> {
     return this.authHeaders().pipe(
@@ -51,8 +53,8 @@ export class PaymentService {
   }
 
   /**
-   * Crea una sesión de checkout para múltiples libros (carrito)
-   * Preparado para cuando se implemente el carrito
+   * @param items Array de items del carrito
+   * @returns Observable con la sesión de checkout
    */
   createCheckoutSessionCart(items: CheckoutSessionItem[]): Observable<CheckoutSessionResponse> {
     return this.authHeaders().pipe(
@@ -67,8 +69,7 @@ export class PaymentService {
   }
 
   /**
-   * Redirige al usuario a Stripe Checkout usando la URL proporcionada
-   * Nota: Stripe eliminó redirectToCheckout, ahora usamos directamente la URL
+   * @param url URL de checkout de Stripe
    */
   redirectToCheckout(url: string): void {
     if (!url) {
@@ -78,7 +79,8 @@ export class PaymentService {
   }
 
   /**
-   * Obtiene los detalles de una sesión de checkout
+   * @param sessionId ID de la sesión
+   * @returns Observable con los detalles de la sesión
    */
   getCheckoutSession(sessionId: string): Observable<any> {
     return this.authHeaders().pipe(
@@ -89,7 +91,8 @@ export class PaymentService {
   }
 
   /**
-   * Verifica el estado de un pago exitoso y crea la Order si no existe
+   * @param sessionId ID de la sesión de pago
+   * @returns Observable con el resultado de la verificación
    */
   verifyPaymentSuccess(sessionId: string): Observable<any> {
     return this.authHeaders().pipe(

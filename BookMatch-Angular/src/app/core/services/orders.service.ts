@@ -27,7 +27,7 @@ export class OrdersService {
   }
 
   /**
-   * Obtiene el historial de compras del usuario autenticado
+   * @returns Observable con el historial de compras del usuario
    */
   getOrderHistory(): Observable<Order[]> {
     return this.authHeaders().pipe(

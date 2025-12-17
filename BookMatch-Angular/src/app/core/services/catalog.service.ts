@@ -25,9 +25,9 @@ export class CatalogService {
     );
   }
 
-  // --- NUEVOS MÉTODOS PARA EL FILTRADO CORRECTO ---
-
-  // 1. Obtener lista maestra de categorías (para saber sus IDs)
+  /**
+   * @returns Observable con la lista de todas las categorías
+   */
   getCategories(): Observable<Category[]> {
     return this.authHeaders().pipe(
       switchMap(headers => 
@@ -36,29 +36,60 @@ export class CatalogService {
     );
   }
 
-  // <--- MODIFICACIÓN: Nuevo método para ACTUALIZAR libro (PATCH)
+  /**
+   * @param id ID del libro a actualizar
+   * @param book Datos parciales del libro
+   * @returns Observable con el libro actualizado
+   */
   updateBook(id: number, book: Partial<CreateCatalogBookDto>): Observable<CatalogBook> {
     return this.authHeaders().pipe(
       switchMap(headers => this.http.patch<CatalogBook>(`${this.apiUrl}/${id}`, book, { headers }))
     );
   }
 
-  // <--- MODIFICACIÓN: Nuevo método para ELIMINAR libro (DELETE)
+  /**
+   * @param id ID del libro a eliminar
+   * @returns Observable vacío cuando se completa la eliminación
+   */
   deleteBook(id: number): Observable<void> {
     return this.authHeaders().pipe(
       switchMap(headers => this.http.delete<void>(`${this.apiUrl}/${id}`, { headers }))
     );
   }
-  // -------------------------------------------------------------
 
-  // 2. Filtrar libros por ID de categoría (Lo que pide tu backend)
-  getBooksByCategoryId(categoryId: number, page = 1, limit = 10) {
+  /**
+   * @param categoryId ID de la categoría
+   * @param page Número de página
+   * @param limit Cantidad de resultados por página
+   * @param minPrice Precio mínimo
+   * @param maxPrice Precio máximo
+   * @param sortBy Criterio de ordenación
+   * @param minRating Valoración mínima
+   * @param inStock Solo productos en stock
+   * @returns Observable con la lista paginada de libros
+   */
+  getBooksByCategoryId(
+    categoryId: number, 
+    page = 1, 
+    limit = 10,
+    minPrice?: number | null,
+    maxPrice?: number | null,
+    sortBy?: string,
+    minRating?: number | null,
+    inStock?: boolean
+  ) {
     return this.authHeaders().pipe(
       switchMap(headers => {
         let params = new HttpParams()
           .set('categoryId', categoryId.toString())
           .set('page', page.toString())
           .set('limit', limit.toString());
+
+        if (minPrice) params = params.set('minPrice', minPrice.toString());
+        if (maxPrice) params = params.set('maxPrice', maxPrice.toString());
+        if (sortBy) params = params.set('sortBy', sortBy);
+        if (minRating) params = params.set('minRating', minRating.toString());
+        if (inStock) params = params.set('inStock', 'true');
 
         return this.http.get<{ total: number; page: number; limit: number; items: CatalogBook[] }>(
           this.apiUrl,
@@ -68,7 +99,10 @@ export class CatalogService {
     );
   }
 
-  // 3. Filtro de Novedades (ordenado por fecha)
+  /**
+   * @param limit Cantidad de novedades a obtener
+   * @returns Observable con las novedades ordenadas por fecha
+   */
   getNewArrivals(limit = 10) {
     return this.authHeaders().pipe(
       switchMap(headers => {
@@ -84,8 +118,11 @@ export class CatalogService {
     );
   }
 
-  // --- MÉTODOS EXISTENTES (INTACTOS) ---
-
+  /**
+   * @param page Número de página
+   * @param limit Cantidad de resultados por página
+   * @returns Observable con la lista paginada de todos los libros
+   */
   getAllBooks(page = 1, limit = 10) {
     return this.authHeaders().pipe(
       switchMap(headers =>
@@ -101,6 +138,12 @@ export class CatalogService {
     );
   }
 
+  /**
+   * @param searchTerm Término de búsqueda
+   * @param page Número de página
+   * @param limit Cantidad de resultados por página
+   * @returns Observable con los libros que coinciden con la búsqueda
+   */
   searchBooks(searchTerm: string, page = 1, limit = 20) {
     return this.authHeaders().pipe(
       switchMap(headers => {
@@ -121,20 +164,37 @@ export class CatalogService {
     );
   }
 
+  /**
+   * @param id ID del libro
+   * @returns Observable con los detalles del libro
+   */
   getBookById(id: number): Observable<CatalogBook> {
     return this.authHeaders().pipe(
       switchMap(headers => this.http.get<CatalogBook>(`${this.apiUrl}/${id}`, { headers }))
     );
   }
 
+  /**
+   * @param book Datos del libro a crear
+   * @returns Observable con el libro creado
+   */
   createBook(book: CreateCatalogBookDto): Observable<CatalogBook> {
     return this.authHeaders().pipe(
       switchMap(headers => this.http.post<CatalogBook>(this.apiUrl, book, { headers }))
     );
   }
 
-  // Este método buscaba por nombre, pero el backend lo ignora. 
-  // Lo mantenemos para no romper código antiguo, pero deberías usar getBooksByCategoryId.
+  /**
+   * @param name Nombre de la categoría
+   * @param page Número de página
+   * @param limit Cantidad de resultados por página
+   * @param minPrice Precio mínimo
+   * @param maxPrice Precio máximo
+   * @param sortBy Criterio de ordenación
+   * @param minRating Valoración mínima
+   * @param inStock Solo productos en stock
+   * @returns Observable con la lista paginada de libros de la categoría
+   */
   getBooksByCategoryName(
     name: string, 
     page = 1, 
@@ -167,6 +227,11 @@ export class CatalogService {
     );
   }
 
+  /**
+   * @param bookId ID del libro
+   * @param data Datos de la reseña (rating y comentario opcional)
+   * @returns Observable con la reseña creada
+   */
   addReview(bookId: number, data: { rating: number; comment?: string }): Observable<Review> {
     return this.authHeaders().pipe(
       switchMap(headers => 
@@ -175,6 +240,10 @@ export class CatalogService {
     );
   }
 
+  /**
+   * @param reviewId ID de la reseña a eliminar
+   * @returns Observable cuando se completa la eliminación
+   */
   deleteReview(reviewId: number): Observable<any> {
     return this.authHeaders().pipe(
       switchMap(headers => 

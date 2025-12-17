@@ -327,6 +327,55 @@
             }
           </div>
 
+          <!-- Imágenes del post -->
+          <div class="space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="block text-sm font-medium" style="color: #45332D;">
+                {{ 'FORUM_TOPIC.CREATE_MODAL.IMAGES_LABEL' | translate : { default: 'Imágenes (opcional)' } }}
+              </span>
+              <button
+                type="button"
+                (click)="addImageToPost()"
+                [disabled]="isUploadingImage()"
+                class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                style="border-color: #E9E1D1; color: #45332D; background-color: white;"
+                onmouseover="if(!this.disabled) this.style.backgroundColor='#F5F5F5'"
+                onmouseout="if(!this.disabled) this.style.backgroundColor='white'">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586A2 2 0 0118.828 12H20M4 6h16a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V8a2 2 0 012-2z"></path>
+                </svg>
+                @if (isUploadingImage()) {
+                  <span>{{ 'FORUM_TOPIC.CREATE_MODAL.IMAGES_UPLOADING' | translate : { default: 'Subiendo...' } }}</span>
+                } @else {
+                  <span>{{ 'FORUM_TOPIC.CREATE_MODAL.IMAGES_ADD_BUTTON' | translate : { default: 'Añadir imagen' } }}</span>
+                }
+              </button>
+            </div>
+
+            @if (uploadImageError()) {
+              <p class="text-xs text-red-600">{{ uploadImageError() }}</p>
+            }
+
+            @if (createImages().length > 0) {
+              <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-2">
+                @for (image of createImages(); track $index) {
+                  <div class="relative group rounded-lg overflow-hidden border" style="border-color: #E9E1D1;">
+                    <img [src]="image" alt="Imagen del post" class="w-full h-28 object-cover">
+                    <button
+                      type="button"
+                      (click)="removeImageFromPost($index)"
+                      class="absolute top-1 right-1 bg-black bg-opacity-60 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                      title="Eliminar imagen">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                      </svg>
+                    </button>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+
           <div class="flex gap-3 pt-2">
             <button
               type="submit"

@@ -67,7 +67,7 @@ export class PurchaseHistoryComponent implements OnInit {
   getStatusColor(status: Order['status']): string {
     const colorMap: Record<Order['status'], string> = {
       'PENDING': '#F59E0B',
-      'PAID': '#047857', // Verde más oscuro para mejor contraste con el fondo naranja
+      'PAID': '#047857', 
       'SHIPPED': '#3B82F6',
       'DELIVERED': '#059669',
       'CANCELLED': '#EF4444'
@@ -76,11 +76,10 @@ export class PurchaseHistoryComponent implements OnInit {
   }
 
   getStatusBackgroundColor(status: Order['status']): string {
-    // Para "Pagado" usamos mayor opacidad para mejor visibilidad sobre el fondo naranja
     if (status === 'PAID') {
-      return this.getStatusColor(status) + '40'; // 40 en hex = ~25% de opacidad
+      return this.getStatusColor(status) + '40'; 
     }
-    return this.getStatusColor(status) + '20'; // 20 en hex = ~12.5% de opacidad para los demás
+    return this.getStatusColor(status) + '20'; 
   }
 }
 

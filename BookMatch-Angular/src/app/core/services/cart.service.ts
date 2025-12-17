@@ -34,21 +34,21 @@ export class CartService {
   );
 
   constructor() {
-    // Effect para persistir en localStorage cada vez que cambie el carrito
     effect(() => {
       const items = this.cartItemsSignal();
       if (this.isBrowser) {
         try {
           localStorage.setItem(this.STORAGE_KEY, JSON.stringify(items));
         } catch (error) {
-          console.error('Error guardando carrito en localStorage:', error);
+          // Error silencioso al guardar en localStorage
         }
       }
     });
   }
 
   /**
-   * Añade un libro al carrito o incrementa su cantidad si ya existe
+   * @param book Libro a añadir
+   * @param quantity Cantidad a añadir
    */
   addToCart(book: CatalogBook, quantity: number = 1): void {
     const currentItems = this.cartItemsSignal();
@@ -77,7 +77,7 @@ export class CartService {
   }
 
   /**
-   * Elimina un libro del carrito por su ID
+   * @param bookId ID del libro a eliminar
    */
   removeFromCart(bookId: number): void {
     const currentItems = this.cartItemsSignal();
@@ -93,7 +93,8 @@ export class CartService {
   }
 
   /**
-   * Actualiza la cantidad de un item en el carrito
+   * @param bookId ID del libro
+   * @param quantity Nueva cantidad
    */
   updateQuantity(bookId: number, quantity: number): void {
     if (quantity <= 0) {
@@ -109,8 +110,7 @@ export class CartService {
   }
 
   /**
-   * Convierte los items del carrito al formato que espera el PaymentService
-   * para crear una sesión de checkout
+   * @returns Array de items formateados para checkout
    */
   getItemsForCheckout(): Array<{ bookId: number; quantity: number }> {
     return this.cartItemsSignal().map(item => ({
@@ -137,7 +137,7 @@ export class CartService {
         }
       }
     } catch (error) {
-      console.error('Error cargando carrito desde localStorage:', error);
+      // Error silencioso al cargar desde localStorage
     }
 
     return [];

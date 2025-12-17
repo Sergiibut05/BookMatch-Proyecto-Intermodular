@@ -2,26 +2,21 @@
 
 <div class="min-h-screen" style="background-color: #FCF5E2;">
   <div class="container mx-auto px-4 py-8">
-    
-    <!-- Título y resultados -->
-    <div class="mb-6">
-      <h1 class="text-2xl md:text-3xl font-bold mb-2" style="color: #45332D;">
-        {{ 'SEARCH_RESULTS.TITLE' | translate }}
-      </h1>
-      @if (searchQuery() && !isLoading()) {
-        <p class="text-base md:text-lg" style="color: #4E6A6A;">
-          @if (searchType() === 'book') {
-            {{ 'SEARCH_RESULTS.RESULTS_FOUND' | translate: { count: totalResults() } }} 
-            {{ 'SEARCH_RESULTS.FOR_BOOKS' | translate: { query: searchQuery() } }}
-          } @else {
-            {{ 'SEARCH_RESULTS.RESULTS_FOUND' | translate: { count: totalResults() } }} 
-            {{ 'SEARCH_RESULTS.FOR_FORUMS' | translate: { query: searchQuery() } }}
-          }
-        </p>
-      }
-    </div>
+    <h1 class="text-2xl md:text-3xl font-bold mb-2" style="color: #45332D;">
+      {{ 'SEARCH_RESULTS.TITLE' | translate }}
+    </h1>
+    @if (searchQuery() && !isLoading()) {
+      <p class="text-base md:text-lg" style="color: #4E6A6A;">
+        @if (searchType() === 'book') {
+          {{ 'SEARCH_RESULTS.RESULTS_FOUND' | translate: { count: totalResults() } }} 
+          {{ 'SEARCH_RESULTS.FOR_BOOKS' | translate: { query: searchQuery() } }}
+        } @else {
+          {{ 'SEARCH_RESULTS.RESULTS_FOUND' | translate: { count: totalResults() } }} 
+          {{ 'SEARCH_RESULTS.FOR_FORUMS' | translate: { query: searchQuery() } }}
+        }
+      </p>
+    }
 
-    <!-- Loading -->
     @if (isLoading()) {
       <div class="flex justify-center items-center py-20">
         <div class="text-center">
@@ -31,14 +26,12 @@
       </div>
     }
 
-    <!-- Error -->
     @if (error() && !isLoading()) {
       <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
         <p class="text-red-800">{{ error() }}</p>
       </div>
     }
 
-    <!-- Sin resultados -->
     @if (!isLoading() && !error() && totalResults() === 0) {
       <div class="text-center py-20">
         <div class="mb-4">
@@ -53,7 +46,6 @@
       </div>
     }
 
-    <!-- Resultados de Libros -->
     @if (!isLoading() && !error() && searchType() === 'book' && books().length > 0) {
       <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
         @for (book of books(); track book.id) {
@@ -98,7 +90,6 @@
       </div>
     }
 
-    <!-- Resultados de Foros -->
     @if (!isLoading() && !error() && searchType() === 'forum' && forums().length > 0) {
       <div class="space-y-4 mb-8">
         @for (forum of forums(); track forum.id) {
@@ -152,7 +143,6 @@
       </div>
     }
 
-    <!-- Paginación -->
     @if (!isLoading() && !error() && totalResults() > 0 && totalPages() > 1) {
       <div class="flex justify-center items-center gap-2 mt-8">
         <button
@@ -186,7 +176,6 @@
         </button>
       </div>
     }
-
   </div>
 </div>
 

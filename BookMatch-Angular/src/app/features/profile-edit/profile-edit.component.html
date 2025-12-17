@@ -31,7 +31,7 @@
   </div>
 
   <div class="space-y-4">
-    <!-- Nombre completo -->
+   
     <div>
       <p class="text-sm font-medium mb-1" style="color: #45332D;">{{ 'PROFILE.FULL_NAME' | translate }}</p>
       @if (isEditing()) {
@@ -81,7 +81,7 @@
       }
     </div>
 
-    <!-- Email (no editable) -->
+    <!-- Email -->
     <div>
       <p class="text-sm font-medium mb-1" style="color: #45332D;">{{ 'PROFILE.EMAIL' | translate }}</p>
       <p class="text-base" style="color: #4E6A6A;">
@@ -89,7 +89,7 @@
       </p>
     </div>
 
-    <!-- Teléfono (no editable) -->
+    <!-- Teléfono -->
     @if (profile.phone) {
       <div>
         <p class="text-sm font-medium mb-1" style="color: #45332D;">{{ 'PROFILE.PHONE' | translate }}</p>
@@ -99,7 +99,7 @@
       </div>
     }
 
-    <!-- Miembro desde (no editable) -->
+    <!-- Miembro desde -->
     <div>
       <p class="text-sm font-medium mb-1" style="color: #45332D;">{{ 'PROFILE.MEMBER_SINCE' | translate }}</p>
       <p class="text-base" style="color: #4E6A6A;">

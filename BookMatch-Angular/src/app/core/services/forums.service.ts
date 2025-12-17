@@ -27,7 +27,10 @@ export class ForumsService {
   }
 
   /**
-   * Obtiene una lista paginada de foros
+   * @param page Número de página
+   * @param limit Cantidad de resultados por página
+   * @param search Término de búsqueda opcional
+   * @returns Observable con la lista paginada de foros
    */
   getForums(page: number = 1, limit: number = 10, search?: string): Observable<ForumsListResponse> {
     return this.authHeaders().pipe(
@@ -40,29 +43,14 @@ export class ForumsService {
           params = params.set('search', search);
         }
 
-        console.log('🌐 Llamando a:', this.apiUrl);
-        console.log('📋 Parámetros:', { page, limit, search });
-        console.log('🔑 Headers:', headers.keys());
-
-        return this.http.get<ForumsListResponse>(this.apiUrl, { headers, params }).pipe(
-          map(response => {
-            console.log('📦 Respuesta raw del backend:', response);
-            console.log('📊 Total de foros:', response.total);
-            console.log('📄 Página actual:', response.page);
-            console.log('📑 Total de páginas:', response.totalPages);
-            console.log('📚 Items recibidos:', response.items?.length || 0);
-            if (response.items && response.items.length > 0) {
-              console.log('🔍 Primer foro:', response.items[0]);
-            }
-            return response;
-          })
-        );
+        return this.http.get<ForumsListResponse>(this.apiUrl, { headers, params });
       })
     );
   }
 
   /**
-   * Obtiene un foro específico por ID
+   * @param id ID del foro
+   * @returns Observable con los detalles del foro
    */
   getForumById(id: number): Observable<Forum> {
     return this.authHeaders().pipe(
@@ -73,15 +61,12 @@ export class ForumsService {
   }
 
   /**
-   * Crea un nuevo foro
+   * @param data Datos del foro a crear
+   * @returns Observable con el foro creado
    */
   createForum(data: CreateForumDto): Observable<Forum> {
     return this.authHeaders().pipe(
       switchMap(headers => {
-        console.log('📤 Creando foro con datos:', data);
-        console.log('🔑 Headers:', headers.keys());
-        
-        // Construir el body según lo que espera el backend
         const body: any = {
           title: data.title
         };
@@ -89,10 +74,7 @@ export class ForumsService {
           body.description = data.description.trim();
         }
         
-        // El backend espera { body: { title: "...", description: "..." } }
         const payload = { body };
-        
-        console.log('📦 Payload final:', payload);
         
         return this.http.post<Forum>(this.apiUrl, payload, { headers });
       })
@@ -100,7 +82,9 @@ export class ForumsService {
   }
 
   /**
-   * Actualiza un foro existente
+   * @param id ID del foro
+   * @param data Datos a actualizar
+   * @returns Observable con el foro actualizado
    */
   updateForum(id: number, data: UpdateForumDto): Observable<Forum> {
     return this.authHeaders().pipe(
@@ -112,7 +96,6 @@ export class ForumsService {
         if (data.description !== undefined) {
           body.description = data.description;
         }
-        // El backend espera { body: { title: "...", description: "..." } }
         const payload = { body };
         
         return this.http.patch<Forum>(`${this.apiUrl}/${id}`, payload, { headers });
@@ -121,7 +104,8 @@ export class ForumsService {
   }
 
   /**
-   * Elimina un foro
+   * @param id ID del foro a eliminar
+   * @returns Observable vacío cuando se completa la eliminación
    */
   deleteForum(id: number): Observable<void> {
     return this.authHeaders().pipe(

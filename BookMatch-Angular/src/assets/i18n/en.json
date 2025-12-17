@@ -65,6 +65,11 @@
         }
     },
     "HOME": {
+        "HERO": {
+            "TITLE": "Discover your next favorite book",
+            "SUBTITLE": "Explore thousands of books, buy, sell and exchange with our community of readers",
+            "CTA": "Explore Catalog"
+        },
         "FEATURES": {
             "BUY_SELL": {
                 "TITLE": "Buy & Sell",
@@ -78,6 +83,11 @@
                 "TITLE": "AI Recommendations",
                 "DESCRIPTION": "Discover your next favorite reading thanks to our artificial intelligence that learns from your tastes and preferences."
             }
+        },
+        "FORUM_BANNER": {
+            "TITLE": "Join our community",
+            "SUBTITLE": "Share your opinions, discover recommendations and connect with other book lovers",
+            "CTA": "Go to Forum"
         }
     },
     "CATEGORIES": {
@@ -118,6 +128,16 @@
         "FROM": "of",
         "LAST": "Prev",
         "NEXT": "Next"
+    },
+    "CATEGORIES_SELECTOR": {
+        "TITLE": "Explore all categories",
+        "SUBTITLE": "Discover books from all available categories. Click on any category to see available books.",
+        "SEARCH_PLACEHOLDER": "Search categories...",
+        "MAIN_CATEGORIES": "Main categories",
+        "SPECIAL_CATEGORIES": "Subcategories",
+        "NO_RESULTS": "No categories found",
+        "NO_RESULTS_DESC": "Try searching with different terms",
+        "RESULTS_FOUND": "categories found"
     },
     "PAYMENT": {
         "VERIFYING": "Verifying payment...",
@@ -367,7 +387,10 @@
             "CONTENT_LABEL": "Content",
             "CONTENT_PLACEHOLDER": "Write your topic content...",
             "CREATING": "Creating...",
-            "CREATE_BUTTON": "Create Topic"
+            "CREATE_BUTTON": "Create Topic",
+            "IMAGES_LABEL": "Images (optional)",
+            "IMAGES_ADD_BUTTON": "Add image",
+            "IMAGES_UPLOADING": "Uploading..."
         },
         "EDIT_MODAL": {
             "TITLE": "Edit Forum",
@@ -442,5 +465,60 @@
         "RESULTS_FOUND": "{{count}} results found",
         "FOR_BOOKS": "for \"{{query}}\"",
         "FOR_FORUMS": "in forums for \"{{query}}\""
+    },
+    "BOOK_FORM": {
+        "TITLE_EDIT": "Edit Book",
+        "TITLE_CREATE": "Add New Book",
+        "COVER": {
+            "BUTTON": "Upload Cover",
+            "UPLOADING": "Uploading..."
+        },
+        "FIELDS": {
+            "TITLE": {
+                "LABEL": "Title"
+            },
+            "AUTHOR": {
+                "LABEL": "Author"
+            },
+            "ISBN": {
+                "LABEL": "ISBN"
+            },
+            "CATEGORY": {
+                "LABEL": "Main Category",
+                "PLACEHOLDER": "Select a category"
+            },
+            "PRICE": {
+                "LABEL": "Price (€)"
+            },
+            "STOCK": {
+                "LABEL": "Stock"
+            },
+            "DESCRIPTION": {
+                "LABEL": "Description"
+            }
+        },
+        "BUTTONS": {
+            "SAVING": "Saving...",
+            "SAVE_CHANGES": "Save Changes",
+            "CREATE": "Create Book",
+            "CANCEL": "Cancel"
+        },
+        "ERRORS": {
+            "ACCESS_DENIED": "Access denied. Admins only.",
+            "LOAD_BOOK": "Error loading book",
+            "UPLOAD_IMAGE": "Error uploading image",
+            "UPDATE_BOOK": "Error updating book",
+            "CREATE_BOOK": "Error creating book"
+        },
+        "SUCCESS": {
+            "UPDATE": "Book updated successfully",
+            "CREATE": "Book created successfully"
+        },
+        "VALIDATION": {
+            "REQUIRED": "This field is required",
+            "MIN_LENGTH": "Text is too short",
+            "MIN_VALUE": "Value must be positive",
+            "INVALID": "Invalid field"
+        }
     }
 }

@@ -26,25 +26,47 @@ export class Categories implements OnInit {
   total = signal<number>(0);
   onGrid = signal<boolean>(true);
 
-  // --- TODOS LOS FILTROS ---
+  
   minPrice = signal<number | null>(null);
   maxPrice = signal<number | null>(null);
   sortBy = signal<string>('newest');
-  minRating = signal<number | null>(null); // Nuevo
-  inStock = signal<boolean>(false);        // Nuevo
+  minRating = signal<number | null>(null); 
+  inStock = signal<boolean>(false);       
 
   showMobileFilters = signal<boolean>(false);
 
-  // Señal para guardar las categorías y poder buscar ID por Slug
+  
+  get minPriceValue(): number | null {
+    return this.minPrice();
+  }
+  set minPriceValue(value: number | null) {
+    this.minPrice.set(value);
+  }
+
+  get maxPriceValue(): number | null {
+    return this.maxPrice();
+  }
+  set maxPriceValue(value: number | null) {
+    this.maxPrice.set(value);
+  }
+
+  get inStockValue(): boolean {
+    return this.inStock();
+  }
+  set inStockValue(value: boolean) {
+    this.inStock.set(value);
+  }
+
+  
   categoriesList = signal<any[]>([]); 
 
   ngOnInit(): void {
-    // 1. Cargamos las categorías primero para poder traducir Slug -> ID
+    
     this.catalogService.getCategories().subscribe({
       next: (cats) => {
         this.categoriesList.set(cats);
         
-        // 2. Nos suscribimos a los cambios de ruta una vez tenemos las categorías
+       
         this.route.paramMap.subscribe((params) => {
           const categoriaParam = params.get('categoria');
           if (categoriaParam) {
@@ -72,22 +94,22 @@ export class Categories implements OnInit {
     const term = this.category();
     if (!term) return;
 
-    // CASO ESPECIAL: NOVEDADES
-    // Si es novedades, no filtramos por ID, usamos el fallback (que llama al backend con el nombre, 
-    // y como el backend ignora nombres que no existen como filtro estricto, devuelve todos los libros).
-    // Nos aseguramos de que el sort sea 'newest' por defecto en la inicialización.
     if (term === 'novedades') {
-       // Dejamos pasar al fallback o llamamos directamente a getBooksByCategoryName
-       // Para mantener la consistencia con filtros y paginación, usamos el método general.
     }
 
-    // CASO NORMAL: BUSCAR ID POR SLUG
-    // Buscamos la categoría en la lista que cargamos al inicio
     const foundCat = this.categoriesList().find(c => c.slug === term || c.name.toLowerCase() === term.toLowerCase());
     
     if (foundCat) {
-      // SI ENCONTRAMOS ID, USAMOS FILTRADO ESTRICTO POR ID
-      this.catalogService.getBooksByCategoryId(foundCat.id, this.page(), this.limit()).subscribe({
+      this.catalogService.getBooksByCategoryId(
+        foundCat.id, 
+        this.page(), 
+        this.limit(),
+        this.minPrice(),
+        this.maxPrice(),
+        this.sortBy(),
+        this.minRating(),
+        this.inStock()
+      ).subscribe({
         next: (res) => {
           this.books.set(res.items || []);
           this.total.set(res.total || 0);
@@ -95,8 +117,6 @@ export class Categories implements OnInit {
         error: (err) => console.error('Error loading category by ID:', err)
       });
     } else {
-      // FALLBACK (POR SI ACASO): Usamos el método antiguo por nombre
-      // Esto maneja 'novedades' (nombre ignorado -> todos los libros -> ordenado por fecha)
       if (term !== 'novedades') {
          console.warn(`Categoría '${term}' no encontrada en la lista, usando fallback por nombre.`);
       }
@@ -134,7 +154,7 @@ export class Categories implements OnInit {
     // Agregamos los nuevos a la URL
     if (this.minRating()) queryParams.minRating = this.minRating();
     if (this.inStock()) queryParams.inStock = 'true';
-    else queryParams.inStock = null; // Para borrarlo de la URL si es false
+    else queryParams.inStock = null; 
 
     this.router.navigate([], {
       relativeTo: this.route,
@@ -158,10 +178,10 @@ export class Categories implements OnInit {
     this.updateParams();
   }
 
-  // Nuevo helper para las estrellas
+  
   setRating(stars: number) {
     if (this.minRating() === stars) {
-      this.minRating.set(null); // Deseleccionar si ya estaba
+      this.minRating.set(null); 
     } else {
       this.minRating.set(stars);
     }
@@ -182,7 +202,7 @@ export class Categories implements OnInit {
     this.showMobileFilters.update(v => !v);
   }
 
-  // --- GETTERS & HELPERS ---
+  
   get totalPages(): number {
     return Math.ceil(this.total() / this.limit());
   }

@@ -27,7 +27,11 @@ export class PostsService {
   }
 
   /**
-   * Obtiene una lista paginada de posts de un foro específico
+   * @param forumId ID del foro
+   * @param page Número de página
+   * @param limit Cantidad de resultados por página
+   * @param sort Criterio de ordenación
+   * @returns Observable con la lista paginada de posts
    */
   getPostsByForumId(forumId: number, page: number = 1, limit: number = 10, sort: 'newest' | 'score' | 'comments' = 'newest'): Observable<PostsListResponse> {
     return this.authHeaders().pipe(
@@ -43,7 +47,9 @@ export class PostsService {
   }
 
   /**
-   * Obtiene un post específico por ID (requiere forumId)
+   * @param forumId ID del foro
+   * @param postId ID del post
+   * @returns Observable con los detalles del post
    */
   getPostById(forumId: number, postId: number): Observable<Post> {
     return this.authHeaders().pipe(
@@ -54,16 +60,20 @@ export class PostsService {
   }
 
   /**
-   * Crea un nuevo post en un foro
+   * @param forumId ID del foro
+   * @param data Datos del post a crear
+   * @returns Observable con el post creado
    */
   createPost(forumId: number, data: CreatePostDto): Observable<Post> {
     return this.authHeaders().pipe(
       switchMap(headers => {
-        // El backend espera { body: { title: "...", content: "..." } }
         const body: any = {
           title: data.title,
           content: data.content
         };
+        if (data.images && data.images.length > 0) {
+          body.images = data.images;
+        }
         const payload = { body };
 
         return this.http.post<Post>(`${this.apiUrl}/${forumId}/posts`, payload, { headers });
@@ -72,7 +82,10 @@ export class PostsService {
   }
 
   /**
-   * Actualiza un post existente (requiere forumId)
+   * @param forumId ID del foro
+   * @param postId ID del post
+   * @param data Datos a actualizar
+   * @returns Observable con el post actualizado
    */
   updatePost(forumId: number, postId: number, data: UpdatePostDto): Observable<Post> {
     return this.authHeaders().pipe(
@@ -92,7 +105,9 @@ export class PostsService {
   }
 
   /**
-   * Elimina un post (requiere forumId)
+   * @param forumId ID del foro
+   * @param postId ID del post a eliminar
+   * @returns Observable vacío cuando se completa la eliminación
    */
   deletePost(forumId: number, postId: number): Observable<void> {
     return this.authHeaders().pipe(

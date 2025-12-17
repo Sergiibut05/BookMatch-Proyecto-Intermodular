@@ -7,6 +7,7 @@ import { PostsService } from '@core/services/posts.service';
 import { ForumsService } from '@core/services/forums.service';
 import { AuthService } from '@core/services/auth.service';
 import { VotesService } from '@core/services/votes.service';
+import { StorageService } from '@core/services/storage';
 import { Post, PostsListResponse, CreatePostDto } from '@shared/models/posts.model';
 import { Forum, UpdateForumDto } from '@shared/models/forums.model';
 import { Header } from '@shared/components/header/header';
@@ -26,8 +27,9 @@ export class ForumTopicListComponent implements OnInit, OnDestroy {
   private forumsService = inject(ForumsService);
   private authService = inject(AuthService);
   private votesService = inject(VotesService);
+  private storageService = inject(StorageService);
   private route = inject(ActivatedRoute);
-  router = inject(Router); // Público para usar en el template
+  router = inject(Router); 
   private fb = inject(FormBuilder);
 
   forumId = signal<number | null>(null);
@@ -51,6 +53,10 @@ export class ForumTopicListComponent implements OnInit, OnDestroy {
   isCreating = signal<boolean>(false);
   createError = signal<string | null>(null);
   createForm!: FormGroup;
+  // Imágenes del nuevo post
+  createImages = signal<string[]>([]);
+  isUploadingImage = signal<boolean>(false);
+  uploadImageError = signal<string | null>(null);
 
   // Menú de opciones del foro
   showForumMenu = signal<boolean>(false);
@@ -111,19 +117,19 @@ export class ForumTopicListComponent implements OnInit, OnDestroy {
     this.error.set(null);
     this.currentPage.set(page);
 
-    // Ordenar por score por defecto
+    
     this.postsService.getPostsByForumId(id, page, this.limit, 'score').subscribe({
       next: (response: PostsListResponse) => {
         const posts = response.items || [];
         
-        // Mostrar posts inmediatamente sin esperar los votos
+        
         this.posts.set(posts);
         this.filteredPosts.set(posts);
         this.totalPages.set(response.totalPages || 1);
         this.totalPosts.set(response.total || 0);
         this.isLoading.set(false);
         
-        // Cargar los votos del usuario de forma asíncrona (sin bloquear)
+        
         if (posts.length > 0) {
           this.loadUserVotesAsync(posts, id);
         }
@@ -142,14 +148,13 @@ export class ForumTopicListComponent implements OnInit, OnDestroy {
   private loadUserVotesAsync(posts: Post[], forumId: number): void {
     const currentUser = this.authService.currentUser();
     if (!currentUser || !posts || posts.length === 0) {
-      return; // Si no hay usuario o posts, no hacer nada
+      return; 
     }
 
-    // Crear un array de observables para obtener los votos
+
     const voteObservables = posts.map(post => 
       this.votesService.getUserVote(forumId, post.id).pipe(
         map(vote => ({ postId: post.id, userVote: vote?.type || null })),
-        // Manejar errores individuales para que no falle todo el forkJoin
         catchError(err => {
           console.warn(`Error cargando voto para post ${post.id}:`, err);
           return of({ postId: post.id, userVote: null });
@@ -157,7 +162,6 @@ export class ForumTopicListComponent implements OnInit, OnDestroy {
       )
     );
 
-    // Ejecutar todas las peticiones en paralelo
     forkJoin(voteObservables).subscribe({
       next: (results) => {
         // Actualizar los posts con los votos del usuario
@@ -167,11 +171,10 @@ export class ForumTopicListComponent implements OnInit, OnDestroy {
           return voteResult ? { ...post, userVote: voteResult.userVote } : post;
         });
         this.posts.set(updatedPosts);
-        this.filterPosts(this.searchQuery()); // Re-filtrar para actualizar la lista filtrada
+        this.filterPosts(this.searchQuery()); 
       },
       error: (err) => {
         console.error('Error cargando votos:', err);
-        // No hacer nada si falla, los posts ya están mostrados
       }
     });
   }
@@ -183,7 +186,7 @@ export class ForumTopicListComponent implements OnInit, OnDestroy {
     this.posts.update(posts =>
       posts.map(post => (post.id === postId ? { ...post, score: newScore } : post))
     );
-    this.filterPosts(this.searchQuery()); // Re-filtrar para reordenar si es necesario
+    this.filterPosts(this.searchQuery()); 
   }
 
   onSearchChange(query: string): void {
@@ -226,12 +229,52 @@ export class ForumTopicListComponent implements OnInit, OnDestroy {
     this.showCreateModal.set(true);
     this.createError.set(null);
     this.createForm.reset();
+    this.createImages.set([]);
+    this.uploadImageError.set(null);
   }
 
   closeCreateModal(): void {
     this.showCreateModal.set(false);
     this.createError.set(null);
     this.createForm.reset();
+    this.createImages.set([]);
+    this.uploadImageError.set(null);
+  }
+
+  /**
+   * Añade una imagen al nuevo post usando Firebase Storage
+   */
+  async addImageToPost(): Promise<void> {
+    if (this.isUploadingImage()) return;
+
+    const currentUser = this.authService.currentUser();
+    if (!currentUser) {
+      this.uploadImageError.set('Debes iniciar sesión para añadir imágenes.');
+      return;
+    }
+
+    try {
+      this.isUploadingImage.set(true);
+      this.uploadImageError.set(null);
+
+      const photo = await this.storageService.takePhoto();
+      if (!photo) {
+        this.isUploadingImage.set(false);
+        return;
+      }
+
+      const url = await this.storageService.uploadPostImage(photo, String(currentUser.id));
+      this.createImages.update(images => [...images, url]);
+    } catch (error: any) {
+      console.error('Error añadiendo imagen al post:', error);
+      this.uploadImageError.set(error?.message || 'Error al subir la imagen.');
+    } finally {
+      this.isUploadingImage.set(false);
+    }
+  }
+
+  removeImageFromPost(index: number): void {
+    this.createImages.update(images => images.filter((_, i) => i !== index));
   }
 
   createPost(): void {
@@ -252,16 +295,19 @@ export class ForumTopicListComponent implements OnInit, OnDestroy {
       content: formValue.content.trim()
     };
 
+    const images = this.createImages();
+    if (images && images.length > 0) {
+      (postData as any).images = images;
+    }
+
     this.postsService.createPost(forumId, postData).subscribe({
       next: (newPost) => {
-        console.log('✅ Post creado:', newPost);
         this.isCreating.set(false);
         this.closeCreateModal();
-        // Recargar la lista de posts
         this.loadPosts(this.currentPage());
       },
       error: (err: any) => {
-        console.error('❌ Error creando post:', err);
+        console.error('Error creando post:', err);
         let errorMessage = 'Error al crear el post';
         if (err.status === 401) {
           errorMessage = 'No estás autenticado. Por favor, inicia sesión.';
@@ -380,13 +426,12 @@ export class ForumTopicListComponent implements OnInit, OnDestroy {
 
     this.forumsService.updateForum(forumId, updateData).subscribe({
       next: (updatedForum) => {
-        console.log('✅ Foro actualizado:', updatedForum);
         this.isUpdatingForum.set(false);
         this.closeEditForumModal();
-        this.loadForum(); // Recargar el foro actualizado
+        this.loadForum(); 
       },
       error: (err: any) => {
-        console.error('❌ Error actualizando foro:', err);
+        console.error('Error actualizando foro:', err);
         let errorMessage = 'Error al actualizar el foro';
         if (err.status === 401) {
           errorMessage = 'No estás autenticado. Por favor, inicia sesión.';
@@ -420,14 +465,13 @@ export class ForumTopicListComponent implements OnInit, OnDestroy {
 
     this.forumsService.deleteForum(forumId).subscribe({
       next: () => {
-        console.log('✅ Foro eliminado');
         this.isDeletingForum.set(false);
         this.closeDeleteForumModal();
-        // Volver a la lista de foros después de eliminar
+
         this.router.navigate(['/foro']);
       },
       error: (err: any) => {
-        console.error('❌ Error eliminando foro:', err);
+        console.error('Error eliminando foro:', err);
         let errorMessage = 'Error al eliminar el foro';
         if (err.status === 401) {
           errorMessage = 'No estás autenticado. Por favor, inicia sesión.';
@@ -470,7 +514,7 @@ export class ForumTopicListComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    // Limpiar cualquier suscripción si es necesario
+    
   }
 }
 
