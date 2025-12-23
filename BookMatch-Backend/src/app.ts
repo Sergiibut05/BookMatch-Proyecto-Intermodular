@@ -22,8 +22,13 @@ const app = express();
 const allowedOrigins = [
   env.FRONTEND_URL || 'http://localhost:4200',
   'https://book-match-proyecto-intermodular-b8.vercel.app',
-  /^https:\/\/book-match-proyecto-intermodular.*\.vercel\.app$/
-];
+  /^https:\/\/book-match-proyecto-intermodular.*\.vercel\.app$/,
+  // Orígenes de apps móviles/webview
+  'capacitor://localhost',
+  'http://localhost',
+  'http://localhost:4200',
+  'https://localhost'
+  ];
 
 const corsOptions = {
   origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
