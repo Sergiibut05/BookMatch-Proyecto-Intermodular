@@ -2,6 +2,7 @@ import { Component, inject, signal, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CatalogService } from '@core/services/catalog.service';
 import { Header } from '@shared/components/header/header';
+import { AiChatModalComponent } from '@shared/components/ai-chat-modal/ai-chat-modal.component';
 import { CatalogBook } from '@shared/models';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -9,7 +10,7 @@ import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-categories',
-  imports: [Header, CommonModule, FormsModule, TranslateModule],
+  imports: [Header, AiChatModalComponent, CommonModule, FormsModule, TranslateModule],
   templateUrl: './categories.html',
   styleUrl: './categories.scss',
 })

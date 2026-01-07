@@ -6,12 +6,13 @@ import { CatalogService } from '@core/services/catalog.service';
 import { Header } from '@shared/components/header/header';
 import { Carousel } from '@shared/components/carousel/carousel';
 import { Footer } from '@shared/components/footer/footer';
+import { AiChatModalComponent } from '@shared/components/ai-chat-modal/ai-chat-modal.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { Category } from '@shared/models'; 
 
 @Component({
   selector: 'app-home',
-  imports: [Header, Carousel, Footer, TranslateModule],
+  imports: [Header, Carousel, Footer, AiChatModalComponent, TranslateModule],
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss',
 })

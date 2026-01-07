@@ -1,0 +1,84 @@
+<!-- Botón flotante para abrir el chat -->
+@if (!isOpen()) {
+  <button
+    (click)="toggle()"
+    class="chat-toggle-button"
+    aria-label="Abrir chat de recomendaciones"
+    title="Chat de recomendaciones de libros">
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+    </svg>
+  </button>
+}
+
+<!-- Modal del chat -->
+@if (isOpen()) {
+  <div class="chat-modal-overlay" (click)="close()"></div>
+  <div class="chat-modal">
+    <!-- Header del chat -->
+    <div class="chat-header">
+      <div class="chat-header-content">
+        <div class="flex items-center gap-2">
+          <div class="chat-avatar">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+            </svg>
+          </div>
+          <div>
+            <h3 class="chat-title">Asistente de Recomendaciones</h3>
+            <p class="chat-subtitle">En línea</p>
+          </div>
+        </div>
+        <button (click)="close()" class="chat-close-button" aria-label="Cerrar chat">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Mensajes -->
+    <div class="chat-messages" #messagesContainer>
+      @for (message of messages(); track message.id) {
+        <div class="message-wrapper" [class.user-message]="message.isUser" [class.ai-message]="!message.isUser">
+          <div class="message-content" [innerHTML]="message.isUser ? message.content : message.content"></div>
+          <span class="message-time">{{ message.timestamp | date:'short' }}</span>
+        </div>
+      }
+      @if (isLoading()) {
+        <div class="message-wrapper ai-message">
+          <div class="message-content">
+            <div class="typing-indicator">
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- Input del chat -->
+    <div class="chat-input-container">
+      <div class="chat-input-wrapper">
+        <textarea
+          [(ngModel)]="currentMessage"
+          (keydown)="onEnterKey($event)"
+          placeholder="Escribe tu mensaje..."
+          class="chat-input"
+          rows="1"
+          [disabled]="isLoading()"></textarea>
+        <button
+          (click)="sendMessage()"
+          [disabled]="!currentMessage().trim() || isLoading()"
+          class="chat-send-button"
+          aria-label="Enviar mensaje">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+}
+

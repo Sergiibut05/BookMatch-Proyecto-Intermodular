@@ -39,6 +39,12 @@
           <span class="font-medium">Foro</span>
         </a>
       </div>
+      <div class="menu-item w-full">
+        <a routerLink="/ai-chat" (click)="closeMenu()" class="menu-link flex items-center justify-start gap-3 w-full p-2 cursor-pointer">
+          <span class="material-symbols-outlined text-xl">smart_toy</span>
+          <span class="font-medium">Asistente de Recomendaciones</span>
+        </a>
+      </div>
 
       <div *isAdmin class="menu-item w-full">
         <a routerLink="/admin/books/create" (click)="closeMenu()" class="menu-link flex items-center justify-start gap-3 w-full p-2 cursor-pointer" style="color: #E0A15E;">
