@@ -153,3 +153,54 @@
   }
 }
 
+// Estilos para header translúcido (glassmorphism)
+nav {
+  background: rgba(255, 255, 255, 0.7) !important;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.4) !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+// Estilos mejorados para el buscador
+.search-container {
+  position: relative;
+}
+
+.search-input {
+  background: rgba(255, 255, 255, 0.9) !important;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 2px solid rgba(224, 161, 94, 0.3) !important;
+  color: #45332D !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  
+  &::placeholder {
+    color: rgba(69, 51, 45, 0.5);
+  }
+  
+  &:focus {
+    border-color: rgba(224, 161, 94, 0.6) !important;
+    box-shadow: 0 4px 12px rgba(224, 161, 94, 0.2), 0 0 0 3px rgba(224, 161, 94, 0.1);
+    background: rgba(255, 255, 255, 0.95) !important;
+  }
+}
+
+.search-button {
+  background: rgba(224, 161, 94, 0.9) !important;
+  color: #FCF5E2 !important;
+  border: none;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  
+  &:hover {
+    background: rgba(224, 161, 94, 1) !important;
+    box-shadow: 0 4px 8px rgba(224, 161, 94, 0.3);
+  }
+  
+  svg {
+    color: #FCF5E2 !important;
+  }
+}
+

@@ -1,0 +1,3 @@
+com.bookmatch.app.test
+style WhiteBackgroundDialogTheme
+style WhiteBackgroundTheme

@@ -1,0 +1,35 @@
+<div class="book-carousel-3d-container">
+  <canvas #canvas class="webgl"></canvas>
+  <div class="top-gradient"></div>
+  <h1 class="main-title">{{ title }}</h1>
+  
+  <div class="book-info" [class.visible]="centerBookIndex() !== null">
+    <h2 class="book-title">{{ currentBook()?.title }}</h2>
+    <p class="book-author">{{ currentBook()?.author }}</p>
+  </div>
+  
+  <button 
+    *ngIf="currentBook()"
+    (click)="onDiscoverClick()"
+    class="discover-button"
+    [class.visible]="centerBookIndex() !== null">
+    Discover More
+  </button>
+  
+  <button 
+    (click)="onPrevClick()"
+    class="carousel-arrow carousel-arrow-left"
+    aria-label="Previous book">
+    ←
+  </button>
+  
+  <button 
+    (click)="onNextClick()"
+    class="carousel-arrow carousel-arrow-right"
+    aria-label="Next book">
+    →
+  </button>
+  
+  <div class="bottom-gradient"></div>
+</div>
+
