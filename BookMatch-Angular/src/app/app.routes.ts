@@ -114,6 +114,11 @@ export const routes: Routes = [
         loadComponent: () => import('./features/footer/about-us/about-us').then(m => m.AboutUs)
       },
       {
+        path: 'ai-chat',
+        canActivate: [authGuard],
+        loadComponent: () => import('./features/ai-chat/ai-chat.component').then(m => m.AiChatComponent)
+      },
+      {
         path: '**',
         redirectTo: '/auth/login'
       }

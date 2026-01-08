@@ -9,10 +9,11 @@ import { Footer } from '@shared/components/footer/footer';
 import { BookCarousel3dComponent, BookData } from '@shared/components/book-carousel-3d/book-carousel-3d.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { Category } from '@shared/models';
+import { AiChatModalComponent } from '@shared/components/ai-chat-modal/ai-chat-modal.component';
 
 @Component({
   selector: 'app-home',
-  imports: [Header, Carousel, Footer, TranslateModule, BookCarousel3dComponent],
+  imports: [Header, Carousel, Footer, TranslateModule, BookCarousel3dComponent, AiChatModalComponent],
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss',
 })
