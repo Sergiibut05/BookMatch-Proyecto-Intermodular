@@ -2,6 +2,7 @@ import { Component, ElementRef, Input, OnInit, OnDestroy, ViewChild, AfterViewIn
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import * as THREE from 'three';
+import { WebGPURenderer } from 'three/webgpu';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
 export interface BookData {
@@ -28,7 +29,7 @@ export class BookCarousel3dComponent implements OnInit, AfterViewInit, OnDestroy
 
   private scene!: THREE.Scene;
   private camera!: THREE.PerspectiveCamera;
-  private renderer!: THREE.WebGLRenderer;
+  private renderer!: any; 
   private booksGroup!: THREE.Group;
   private raycaster!: THREE.Raycaster;
   private mouse = new THREE.Vector2();
@@ -42,6 +43,9 @@ export class BookCarousel3dComponent implements OnInit, AfterViewInit, OnDestroy
   private isDragging = false;
   private lastDragX = 0;
   private isMouseOverCanvas = false;
+  private touchStartX = 0;
+  private touchStartY = 0;
+  private isHorizontalSwipe = false;
 
   // Configuration
   private isMobile = false;
@@ -109,7 +113,7 @@ export class BookCarousel3dComponent implements OnInit, AfterViewInit, OnDestroy
     }
   }
 
-  private initThree() {
+  private async initThree() {
     const canvas = this.canvasRef.nativeElement;
     const container = canvas.parentElement;
     
@@ -137,11 +141,19 @@ export class BookCarousel3dComponent implements OnInit, AfterViewInit, OnDestroy
     }
     this.scene.add(this.camera);
 
-    // Renderer
-    this.renderer = new THREE.WebGLRenderer({
-      canvas: canvas,
-      antialias: true
-    });
+    // Renderer - try WebGPU first, fallback to WebGL
+    try {
+      this.renderer = new WebGPURenderer({
+        canvas: canvas,
+        antialias: true
+      });
+      await this.renderer.init();
+    } catch (error) {
+      this.renderer = new THREE.WebGLRenderer({
+        canvas: canvas,
+        antialias: true
+      });
+    }
     this.renderer.setSize(sizes.width, sizes.height);
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
@@ -303,31 +315,59 @@ export class BookCarousel3dComponent implements OnInit, AfterViewInit, OnDestroy
   }
 
   private onTouchStart(event: TouchEvent) {
-    event.preventDefault();
+    // Guardar posición inicial para detectar dirección
+    this.touchStartX = event.touches[0].clientX;
+    this.touchStartY = event.touches[0].clientY;
+    this.lastDragX = this.touchStartX;
     this.isDragging = true;
-    this.lastDragX = event.touches[0].clientX;
+    this.isHorizontalSwipe = false; // Resetear hasta determinar dirección
   }
 
   private onTouchMove(event: TouchEvent) {
-    if (this.isDragging) {
-      event.preventDefault();
-      const deltaX = event.touches[0].clientX - this.lastDragX;
-      const newOffset = this.targetCarouselOffset + deltaX * this.carouselConfig.dragSensitivity;
-      this.targetCarouselOffset = Math.max(this.carouselMinOffset, Math.min(this.carouselMaxOffset, newOffset));
-      this.lastDragX = event.touches[0].clientX;
+    if (this.isDragging && event.touches.length > 0) {
+      const currentX = event.touches[0].clientX;
+      const currentY = event.touches[0].clientY;
+      const deltaX = Math.abs(currentX - this.touchStartX);
+      const deltaY = Math.abs(currentY - this.touchStartY);
+      
+      // Determinar dirección del movimiento (solo una vez al inicio)
+      if (!this.isHorizontalSwipe && deltaX + deltaY > 10) {
+        this.isHorizontalSwipe = deltaX > deltaY;
+      }
+      
+      // Solo interceptar si el movimiento es principalmente horizontal
+      if (this.isHorizontalSwipe) {
+        event.preventDefault();
+        const moveDeltaX = currentX - this.lastDragX;
+        const newOffset = this.targetCarouselOffset + moveDeltaX * this.carouselConfig.dragSensitivity;
+        this.targetCarouselOffset = Math.max(this.carouselMinOffset, Math.min(this.carouselMaxOffset, newOffset));
+        this.lastDragX = currentX;
+      }
+      // Si es movimiento vertical, no hacer preventDefault() para permitir scroll normal
     }
   }
 
   private onTouchEnd(event: TouchEvent) {
-    event.preventDefault();
+    // Solo hacer preventDefault si era un swipe horizontal
+    if (this.isHorizontalSwipe) {
+      event.preventDefault();
+    }
     this.isDragging = false;
+    this.isHorizontalSwipe = false;
   }
 
   private onWheel(event: WheelEvent) {
     if (this.isMouseOverCanvas) {
-      event.preventDefault();
-      const newOffset = this.targetCarouselOffset - event.deltaY * this.carouselConfig.scrollSensitivity;
-      this.targetCarouselOffset = Math.max(this.carouselMinOffset, Math.min(this.carouselMaxOffset, newOffset));
+      // Detectar si el scroll es principalmente horizontal o vertical
+      const isHorizontalScroll = Math.abs(event.deltaX) > Math.abs(event.deltaY);
+      
+      if (isHorizontalScroll) {
+        // Scroll horizontal: controlar el carrusel
+        event.preventDefault();
+        const newOffset = this.targetCarouselOffset - event.deltaX * this.carouselConfig.scrollSensitivity;
+        this.targetCarouselOffset = Math.max(this.carouselMinOffset, Math.min(this.carouselMaxOffset, newOffset));
+      }
+      // Si es scroll vertical, no hacer preventDefault() para permitir scroll normal de la página
     }
   }
 

@@ -16,7 +16,7 @@
 
 .main-title {
   position: absolute;
-  top: 100px;
+  top: clamp(80px, 8vh, 120px);
   left: 50%;
   transform: translateX(-50%);
   font-family: system-ui, -apple-system, sans-serif;
@@ -30,9 +30,23 @@
   pointer-events: none;
 }
 
+// Media query específica para 1080p y similares (1920px - 2560px)
+@media (min-width: 1920px) and (max-width: 2560px) {
+  .main-title {
+    top: clamp(100px, 10vh, 140px);
+  }
+}
+
+// Media query para pantallas medianas (1024px - 1920px)
+@media (max-width: 1920px) and (min-width: 1024px) {
+  .main-title {
+    top: clamp(90px, 9vh, 130px);
+  }
+}
+
 @media (max-width: 768px) {
   .main-title {
-    top: 100px;
+    top: clamp(60px, 8vh, 100px);
     font-size: clamp(1.5rem, 6vw, 2.5rem);
     letter-spacing: 0.5px;
   }
