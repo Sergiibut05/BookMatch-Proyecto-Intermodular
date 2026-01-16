@@ -149,10 +149,10 @@ export class BookCarousel3dComponent implements OnInit, AfterViewInit, OnDestroy
       });
       await this.renderer.init();
     } catch (error) {
-      this.renderer = new THREE.WebGLRenderer({
-        canvas: canvas,
-        antialias: true
-      });
+    this.renderer = new THREE.WebGLRenderer({
+      canvas: canvas,
+      antialias: true
+    });
     }
     this.renderer.setSize(sizes.width, sizes.height);
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -337,10 +337,10 @@ export class BookCarousel3dComponent implements OnInit, AfterViewInit, OnDestroy
       
       // Solo interceptar si el movimiento es principalmente horizontal
       if (this.isHorizontalSwipe) {
-        event.preventDefault();
+      event.preventDefault();
         const moveDeltaX = currentX - this.lastDragX;
         const newOffset = this.targetCarouselOffset + moveDeltaX * this.carouselConfig.dragSensitivity;
-        this.targetCarouselOffset = Math.max(this.carouselMinOffset, Math.min(this.carouselMaxOffset, newOffset));
+      this.targetCarouselOffset = Math.max(this.carouselMinOffset, Math.min(this.carouselMaxOffset, newOffset));
         this.lastDragX = currentX;
       }
       // Si es movimiento vertical, no hacer preventDefault() para permitir scroll normal
@@ -350,7 +350,7 @@ export class BookCarousel3dComponent implements OnInit, AfterViewInit, OnDestroy
   private onTouchEnd(event: TouchEvent) {
     // Solo hacer preventDefault si era un swipe horizontal
     if (this.isHorizontalSwipe) {
-      event.preventDefault();
+    event.preventDefault();
     }
     this.isDragging = false;
     this.isHorizontalSwipe = false;
@@ -363,9 +363,9 @@ export class BookCarousel3dComponent implements OnInit, AfterViewInit, OnDestroy
       
       if (isHorizontalScroll) {
         // Scroll horizontal: controlar el carrusel
-        event.preventDefault();
+      event.preventDefault();
         const newOffset = this.targetCarouselOffset - event.deltaX * this.carouselConfig.scrollSensitivity;
-        this.targetCarouselOffset = Math.max(this.carouselMinOffset, Math.min(this.carouselMaxOffset, newOffset));
+      this.targetCarouselOffset = Math.max(this.carouselMinOffset, Math.min(this.carouselMaxOffset, newOffset));
       }
       // Si es scroll vertical, no hacer preventDefault() para permitir scroll normal de la página
     }

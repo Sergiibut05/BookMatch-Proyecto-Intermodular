@@ -19,3 +19,8 @@ export function getFirebaseAdmin() {
   return admin;
 }
 
+export function getFirestore() {
+  const admin = getFirebaseAdmin();
+  return admin.firestore();
+}
+
