@@ -15,7 +15,7 @@ export interface ChatMessage {
 })
 export class AiChatService {
   private http = inject(HttpClient);
-  private readonly WEBHOOK_URL = 'https://sergii05.app.n8n.cloud/webhook/f777a913-9d3a-4095-9082-3ae9bab645df';
+  private readonly WEBHOOK_URL = 'http://98.84.24.135:5678/webhook/firebase';
   private readonly TIMEOUT_MS = 120000; // 2 minutos de timeout
 
   sendMessage(userId: number, message: string, baseUrl: string): Observable<string> {
