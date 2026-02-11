@@ -51,3 +51,11 @@ export async function auth(req: Request, res: Response, next: NextFunction) {
   }
 }
 
+import bcrypt from 'bcryptjs';
+
+// Para guardar una contraseña
+const salt = await bcrypt.genSalt(10);
+const hashedPassword = await bcrypt.hash(password, salt);
+
+// Para comparar en el login
+const isMatch = await bcrypt.compare(password, user.password);

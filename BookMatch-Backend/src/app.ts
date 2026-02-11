@@ -16,6 +16,10 @@ import forumsRoutes from './modules/forums/forums.routes.js';
 import commentsRoutes from './modules/comments/comments.routes.js';
 import { stripeWebhookCtrl } from './modules/payments/payments.controller.js';
 
+import hpp from 'hpp';
+import xss from 'xss-clean';
+import mongoSanitize from 'express-mongo-sanitize';
+
 const app = express();
 
 // CORS debe estar antes de todo, incluso antes del webhook
@@ -66,6 +70,12 @@ app.use(helmet({
   contentSecurityPolicy: false,
   crossOriginResourcePolicy: { policy: "cross-origin" }
 }));
+
+app.use(mongoSanitize());
+
+app.use(xss());
+
+app.use(hpp());
 
 // Webhook de Stripe debe estar antes de express.json()
 app.post('/api/payments/webhook', express.raw({ type: 'application/json' }), stripeWebhookCtrl);

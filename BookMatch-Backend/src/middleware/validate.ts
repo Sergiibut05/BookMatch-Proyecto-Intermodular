@@ -1,5 +1,6 @@
 import type { Request, Response, NextFunction } from 'express';
 import type { ZodSchema } from 'zod';
+import { validationResult, ValidationChain } from 'express-validator';
 
 export const validate = (schema: ZodSchema<any>) => (req: Request, res: Response, next: NextFunction) => {
   const parsed = schema.safeParse(req.body);
@@ -20,3 +21,14 @@ export const validate = (schema: ZodSchema<any>) => (req: Request, res: Response
   next();
 };
 
+
+
+
+// Este sería un middleware para procesar los errores de express-validator
+export const validateResult = (req: Request, res: Response, next: NextFunction) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+  next();
+};
