@@ -1,0 +1,6 @@
+com.bookmatch.app.test.app-core-1.6.1-0 C:\Users\mnsa1\.gradle\caches\8.11.1\transforms\0dfb94e8e9f7930d0d4cbce98a17f1aa\transformed\core-1.6.1\res
+com.bookmatch.app.test.app-tracing-1.2.0-1 C:\Users\mnsa1\.gradle\caches\8.11.1\transforms\640934fa0c2deb02232fb188bbe4540c\transformed\tracing-1.2.0\res
+com.bookmatch.app.test.app-androidTest-2 C:\Users\mnsa1\Desktop\BookMatch-Proyecto-Intermodular\BookMatch-Angular\android\app\build\generated\res\resValues\androidTest\debug
+com.bookmatch.app.test.app-mergeDebugAndroidTestResources-3 C:\Users\mnsa1\Desktop\BookMatch-Proyecto-Intermodular\BookMatch-Angular\android\app\build\intermediates\incremental\debugAndroidTest\mergeDebugAndroidTestResources\merged.dir
+com.bookmatch.app.test.app-mergeDebugAndroidTestResources-4 C:\Users\mnsa1\Desktop\BookMatch-Proyecto-Intermodular\BookMatch-Angular\android\app\build\intermediates\incremental\debugAndroidTest\mergeDebugAndroidTestResources\stripped.dir
+com.bookmatch.app.test.app-debugAndroidTest-5 C:\Users\mnsa1\Desktop\BookMatch-Proyecto-Intermodular\BookMatch-Angular\android\app\build\intermediates\merged_res\debugAndroidTest\mergeDebugAndroidTestResources

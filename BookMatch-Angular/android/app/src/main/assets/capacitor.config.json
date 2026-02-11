@@ -1,0 +1,5 @@
+{
+	"appId": "com.bookmatch.app",
+	"appName": "book-match-angular",
+	"webDir": "dist/BookMatch-Angular/browser"
+}

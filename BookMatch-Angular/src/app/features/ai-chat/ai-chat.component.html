@@ -1,66 +1,118 @@
 <app-header></app-header>
 
-<div class="chat-page-container" style="background-color: #FCF5E2; min-height: 100vh;">
-  <div class="chat-page-content">
-    <!-- Header de la página -->
-    <div class="chat-page-header">
-      <div class="flex items-center gap-3">
-        <div class="chat-page-avatar">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-          </svg>
-        </div>
-        <div>
-          <h1 class="chat-page-title">Asistente de Recomendaciones</h1>
-          <p class="chat-page-subtitle">Pregúntame sobre libros y te ayudaré a encontrar el perfecto para ti</p>
-        </div>
-      </div>
+<div class="chat-page-container">
+  <!-- Sidebar con lista de conversaciones -->
+  <div class="conversations-sidebar" [class.mobile-show]="showSidebarMobile()">
+    <div class="sidebar-header">
+      <button (click)="createNewConversation()" class="new-conversation-btn">
+        + Nueva conversación
+      </button>
+      <button class="mobile-close-btn" (click)="toggleSidebarMobile()">✕</button>
     </div>
-
-    <!-- Mensajes -->
-    <div class="chat-page-messages" #messagesContainer>
-      @for (message of messages(); track message.id) {
-        <div class="chat-page-message-wrapper" [class.user-message]="message.isUser" [class.ai-message]="!message.isUser">
-          <div class="chat-page-message-content" [innerHTML]="message.isUser ? message.content : message.content"></div>
-          <span class="chat-page-message-time">{{ message.timestamp | date:'short' }}</span>
+    
+    <div class="conversations-list">
+      @if (conversations().length === 0) {
+        <div class="no-conversations">
+          <p>📝 No hay conversaciones</p>
+          <p class="hint">Escribe un mensaje para comenzar</p>
         </div>
       }
-      @if (isLoading()) {
-        <div class="chat-page-message-wrapper ai-message">
-          <div class="chat-page-message-content">
-            <div class="typing-indicator">
-              <span></span>
-              <span></span>
-              <span></span>
-            </div>
+      @for (conv of conversations(); track conv.id) {
+        <div class="conversation-item" 
+             [class.active]="conv.id === activeConversationId()"
+             (click)="selectConversation(conv.id)">
+          <div class="conv-title">{{ conv.title }}</div>
+          <div class="conv-date">{{ conv.updatedAt | date:'short' }}</div>
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- Botón flotante para abrir sidebar en móvil -->
+  <button class="mobile-fab-sidebar" 
+          (click)="toggleSidebarMobile()" 
+          [class.hidden]="showSidebarMobile()">
+    ☰
+  </button>
+  
+  <!-- Área de chat principal -->
+  <div class="chat-area">
+    <div class="messages-container" #messagesContainer>
+      @if (messages().length === 0 && isNewEmptyConversation()) {
+        <div class="welcome-message">
+          <div class="welcome-icon">📚</div>
+          <h2>¡Hola! Soy tu asistente de libros</h2>
+          <p>¿En qué puedo ayudarte hoy?</p>
+          <div class="suggestions">
+            <button (click)="useSuggestion('Busco libros de fantasía épica')" class="suggestion-chip">
+              📖 Libros de fantasía
+            </button>
+            <button (click)="useSuggestion('Recomiéndame algo de ciencia ficción')" class="suggestion-chip">
+              🚀 Ciencia ficción
+            </button>
+            <button (click)="useSuggestion('Libros de misterio y suspense')" class="suggestion-chip">
+              🔍 Misterio
+            </button>
           </div>
         </div>
       }
+      
+      @for (msg of messages(); track msg.id) {
+        <div class="message" 
+             [class.user]="msg.role === 'user'" 
+             [class.assistant]="msg.role === 'assistant'">
+          
+          @if (msg.role === 'assistant') {
+            <!-- Thoughts section - abierto por defecto si está processing -->
+            @if (msg.metadata?.thoughts && msg.metadata!.thoughts!.length > 0) {
+              <details class="thoughts-section" [open]="msg.status === 'processing'">
+                <summary>💭 Razonamiento ({{ msg.metadata!.thoughts!.length }} paso{{ msg.metadata!.thoughts!.length > 1 ? 's' : '' }})</summary>
+                <ul>
+                  @for (thought of msg.metadata!.thoughts!; track $index) {
+                    <li>{{ thought }}</li>
+                  }
+                </ul>
+              </details>
+            }
+            
+            <!-- Contenido del mensaje -->
+            @if (msg.status === 'processing') {
+              <div class="processing-container">
+                <div class="processing-spinner">
+                  <div class="spinner"></div>
+                </div>
+                <div class="processing-text">
+                  <span class="main-text">Procesando tu solicitud</span>
+                  <span class="sub-text">Analizando y buscando la mejor información...</span>
+            </div>
+          </div>
+            } @else {
+              <div class="message-content" [innerHTML]="renderMarkdown(msg.content)"></div>
+            }
+          } @else {
+            <!-- Mensaje del usuario -->
+            <div class="message-content">{{ msg.content }}</div>
+          }
+        </div>
+      }
     </div>
 
-    <!-- Input del chat -->
-    <div class="chat-page-input-container">
-      <div class="chat-page-input-wrapper">
-        <textarea
-          [(ngModel)]="currentMessage"
+    <!-- Input area - siempre pegado abajo -->
+    <div class="input-area">
+      <textarea [(ngModel)]="currentMessage" 
           (keydown)="onEnterKey($event)"
           placeholder="Escribe tu mensaje..."
-          class="chat-page-input"
-          rows="2"
-          [disabled]="isLoading()"></textarea>
-        <button
-          (click)="sendMessage()"
-          [disabled]="!currentMessage().trim() || isLoading()"
-          class="chat-page-send-button"
-          aria-label="Enviar mensaje">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-          </svg>
+                [disabled]="isLoading()"
+                rows="1"></textarea>
+      <button (click)="sendMessage()" 
+              [disabled]="!currentMessage() || isLoading()"
+              class="send-btn">
+        @if (isLoading()) {
+          <span class="btn-spinner"></span>
+        } @else {
+          <span>Enviar</span>
+        }
         </button>
-      </div>
     </div>
   </div>
 </div>
-
-<app-footer></app-footer>
-

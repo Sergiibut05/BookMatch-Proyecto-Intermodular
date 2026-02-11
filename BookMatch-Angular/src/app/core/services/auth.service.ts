@@ -19,6 +19,7 @@ export class AuthService {
   private readonly TOKEN_KEY = 'firebase_token';
 
   currentUser = signal<BackendUser | null>(null);
+  firebaseUser = signal<FirebaseUser | null>(null);
   
   isAdmin = computed(() => {
     return this.currentUser()?.role === 'ADMIN';
@@ -29,6 +30,7 @@ export class AuthService {
   constructor() {
     this.user$.subscribe(async (firebaseUser) => {
       if (firebaseUser) {
+        this.firebaseUser.set(firebaseUser);
         const token = await firebaseUser.getIdToken();
         localStorage.setItem(this.TOKEN_KEY, token);
 
@@ -48,6 +50,7 @@ export class AuthService {
         });
 
       } else {
+        this.firebaseUser.set(null);
         localStorage.removeItem(this.TOKEN_KEY);
         this.currentUser.set(null);
       }

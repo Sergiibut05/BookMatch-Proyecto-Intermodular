@@ -1,0 +1,524 @@
+{
+    "HEADER": {
+        "HOME": "Home",
+        "CATALOG": "Catalog",
+        "CATEGORIES": "Categories",
+        "PROFILE": "Profile",
+        "SEARCH_PLACEHOLDER": "Search...",
+        "SEARCH_BOOKS_PLACEHOLDER": "Search by Title, Author or ISBN...",
+        "SEARCH_FORUMS_PLACEHOLDER": "Search in forums...",
+        "WELCOME": "Welcome,",
+        "LOGOUT": "Logout",
+        "LOGOUT_SHORT": "Exit"
+    },
+    "LOGIN": {
+        "SUBTITLE": "Sign in to continue",
+        "EMAIL_LABEL": "Email",
+        "EMAIL_PLACEHOLDER": "you@email.com",
+        "EMAIL_ERROR": "Please enter a valid email",
+        "PASSWORD_LABEL": "Password",
+        "PASSWORD_ERROR": "Password must be at least 6 characters",
+        "SUBMIT_BUTTON": "Sign In",
+        "OR_CONTINUE_WITH": "Or continue with",
+        "NO_ACCOUNT": "Don't have an account?",
+        "REGISTER_LINK": "Register here",
+        "ERRORS": {
+            "USER_NOT_FOUND": "No account found with this email.",
+            "WRONG_PASSWORD": "Wrong password.",
+            "INVALID_EMAIL": "Invalid email.",
+            "USER_DISABLED": "This account has been disabled.",
+            "TOO_MANY_REQUESTS": "Too many requests. Try again later.",
+            "POPUP_CLOSED": "Sign in cancelled.",
+            "DEFAULT": "Error signing in. Try again."
+        }
+    },
+    "REGISTER": {
+        "SUBTITLE": "Create your account",
+        "NAME_LABEL": "Name",
+        "NAME_PLACEHOLDER": "your name",
+        "SURNAME_LABEL": "Last Name",
+        "SURNAME_PLACEHOLDER": "your last name",
+        "EMAIL_LABEL": "Email",
+        "EMAIL_PLACEHOLDER": "you@email.com",
+        "PASSWORD_LABEL": "Password",
+        "CONFIRM_PASSWORD_LABEL": "Confirm Password",
+        "SUBMIT_BUTTON": "Create Account",
+        "OR_CONTINUE_WITH": "Or continue with",
+        "ALREADY_HAVE_ACCOUNT": "Already have an account?",
+        "LOGIN_LINK": "Log in here",
+        "SUCCESS_MESSAGE": "Account created successfully. Redirecting...",
+        "ERRORS": {
+            "NAME_REQUIRED": "*Name is required",
+            "MIN_LENGTH_3": "*Must be at least 3 characters",
+            "SURNAME_REQUIRED": "*Last name is required",
+            "EMAIL_REQUIRED": "*Email is required",
+            "EMAIL_INVALID": "*Invalid email",
+            "PASSWORD_REQUIRED": "*Password is required",
+            "PASSWORD_PATTERN": "*At least one uppercase, one lowercase, one number and 8 characters",
+            "PASSWORD_MISMATCH": "*Passwords do not match",
+            "EMAIL_IN_USE": "Email is already in use",
+            "INVALID_EMAIL": "Invalid email",
+            "WEAK_PASSWORD": "Password is too weak",
+            "OPERATION_NOT_ALLOWED": "Operation not allowed",
+            "POPUP_CLOSED": "Authentication window closed",
+            "DEFAULT": "An error occurred. Try again"
+        }
+    },
+    "HOME": {
+        "HERO": {
+            "TITLE": "Discover your next favorite book",
+            "SUBTITLE": "Explore thousands of books, buy, sell and exchange with our community of readers",
+            "CTA": "Explore Catalog"
+        },
+        "FEATURES": {
+            "BUY_SELL": {
+                "TITLE": "Buy & Sell",
+                "DESCRIPTION": "Buy and sell books easily and securely. Find the titles you are looking for or give a second life to your favorite books."
+            },
+            "SWAP": {
+                "TITLE": "Digital Swap",
+                "DESCRIPTION": "Swap your books with other users easily. A sustainable way to discover new readings without spending money."
+            },
+            "AI": {
+                "TITLE": "AI Recommendations",
+                "DESCRIPTION": "Discover your next favorite reading thanks to our artificial intelligence that learns from your tastes and preferences."
+            }
+        },
+        "FORUM_BANNER": {
+            "TITLE": "Join our community",
+            "SUBTITLE": "Share your opinions, discover recommendations and connect with other book lovers",
+            "CTA": "Go to Forum"
+        }
+    },
+    "CATEGORIES": {
+        "NEW_ARRIVALS_TITLE": "New Arrivals",
+        "SCI_FI_TITLE": "Science Fiction",
+        "FANTASY_TITLE": "Fantasy",
+        "ROMANCE_TITLE": "Romance",
+        "MYSTERY_THRILLER_TITLE": "Mystery / Thriller",
+        "YOUNG_ADULT_TITLE": "Young Adult",
+        "COMIC_MANGA_TITLE": "Comics / Manga",
+        "NEW_ARRIVALS": "Novedades",
+        "SCI_FI": "Ciencia Ficción",
+        "FANTASY": "Fantasía",
+        "ROMANCE": "Romance",
+        "MYSTERY_THRILLER": "Misterio / Thriller",
+        "YOUNG_ADULT": "Juvenil",
+        "COMIC_MANGA": "Cómic / Manga",
+        "FILTER_ORDER": "Filter & Sort",
+        "FILTERS": "Filters",
+        "CLOSE": "Close",
+        "ONLY_INSTOCK": "In Stock Only",
+        "ORDERBY": "Sort by",
+        "MORE_RECENT": "Newest",
+        "LESS_TO_MORE": "Price: Low to High",
+        "MORE_TO_LESS": "Price: High to Low",
+        "ALPHABETIC": "Alphabetical (A-Z)",
+        "PRICE": "Price",
+        "MONEY": "€",
+        "APLIE_PRICE": "Apply Price",
+        "MINIM_VALORATION": "Minimum Rating",
+        "STARS_OR_MORE": "stars or more",
+        "CLEAN_FILTERS": "Clear all filters",
+        "RESULTS_FOUND": "results found",
+        "SHOW": "Show:",
+        "BUY": "Buy",
+        "NOT_FOUND": "No books found with these filters.",
+        "CLEAN_FILTERS2": "Clear filters",
+        "FROM": "of",
+        "LAST": "Prev",
+        "NEXT": "Next"
+    },
+    "CATEGORIES_SELECTOR": {
+        "TITLE": "Explore all categories",
+        "SUBTITLE": "Discover books from all available categories. Click on any category to see available books.",
+        "SEARCH_PLACEHOLDER": "Search categories...",
+        "MAIN_CATEGORIES": "Main categories",
+        "SPECIAL_CATEGORIES": "Subcategories",
+        "NO_RESULTS": "No categories found",
+        "NO_RESULTS_DESC": "Try searching with different terms",
+        "RESULTS_FOUND": "categories found"
+    },
+    "PAYMENT": {
+        "VERIFYING": "Verifying payment...",
+        "SUCCESS": "Payment successful!",
+        "SUCCESS_PAYMENT": "Your order has been successfully processed. You will receive a confirmation email shortly.",
+        "SESSIONID": "Session ID:",
+        "BACKHOME": "Back to Home",
+        "SEE_MY_ORDERS": "View my orders",
+        "ERROR": "Error verifying payment",
+        "PAYMENT_LEFT": "Payment pending",
+        "PAYMENT_IN_PROCESS": "Your payment is being processed. Please wait a few moments."
+    },
+    "PROFILE": {
+        "LOADING": "Loading profile...",
+        "PROFILE_INFORMATION": "Profile Information",
+        "EDIT": "Edit",
+        "FULL_NAME": "Full Name",
+        "SAVING": "Saving...",
+        "SAVE": "Save",
+        "CANCEL": "Cancel",
+        "EMAIL": "Email",
+        "PHONE": "Phone",
+        "MEMBER_SINCE": "Member Since"
+    },
+    "PURCHASE": {
+        "PURCHASE_HISTORY": "Purchase History",
+        "NO_PURCHASE_YET": "No purchases yet",
+        "ORDER": "Order #",
+        "AT": "at"
+    },
+    "FOOTER": {
+        "ABOUT_US": "About Us",
+        "DESCRIPTION": "BookMatch is your trusted online bookstore. Find the best books and enjoy a unique shopping experience.",
+        "LOCATION": "Location:",
+        "REAL_LOCATION": "Av. Juan López de Peñalver, 21. Campanillas, 29590 Málaga",
+        "LEGAL_INFO": "Legal Information",
+        "PRIVACY_POLICY": "Privacy Policy",
+        "COOKIES_POLICY": "Cookie Policy",
+        "REFUND_POLICY": "Return & Refund Policy",
+        "TERMS": "Terms & Conditions",
+        "CLIENT_ATTENTION": "Customer Service",
+        "QUESTIONS": "Frequently Asked Questions",
+        "CONTACT": "Contact",
+        "SHIPPING": "Shipping & Delivery",
+        "PAY_METHODS": "Payment Methods",
+        "FOLLOW_US": "Follow Us",
+        "COPY": "BookMatch. All rights reserved."
+    },
+    "BOOK_DETAILS": {
+        "LOADING": "Loading book...",
+        "LOADING2": "Loading",
+        "SEE_MORE": "See more →",
+        "IN_STOCK": "In stock ({{stock}} available)",
+        "OUT_OF_STOCK": "Out of stock",
+        "DESCRIPTION_TITLE": "Description",
+        "REVIEWS_TITLE": "Reviews",
+        "NO_REVIEWS": "No reviews yet for this book.",
+        "ADDED_TO_CART": "Added!",
+        "ADD_TO_CART": "Add to cart",
+        "BUY_NOW": "Buy now",
+        "PROCESSING": "Processing...",
+        "BUY_WITH_STRIPE": "Buy with Stripe",
+        "AVAILABILITY": "Availability",
+        "IMMEDIATE_SHIPPING": "Immediate shipping",
+        "NO_STOCK_LABEL": "Out of stock",
+        "FORMAT": "Format",
+        "PAPERBACK": "Paperback",
+        "NOT_FOUND_TITLE": "Book not found",
+        "NOT_FOUND_DESC": "The book you are looking for is not available.",
+        "BOOKMATCH_USER": "BookMatch User",
+        "DEFAULT_CATEGORY": "Book",
+        "SAVE_DISCOUNT": "You save 15%",
+        "ADD_TO_FAVORITES": "Add to favorites",
+        "GLOBAL_RATINGS": "global ratings",
+        "FEATURED_REVIEWS": "Featured reviews",
+        "DELETE_REVIEW": "Delete my review",
+        "REVIEWED_ON": "Reviewed on",
+        "BE_FIRST_REVIEW": "Be the first to share your opinion below!",
+        "WRITE_REVIEW_TITLE": "Write your own review",
+        "WRITE_REVIEW_DESC": "Share your experience with this book to help other readers.",
+        "YOUR_RATING": "Your rating",
+        "YOUR_OPINION": "Your opinion (Optional)",
+        "COMMENT_PLACEHOLDER": "What did you like most? What didn't you like?",
+        "PUBLISHING_REVIEW": "Publishing review...",
+        "PUBLISH_REVIEW": "Publish Review",
+        "YOU": "You",
+        "ERRORS": {
+            "LOGIN_REQUIRED": "You must be logged in to leave a review.",
+            "SAVE_ERROR": "An error occurred while saving your review.",
+            "DELETE_ERROR": "Error deleting the review",
+            "DELETE_CONFIRM": "Are you sure you want to delete your review? This action cannot be undone.",
+            "RATING_REQUIRED": "Rating is required",
+            "RATING_MIN": "Minimum rating is 1 star",
+            "RATING_MAX": "Maximum rating is 5 stars",
+            "RATING_SELECT": "Please select a star rating",
+            "PAYMENT_PROCESS_ERROR": "Error processing payment. Please try again."
+        }
+    },
+    "CART": {
+        "TITLE": "Your Cart",
+        "SUBTITLE": "{{count}} books ready to read",
+        "CLEAR_CART": "Clear Cart",
+        "EMPTY_TITLE": "Your cart is empty",
+        "EMPTY_DESC": "It looks like you haven't added any stories to your collection yet.",
+        "EXPLORE_CATALOG": "Explore Catalog",
+        "REMOVE_ITEM": "Remove",
+        "ORDER_SUMMARY": "Order Summary",
+        "SUBTOTAL": "Subtotal",
+        "ESTIMATED_SHIPPING": "Estimated Shipping",
+        "FREE": "Free",
+        "TOTAL": "Total",
+        "TAX_INCLUDED": "Tax included",
+        "CHECKOUT": "Checkout",
+        "SECURE_PAYMENT": "Secure payment processed by Stripe",
+        "MODAL": {
+            "TITLE": "Clear cart?",
+            "DESC": "Are you sure you want to remove all books? This action cannot be undone.",
+            "CANCEL": "Cancel",
+            "CONFIRM": "Yes, clear"
+        }
+    },
+    "FAQ": {
+        "TITLE": "Frequently Asked Questions",
+        "STILL_QUESTIONS": "Still have questions?",
+        "CONTACT_US": "Contact Us",
+        "Q1": "How can I place an order?",
+        "A1": "You can place an order by browsing our catalog, adding books to your cart, and completing the checkout process. We accept secure payments through Stripe.",
+        "Q2": "What shipping methods are available?",
+        "A2": "We offer standard shipping throughout Spain. Delivery times may vary depending on location. For more information, check our shipping policy.",
+        "Q3": "Can I return a book?",
+        "A3": "Yes, we have a 30-day return policy. The book must be in the same condition you received it, unused and in its original packaging. Check our return policy for more details.",
+        "Q4": "How can I track my order?",
+        "A4": "Once your order is shipped, you will receive an email with the tracking number and a link to track your package in real-time.",
+        "Q5": "What payment methods do you accept?",
+        "A5": "We accept secure payments through Stripe, including credit and debit cards (Visa, Mastercard, American Express). All payments are encrypted and processed securely.",
+        "Q6": "Do you offer discounts or promotions?",
+        "A6": "Yes, we offer special promotions and discounts periodically. Subscribe to our newsletter or follow us on social media to stay up to date with our offers.",
+        "Q7": "Can I change or cancel my order?",
+        "A7": "You can cancel your order before it is shipped. Once shipped, you will need to follow the standard return process. Contact us at bookmatch3@gmail.com for more help.",
+        "Q8": "How can I contact customer service?",
+        "A8": "You can contact us by email at bookmatch3@gmail.com. We'll be happy to help you with any questions or issues you may have."
+    },
+    "PAYMENT_METHODS": {
+        "TITLE": "Payment Methods",
+        "SUBTITLE": "We accept multiple secure payment methods for your convenience",
+        "QUESTIONS": "Have questions about payment methods?",
+        "CONTACT": "Contact Us",
+        "STRIPE": {
+            "TITLE": "Stripe",
+            "DESCRIPTION": "We process all payments securely through Stripe, one of the world's most secure and reliable payment platforms.",
+            "FEATURE1": "Encrypted and secure payments",
+            "FEATURE2": "Instant processing",
+            "FEATURE3": "PCI DSS compliance"
+        },
+        "CARDS": {
+            "TITLE": "Credit and Debit Cards",
+            "DESCRIPTION": "We accept major credit and debit cards through our secure platform."
+        },
+        "SECURITY": {
+            "TITLE": "Payment Security",
+            "DESCRIPTION": "Your security is our priority. All payments are protected with:",
+            "FEATURE1": "End-to-end SSL encryption",
+            "FEATURE2": "PCI DSS compliance",
+            "FEATURE3": "Real-time fraud protection"
+        }
+    },
+    "ABOUT_US": {
+        "TITLE": "About Us",
+        "SUBTITLE": "App to buy recommended books and digital exchange",
+        "INTRODUCTION": {
+            "TITLE": "Introduction",
+            "DESCRIPTION": "The proposal arises from the need to promote reading while adapting to new sustainability trends. BookMatch is a mobile app that combines the purchase of books (both new and used) with an innovative system of personalized suggestions through artificial intelligence and a platform for exchanging used books between readers.",
+            "REASON": "We chose it because it unites three growing concepts: digitalization, reading, and circular economy. It is based on a real problem: books accumulate unused and readers seek new readings without spending more. It has potential for national and international growth with a low initial investment.",
+            "CONCEPT1": {
+                "TITLE": "Digitalization",
+                "DESC": "Modern and accessible technology"
+            },
+            "CONCEPT2": {
+                "TITLE": "Reading",
+                "DESC": "Promotion of culture and knowledge"
+            },
+            "CONCEPT3": {
+                "TITLE": "Circular Economy",
+                "DESC": "Sustainability and reuse"
+            }
+        },
+        "TEAM": {
+            "TITLE": "Project Promoters",
+            "SERGII": {
+                "ROLE": "Multiplatform Developer",
+                "DESCRIPTION": "Epic fantasy lover and regular reader. Multiplatform application developer, with experience in 3D animation in applications like Blender, which allows him to create visual content to promote the app on social media."
+            },
+            "LUCAS": {
+                "ROLE": "Multiplatform Developer",
+                "DESCRIPTION": "Also a multiplatform application developer with knowledge in 3D modeling and animation. Thanks to his creativity, he can bring a more visual and unique approach to the project, in addition to helping with ad creation."
+            },
+            "SAMUEL": {
+                "ROLE": "Database Specialist",
+                "DESCRIPTION": "Database specialist and technical aspects of the app. His more technical profile ensures that BookMatch will function efficiently and securely."
+            }
+        },
+        "CONCLUSION": "We are three second-year Multiplatform Application Development students from the Málaga Technology Park, passionate about technology, creativity, and reading. Together, we combine technical knowledge, creativity, and passion for reading to develop an innovative application that combines technology, sustainability, and appreciation for books."
+    },
+    "FORUM": {
+        "TITLE": "Discussion Forums",
+        "SUBTITLE": "Explore different categories and join conversations about books",
+        "CREATE_FORUM": "Create Forum",
+        "LOADING": "Loading forums...",
+        "NO_FORUMS": "No forums available",
+        "NO_FORUMS_DESC": "No discussion forums have been created yet.",
+        "NO_DESCRIPTION": "No description",
+        "TOPIC_SINGULAR": "topic",
+        "TOPIC_PLURAL": "topics",
+        "PREVIOUS": "Previous",
+        "NEXT": "Next",
+        "CANCEL": "Cancel",
+        "CREATE_MODAL": {
+            "TITLE": "Create New Forum",
+            "TITLE_LABEL": "Forum Title",
+            "TITLE_PLACEHOLDER": "E.g.: Book Recommendations",
+            "DESCRIPTION_LABEL": "Description (optional)",
+            "DESCRIPTION_PLACEHOLDER": "Describe the topic of this forum...",
+            "CREATING": "Creating...",
+            "CREATE_BUTTON": "Create Forum"
+        }
+    },
+    "FORUM_TOPIC": {
+        "BACK_TO_FORUMS": "Back to Forums",
+        "EDIT_FORUM": "Edit Forum",
+        "DELETE_FORUM": "Delete Forum",
+        "SEARCH_PLACEHOLDER": "Search topics...",
+        "LOADING": "Loading topics...",
+        "NO_TOPICS_FOUND": "No topics found",
+        "NO_TOPICS": "No topics yet",
+        "NO_TOPICS_FOUND_DESC": "Try with other search terms.",
+        "NO_TOPICS_DESC": "Be the first to create a discussion topic.",
+        "COMMENT_SINGULAR": "comment",
+        "COMMENT_PLURAL": "comments",
+        "PREVIOUS": "Previous",
+        "NEXT": "Next",
+        "CREATE_TOPIC": "Create New Topic",
+        "CANCEL": "Cancel",
+        "CREATE_MODAL": {
+            "TITLE": "Create New Topic",
+            "TITLE_LABEL": "Topic Title",
+            "TITLE_PLACEHOLDER": "E.g.: Science fiction book recommendation",
+            "CONTENT_LABEL": "Content",
+            "CONTENT_PLACEHOLDER": "Write your topic content...",
+            "CREATING": "Creating...",
+            "CREATE_BUTTON": "Create Topic",
+            "IMAGES_LABEL": "Images (optional)",
+            "IMAGES_ADD_BUTTON": "Add image",
+            "IMAGES_UPLOADING": "Uploading..."
+        },
+        "EDIT_MODAL": {
+            "TITLE": "Edit Forum",
+            "TITLE_LABEL": "Forum Title",
+            "TITLE_PLACEHOLDER": "Forum title",
+            "DESCRIPTION_LABEL": "Description (optional)",
+            "DESCRIPTION_PLACEHOLDER": "Forum description...",
+            "SAVING": "Saving...",
+            "SAVE_BUTTON": "Save Changes"
+        },
+        "DELETE_MODAL": {
+            "TITLE": "Delete Forum",
+            "MESSAGE": "Are you sure you want to delete this forum? This action will delete all associated topics and comments and cannot be undone.",
+            "DELETING": "Deleting...",
+            "DELETE_BUTTON": "Delete"
+        }
+    },
+    "POST": {
+        "BACK_TO_FORUM": "Back to forum",
+        "LOADING": "Loading post...",
+        "AT_TIME": "at",
+        "COMMENT_SINGULAR": "comment",
+        "COMMENT_PLURAL": "comments",
+        "EDIT": "Edit",
+        "DELETE": "Delete",
+        "CANCEL": "Cancel",
+        "EDIT_MODAL": {
+            "TITLE": "Edit Post",
+            "TITLE_LABEL": "Post Title",
+            "TITLE_PLACEHOLDER": "Post title",
+            "CONTENT_LABEL": "Content",
+            "CONTENT_PLACEHOLDER": "Post content...",
+            "SAVING": "Saving...",
+            "SAVE_BUTTON": "Save Changes"
+        },
+        "DELETE_MODAL": {
+            "TITLE": "Delete Post",
+            "MESSAGE": "Are you sure you want to delete this post? This action cannot be undone.",
+            "DELETING": "Deleting...",
+            "DELETE_BUTTON": "Delete"
+        }
+    },
+    "COMMENTS": {
+        "TITLE": "Comments",
+        "WRITE_COMMENT": "Write a comment",
+        "COMMENT_PLACEHOLDER": "Write your comment...",
+        "PUBLISHING": "Publishing...",
+        "PUBLISH": "Publish",
+        "CANCEL": "Cancel",
+        "LOADING": "Loading comments...",
+        "ERROR_MESSAGE": "You can still try to comment.",
+        "NO_COMMENTS": "No comments yet. Be the first to comment.",
+        "AT_TIME": "at",
+        "REPLIED": "replied",
+        "DELETE": "Delete",
+        "SEE_LESS": "See less",
+        "SEE_MORE": "See more",
+        "REPLY": "Reply",
+        "REPLY_PLACEHOLDER": "Write your reply...",
+        "DELETE_MODAL": {
+            "TITLE": "Delete Comment",
+            "MESSAGE": "Are you sure you want to delete this comment? This action cannot be undone.",
+            "DELETING": "Deleting...",
+            "DELETE_BUTTON": "Delete"
+        }
+    },
+    "SEARCH_RESULTS": {
+        "TITLE": "Search Results",
+        "LOADING": "Searching...",
+        "NO_RESULTS": "No results found",
+        "NO_RESULTS_DESC": "Try with other search terms.",
+        "RESULTS_FOUND": "{{count}} results found",
+        "FOR_BOOKS": "for \"{{query}}\"",
+        "FOR_FORUMS": "in forums for \"{{query}}\""
+    },
+    "BOOK_FORM": {
+        "TITLE_EDIT": "Edit Book",
+        "TITLE_CREATE": "Add New Book",
+        "COVER": {
+            "BUTTON": "Upload Cover",
+            "UPLOADING": "Uploading..."
+        },
+        "FIELDS": {
+            "TITLE": {
+                "LABEL": "Title"
+            },
+            "AUTHOR": {
+                "LABEL": "Author"
+            },
+            "ISBN": {
+                "LABEL": "ISBN"
+            },
+            "CATEGORY": {
+                "LABEL": "Main Category",
+                "PLACEHOLDER": "Select a category"
+            },
+            "PRICE": {
+                "LABEL": "Price (€)"
+            },
+            "STOCK": {
+                "LABEL": "Stock"
+            },
+            "DESCRIPTION": {
+                "LABEL": "Description"
+            }
+        },
+        "BUTTONS": {
+            "SAVING": "Saving...",
+            "SAVE_CHANGES": "Save Changes",
+            "CREATE": "Create Book",
+            "CANCEL": "Cancel"
+        },
+        "ERRORS": {
+            "ACCESS_DENIED": "Access denied. Admins only.",
+            "LOAD_BOOK": "Error loading book",
+            "UPLOAD_IMAGE": "Error uploading image",
+            "UPDATE_BOOK": "Error updating book",
+            "CREATE_BOOK": "Error creating book"
+        },
+        "SUCCESS": {
+            "UPDATE": "Book updated successfully",
+            "CREATE": "Book created successfully"
+        },
+        "VALIDATION": {
+            "REQUIRED": "This field is required",
+            "MIN_LENGTH": "Text is too short",
+            "MIN_VALUE": "Value must be positive",
+            "INVALID": "Invalid field"
+        }
+    }
+}

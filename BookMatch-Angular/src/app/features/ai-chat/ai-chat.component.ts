@@ -1,143 +1,149 @@
-import { Component, inject, signal, OnInit, OnDestroy, ElementRef, ViewChild, AfterViewChecked } from '@angular/core';
+import { Component, OnInit, inject, signal, ViewChild, ElementRef, AfterViewChecked } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { AiChatService } from '@core/services/ai-chat.service';
+import { marked } from 'marked';
+import { ConversationService } from '../../core/services/conversation.service';
 import { AuthService } from '@core/services/auth.service';
+import { ConversationUI, MessageUI } from '../../core/models/conversation.model';
 import { Header } from '@shared/components/header/header';
-import { Footer } from '@shared/components/footer/footer';
-
-export interface ChatMessage {
-  id: string;
-  content: string;
-  isUser: boolean;
-  timestamp: Date;
-}
 
 @Component({
   selector: 'app-ai-chat',
   standalone: true,
-  imports: [CommonModule, FormsModule, Header, Footer],
+  imports: [CommonModule, FormsModule, Header],
   templateUrl: './ai-chat.component.html',
   styleUrl: './ai-chat.component.scss'
 })
-export class AiChatComponent implements OnInit, OnDestroy, AfterViewChecked {
-  private aiChatService = inject(AiChatService);
+export class AiChatComponent implements OnInit, AfterViewChecked {
+  private conversationService = inject(ConversationService);
   private authService = inject(AuthService);
   private router = inject(Router);
 
   @ViewChild('messagesContainer') messagesContainer!: ElementRef<HTMLDivElement>;
   
-  messages = signal<ChatMessage[]>([]);
+  // Signals
+  conversations = signal<ConversationUI[]>([]);
+  activeConversationId = signal<string | null>(null);
+  messages = signal<MessageUI[]>([]);
   currentMessage = signal('');
   isLoading = signal(false);
+  showSidebarMobile = signal(false);
+  isNewEmptyConversation = signal(true); // Para saber si es una conversación nueva sin crear
+  
   private shouldScrollToBottom = false;
 
-  ngOnInit(): void {
-    // Mensaje de bienvenida inicial
-    const welcomeMessage: ChatMessage = {
-      id: 'welcome',
-      content: '¡Hola! 👋 Soy tu asistente de recomendación de libros. ¿Qué tipo de libro estás buscando hoy?',
-      isUser: false,
-      timestamp: new Date()
-    };
-    this.messages.set([welcomeMessage]);
+  ngOnInit() {
+    const firebaseUser = this.authService.firebaseUser();
+    if (!firebaseUser?.uid) {
+      this.router.navigate(['/login']);
+      return;
+    }
+    this.loadConversations(firebaseUser.uid);
+    // Empezar con una conversación vacía (no creada aún)
+    this.isNewEmptyConversation.set(true);
+    this.messages.set([]);
   }
 
-  ngOnDestroy(): void {
-    // Cleanup si es necesario
-  }
-
-  ngAfterViewChecked(): void {
+  ngAfterViewChecked() {
     if (this.shouldScrollToBottom) {
       this.scrollToBottom();
       this.shouldScrollToBottom = false;
     }
   }
 
-  sendMessage(): void {
-    const messageText = this.currentMessage().trim();
-    if (!messageText || this.isLoading()) return;
-
-    const user = this.authService.currentUser();
-    if (!user?.id) {
-      console.error('Usuario no autenticado');
-      return;
+  loadConversations(userId: string) {
+    this.conversationService.getConversations(userId).subscribe(
+      conversations => {
+        this.conversations.set(conversations);
+        // NO seleccionar automáticamente la primera conversación
+        // El usuario empieza con una conversación vacía
+      }
+    );
+  }
+  
+  selectConversation(conversationId: string, closeSidebar: boolean = true) {
+    this.activeConversationId.set(conversationId);
+    this.isNewEmptyConversation.set(false);
+    if (closeSidebar) {
+      this.showSidebarMobile.set(false); // Cerrar sidebar en móvil al seleccionar
+    }
+    const firebaseUser = this.authService.firebaseUser();
+    if (firebaseUser?.uid) {
+      this.conversationService.getMessages(firebaseUser.uid, conversationId).subscribe(
+        messages => {
+          this.messages.set(messages);
+          this.shouldScrollToBottom = true;
+        }
+      );
+    }
+  }
+  
+  createNewConversation() {
+    // Limpiar la conversación actual y mostrar una vacía
+    this.activeConversationId.set(null);
+    this.messages.set([]);
+    this.isNewEmptyConversation.set(true);
+    this.showSidebarMobile.set(false);
     }
 
-    // Agregar mensaje del usuario
-    const userMessage: ChatMessage = {
-      id: Date.now().toString(),
-      content: messageText,
-      isUser: true,
-      timestamp: new Date()
-    };
-
-    this.messages.update(msgs => [...msgs, userMessage]);
-    this.currentMessage.set('');
+  sendMessage() {
+    const firebaseUser = this.authService.firebaseUser();
+    const content = this.currentMessage().trim();
+    
+    if (!firebaseUser?.uid || !content) return;
+    
+    // Si es una conversación nueva, crearla primero
+    if (this.isNewEmptyConversation() || !this.activeConversationId()) {
+      this.isLoading.set(true);
+      this.currentMessage.set(''); // Limpiar input inmediatamente
+      
+      this.conversationService.createConversation(firebaseUser.uid).subscribe({
+        next: (conversationId) => {
+          // Seleccionar la conversación (esto suscribe a los mensajes)
+          // No cerramos el sidebar porque estamos creando una nueva
+          this.selectConversation(conversationId, false);
+          // Ahora enviar el mensaje
+          this.sendMessageToConversation(firebaseUser.uid, conversationId, content);
+        },
+        error: (error) => {
+          console.error('Error creating conversation:', error);
+          this.isLoading.set(false);
+          this.currentMessage.set(content); // Restaurar mensaje en caso de error
+        }
+      });
+    } else {
+      // Conversación ya existe, solo enviar mensaje
+      this.sendMessageToConversation(firebaseUser.uid, this.activeConversationId()!, content);
+    }
+  }
+  
+  private sendMessageToConversation(userId: string, conversationId: string, content: string) {
     this.isLoading.set(true);
+    this.currentMessage.set('');
     this.shouldScrollToBottom = true;
 
-    // Obtener la URL base
-    const baseUrl = this.getBaseUrl();
-
-    // Enviar mensaje a la IA
-    this.aiChatService.sendMessage(user.id, messageText, baseUrl).subscribe({
-      next: (htmlResponse) => {
-        console.log('✅ Respuesta HTML recibida:', htmlResponse);
-        console.log('✅ Tipo de respuesta:', typeof htmlResponse);
-        
-        // Asegurarse de que la respuesta es un string
-        const responseContent = typeof htmlResponse === 'string' ? htmlResponse : String(htmlResponse);
-        
-        const aiMessage: ChatMessage = {
-          id: (Date.now() + 1).toString(),
-          content: responseContent,
-          isUser: false,
-          timestamp: new Date()
-        };
-        this.messages.update(msgs => [...msgs, aiMessage]);
+    this.conversationService.sendMessage(userId, conversationId, content).subscribe({
+      next: () => {
         this.isLoading.set(false);
-        this.shouldScrollToBottom = true;
       },
       error: (error) => {
-        console.error('❌ Error enviando mensaje:', error);
-        console.error('❌ Error status:', error?.status);
-        console.error('❌ Error message:', error?.message);
-        console.error('❌ Error error:', error?.error);
-        
-        let errorText = 'Lo siento, hubo un error al procesar tu solicitud. Por favor, intenta de nuevo.';
-        
-        // Intentar obtener un mensaje de error más específico
-        if (error?.error && typeof error.error === 'string') {
-          errorText = error.error;
-        } else if (error?.message) {
-          errorText = `Error: ${error.message}`;
-        }
-        
-        const errorMessage: ChatMessage = {
-          id: (Date.now() + 1).toString(),
-          content: errorText,
-          isUser: false,
-          timestamp: new Date()
-        };
-        this.messages.update(msgs => [...msgs, errorMessage]);
+        console.error('Error sending message:', error);
         this.isLoading.set(false);
-        this.shouldScrollToBottom = true;
       }
     });
   }
 
-  private getBaseUrl(): string {
-    const currentUrl = window.location.origin;
-    return currentUrl + '/';
+  toggleSidebarMobile() {
+    this.showSidebarMobile.update(value => !value);
   }
-
-  private scrollToBottom(): void {
-    if (this.messagesContainer) {
-      const element = this.messagesContainer.nativeElement;
-      element.scrollTop = element.scrollHeight;
-    }
+  
+  useSuggestion(suggestion: string) {
+    this.currentMessage.set(suggestion);
+  }
+  
+  renderMarkdown(content: string): string {
+    return marked.parse(content) as string;
   }
 
   onEnterKey(event: KeyboardEvent): void {
@@ -146,5 +152,11 @@ export class AiChatComponent implements OnInit, OnDestroy, AfterViewChecked {
       this.sendMessage();
     }
   }
+  
+  private scrollToBottom() {
+    try {
+      this.messagesContainer.nativeElement.scrollTop = 
+        this.messagesContainer.nativeElement.scrollHeight;
+    } catch {}
+  }
 }
-
