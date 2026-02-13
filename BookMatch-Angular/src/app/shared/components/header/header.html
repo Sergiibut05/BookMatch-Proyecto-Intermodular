@@ -4,7 +4,7 @@
 
 <div class="side-menu" [class.menu-open]="isMenuOpen()">
   <div class="side-menu-header">
-    <img src="assets/bookMatch-logo-transparent.png" alt="BookMatch Logo" class="h-10 w-10 lg:h-12 lg:w-12 mr-2" />
+    <img src="assets/bookMatch-logo-transparent.png" alt="BookMatch Logo" class="h-10 w-10 lg:h-12 lg:w-12 mr-2" loading="lazy" decoding="async" />
     <h2 class="text-xl font-bold" style="color: #45332D;">BookMatch</h2>
     <button (click)="closeMenu()" class="close-button" aria-label="Cerrar menú">
       <svg class="w-6 h-6" style="color: #45332D;" fill="none" stroke="currentColor" viewBox="0 0 24 24"
@@ -81,7 +81,7 @@
 
         <div class="hidden md:flex items-center cursor-pointer" (click)="goHome()">
           <img src="assets/bookMatch-logo-transparent.png" alt="BookMatch Logo"
-            class="h-10 w-10 lg:h-12 lg:w-12 mr-2" />
+            class="h-10 w-10 lg:h-12 lg:w-12 mr-2" loading="lazy" decoding="async" />
             <h1 class="text-xl lg:text-2xl font-bold" style="color: #45332D;">BookMatch</h1>
           </div>
         </div>
@@ -129,7 +129,7 @@
                 <div class="flex items-center justify-center p-1.5 md:p-2 hover:bg-gray-100 rounded-lg transition-colors"
                   (click)="goProfile()">
                   <img [src]="authService.currentUser()?.avatarUrl" alt="Avatar"
-                    class="w-6 h-6 md:w-8 md:h-8 rounded-full object-cover">
+                    class="w-6 h-6 md:w-8 md:h-8 rounded-full object-cover" loading="lazy" decoding="async">
                   </div>
                 }
                 

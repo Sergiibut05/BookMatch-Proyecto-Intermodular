@@ -91,13 +91,30 @@ export class BookCarousel3dComponent implements OnInit, AfterViewInit, OnDestroy
     this.updateMobileConfig();
   }
 
+  private intersectionObserver: IntersectionObserver | null = null;
+
   ngAfterViewInit() {
-    // Use setTimeout to ensure DOM is fully rendered
-    setTimeout(() => {
-      if (this.canvasRef && this.books.length > 0) {
-        this.initThree();
-      }
-    }, 0);
+    if (!this.canvasRef?.nativeElement || this.books.length === 0) return;
+
+    const container = this.canvasRef.nativeElement.parentElement;
+    if (!container) {
+      this.initThree();
+      return;
+    }
+
+    // Lazy-load: only init and load textures when the carousel section is in (or near) viewport
+    this.intersectionObserver = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+        if (entry?.isIntersecting) {
+          this.initThree();
+          this.intersectionObserver?.disconnect();
+          this.intersectionObserver = null;
+        }
+      },
+      { rootMargin: '100px', threshold: 0.01 }
+    );
+    this.intersectionObserver.observe(container);
   }
 
   ngOnDestroy() {
@@ -539,6 +556,8 @@ export class BookCarousel3dComponent implements OnInit, AfterViewInit, OnDestroy
   }
 
   private cleanup() {
+    this.intersectionObserver?.disconnect();
+    this.intersectionObserver = null;
     if (this.animationId !== null) {
       cancelAnimationFrame(this.animationId);
     }

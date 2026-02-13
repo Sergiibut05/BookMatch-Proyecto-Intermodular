@@ -1,6 +1,6 @@
 import type { Request, Response, NextFunction } from 'express';
 import type { ZodSchema } from 'zod';
-import { validationResult, ValidationChain } from 'express-validator';
+import { validationResult } from 'express-validator';
 
 export const validate = (schema: ZodSchema<any>) => (req: Request, res: Response, next: NextFunction) => {
   const parsed = schema.safeParse(req.body);

@@ -18,8 +18,6 @@ import aiChatRoutes from './routes/ai-chat.routes.js';
 import { stripeWebhookCtrl } from './modules/payments/payments.controller.js';
 
 import hpp from 'hpp';
-import xss from 'xss-clean';
-import mongoSanitize from 'express-mongo-sanitize';
 
 const app = express();
 
@@ -71,10 +69,6 @@ app.use(helmet({
   contentSecurityPolicy: false,
   crossOriginResourcePolicy: { policy: "cross-origin" }
 }));
-
-app.use(mongoSanitize());
-
-app.use(xss());
 
 app.use(hpp());
 

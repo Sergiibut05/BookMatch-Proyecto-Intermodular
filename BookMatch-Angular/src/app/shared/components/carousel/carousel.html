@@ -38,6 +38,7 @@
               [alt]="book.title"
               class="w-full h-full object-cover"
               loading="lazy"
+              decoding="async"
               (error)="$event.target.src='https://via.placeholder.com/150x225?text=No+Cover'">
             
             @if (book.stock === 0) {
