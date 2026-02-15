@@ -2,10 +2,15 @@ import { Router } from 'express';
 import { getFirestore } from '../utils/firebaseAdmin.js';
 import { FieldValue } from 'firebase-admin/firestore';
 import axios from 'axios';
+import { env } from '../config/env.js';
 
 const router = Router();
-const N8N_WEBHOOK_URL = process.env.N8N_WEBHOOK_URL || 
-  'https://sergii05.app.n8n.cloud/webhook/YOUR_NEW_WEBHOOK_ID';
+
+function getN8nWebhookUrl(): string | null {
+  const url = env.N8N_WEBHOOK_URL;
+  if (!url || url.includes('YOUR_NEW_WEBHOOK_ID')) return null;
+  return url;
+}
 
 // POST /api/ai-chat/send-message
 router.post('/send-message', async (req, res) => {
@@ -48,12 +53,20 @@ router.post('/send-message', async (req, res) => {
       });
 
     // 4. Disparar workflow de n8n
-    await axios.post(N8N_WEBHOOK_URL, {
+    const webhookUrl = getN8nWebhookUrl();
+    if (!webhookUrl) {
+      console.error('N8N_WEBHOOK_URL no configurada en .env. Añade la URL real de tu webhook n8n.');
+      return res.status(503).json({
+        error: 'Servicio de IA no configurado',
+        message: 'El webhook de n8n no está configurado. Configura N8N_WEBHOOK_URL en el servidor.'
+      });
+    }
+    await axios.post(webhookUrl, {
       userId,
       conversationId,
       messageId: assistantMessageRef.id,
       userMessage: content,
-      baseUrl: req.headers.origin || process.env.FRONTEND_URL
+      baseUrl: req.headers.origin || env.FRONTEND_URL
     });
 
     res.status(200).json({ 

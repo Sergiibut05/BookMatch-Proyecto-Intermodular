@@ -15,5 +15,7 @@ export const env = {
   STRIPE_SECRET_KEY: required(process.env.STRIPE_SECRET_KEY, 'STRIPE_SECRET_KEY'),
   STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET?.trim(),
   FRONTEND_URL: process.env.FRONTEND_URL ?? 'http://localhost:4200',
+  /** URL del webhook de n8n para el chat con IA. Ej: https://tu-instancia.app.n8n.cloud/webhook/ID_REAL */
+  N8N_WEBHOOK_URL: process.env.N8N_WEBHOOK_URL?.trim() || '',
 };
 
