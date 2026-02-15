@@ -1,6 +1,6 @@
 # API Express + PostgreSQL - Manual Completo
 
-Este proyecto implementa una API REST con Node.js, Express y PostgreSQL siguiendo un desarrollo incremental versionado con Git tags. Cada versión añade funcionalidad nueva de forma progresiva.
+Este proyecto implementa una API REST con Node.js, Express y PostgreSQL siguiendo un desarrollo incremental versionado con Git tags. Cada versión añade funcionalidad nueva de forma progresiva..
 
 ## 📚 Índice
 
