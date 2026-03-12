@@ -40,6 +40,7 @@ __screenshots__/
 /docs
 /documentation
 /compodoc-vercel/public
+/compodoc-vercel/node_modules
 
 # System files
 .DS_Store

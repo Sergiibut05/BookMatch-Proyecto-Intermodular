@@ -14,6 +14,7 @@ This project is configured to deploy Compodoc as a separate Vercel site, isolate
 - A dedicated Vercel wrapper exists at `BookMatch-Angular/compodoc-vercel`:
   - `package.json`
   - `vercel.json`
+  - Its own `package-lock.json` and local Compodoc dependency (required on Vercel)
 
 ## Local verification
 

@@ -4,6 +4,9 @@
   "version": "1.0.0",
   "description": "Vercel build wrapper for Compodoc static site",
   "scripts": {
-    "build": "npm --prefix .. run docs:build:vercel"
+    "build": "compodoc -p ../tsconfig.doc.json --output public --disableCoverage --disableGraph"
+  },
+  "devDependencies": {
+    "@compodoc/compodoc": "^1.2.1"
   }
 }
