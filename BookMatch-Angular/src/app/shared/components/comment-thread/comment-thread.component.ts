@@ -7,6 +7,17 @@ import { AuthService } from '@core/services/auth.service';
 import { Comment, CreateCommentDto } from '@shared/models/comments.model';
 import { CommentItemComponent } from '../comment-item/comment-item.component';
 
+/**
+ * Hilo de comentarios para un post del foro.
+ *
+ * Gestiona carga inicial, alta de comentario raiz, respuestas anidadas y
+ * eliminacion, manteniendo formularios por comentario.
+ *
+ * @example
+ * ```html
+ * <app-comment-thread [forumId]="forumId" [postId]="postId" />
+ * ```
+ */
 @Component({
   selector: 'app-comment-thread',
   imports: [ReactiveFormsModule, CommentItemComponent, TranslateModule],
@@ -49,6 +60,9 @@ export class CommentThreadComponent implements OnInit {
     this.loadComments();
   }
 
+  /**
+   * Carga comentarios del post actual.
+   */
   loadComments(): void {
     console.log('🔵 Cargando comentarios para postId:', this.postId, 'forumId:', this.forumId);
     this.isLoading.set(true);
@@ -69,6 +83,9 @@ export class CommentThreadComponent implements OnInit {
     });
   }
 
+  /**
+   * Muestra/oculta el formulario de comentario principal.
+   */
   toggleMainInput(): void {
     this.showMainInput.set(!this.showMainInput());
     this.mainCommentError.set(null);
@@ -77,6 +94,9 @@ export class CommentThreadComponent implements OnInit {
     }
   }
 
+  /**
+   * Envia comentario principal.
+   */
   submitMainComment(): void {
     if (this.mainCommentForm.invalid) {
       this.mainCommentForm.markAllAsTouched();
@@ -114,6 +134,11 @@ export class CommentThreadComponent implements OnInit {
     });
   }
 
+  /**
+   * Muestra/oculta formulario de respuesta para un comentario.
+   *
+   * @param commentId Identificador del comentario padre
+   */
   toggleReplyInput(commentId: number): void {
     const current = this.showReplyInput();
     const newMap = new Map(current);
@@ -135,6 +160,11 @@ export class CommentThreadComponent implements OnInit {
     this.replyErrors.set(errors);
   }
 
+  /**
+   * Envia respuesta anidada.
+   *
+   * @param parentId Identificador del comentario padre
+   */
   submitReply(parentId: number): void {
     const form = this.replyForms.get(parentId);
     if (!form || form.invalid) {

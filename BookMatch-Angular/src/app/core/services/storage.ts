@@ -3,6 +3,12 @@ import { Storage as FirebaseStorage, ref, uploadBytes, getDownloadURL, deleteObj
 import { Camera, CameraResultType, CameraSource, Photo } from '@capacitor/camera';
 import { Capacitor } from '@capacitor/core';
 
+/**
+ * Servicio de gestion de imagenes con Firebase Storage y Capacitor Camera.
+ *
+ * Abstrae captura/seleccion de fotos y operaciones de subida/eliminacion para
+ * avatares de usuario e imagenes de publicaciones.
+ */
 @Injectable({
   providedIn: 'root'
 })

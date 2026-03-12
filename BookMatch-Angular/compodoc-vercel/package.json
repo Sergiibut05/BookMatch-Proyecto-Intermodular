@@ -1,0 +1,9 @@
+{
+  "name": "bookmatch-compodoc-vercel",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Vercel build wrapper for Compodoc static site",
+  "scripts": {
+    "build": "npm --prefix .. run docs:build:vercel"
+  }
+}

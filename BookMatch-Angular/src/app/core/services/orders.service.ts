@@ -6,6 +6,9 @@ import { AuthService } from './auth.service';
 import { environment } from '../../../environments/environment';
 import { Order } from '@shared/models/orders.model';
 
+/**
+ * Servicio de historial de pedidos del usuario.
+ */
 @Injectable({
   providedIn: 'root'
 })
@@ -29,6 +32,13 @@ export class OrdersService {
 
   /**
    * @returns Observable con el historial de compras del usuario
+   *
+   * @example
+   * ```ts
+   * this.ordersService.getOrderHistory().subscribe((orders) => {
+   *   this.orders = orders;
+   * });
+   * ```
    */
   getOrderHistory(): Observable<Order[]> {
     return this.authHeaders().pipe(

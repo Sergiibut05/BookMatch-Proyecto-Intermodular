@@ -6,6 +6,9 @@ import { AuthService } from './auth.service';
 import { environment } from '../../../environments/environment';
 import { Comment, CreateCommentDto, UpdateCommentDto } from '@shared/models/comments.model';
 
+/**
+ * Servicio para comentarios jerarquicos en posts del foro.
+ */
 @Injectable({
   providedIn: 'root'
 })
@@ -31,6 +34,11 @@ export class CommentsService {
    * @param forumId ID del foro
    * @param postId ID del post
    * @returns Observable con el árbol jerárquico de comentarios
+   *
+   * @example
+   * ```ts
+   * this.commentsService.getCommentsByPostId(forumId, postId).subscribe();
+   * ```
    */
   getCommentsByPostId(forumId: number, postId: number): Observable<Comment[]> {
     return this.authHeaders().pipe(
@@ -45,6 +53,11 @@ export class CommentsService {
    * @param postId ID del post
    * @param data Datos del comentario
    * @returns Observable con el comentario creado
+   *
+   * @example
+   * ```ts
+   * this.commentsService.createComment(forumId, postId, { content: 'Totalmente de acuerdo' }).subscribe();
+   * ```
    */
   createComment(forumId: number, postId: number, data: CreateCommentDto): Observable<Comment> {
     return this.authHeaders().pipe(

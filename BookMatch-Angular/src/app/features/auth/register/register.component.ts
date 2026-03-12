@@ -5,6 +5,9 @@ import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
+/**
+ * Validador de formulario que comprueba coincidencia de contrasenas.
+ */
 function passwordMatchValidator(control: AbstractControl) {
   const password = control.get('password');
   const confirmPassword = control.get('confirmPassword');
@@ -16,6 +19,9 @@ function passwordMatchValidator(control: AbstractControl) {
   return null;
 }
 
+/**
+ * Pantalla de registro de usuario con validaciones reactivas.
+ */
 @Component({
   selector: 'app-register',
   imports: [ReactiveFormsModule, RouterModule, TranslateModule],
@@ -49,6 +55,9 @@ export class RegisterComponent {
 
 
 
+  /**
+   * Ejecuta el alta de usuario cuando el formulario es valido.
+   */
   onSubmit(): void {
     if (this.formRegister.valid) {
       this.loading = true;
@@ -72,6 +81,9 @@ export class RegisterComponent {
     }
   }
 
+  /**
+   * Ejecuta registro/login con Google y redirige al destino pendiente.
+   */
   loginWithGoogle(): void {
     this.loading = true;
     this.errorMessage = '';
@@ -87,6 +99,9 @@ export class RegisterComponent {
     });
   }
 
+  /**
+   * Traduce errores de Firebase a mensajes mostrables.
+   */
   private getErrorMessage(code: string): string {
     switch (code) {
       case 'auth/email-already-in-use':
@@ -104,6 +119,9 @@ export class RegisterComponent {
     }
   }
 
+  /**
+   * Construye mensajes de validacion por control para la plantilla.
+   */
   getError(control: string) {
 
     switch (control) {

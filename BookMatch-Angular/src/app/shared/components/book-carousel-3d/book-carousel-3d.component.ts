@@ -5,6 +5,9 @@ import * as THREE from 'three';
 import { WebGPURenderer } from 'three/webgpu';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
+/**
+ * Datos de entrada para cada libro renderizado en el carrusel 3D.
+ */
 export interface BookData {
   title: string;
   author: string;
@@ -13,6 +16,17 @@ export interface BookData {
   id?: number;
 }
 
+/**
+ * Carrusel 3D de libros basado en Three.js.
+ *
+ * Renderiza modelos con texturas de portada, soporta interaccion por arrastre,
+ * rueda y tactil, y permite navegar al libro seleccionado.
+ *
+ * @example
+ * ```html
+ * <app-book-carousel-3d [books]="featuredBooks" title="Destacados" />
+ * ```
+ */
 @Component({
   selector: 'app-book-carousel-3d',
   standalone: true,
@@ -413,16 +427,25 @@ export class BookCarousel3dComponent implements OnInit, AfterViewInit, OnDestroy
     }
   }
 
+  /**
+   * Navega al libro anterior en el carrusel.
+   */
   onPrevClick() {
     const newOffset = this.targetCarouselOffset + this.carouselConfig.buttonStep;
     this.targetCarouselOffset = Math.max(this.carouselMinOffset, Math.min(this.carouselMaxOffset, newOffset));
   }
 
+  /**
+   * Navega al libro siguiente en el carrusel.
+   */
   onNextClick() {
     const newOffset = this.targetCarouselOffset - this.carouselConfig.buttonStep;
     this.targetCarouselOffset = Math.max(this.carouselMinOffset, Math.min(this.carouselMaxOffset, newOffset));
   }
 
+  /**
+   * Navega al detalle del libro centrado actualmente.
+   */
   onDiscoverClick() {
     const currentBook = this.currentBook();
     if (currentBook) {

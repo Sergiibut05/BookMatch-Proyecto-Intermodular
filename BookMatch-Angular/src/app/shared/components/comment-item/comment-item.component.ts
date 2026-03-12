@@ -6,6 +6,20 @@ import { Comment } from '@shared/models/comments.model';
 import { AuthService } from '@core/services/auth.service';
 import { RelativeTimePipe } from '@core/pipes/relative-time.pipe';
 
+/**
+ * Componente recursivo para representar un comentario individual del hilo.
+ *
+ * Incluye acciones de respuesta, estado expandido y menu de moderacion.
+ *
+ * @example
+ * ```html
+ * <app-comment-item
+ *   [comment]="comment"
+ *   [forumId]="forumId"
+ *   [postId]="postId"
+ * />
+ * ```
+ */
 @Component({
   selector: 'app-comment-item',
   imports: [ReactiveFormsModule, CommentItemComponent, TranslateModule, RelativeTimePipe], 
@@ -35,22 +49,32 @@ export class CommentItemComponent {
   
   isExpanded = signal<boolean>(false);
 
+  /**
+   * Determina si el usuario actual puede modificar/eliminar el comentario.
+   */
   canModify(): boolean {
     const currentUser = this.authService.currentUser();
     const isAuthor = currentUser ? this.comment.authorId === currentUser.id : false;
     const isAdmin = this.authService.isAdmin();
     return isAuthor || isAdmin;
   }
-  
-
+  /**
+   * Indica si el usuario actual tiene rol administrador.
+   */
   isAdmin() {
     return this.authService.isAdmin();
   }
 
+  /**
+   * Devuelve nombre visible del autor.
+   */
   getAuthorName(): string {
     return this.comment.author?.fullName || 'Usuario';
   }
 
+  /**
+   * Devuelve avatar del autor o `null` si no existe.
+   */
   getAuthorAvatar(): string | null {
     return this.comment.author?.avatarUrl || null;
   }

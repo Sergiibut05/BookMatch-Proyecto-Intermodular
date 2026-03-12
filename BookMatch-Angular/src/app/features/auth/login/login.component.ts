@@ -6,6 +6,9 @@ import { AuthService } from '../../../core/services/auth.service';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 
+/**
+ * Pantalla de inicio de sesion con email/contrasena y Google.
+ */
 @Component({
   selector: 'app-login',
   imports: [ReactiveFormsModule, RouterModule, TranslateModule],
@@ -29,6 +32,9 @@ export class LoginComponent {
     });
   }
 
+  /**
+   * Ejecuta login clasico cuando el formulario es valido.
+   */
   onSubmit(): void {
     if (this.loginForm.valid) {
       this.loading = true;
@@ -48,6 +54,9 @@ export class LoginComponent {
     }
   }
 
+  /**
+   * Ejecuta login federado con Google.
+   */
   loginWithGoogle(): void {
     this.loading = true;
     this.errorMessage = '';
@@ -63,6 +72,9 @@ export class LoginComponent {
     });
   }
 
+  /**
+   * Mapea codigos de error de Firebase a claves i18n.
+   */
   private getErrorMessage(errorCode: string): string {
     const errorMessages: { [key: string]: string } = {
       'auth/user-not-found': 'LOGIN.ERRORS.USER_NOT_FOUND',

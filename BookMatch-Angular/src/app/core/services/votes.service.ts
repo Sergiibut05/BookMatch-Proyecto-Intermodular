@@ -5,6 +5,9 @@ import { map, switchMap, catchError } from 'rxjs/operators';
 import { AuthService } from './auth.service';
 import { environment } from '../../../environments/environment';
 
+/**
+ * Tipos de voto soportados por el sistema de foro.
+ */
 export type VoteType = 'UP' | 'DOWN';
 
 export interface Vote {
@@ -22,6 +25,11 @@ export interface VoteScoreResponse {
   score: number;
 }
 
+/**
+ * Servicio de votos de publicaciones.
+ *
+ * Permite consultar el voto del usuario, crear/actualizar voto y retirarlo.
+ */
 @Injectable({
   providedIn: 'root'
 })
@@ -47,6 +55,13 @@ export class VotesService {
    * @param forumId ID del foro
    * @param postId ID del post
    * @returns Observable con el voto del usuario o null si no ha votado
+   *
+   * @example
+   * ```ts
+   * this.votesService.getUserVote(forumId, postId).subscribe((vote) => {
+   *   this.userVote = vote?.type ?? null;
+   * });
+   * ```
    */
   getUserVote(forumId: number, postId: number): Observable<Vote | null> {
     return this.authHeaders().pipe(
@@ -68,6 +83,13 @@ export class VotesService {
    * @param postId ID del post
    * @param voteType Tipo de voto (UP o DOWN)
    * @returns Observable con el nuevo score del post
+   *
+   * @example
+   * ```ts
+   * this.votesService.upsertVote(forumId, postId, 'UP').subscribe(({ score }) => {
+   *   this.score = score;
+   * });
+   * ```
    */
   upsertVote(forumId: number, postId: number, voteType: VoteType): Observable<VoteScoreResponse> {
     return this.authHeaders().pipe(

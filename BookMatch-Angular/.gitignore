@@ -37,6 +37,9 @@ yarn-error.log
 testem.log
 /typings
 __screenshots__/
+/docs
+/documentation
+/compodoc-vercel/public
 
 # System files
 .DS_Store

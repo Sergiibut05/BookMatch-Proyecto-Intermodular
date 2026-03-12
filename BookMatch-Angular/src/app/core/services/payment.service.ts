@@ -5,6 +5,9 @@ import { map, switchMap } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { AuthService } from './auth.service';
 
+/**
+ * Respuesta de backend al crear una sesion de Stripe Checkout.
+ */
 export interface CheckoutSessionResponse {
   sessionId: string;
   url: string;
@@ -15,6 +18,12 @@ export interface CheckoutSessionItem {
   quantity: number;
 }
 
+/**
+ * Servicio de pagos y checkout con Stripe.
+ *
+ * Crea sesiones para compra directa o carrito, consulta sesiones y gestiona
+ * la redireccion segura al checkout alojado.
+ */
 @Injectable({
   providedIn: 'root'
 })
@@ -40,6 +49,13 @@ export class PaymentService {
    * @param bookId ID del libro
    * @param quantity Cantidad
    * @returns Observable con la sesión de checkout
+   *
+   * @example
+   * ```ts
+   * this.paymentService.createCheckoutSession(822, 1).subscribe((session) => {
+   *   this.paymentService.redirectToCheckout(session.url);
+   * });
+   * ```
    */
   createCheckoutSession(bookId: number, quantity: number = 1): Observable<CheckoutSessionResponse> {
     return this.authHeaders().pipe(
@@ -56,6 +72,11 @@ export class PaymentService {
   /**
    * @param items Array de items del carrito
    * @returns Observable con la sesión de checkout
+   *
+   * @example
+   * ```ts
+   * this.paymentService.createCheckoutSessionCart([{ bookId: 12, quantity: 2 }]).subscribe();
+   * ```
    */
   createCheckoutSessionCart(items: CheckoutSessionItem[]): Observable<CheckoutSessionResponse> {
     return this.authHeaders().pipe(
@@ -71,6 +92,11 @@ export class PaymentService {
 
   /**
    * @param url URL de checkout de Stripe
+   *
+   * @example
+   * ```ts
+   * this.paymentService.redirectToCheckout(session.url);
+   * ```
    */
   redirectToCheckout(url: string): void {
     if (!url) {
@@ -82,6 +108,11 @@ export class PaymentService {
   /**
    * @param sessionId ID de la sesión
    * @returns Observable con los detalles de la sesión
+   *
+   * @example
+   * ```ts
+   * this.paymentService.getCheckoutSession(sessionId).subscribe();
+   * ```
    */
   getCheckoutSession(sessionId: string): Observable<any> {
     return this.authHeaders().pipe(
@@ -94,6 +125,11 @@ export class PaymentService {
   /**
    * @param sessionId ID de la sesión de pago
    * @returns Observable con el resultado de la verificación
+   *
+   * @example
+   * ```ts
+   * this.paymentService.verifyPaymentSuccess(sessionId).subscribe();
+   * ```
    */
   verifyPaymentSuccess(sessionId: string): Observable<any> {
     return this.authHeaders().pipe(

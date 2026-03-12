@@ -6,6 +6,12 @@ import { CatalogBook, CreateCatalogBookDto, Review, Category } from '@shared/mod
 import { AuthService } from './auth.service';
 import { environment } from '../../../environments/environment';
 
+/**
+ * Servicio de acceso al catalogo de libros y resenas.
+ *
+ * Centraliza consultas paginadas, filtros, CRUD de libros y operaciones de
+ * valoracion sobre el backend protegido por token.
+ */
 @Injectable({
   providedIn: 'root'
 })
@@ -29,6 +35,13 @@ export class CatalogService {
 
   /**
    * @returns Observable con la lista de todas las categorías
+   *
+   * @example
+   * ```ts
+   * this.catalogService.getCategories().subscribe((categories) => {
+   *   this.categories.set(categories);
+   * });
+   * ```
    */
   getCategories(): Observable<Category[]> {
     return this.authHeaders().pipe(
@@ -42,6 +55,11 @@ export class CatalogService {
    * @param id ID del libro a actualizar
    * @param book Datos parciales del libro
    * @returns Observable con el libro actualizado
+   *
+   * @example
+   * ```ts
+   * this.catalogService.updateBook(12, { price: 19.99, stock: 7 }).subscribe();
+   * ```
    */
   updateBook(id: number, book: Partial<CreateCatalogBookDto>): Observable<CatalogBook> {
     return this.authHeaders().pipe(
@@ -69,6 +87,12 @@ export class CatalogService {
    * @param minRating Valoración mínima
    * @param inStock Solo productos en stock
    * @returns Observable con la lista paginada de libros
+   *
+   * @example
+   * ```ts
+   * this.catalogService.getBooksByCategoryId(4, 1, 12, 10, 30, 'price_asc')
+   *   .subscribe((result) => this.items.set(result.items));
+   * ```
    */
   getBooksByCategoryId(
     categoryId: number, 
@@ -104,6 +128,13 @@ export class CatalogService {
   /**
    * @param limit Cantidad de novedades a obtener
    * @returns Observable con las novedades ordenadas por fecha
+   *
+   * @example
+   * ```ts
+   * this.catalogService.getNewArrivals(8).subscribe(({ items }) => {
+   *   this.newArrivals = items;
+   * });
+   * ```
    */
   getNewArrivals(limit = 10) {
     return this.authHeaders().pipe(
@@ -169,6 +200,11 @@ export class CatalogService {
   /**
    * @param id ID del libro
    * @returns Observable con los detalles del libro
+   *
+   * @example
+   * ```ts
+   * this.catalogService.getBookById(822).subscribe((book) => this.book.set(book));
+   * ```
    */
   getBookById(id: number): Observable<CatalogBook> {
     return this.authHeaders().pipe(
@@ -179,6 +215,11 @@ export class CatalogService {
   /**
    * @param book Datos del libro a crear
    * @returns Observable con el libro creado
+   *
+   * @example
+   * ```ts
+   * this.catalogService.createBook(formValue).subscribe();
+   * ```
    */
   createBook(book: CreateCatalogBookDto): Observable<CatalogBook> {
     return this.authHeaders().pipe(
@@ -196,6 +237,12 @@ export class CatalogService {
    * @param minRating Valoración mínima
    * @param inStock Solo productos en stock
    * @returns Observable con la lista paginada de libros de la categoría
+   *
+   * @example
+   * ```ts
+   * this.catalogService.getBooksByCategoryName('fantasia', 1, 10, null, 25, 'newest')
+   *   .subscribe();
+   * ```
    */
   getBooksByCategoryName(
     name: string, 
@@ -233,6 +280,11 @@ export class CatalogService {
    * @param bookId ID del libro
    * @param data Datos de la reseña (rating y comentario opcional)
    * @returns Observable con la reseña creada
+   *
+   * @example
+   * ```ts
+   * this.catalogService.addReview(822, { rating: 5, comment: 'Muy recomendado' }).subscribe();
+   * ```
    */
   addReview(bookId: number, data: { rating: number; comment?: string }): Observable<Review> {
     return this.authHeaders().pipe(

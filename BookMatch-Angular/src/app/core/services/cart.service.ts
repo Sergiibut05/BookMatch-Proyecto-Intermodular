@@ -1,6 +1,9 @@
 import { Injectable, signal, computed, effect } from '@angular/core';
 import { CatalogBook } from '@shared/models';
 
+/**
+ * Item persistido en el carrito de compra.
+ */
 export interface CartItem {
   id: number;
   title: string;
@@ -10,6 +13,12 @@ export interface CartItem {
   coverUrl?: string | null;
 }
 
+/**
+ * Carrito de compra reactivo basado en Angular Signals.
+ *
+ * Mantiene sincronizacion con `localStorage` y ofrece utilidades para
+ * cantidades, totales y preparacion de payload de checkout.
+ */
 @Injectable({
   providedIn: 'root',
 })
@@ -49,6 +58,11 @@ export class CartService {
   /**
    * @param book Libro a añadir
    * @param quantity Cantidad a añadir
+   *
+   * @example
+   * ```ts
+   * this.cartService.addToCart(book, 1);
+   * ```
    */
   addToCart(book: CatalogBook, quantity: number = 1): void {
     const currentItems = this.cartItemsSignal();
@@ -78,6 +92,11 @@ export class CartService {
 
   /**
    * @param bookId ID del libro a eliminar
+   *
+   * @example
+   * ```ts
+   * this.cartService.removeFromCart(book.id);
+   * ```
    */
   removeFromCart(bookId: number): void {
     const currentItems = this.cartItemsSignal();
@@ -87,6 +106,11 @@ export class CartService {
 
   /**
    * Limpia todo el carrito
+   *
+   * @example
+   * ```ts
+   * this.cartService.clearCart();
+   * ```
    */
   clearCart(): void {
     this.cartItemsSignal.set([]);
@@ -95,6 +119,11 @@ export class CartService {
   /**
    * @param bookId ID del libro
    * @param quantity Nueva cantidad
+   *
+   * @example
+   * ```ts
+   * this.cartService.updateQuantity(item.id, 3);
+   * ```
    */
   updateQuantity(bookId: number, quantity: number): void {
     if (quantity <= 0) {
@@ -111,6 +140,11 @@ export class CartService {
 
   /**
    * @returns Array de items formateados para checkout
+   *
+   * @example
+   * ```ts
+   * const payload = this.cartService.getItemsForCheckout();
+   * ```
    */
   getItemsForCheckout(): Array<{ bookId: number; quantity: number }> {
     return this.cartItemsSignal().map(item => ({

@@ -1,59 +1,113 @@
-# BookMatchAngular
+# BookMatch Angular
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 20.3.7.
+Frontend de BookMatch construido con Angular standalone, Firebase y Stripe.
+Esta aplicacion cubre autenticacion, catalogo de libros, carrito, pagos,
+perfil de usuario y foro comunitario.
 
-## Development server
+## Stack principal
 
-To start a local development server run:
+- Angular 21 (standalone components)
+- Firebase (Auth, Firestore, Storage)
+- Stripe Checkout
+- Tailwind CSS + SCSS
+- ngx-translate (es/en)
+
+## Estructura funcional
+
+- `src/app/core`: servicios, guards, pipes y directivas globales
+- `src/app/features`: pantallas de negocio (auth, catalogo, perfil, foro, pagos)
+- `src/app/shared`: componentes reutilizables y modelos de dominio
+- `src/environments`: configuracion por entorno
+
+## Arquitectura tecnica
+
+### Capas de frontend
+
+- **Presentacion (`features` y `shared`)**: componentes standalone, formularios reactivos y vistas.
+- **Aplicacion (`core/services`)**: casos de uso de UI, orquestacion de flujos y consumo HTTP.
+- **Dominio liviano (`shared/models`)**: contratos TypeScript para catalogo, pedidos, foro y usuarios.
+- **Infraestructura cliente**: Firebase SDK, ngx-translate y Stripe redireccionado desde backend.
+
+### Flujo de autenticacion
+
+1. Login/registro con Firebase Authentication.
+2. Obtencion de ID token en cliente.
+3. Sincronizacion de perfil con backend (`/users/profile`).
+4. Uso de `Authorization: Bearer <token>` en peticiones protegidas.
+5. `authGuard` protege rutas privadas y conserva `returnUrl`.
+
+### Flujo de compra
+
+1. El usuario anade libros al carrito (`CartService`) o compra directa desde detalle.
+2. Frontend solicita sesion de checkout al backend (`PaymentService`).
+3. Backend crea sesion Stripe y devuelve URL.
+4. Frontend redirige a Stripe Checkout.
+5. Al volver, se valida sesion para mostrar confirmacion y actualizar historial.
+
+### Foro y comunidad
+
+- Foros (`ForumsService`) agrupan temas.
+- Posts (`PostsService`) representan hilos/discusiones.
+- Comentarios jerarquicos (`CommentsService`) permiten respuestas anidadas.
+- Votaciones (`VotesService`) ajustan relevancia por score.
+
+## Arranque local
 
 ```bash
-ng serve
+npm install
+npm start
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+Aplicacion disponible en `http://localhost:4200`.
 
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+## Scripts utiles
 
 ```bash
-ng generate component component-name
+npm start             # desarrollo
+npm run build         # build produccion
+npm test              # tests unitarios
+npm run docs:serve    # compodoc en local (http://localhost:8080)
+npm run docs:build    # genera documentacion en ./docs
 ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+## Variables y dependencias externas
+
+Revisa `src/environments/environment.ts` para:
+
+- configuracion de Firebase
+- `stripePublishableKey`
+- `apiUrl` del backend
+
+## Flujo general de la app
+
+1. El usuario se autentica con Firebase (email/password o Google).
+2. El frontend recupera y sincroniza el perfil del backend.
+3. El catalogo se consume desde API protegida por token.
+4. La compra puede hacerse desde detalle o carrito usando Stripe Checkout.
+5. Tras el pago, la app muestra confirmacion y permite revisar historial.
+
+## Documentacion con Compodoc
+
+Este proyecto esta preparado para generar documentacion tecnica navegable:
 
 ```bash
-ng generate --help
+npm run docs:serve
 ```
 
-## Building
-
-To build the project run:
+Y para build estatico:
 
 ```bash
-ng build
+npm run docs:build
 ```
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
+Si despliegas en Vercel con el wrapper `compodoc-vercel`, usa:
 
 ```bash
-ng test
+npm run docs:build:vercel
 ```
 
-## Running end-to-end tests
+### Recomendaciones para mantener buena documentacion
 
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+- Documentar siempre metodos publicos con `@param`, `@returns` y `@example`.
+- Priorizar el "por que" y el "como usar" frente a describir lo obvio.
+- Actualizar README y JSDoc en el mismo PR cuando cambie un flujo funcional.

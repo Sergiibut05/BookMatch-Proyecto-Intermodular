@@ -1,6 +1,12 @@
 import { Directive, inject, ViewContainerRef, TemplateRef, effect } from '@angular/core';
 import { AuthService } from '../services/auth.service';
 
+/**
+ * Directiva estructural para renderizar contenido exclusivo de administradores.
+ *
+ * Uso:
+ * `<button *isAdmin>...</button>`
+ */
 @Directive({
   selector: '[isAdmin]',
   standalone: true

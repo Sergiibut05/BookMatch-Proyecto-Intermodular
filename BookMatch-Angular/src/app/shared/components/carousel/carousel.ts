@@ -5,6 +5,20 @@ import { CatalogBook } from '@shared/models';
 import { Router } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 
+/**
+ * Carrusel horizontal reutilizable de libros.
+ *
+ * Soporta modo por categoria o modo novedades y encapsula navegacion a
+ * detalle y vista ampliada de catalogo.
+ *
+ * @example
+ * ```html
+ * <app-carousel
+ *   [categoryTitle]="'Fantasia'"
+ *   [categoryId]="4"
+ * />
+ * ```
+ */
 @Component({
   selector: 'app-carousel',
   standalone: true,
@@ -35,6 +49,9 @@ export class Carousel implements OnInit {
     this.loadBooks();
   }
 
+  /**
+   * Carga libros segun el modo configurado.
+   */
   loadBooks() {
     
     if (this.isNewArrivals) {
@@ -78,6 +95,9 @@ export class Carousel implements OnInit {
     el.scrollTo({ left: nearest, behavior: 'smooth' });
   }
 
+  /**
+   * Desplaza el carrusel una tarjeta hacia atras.
+   */
   prev() {
     const el = this.carouselRef?.nativeElement;
     if (!el) return;
@@ -85,6 +105,9 @@ export class Carousel implements OnInit {
     setTimeout(() => this.snapToNearest(), 220);
   }
 
+  /**
+   * Desplaza el carrusel una tarjeta hacia delante.
+   */
   next() {
     const el = this.carouselRef?.nativeElement;
     if (!el) return;
@@ -92,7 +115,9 @@ export class Carousel implements OnInit {
     setTimeout(() => this.snapToNearest(), 220);
   }
 
-  
+  /**
+   * Navega a la vista de categoria completa.
+   */
   onSeeMore(): void {
     if (this.isNewArrivals) {
       this.router.navigate(['/categories', 'novedades'], { queryParams: { sortBy: 'newest' } });
@@ -108,6 +133,9 @@ export class Carousel implements OnInit {
     }
   }
 
+  /**
+   * Navega al detalle del libro seleccionado.
+   */
   onBookClick(book: CatalogBook): void {
     this.router.navigate(['/book-details', book.id]);
   }

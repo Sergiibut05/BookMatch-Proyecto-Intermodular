@@ -2,12 +2,28 @@ import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChange
 
 import { VotesService, VoteType } from '@core/services/votes.service';
 
+/**
+ * Datos minimos necesarios para renderizar y actualizar votos de un post.
+ */
 export interface UpvoteData {
   id: number;
   score: number;
   userVote?: VoteType | null;
 }
 
+/**
+ * Control de voto positivo/negativo para publicaciones del foro.
+ *
+ * @example
+ * ```html
+ * <app-upvote-button
+ *   [item]="post"
+ *   [forumId]="forumId"
+ *   [postId]="post.id"
+ *   (scoreUpdated)="onScoreUpdated($event)"
+ * />
+ * ```
+ */
 @Component({
   selector: 'app-upvote-button',
   imports: [],
@@ -46,6 +62,8 @@ export class UpvoteButtonComponent implements OnInit {
 
   /**
    * Maneja el voto hacia arriba
+   *
+   * @returns void
    */
   handleUpvote(): void {
     if (this.isVoting()) return;
@@ -63,6 +81,8 @@ export class UpvoteButtonComponent implements OnInit {
 
   /**
    * Maneja el voto hacia abajo
+   *
+   * @returns void
    */
   handleDownvote(): void {
     if (this.isVoting()) return;
@@ -80,6 +100,8 @@ export class UpvoteButtonComponent implements OnInit {
 
   /**
    * Realiza un voto
+   *
+   * @param type Tipo de voto (`UP` o `DOWN`)
    */
   private vote(type: VoteType): void {
     this.isVoting.set(true);

@@ -18,6 +18,12 @@ import { IsAdminDirective } from '@core/directives/is-admin.directive';
 // Módulo de traducción
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
+/**
+ * Vista de detalle de libro con compra, carrito y reseñas.
+ *
+ * Gestiona carga de un libro, flujo de compra directa con Stripe y CRUD basico
+ * de reseñas asociado al usuario autenticado.
+ */
 @Component({
   selector: 'app-book-details',
   standalone: true,

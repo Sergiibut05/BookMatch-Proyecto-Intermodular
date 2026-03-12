@@ -4,6 +4,9 @@ import { FormsModule } from '@angular/forms';
 import { AiChatService } from '@core/services/ai-chat.service';
 import { AuthService } from '@core/services/auth.service';
 
+/**
+ * Mensaje intercambiado en el chat asistido por IA.
+ */
 export interface ChatMessage {
   id: string;
   content: string;
@@ -11,6 +14,17 @@ export interface ChatMessage {
   timestamp: Date;
 }
 
+/**
+ * Modal flotante para recomendaciones de libros con IA.
+ *
+ * Mantiene historial local de mensajes, integra envio al backend y gestiona
+ * auto-scroll en cada respuesta.
+ *
+ * @example
+ * ```html
+ * <app-ai-chat-modal />
+ * ```
+ */
 @Component({
   selector: 'app-ai-chat-modal',
   standalone: true,
@@ -52,6 +66,9 @@ export class AiChatModalComponent implements OnInit, OnDestroy, AfterViewChecked
     }
   }
 
+  /**
+   * Abre o cierra el modal de chat.
+   */
   toggle(): void {
     this.isOpen.set(!this.isOpen());
     if (this.isOpen()) {
@@ -59,10 +76,16 @@ export class AiChatModalComponent implements OnInit, OnDestroy, AfterViewChecked
     }
   }
 
+  /**
+   * Cierra el modal.
+   */
   close(): void {
     this.isOpen.set(false);
   }
 
+  /**
+   * Envia el mensaje actual al asistente y anade la respuesta al hilo.
+   */
   sendMessage(): void {
     const messageText = this.currentMessage().trim();
     if (!messageText || this.isLoading()) return;
@@ -150,6 +173,9 @@ export class AiChatModalComponent implements OnInit, OnDestroy, AfterViewChecked
     }
   }
 
+  /**
+   * Envia mensaje con Enter (sin Shift).
+   */
   onEnterKey(event: KeyboardEvent): void {
     if (event.key === 'Enter' && !event.shiftKey) {
       event.preventDefault();

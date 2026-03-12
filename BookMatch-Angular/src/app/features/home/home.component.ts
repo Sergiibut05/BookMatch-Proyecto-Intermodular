@@ -10,6 +10,12 @@ import { BookCarousel3dComponent, BookData } from '@shared/components/book-carou
 import { TranslateModule } from '@ngx-translate/core';
 import { Category } from '@shared/models';
 
+/**
+ * Pantalla principal autenticada.
+ *
+ * Muestra categorias, accesos rapidos al catalogo/foro/chat y un carrusel
+ * destacado de libros para navegacion inicial.
+ */
 @Component({
   selector: 'app-home',
   imports: [Header, Carousel, Footer, TranslateModule, BookCarousel3dComponent],
@@ -62,6 +68,9 @@ export class HomeComponent implements OnInit {
     this.loadCategories();
   }
 
+  /**
+   * Carga categorias principales desde backend para renderizado en home.
+   */
   loadCategories() {
     this.catalogService.getCategories().subscribe({
       next: (cats) => {
@@ -73,27 +82,45 @@ export class HomeComponent implements OnInit {
     });
   }
 
+  /**
+   * Obtiene el id de categoria a partir de su slug.
+   */
   getCategoryId(slug: string): number | undefined {
     const category = this.categories().find(c => c.slug === slug);
     return category ? category.id : undefined;
   }
 
+  /**
+   * Devuelve categorias principales visibles en la portada.
+   */
   getMainCategories(): Category[] {
     return this.categories().filter(c => c.slug !== 'novedades' && c.slug !== 'romance');
   }
 
+  /**
+   * Navega al indice del foro.
+   */
   navigateToForum() {
     this.router.navigate(['/foro']);
   }
 
+  /**
+   * Navega a la vista global de catalogo por categorias.
+   */
   navigateToCatalog() {
     this.router.navigate(['/categories']);
   }
 
+  /**
+   * Navega a la funcionalidad de chat con IA.
+   */
   goToChat() {
     this.router.navigate(['/ai-chat']);
   }
 
+  /**
+   * Hace scroll suave hasta el contenido principal.
+   */
   scrollToContent() {
     const el = document.getElementById('home-content');
     if (el) {

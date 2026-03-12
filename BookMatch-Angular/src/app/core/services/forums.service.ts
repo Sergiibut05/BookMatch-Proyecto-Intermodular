@@ -6,6 +6,11 @@ import { AuthService } from './auth.service';
 import { environment } from '../../../environments/environment';
 import { Forum, ForumsListResponse, CreateForumDto, UpdateForumDto } from '@shared/models/forums.model';
 
+/**
+ * Servicio para gestion de foros.
+ *
+ * Permite listar, consultar, crear, editar y eliminar foros con autenticacion.
+ */
 @Injectable({
   providedIn: 'root'
 })
@@ -32,6 +37,11 @@ export class ForumsService {
    * @param limit Cantidad de resultados por página
    * @param search Término de búsqueda opcional
    * @returns Observable con la lista paginada de foros
+   *
+   * @example
+   * ```ts
+   * this.forumsService.getForums(1, 12, 'fantasia').subscribe();
+   * ```
    */
   getForums(page: number = 1, limit: number = 10, search?: string): Observable<ForumsListResponse> {
     return this.authHeaders().pipe(
@@ -52,6 +62,11 @@ export class ForumsService {
   /**
    * @param id ID del foro
    * @returns Observable con los detalles del foro
+   *
+   * @example
+   * ```ts
+   * this.forumsService.getForumById(forumId).subscribe();
+   * ```
    */
   getForumById(id: number): Observable<Forum> {
     return this.authHeaders().pipe(
@@ -64,6 +79,11 @@ export class ForumsService {
   /**
    * @param data Datos del foro a crear
    * @returns Observable con el foro creado
+   *
+   * @example
+   * ```ts
+   * this.forumsService.createForum({ title: 'Novedades', description: 'Noticias y lanzamientos' }).subscribe();
+   * ```
    */
   createForum(data: CreateForumDto): Observable<Forum> {
     return this.authHeaders().pipe(

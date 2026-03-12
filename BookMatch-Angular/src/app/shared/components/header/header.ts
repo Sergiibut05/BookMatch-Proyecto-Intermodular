@@ -11,6 +11,17 @@ import { LanguageSelectorComponent } from '../language-selector/language-selecto
 import { filter, takeUntil } from 'rxjs/operators';
 import { Subject } from 'rxjs';
 
+/**
+ * Cabecera global de la aplicacion.
+ *
+ * Gestiona navegacion principal, buscador contextual (libros/foro),
+ * estado de menu movil y accesos a perfil, carrito y cierre de sesion.
+ *
+ * @example
+ * ```html
+ * <app-header />
+ * ```
+ */
 @Component({
   selector: 'app-header',
   imports: [CommonModule, RouterLink, LanguageSelectorComponent, TranslateModule, FormsModule, IsAdminDirective],
@@ -75,6 +86,9 @@ export class Header implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
+  /**
+   * Lee la URL actual y ajusta el tipo de busqueda contextual.
+   */
   private updateSearchTypeFromUrl(): void {
     const url = this.router.url;
     if (url.startsWith('/search-results')) {
@@ -86,14 +100,23 @@ export class Header implements OnInit, OnDestroy {
     }
   }
 
+  /**
+   * Alterna apertura/cierre del menu movil.
+   */
   toggleMenu(): void {
     this.isMenuOpen.update(value => !value);
   }
 
+  /**
+   * Cierra menu movil.
+   */
   closeMenu(): void {
     this.isMenuOpen.set(false);
   }
 
+  /**
+   * Cierra sesion y redirige a login.
+   */
   logout(): void {
     this.authService.logout().subscribe({
       next: () => {
@@ -102,23 +125,38 @@ export class Header implements OnInit, OnDestroy {
     });
   }
 
+  /**
+   * Navega al perfil del usuario.
+   */
   goProfile() {
     this.router.navigate(['/profile'])
   }
 
+  /**
+   * Navega a home.
+   */
   goHome() {
     this.router.navigate(['/home'])
   }
 
+  /**
+   * Navega al carrito.
+   */
   goCart() {
     this.router.navigate(['/cart'])
   }
 
+  /**
+   * Navega al foro principal.
+   */
   goForum() {
     this.router.navigate(['/foro']);
     this.closeMenu();
   }
 
+  /**
+   * Lanza busqueda segun contexto (libros o foro).
+   */
   onSearch(): void {
     const query = this.searchQuery().trim();
     if (!query) return;
@@ -130,6 +168,9 @@ export class Header implements OnInit, OnDestroy {
     this.searchQuery.set('');
   }
 
+  /**
+   * Ejecuta busqueda al pulsar Enter.
+   */
   onSearchKeyPress(event: KeyboardEvent): void {
     if (event.key === 'Enter') {
       this.onSearch();

@@ -6,6 +6,9 @@ import { AuthService } from './auth.service';
 import { environment } from '../../../environments/environment';
 import { Post, PostsListResponse, CreatePostDto, UpdatePostDto } from '@shared/models/posts.model';
 
+/**
+ * Servicio para temas/publicaciones dentro de un foro.
+ */
 @Injectable({
   providedIn: 'root'
 })
@@ -33,6 +36,11 @@ export class PostsService {
    * @param limit Cantidad de resultados por página
    * @param sort Criterio de ordenación
    * @returns Observable con la lista paginada de posts
+   *
+   * @example
+   * ```ts
+   * this.postsService.getPostsByForumId(forumId, 1, 10, 'score').subscribe();
+   * ```
    */
   getPostsByForumId(forumId: number, page: number = 1, limit: number = 10, sort: 'newest' | 'score' | 'comments' = 'newest'): Observable<PostsListResponse> {
     return this.authHeaders().pipe(
@@ -51,6 +59,11 @@ export class PostsService {
    * @param forumId ID del foro
    * @param postId ID del post
    * @returns Observable con los detalles del post
+   *
+   * @example
+   * ```ts
+   * this.postsService.getPostById(forumId, postId).subscribe();
+   * ```
    */
   getPostById(forumId: number, postId: number): Observable<Post> {
     return this.authHeaders().pipe(
@@ -64,6 +77,11 @@ export class PostsService {
    * @param forumId ID del foro
    * @param data Datos del post a crear
    * @returns Observable con el post creado
+   *
+   * @example
+   * ```ts
+   * this.postsService.createPost(forumId, { title: 'Mi reseña', content: 'Contenido...' }).subscribe();
+   * ```
    */
   createPost(forumId: number, data: CreatePostDto): Observable<Post> {
     return this.authHeaders().pipe(

@@ -11,19 +11,34 @@ import { routes } from './app.routes';
 import { environment } from '../environments/environment';
 import { Observable } from 'rxjs';
 
-
+/**
+ * Loader de traducciones basado en archivos JSON bajo `assets/i18n`.
+ */
 export class CustomTranslateLoader implements TranslateLoader {
   constructor(private http: HttpClient) { }
 
+  /**
+   * @param lang Codigo de idioma (por ejemplo `es` o `en`)
+   * @returns Observable con el diccionario de traducciones
+   */
   getTranslation(lang: string): Observable<any> {
     return this.http.get(`./assets/i18n/${lang}.json`);
   }
 }
 
+/**
+ * Factory usada por ngx-translate para instanciar el loader HTTP.
+ */
 export function HttpLoaderFactory(http: HttpClient) {
   return new CustomTranslateLoader(http);
 }
 
+/**
+ * Configuracion global de Angular para BookMatch.
+ *
+ * Incluye router con transiciones, HttpClient, inicializacion de Firebase
+ * y soporte de internacionalizacion con ngx-translate.
+ */
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),

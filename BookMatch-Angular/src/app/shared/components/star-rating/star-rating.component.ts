@@ -3,6 +3,11 @@ import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 
 /**
  * StarRatingComponent - Componente de selección de estrellas para formularios reactivos
+ *
+ * @example
+ * ```html
+ * <app-star-rating formControlName="rating" />
+ * ```
  */
 
 @Component({
@@ -62,6 +67,8 @@ export class StarRatingComponent implements ControlValueAccessor {
 
   /**
    * Obtiene el valor actual del rating
+   *
+   * @returns Valor actual entre 0 y 5
    */
   getValue(): number {
     return this.rating();
@@ -69,6 +76,8 @@ export class StarRatingComponent implements ControlValueAccessor {
 
   /**
    * Verifica si el componente está deshabilitado
+   *
+   * @returns `true` cuando esta deshabilitado
    */
   isDisabled(): boolean {
     return this.disabled();
@@ -77,6 +86,9 @@ export class StarRatingComponent implements ControlValueAccessor {
   /**
    * Al hacer click en una estrella, actualizamos el signal y notificamos a Angular Forms del cambio.
    * También marcamos como touched para que el formulario se valide.
+   *
+   * @param rating Valor seleccionado (1..5)
+   * @returns void
    */
   onStarClick(rating: number): void {
     if (this.disabled()) return;
@@ -90,6 +102,8 @@ export class StarRatingComponent implements ControlValueAccessor {
 
   /**
    * Solo actualiza el preview visual, no cambia el valor real.
+   *
+   * @param rating Valor de previsualizacion
    */
   onStarHover(rating: number): void {
     if (this.disabled()) return;
@@ -105,6 +119,9 @@ export class StarRatingComponent implements ControlValueAccessor {
 
   /**
    * Determina si una estrella debe mostrarse llena o vacía.
+   *
+   * @param star Indice de estrella a evaluar
+   * @returns `true` si la estrella debe mostrarse activa
    */
   isStarFilled(star: number): boolean {
     const displayRating = this.hoverRating() || this.rating();

@@ -5,6 +5,9 @@ import { map, switchMap } from 'rxjs/operators';
 import { AuthService } from './auth.service';
 import { environment } from '../../../environments/environment';
 
+/**
+ * Perfil de usuario retornado por la API.
+ */
 export interface UserProfile {
   id: number;
   firebaseUid: string;
@@ -24,6 +27,12 @@ export interface UpdateProfileData {
   phone?: string | null;
 }
 
+/**
+ * Servicio de perfil del usuario autenticado.
+ *
+ * Expone operaciones para consultar y actualizar informacion personal
+ * incluyendo avatar y datos de contacto.
+ */
 @Injectable({
   providedIn: 'root'
 })
@@ -47,6 +56,11 @@ export class UsersService {
 
   /**
    * @returns Observable con el perfil del usuario autenticado
+   *
+   * @example
+   * ```ts
+   * this.usersService.getMyProfile().subscribe((profile) => this.profile = profile);
+   * ```
    */
   getMyProfile(): Observable<UserProfile> {
     return this.authHeaders().pipe(
@@ -59,6 +73,11 @@ export class UsersService {
   /**
    * @param data Datos a actualizar
    * @returns Observable con el perfil actualizado
+   *
+   * @example
+   * ```ts
+   * this.usersService.updateMyProfile({ fullName: 'Ana Lopez' }).subscribe();
+   * ```
    */
   updateMyProfile(data: UpdateProfileData): Observable<UserProfile> {
     return this.authHeaders().pipe(
@@ -71,6 +90,11 @@ export class UsersService {
   /**
    * @param avatarUrl URL del nuevo avatar
    * @returns Observable con el perfil actualizado
+   *
+   * @example
+   * ```ts
+   * this.usersService.updateAvatar(downloadUrl).subscribe();
+   * ```
    */
   updateAvatar(avatarUrl: string): Observable<UserProfile> {
     return this.updateMyProfile({ avatarUrl });

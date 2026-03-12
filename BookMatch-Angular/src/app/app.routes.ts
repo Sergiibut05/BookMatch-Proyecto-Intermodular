@@ -1,6 +1,12 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
 
+/**
+ * Declaracion central de rutas de la aplicacion.
+ *
+ * Organiza el flujo principal de autenticacion, catalogo, perfil, foro y
+ * secciones legales, aplicando `authGuard` en todas las vistas privadas.
+ */
 export const routes: Routes = [
     {
         path: '',
