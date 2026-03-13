@@ -7,6 +7,9 @@ import { ForumsService } from '@core/services/forums.service';
 import { Forum, ForumsListResponse, CreateForumDto } from '@shared/models/forums.model';
 import { Header } from '@shared/components/header/header';
 
+/**
+ * Listado de foros con paginación; permite crear foros (modal) y navegar a cada foro.
+ */
 @Component({
   selector: 'app-forum-index',
   imports: [CommonModule, Header, ReactiveFormsModule, TranslateModule],
@@ -18,22 +21,32 @@ export class ForumIndexComponent implements OnInit {
   private router = inject(Router);
   private fb = inject(FormBuilder);
 
+  /** Lista de foros de la página actual. */
   forums = signal<Forum[]>([]);
+  /** Cargando foros. */
   isLoading = signal<boolean>(true);
+  /** Mensaje de error. */
   error = signal<string | null>(null);
-  
-  // Paginación
-  currentPage = signal<number>(1);
-  totalPages = signal<number>(1);
-  totalForums = signal<number>(0);
-  limit = 12; // Foros por página
 
-  // Modal de crear foro
+  /** Página actual. */
+  currentPage = signal<number>(1);
+  /** Total de páginas. */
+  totalPages = signal<number>(1);
+  /** Total de foros. */
+  totalForums = signal<number>(0);
+  /** Foros por página. */
+  limit = 12;
+
+  /** Modal de crear foro visible. */
   showCreateModal = signal<boolean>(false);
+  /** Enviando creación. */
   isCreating = signal<boolean>(false);
+  /** Error al crear. */
   createError = signal<string | null>(null);
+  /** Formulario de creación. */
   createForm!: FormGroup;
 
+  /** Inicializa el formulario y carga la primera página. */
   ngOnInit(): void {
     this.createForm = this.fb.group({
       title: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(100)]],
@@ -42,6 +55,7 @@ export class ForumIndexComponent implements OnInit {
     this.loadForums();
   }
 
+  /** Carga la página de foros. */
   loadForums(page: number = 1): void {
     this.isLoading.set(true);
     this.error.set(null);
@@ -67,10 +81,12 @@ export class ForumIndexComponent implements OnInit {
     });
   }
 
+  /** Navega al detalle del foro. */
   goToForum(forumId: number): void {
     this.router.navigate(['/foro', forumId]);
   }
 
+  /** Cambia a otra página y hace scroll arriba. */
   goToPage(page: number): void {
     if (page >= 1 && page <= this.totalPages()) {
       this.loadForums(page);
@@ -79,18 +95,22 @@ export class ForumIndexComponent implements OnInit {
     }
   }
 
+  /** Nombre del creador o 'Usuario'. */
   getCreatorName(forum: Forum): string {
     return forum.creator?.fullName || 'Usuario';
   }
 
+  /** Avatar del creador o null. */
   getCreatorAvatar(forum: Forum): string | null {
     return forum.creator?.avatarUrl || null;
   }
 
+  /** Número de posts del foro. */
   getTotalPosts(forum: Forum): number {
     return forum._count?.posts || 0;
   }
 
+  /** Números de página a mostrar en la paginación. */
   getPageNumbers(): number[] {
     const pages: number[] = [];
     const current = this.currentPage();
@@ -116,18 +136,21 @@ export class ForumIndexComponent implements OnInit {
     return pages;
   }
 
+  /** Abre el modal de crear foro. */
   openCreateModal(): void {
     this.showCreateModal.set(true);
     this.createError.set(null);
     this.createForm.reset();
   }
 
+  /** Cierra el modal de crear foro. */
   closeCreateModal(): void {
     this.showCreateModal.set(false);
     this.createError.set(null);
     this.createForm.reset();
   }
 
+  /** Crea el foro con los datos del formulario. */
   createForum(): void {
     if (this.createForm.invalid) {
       this.createForm.markAllAsTouched();
@@ -180,6 +203,7 @@ export class ForumIndexComponent implements OnInit {
     });
   }
 
+  /** Mensaje de error del campo del formulario. */
   getFieldError(fieldName: string): string | null {
     const field = this.createForm?.get(fieldName);
     if (!field || !field.touched || !field.errors) return null;

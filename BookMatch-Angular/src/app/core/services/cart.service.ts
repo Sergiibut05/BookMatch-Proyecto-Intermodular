@@ -5,11 +5,17 @@ import { CatalogBook } from '@shared/models';
  * Item persistido en el carrito de compra.
  */
 export interface CartItem {
+  /** ID del libro. */
   id: number;
+  /** Título del libro. */
   title: string;
+  /** Autor. */
   author: string;
+  /** Precio unitario. */
   price: number;
+  /** Cantidad. */
   quantity: number;
+  /** URL de la portada. */
   coverUrl?: string | null;
 }
 

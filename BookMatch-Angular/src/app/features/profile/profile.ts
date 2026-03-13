@@ -8,6 +8,10 @@ import { PurchaseHistoryComponent } from '../purchase-history/purchase-history.c
 import { ProfileEditComponent } from '../profile-edit/profile-edit.component';
 import { TranslateModule } from '@ngx-translate/core';
 
+/**
+ * Perfil del usuario: muestra datos personales, historial de compras y edición.
+ * Permite cambiar avatar (cámara/galería) y sincroniza con Firebase Auth y backend.
+ */
 @Component({
   selector: 'app-profile',
   imports: [Header, PurchaseHistoryComponent, ProfileEditComponent, TranslateModule],
@@ -19,15 +23,21 @@ export class Profile implements OnInit {
   private usersService = inject(UsersService);
   private authService = inject(AuthService);
 
+  /** Perfil del usuario desde la API. */
   profile = signal<UserProfile | null>(null);
+  /** Cargando perfil. */
   isLoading = signal<boolean>(false);
+  /** Subiendo avatar. */
   isUploading = signal<boolean>(false);
+  /** Mensaje de error. */
   error = signal<string | null>(null);
 
+  /** Carga el perfil al iniciar. */
   ngOnInit(): void {
     this.loadProfile();
   }
 
+  /** Obtiene el perfil del usuario autenticado. */
   loadProfile(): void {
     this.isLoading.set(true);
     this.error.set(null);
@@ -45,10 +55,12 @@ export class Profile implements OnInit {
     });
   }
 
+  /** Actualiza el perfil en el estado cuando se edita. */
   onProfileUpdated(updatedProfile: UserProfile): void {
     this.profile.set(updatedProfile);
   }
 
+  /** Toma foto, sube a Storage y actualiza Auth y backend. */
   async changePhoto(): Promise<void> {
     try {
       this.error.set(null);
@@ -101,6 +113,7 @@ export class Profile implements OnInit {
     }
   }
 
+  /** URL del avatar (perfil o Auth). */
   getAvatarUrl(): string | null {
     const profile = this.profile();
     if (profile?.avatarUrl) {
@@ -110,6 +123,7 @@ export class Profile implements OnInit {
     return user?.avatarUrl || null; 
   }
 
+  /** True si hay URL de avatar. */
   hasPhoto(): boolean {
     return !!this.getAvatarUrl();
   }

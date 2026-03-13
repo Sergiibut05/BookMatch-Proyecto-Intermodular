@@ -11,6 +11,10 @@ import { CommentThreadComponent } from '@shared/components/comment-thread/commen
 import { RelativeTimePipe } from '@core/pipes/relative-time.pipe';
 import { IsAdminDirective } from '@core/directives/is-admin.directive';
 
+/**
+ * Detalle de un post/tema: contenido, imágenes, votos, comentarios en hilo.
+ * Permite editar/borrar (admin o autor), ampliar imágenes y votar.
+ */
 @Component({
   selector: 'app-post-detail',
   imports: [Header, ReactiveFormsModule, CommentThreadComponent, TranslateModule, RelativeTimePipe, IsAdminDirective],
@@ -22,32 +26,45 @@ export class PostDetailComponent implements OnInit, OnDestroy {
   private authService = inject(AuthService);
   private route = inject(ActivatedRoute);
   private fb = inject(FormBuilder);
-  router = inject(Router); 
+  /** Router para navegación. */
+  router = inject(Router);
+  /** Signal que indica si el usuario actual es admin. */
   isAdmin = this.authService.isAdmin;
 
+  /** ID del foro actual (desde ruta). */
   forumId = signal<number | null>(null);
+  /** ID del post actual (desde ruta). */
   postId = signal<number | null>(null);
+  /** Post cargado desde la API. */
   post = signal<Post | null>(null);
+  /** Cargando detalle del post. */
   isLoading = signal<boolean>(true);
+  /** Mensaje de error si falla la carga. */
   error = signal<string | null>(null);
 
-  // Modal de imagen ampliada
+  /** Si el modal de imagen ampliada está visible. */
   showImageModal = signal<boolean>(false);
+  /** URL de la imagen seleccionada en el modal. */
   selectedImageUrl = signal<string | null>(null);
 
-  // Menú de opciones
+  /** Si el menú de opciones (editar/borrar) está abierto. */
   showMenu = signal<boolean>(false);
 
-  // Modal de editar
+  /** Si el modal de editar post está visible. */
   showEditModal = signal<boolean>(false);
+  /** Enviando actualización del post. */
   isUpdating = signal<boolean>(false);
+  /** Error al actualizar el post. */
   updateError = signal<string | null>(null);
+  /** Formulario reactivo para editar título y contenido. */
   editForm!: FormGroup;
 
-  // Modal de confirmar borrar
+  /** Si el modal de confirmar borrado está visible. */
   showDeleteModal = signal<boolean>(false);
+  /** Eliminando el post. */
   isDeleting = signal<boolean>(false);
 
+  /** Inicializa el formulario de edición y suscribe a params para cargar el post. */
   ngOnInit(): void {
     this.editForm = this.fb.group({
       title: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(200)]],
@@ -69,16 +86,19 @@ export class PostDetailComponent implements OnInit, OnDestroy {
     });
   }
 
+  /** Abre el modal con la imagen ampliada. */
   openImageModal(imageUrl: string): void {
     this.selectedImageUrl.set(imageUrl);
     this.showImageModal.set(true);
   }
 
+  /** Cierra el modal de imagen. */
   closeImageModal(): void {
     this.showImageModal.set(false);
     this.selectedImageUrl.set(null);
   }
 
+  /** Carga el post por forumId y postId desde la API. */
   loadPost(): void {
     const forumId = this.forumId();
     const postId = this.postId();
@@ -101,6 +121,7 @@ export class PostDetailComponent implements OnInit, OnDestroy {
     });
   }
 
+  /** Navega de vuelta al listado del foro o a /foro. */
   goBack(): void {
     const forumId = this.forumId();
     if (forumId) {
@@ -110,27 +131,32 @@ export class PostDetailComponent implements OnInit, OnDestroy {
     }
   }
 
+  /** Nombre del autor del post o 'Usuario'. */
   getAuthorName(): string {
     const post = this.post();
     return post?.author?.fullName || 'Usuario';
   }
 
+  /** URL del avatar del autor o null. */
   getAuthorAvatar(): string | null {
     const post = this.post();
     return post?.author?.avatarUrl || null;
   }
 
+  /** Número de comentarios del post. */
   getCommentCount(): number {
     const post = this.post();
     return post?._count?.comments || 0;
   }
 
+  /** True si el usuario actual es el autor del post. */
   isAuthor(): boolean {
     const post = this.post();
     const currentUser = this.authService.currentUser();
     return post && currentUser ? post.authorId === currentUser.id : false;
   }
 
+  /** True si el usuario puede editar/borrar (autor o admin). */
   canModify(): boolean {
     const post = this.post();
     const currentUser = this.authService.currentUser();
@@ -142,14 +168,17 @@ export class PostDetailComponent implements OnInit, OnDestroy {
     return isAuthor || isAdmin;
   }
 
+  /** Alterna la visibilidad del menú de opciones. */
   toggleMenu(): void {
     this.showMenu.set(!this.showMenu());
   }
 
+  /** Cierra el menú de opciones. */
   closeMenu(): void {
     this.showMenu.set(false);
   }
 
+  /** Abre el modal de edición con los datos actuales del post. */
   openEditModal(): void {
     const post = this.post();
     if (!post) return;
@@ -163,12 +192,14 @@ export class PostDetailComponent implements OnInit, OnDestroy {
     this.closeMenu();
   }
 
+  /** Cierra el modal de edición y resetea el formulario. */
   closeEditModal(): void {
     this.showEditModal.set(false);
     this.updateError.set(null);
     this.editForm.reset();
   }
 
+  /** Envía la actualización del post a la API y recarga. */
   updatePost(): void {
     if (this.editForm.invalid) {
       this.editForm.markAllAsTouched();
@@ -213,15 +244,18 @@ export class PostDetailComponent implements OnInit, OnDestroy {
     });
   }
 
+  /** Abre el modal de confirmar borrado. */
   openDeleteModal(): void {
     this.showDeleteModal.set(true);
     this.closeMenu();
   }
 
+  /** Cierra el modal de confirmar borrado. */
   closeDeleteModal(): void {
     this.showDeleteModal.set(false);
   }
 
+  /** Elimina el post en la API y navega al foro. */
   deletePost(): void {
     const forumId = this.forumId();
     const postId = this.postId();
@@ -252,6 +286,7 @@ export class PostDetailComponent implements OnInit, OnDestroy {
     });
   }
 
+  /** Mensaje de error del campo del formulario de edición. */
   getFieldError(fieldName: string): string | null {
     const field = this.editForm?.get(fieldName);
     if (!field || !field.touched || !field.errors) return null;
@@ -268,6 +303,7 @@ export class PostDetailComponent implements OnInit, OnDestroy {
     return 'Campo inválido';
   }
 
+  /** Cierra el menú al hacer click fuera. */
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent): void {
     
@@ -279,6 +315,7 @@ export class PostDetailComponent implements OnInit, OnDestroy {
     }
   }
 
+  /** Limpieza al destruir el componente. */
   ngOnDestroy(): void {
     
   }

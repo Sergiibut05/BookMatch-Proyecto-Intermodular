@@ -6,8 +6,11 @@ import { VotesService, VoteType } from '@core/services/votes.service';
  * Datos minimos necesarios para renderizar y actualizar votos de un post.
  */
 export interface UpvoteData {
+  /** ID del post. */
   id: number;
+  /** Puntuación actual. */
   score: number;
+  /** Voto del usuario actual (UP/DOWN) o null. */
   userVote?: VoteType | null;
 }
 

@@ -29,25 +29,37 @@ export class CommentThreadComponent implements OnInit {
   private authService = inject(AuthService);
   private fb = inject(FormBuilder);
 
+  /** ID del foro (para llamadas a la API). */
   @Input() forumId!: number;
+  /** ID del post (para cargar y crear comentarios). */
   @Input() postId!: number;
 
+  /** Lista de comentarios del post. */
   comments = signal<Comment[]>([]);
+  /** Cargando comentarios. */
   isLoading = signal<boolean>(true);
+  /** Mensaje de error. */
   error = signal<string | null>(null);
 
-  // Formularios de respuesta (uno por comentario)
+  /** Formularios de respuesta (uno por comentario). */
   replyForms = new Map<number, FormGroup>();
+  /** Si se muestra el input de respuesta por comentario. */
   showReplyInput = signal<Map<number, boolean>>(new Map());
+  /** Si se está enviando una respuesta por comentario. */
   isReplying = signal<Map<number, boolean>>(new Map());
+  /** Error por comentario al enviar respuesta. */
   replyErrors = signal<Map<number, string | null>>(new Map());
 
-  // Formulario para comentario principal
+  /** Formulario del comentario principal (raíz). */
   mainCommentForm!: FormGroup;
+  /** Si se muestra el input de comentario principal. */
   showMainInput = signal<boolean>(false);
+  /** Enviando comentario principal. */
   isSubmittingMain = signal<boolean>(false);
+  /** Error al enviar comentario principal. */
   mainCommentError = signal<string | null>(null);
 
+  /** Inicializa el formulario principal y carga comentarios. */
   ngOnInit(): void {
     console.log('🔵 CommentThreadComponent inicializado');
     console.log('🔵 forumId:', this.forumId);
@@ -224,14 +236,17 @@ export class CommentThreadComponent implements OnInit {
     });
   }
 
+  /** Nombre del autor del comentario o 'Usuario'. */
   getAuthorName(comment: Comment): string {
     return comment.author?.fullName || 'Usuario';
   }
 
+  /** Avatar del autor o null. */
   getAuthorAvatar(comment: Comment): string | null {
     return comment.author?.avatarUrl || null;
   }
 
+  /** Mensaje de error del campo (comentario principal o respuesta). */
   getFieldError(commentId: number | 'main', fieldName: string): string | null {
     const form = commentId === 'main' 
       ? this.mainCommentForm 
@@ -254,18 +269,22 @@ export class CommentThreadComponent implements OnInit {
     return 'Campo inválido';
   }
 
+  /** Error de la respuesta para un comentario. */
   getReplyError(commentId: number): string | null {
     return this.replyErrors().get(commentId) || null;
   }
 
+  /** True si se está enviando una respuesta a ese comentario. */
   isReplyingTo(commentId: number): boolean {
     return this.isReplying().get(commentId) ?? false;
   }
 
+  /** True si el input de respuesta está visible para ese comentario. */
   isShowingReplyInput(commentId: number): boolean {
     return this.showReplyInput().get(commentId) ?? false;
   }
 
+  /** Formulario de respuesta para un comentario o null. */
   getReplyForm(commentId: number): FormGroup | null {
     return this.replyForms.get(commentId) || null;
   }

@@ -10,11 +10,20 @@ import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import { Conversation, Message, ConversationUI, MessageUI } from '../models/conversation.model';
 
+/**
+ * Servicio de conversaciones con IA: crea y lista conversaciones en Firestore,
+ * obtiene mensajes, envía mensajes al backend y archiva conversaciones.
+ */
 @Injectable({ providedIn: 'root' })
 export class ConversationService {
   private firestore = inject(Firestore);
   private http = inject(HttpClient);
 
+  /**
+   * Crea una nueva conversación para el usuario en Firestore.
+   * @param userId Firebase UID del usuario
+   * @returns Observable con el ID del documento creado
+   */
   createConversation(userId: string): Observable<string> {
     const conversationsRef = collection(
       this.firestore, 
@@ -35,6 +44,11 @@ export class ConversationService {
     );
   }
 
+  /**
+   * Obtiene las conversaciones activas del usuario ordenadas por fecha de actualización.
+   * @param userId Firebase UID del usuario
+   * @returns Observable con lista de conversaciones para UI (fechas como Date)
+   */
   getConversations(userId: string): Observable<ConversationUI[]> {
     const conversationsRef = collection(
       this.firestore, 
@@ -55,6 +69,12 @@ export class ConversationService {
     );
   }
 
+  /**
+   * Obtiene los mensajes de una conversación ordenados por timestamp.
+   * @param userId Firebase UID del usuario
+   * @param conversationId ID del documento de conversación
+   * @returns Observable con mensajes para UI (timestamp como Date)
+   */
   getMessages(userId: string, conversationId: string): Observable<MessageUI[]> {
     const messagesRef = collection(
       this.firestore,
@@ -70,6 +90,13 @@ export class ConversationService {
     );
   }
 
+  /**
+   * Envía un mensaje del usuario al backend (procesamiento IA).
+   * @param userId Firebase UID del usuario
+   * @param conversationId ID de la conversación
+   * @param content Texto del mensaje
+   * @returns Observable que completa cuando el mensaje se envió
+   */
   sendMessage(userId: string, conversationId: string, content: string): Observable<void> {
     return this.http.post<void>(
       `${environment.apiUrl}/ai-chat/send-message`,
@@ -77,6 +104,12 @@ export class ConversationService {
     );
   }
 
+  /**
+   * Archiva una conversación (cambia status a 'archived' en Firestore).
+   * @param userId Firebase UID del usuario
+   * @param conversationId ID de la conversación
+   * @returns Observable que completa cuando se actualizó
+   */
   archiveConversation(userId: string, conversationId: string): Observable<void> {
     const conversationRef = doc(
       this.firestore,

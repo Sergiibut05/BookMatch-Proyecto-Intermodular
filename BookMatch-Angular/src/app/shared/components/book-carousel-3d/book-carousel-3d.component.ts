@@ -9,10 +9,15 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
  * Datos de entrada para cada libro renderizado en el carrusel 3D.
  */
 export interface BookData {
+  /** Título del libro. */
   title: string;
+  /** Autor. */
   author: string;
+  /** URL de la imagen de portada. */
   coverImage: string;
+  /** Ruta para navegar al hacer click. */
   url?: string;
+  /** ID del libro en catálogo. */
   id?: number;
 }
 
@@ -35,10 +40,14 @@ export interface BookData {
   styleUrl: './book-carousel-3d.component.scss',
 })
 export class BookCarousel3dComponent implements OnInit, AfterViewInit, OnDestroy {
+  /** Referencia al canvas. */
   @ViewChild('canvas', { static: false }) canvasRef!: ElementRef<HTMLCanvasElement>;
-  
+
+  /** Lista de libros a mostrar en el carrusel. */
   @Input() books: BookData[] = [];
+  /** Título de la sección. */
   @Input() title: string = 'The Best Selling Books';
+  /** Color de fondo del carrusel. */
   @Input() backgroundColor: string = '#DFEFED';
 
   private scene!: THREE.Scene;
@@ -85,8 +94,9 @@ export class BookCarousel3dComponent implements OnInit, AfterViewInit, OnDestroy
   // Cursor
   private cursor = { x: 0, y: 0 };
 
-  // Current center book
+  /** Índice del libro centrado en el carrusel. */
   centerBookIndex = signal<number | null>(null);
+  /** Datos del libro actualmente centrado. */
   currentBook = signal<BookData | null>(null);
 
   // Background colors for each book
@@ -98,8 +108,10 @@ export class BookCarousel3dComponent implements OnInit, AfterViewInit, OnDestroy
     0xFFF5E5
   ];
 
+  /** Inyecta el Router para navegar al libro al hacer click. */
   constructor(private router: Router) {}
 
+  /** Detecta si es móvil y ajusta la configuración del carrusel. */
   ngOnInit() {
     this.isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || window.innerWidth < 768;
     this.updateMobileConfig();
@@ -107,6 +119,7 @@ export class BookCarousel3dComponent implements OnInit, AfterViewInit, OnDestroy
 
   private intersectionObserver: IntersectionObserver | null = null;
 
+  /** Inicializa Three.js cuando el canvas entra en viewport (IntersectionObserver). */
   ngAfterViewInit() {
     if (!this.canvasRef?.nativeElement || this.books.length === 0) return;
 
@@ -131,6 +144,7 @@ export class BookCarousel3dComponent implements OnInit, AfterViewInit, OnDestroy
     this.intersectionObserver.observe(container);
   }
 
+  /** Limpia escena, listeners y animación. */
   ngOnDestroy() {
     this.cleanup();
   }
@@ -430,6 +444,7 @@ export class BookCarousel3dComponent implements OnInit, AfterViewInit, OnDestroy
   /**
    * Navega al libro anterior en el carrusel.
    */
+  /** Desplaza el carrusel al libro anterior. */
   onPrevClick() {
     const newOffset = this.targetCarouselOffset + this.carouselConfig.buttonStep;
     this.targetCarouselOffset = Math.max(this.carouselMinOffset, Math.min(this.carouselMaxOffset, newOffset));
@@ -438,6 +453,7 @@ export class BookCarousel3dComponent implements OnInit, AfterViewInit, OnDestroy
   /**
    * Navega al libro siguiente en el carrusel.
    */
+  /** Desplaza el carrusel al libro siguiente. */
   onNextClick() {
     const newOffset = this.targetCarouselOffset - this.carouselConfig.buttonStep;
     this.targetCarouselOffset = Math.max(this.carouselMinOffset, Math.min(this.carouselMaxOffset, newOffset));
@@ -446,6 +462,7 @@ export class BookCarousel3dComponent implements OnInit, AfterViewInit, OnDestroy
   /**
    * Navega al detalle del libro centrado actualmente.
    */
+  /** Navega al libro centrado si tiene URL. */
   onDiscoverClick() {
     const currentBook = this.currentBook();
     if (currentBook) {

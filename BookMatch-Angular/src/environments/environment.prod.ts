@@ -1,3 +1,8 @@
+/**
+ * Configuración del entorno de producción.
+ * Usada al hacer build con --configuration=production.
+ * API apunta al backend desplegado en Vercel.
+ */
 export const environment = {
     production: true,
     firebase: {

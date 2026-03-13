@@ -13,6 +13,7 @@ export interface CheckoutSessionResponse {
   url: string;
 }
 
+/** Ítem para crear una sesión de checkout desde el carrito: libro y cantidad. */
 export interface CheckoutSessionItem {
   bookId: number;
   quantity: number;

@@ -6,6 +6,10 @@ import { CartService } from '@core/services/cart.service';
 import { Header } from '@shared/components/header/header';
 import { TranslateModule } from '@ngx-translate/core';
 
+/**
+ * Página de éxito de pago: recibe session_id por query, verifica con el backend,
+ * limpia el carrito y permite ir a inicio o al perfil (pedidos).
+ */
 @Component({
   selector: 'app-payment-success',
   imports: [Header, TranslateModule],
@@ -16,13 +20,18 @@ export class PaymentSuccessComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private paymentService = inject(PaymentService);
-  private cartService = inject(CartService); 
+  private cartService = inject(CartService);
 
+  /** ID de sesión Stripe (query session_id). */
   sessionId: string | null = null;
+  /** Verificando pago. */
   isLoading = true;
+  /** Estado del pago tras verificar. */
   paymentStatus: string | null = null;
+  /** Mensaje de error. */
   error: string | null = null;
 
+  /** Lee session_id y llama a verifyPayment. */
   ngOnInit(): void {
     this.route.queryParams.subscribe(params => {
       this.sessionId = params['session_id'] || null;
@@ -36,6 +45,7 @@ export class PaymentSuccessComponent implements OnInit {
     });
   }
 
+  /** Verifica el pago con el backend y limpia el carrito. */
   verifyPayment(): void {
     if (!this.sessionId) {
       this.error = 'ID de sesión no válido';
@@ -60,10 +70,12 @@ export class PaymentSuccessComponent implements OnInit {
     });
   }
 
+  /** Navega a inicio. */
   goToHome(): void {
     this.router.navigate(['/home']);
   }
 
+  /** Navega al perfil (historial de pedidos). */
   goToOrders(): void {
     this.router.navigate(['/profile']); 
   }

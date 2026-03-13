@@ -3,6 +3,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { Header } from '@shared/components/header/header';
 import { Footer } from '@shared/components/footer/footer';
 
+/** Página estática "Sobre nosotros". */
 @Component({
   selector: 'app-about-us',
   imports: [TranslateModule, Header, Footer],

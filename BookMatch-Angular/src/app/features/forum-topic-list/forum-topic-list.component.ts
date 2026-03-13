@@ -16,6 +16,10 @@ import { RelativeTimePipe } from '@core/pipes/relative-time.pipe';
 import { forkJoin, of } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 
+/**
+ * Listado de posts/temas de un foro: paginación, búsqueda, crear/editar/borrar post y foro (admin),
+ * subida de imágenes y votos. Usa UpvoteButtonComponent y RelativeTimePipe.
+ */
 @Component({
   selector: 'app-forum-topic-list',
   imports: [Header, ReactiveFormsModule, UpvoteButtonComponent, TranslateModule, RelativeTimePipe],
@@ -29,48 +33,68 @@ export class ForumTopicListComponent implements OnInit, OnDestroy {
   private votesService = inject(VotesService);
   private storageService = inject(StorageService);
   private route = inject(ActivatedRoute);
-  router = inject(Router); 
+  /** Router para navegación. */
+  router = inject(Router);
   private fb = inject(FormBuilder);
 
+  /** ID del foro (desde ruta). */
   forumId = signal<number | null>(null);
+  /** Foro actual cargado. */
   forum = signal<Forum | null>(null);
+  /** Posts del foro. */
   posts = signal<Post[]>([]);
+  /** Posts filtrados por búsqueda. */
   filteredPosts = signal<Post[]>([]);
+  /** Cargando datos. */
   isLoading = signal<boolean>(true);
+  /** Mensaje de error. */
   error = signal<string | null>(null);
-  
-  // Paginación
+
+  /** Página actual. */
   currentPage = signal<number>(1);
+  /** Total de páginas. */
   totalPages = signal<number>(1);
+  /** Total de posts. */
   totalPosts = signal<number>(0);
-  limit = 10; // Posts por página
-  
-  // Búsqueda
+  /** Posts por página. */
+  limit = 10;
+
+  /** Texto de búsqueda en posts. */
   searchQuery = signal<string>('');
-  
-  // Modal de crear post
+
+  /** Modal de crear post visible. */
   showCreateModal = signal<boolean>(false);
+  /** Enviando creación de post. */
   isCreating = signal<boolean>(false);
+  /** Error al crear post. */
   createError = signal<string | null>(null);
+  /** Formulario de nuevo post. */
   createForm!: FormGroup;
-  // Imágenes del nuevo post
+  /** URLs de imágenes del nuevo post. */
   createImages = signal<string[]>([]);
+  /** Subiendo imagen. */
   isUploadingImage = signal<boolean>(false);
+  /** Error al subir imagen. */
   uploadImageError = signal<string | null>(null);
 
-  // Menú de opciones del foro
+  /** Menú de opciones del foro (editar/borrar) visible. */
   showForumMenu = signal<boolean>(false);
 
-  // Modal de editar foro
+  /** Modal de editar foro visible. */
   showEditForumModal = signal<boolean>(false);
+  /** Actualizando foro. */
   isUpdatingForum = signal<boolean>(false);
+  /** Error al actualizar foro. */
   updateForumError = signal<string | null>(null);
+  /** Formulario de edición del foro. */
   editForumForm!: FormGroup;
 
-  // Modal de confirmar borrar foro
+  /** Modal de confirmar borrar foro visible. */
   showDeleteForumModal = signal<boolean>(false);
+  /** Eliminando foro. */
   isDeletingForum = signal<boolean>(false);
 
+  /** Inicializa formularios y suscribe a params para cargar foro y posts. */
   ngOnInit(): void {
     this.createForm = this.fb.group({
       title: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(200)]],
@@ -95,6 +119,7 @@ export class ForumTopicListComponent implements OnInit, OnDestroy {
     });
   }
 
+  /** Carga el foro por ID. */
   loadForum(): void {
     const id = this.forumId();
     if (!id) return;
@@ -109,6 +134,7 @@ export class ForumTopicListComponent implements OnInit, OnDestroy {
     });
   }
 
+  /** Carga posts del foro con paginación y votos del usuario. */
   loadPosts(page: number = 1): void {
     const id = this.forumId();
     if (!id) return;
@@ -189,11 +215,13 @@ export class ForumTopicListComponent implements OnInit, OnDestroy {
     this.filterPosts(this.searchQuery()); 
   }
 
+  /** Actualiza la búsqueda y filtra posts. */
   onSearchChange(query: string): void {
     this.searchQuery.set(query);
     this.filterPosts(query);
   }
 
+  /** Filtra posts por título, contenido o nombre de autor. */
   filterPosts(query: string): void {
     const allPosts = this.posts();
     if (!query || query.trim() === '') {
@@ -211,6 +239,7 @@ export class ForumTopicListComponent implements OnInit, OnDestroy {
     this.filteredPosts.set(filtered);
   }
 
+  /** Cambia de página y hace scroll arriba. */
   goToPage(page: number): void {
     if (page >= 1 && page <= this.totalPages()) {
       this.loadPosts(page);
@@ -218,6 +247,7 @@ export class ForumTopicListComponent implements OnInit, OnDestroy {
     }
   }
 
+  /** Navega al detalle del post. */
   goToPost(postId: number): void {
     const forumId = this.forumId();
     if (forumId) {
@@ -225,6 +255,7 @@ export class ForumTopicListComponent implements OnInit, OnDestroy {
     }
   }
 
+  /** Abre el modal de crear post. */
   openCreateModal(): void {
     this.showCreateModal.set(true);
     this.createError.set(null);
@@ -233,6 +264,7 @@ export class ForumTopicListComponent implements OnInit, OnDestroy {
     this.uploadImageError.set(null);
   }
 
+  /** Cierra el modal de crear post. */
   closeCreateModal(): void {
     this.showCreateModal.set(false);
     this.createError.set(null);
@@ -273,10 +305,12 @@ export class ForumTopicListComponent implements OnInit, OnDestroy {
     }
   }
 
+  /** Quita una imagen de la lista del nuevo post. */
   removeImageFromPost(index: number): void {
     this.createImages.update(images => images.filter((_, i) => i !== index));
   }
 
+  /** Crea el post con título, contenido e imágenes. */
   createPost(): void {
     if (this.createForm.invalid) {
       this.createForm.markAllAsTouched();
@@ -322,18 +356,22 @@ export class ForumTopicListComponent implements OnInit, OnDestroy {
     });
   }
 
+  /** Nombre del autor del post o 'Usuario'. */
   getAuthorName(post: Post): string {
     return post.author?.fullName || 'Usuario';
   }
 
+  /** Avatar del autor o null. */
   getAuthorAvatar(post: Post): string | null {
     return post.author?.avatarUrl || null;
   }
 
+  /** Número de comentarios del post. */
   getCommentCount(post: Post): number {
     return post._count?.comments || 0;
   }
 
+  /** Números de página para la paginación. */
   getPageNumbers(): number[] {
     const pages: number[] = [];
     const current = this.currentPage();
@@ -357,6 +395,7 @@ export class ForumTopicListComponent implements OnInit, OnDestroy {
     return pages;
   }
 
+  /** Mensaje de error del campo del formulario de crear post. */
   getFieldError(fieldName: string): string | null {
     const field = this.createForm?.get(fieldName);
     if (!field || !field.touched || !field.errors) return null;
@@ -373,20 +412,24 @@ export class ForumTopicListComponent implements OnInit, OnDestroy {
     return 'Campo inválido';
   }
 
+  /** True si el usuario actual es el creador del foro. */
   isForumCreator(): boolean {
     const forum = this.forum();
     const currentUser = this.authService.currentUser();
     return forum && currentUser ? forum.creatorId === currentUser.id : false;
   }
 
+  /** Alterna la visibilidad del menú del foro. */
   toggleForumMenu(): void {
     this.showForumMenu.set(!this.showForumMenu());
   }
 
+  /** Cierra el menú del foro. */
   closeForumMenu(): void {
     this.showForumMenu.set(false);
   }
 
+  /** Abre el modal de editar foro con los datos actuales. */
   openEditForumModal(): void {
     const forum = this.forum();
     if (!forum) return;
@@ -400,12 +443,14 @@ export class ForumTopicListComponent implements OnInit, OnDestroy {
     this.closeForumMenu();
   }
 
+  /** Cierra el modal de editar foro. */
   closeEditForumModal(): void {
     this.showEditForumModal.set(false);
     this.updateForumError.set(null);
     this.editForumForm.reset();
   }
 
+  /** Envía la actualización del foro a la API. */
   updateForum(): void {
     if (this.editForumForm.invalid) {
       this.editForumForm.markAllAsTouched();
@@ -448,15 +493,18 @@ export class ForumTopicListComponent implements OnInit, OnDestroy {
     });
   }
 
+  /** Abre el modal de confirmar borrar foro. */
   openDeleteForumModal(): void {
     this.showDeleteForumModal.set(true);
     this.closeForumMenu();
   }
 
+  /** Cierra el modal de confirmar borrar foro. */
   closeDeleteForumModal(): void {
     this.showDeleteForumModal.set(false);
   }
 
+  /** Elimina el foro y navega a /foro. */
   deleteForum(): void {
     const forumId = this.forumId();
     if (!forumId) return;
@@ -486,6 +534,7 @@ export class ForumTopicListComponent implements OnInit, OnDestroy {
     });
   }
 
+  /** Mensaje de error del campo del formulario de editar foro. */
   getForumFieldError(fieldName: string): string | null {
     const field = this.editForumForm?.get(fieldName);
     if (!field || !field.touched || !field.errors) return null;
@@ -502,6 +551,7 @@ export class ForumTopicListComponent implements OnInit, OnDestroy {
     return 'Campo inválido';
   }
 
+  /** Cierra el menú del foro al hacer click fuera. */
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent): void {
     // Cerrar el menú si se hace clic fuera
@@ -513,6 +563,7 @@ export class ForumTopicListComponent implements OnInit, OnDestroy {
     }
   }
 
+  /** Limpieza al destruir el componente. */
   ngOnDestroy(): void {
     
   }

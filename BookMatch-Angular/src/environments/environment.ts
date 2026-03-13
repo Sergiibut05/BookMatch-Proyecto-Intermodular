@@ -1,3 +1,8 @@
+/**
+ * Configuración del entorno de desarrollo.
+ * Incluye claves de Firebase, Stripe (modo prueba) y URL base de la API.
+ * No usar en producción.
+ */
 export const environment = {
     production: false,
     firebase: {

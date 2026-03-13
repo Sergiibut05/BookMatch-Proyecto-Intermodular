@@ -16,6 +16,7 @@ export class StorageService {
   private storage = inject(FirebaseStorage);
 
   /**
+   * Toma o selecciona una foto (cámara en móvil, input file en web).
    * @returns Promise con la foto tomada o null si se cancela
    */
   async takePhoto(): Promise<Photo | null> {
@@ -71,6 +72,7 @@ export class StorageService {
   }
 
   /**
+   * Sube una foto como avatar de usuario; elimina la anterior si se indica.
    * @param photo Foto a subir
    * @param userId ID del usuario
    * @param oldPhotoUrl URL de la foto anterior a eliminar
@@ -102,6 +104,7 @@ export class StorageService {
   }
 
   /**
+   * Sube una imagen para un post (ruta posts/ en Storage).
    * @param photo Foto a subir
    * @param userId ID del usuario
    * @returns Promise con la URL de la imagen subida
@@ -127,6 +130,7 @@ export class StorageService {
   }
 
   /**
+   * Elimina una foto de Firebase Storage a partir de su URL de descarga.
    * @param photoUrl URL de la foto a eliminar
    */
   async deletePhoto(photoUrl: string): Promise<void> {

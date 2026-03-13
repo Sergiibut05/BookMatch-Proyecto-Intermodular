@@ -6,6 +6,9 @@ import { Header } from '@shared/components/header/header';
 import { Category } from '@shared/models';
 import { TranslateModule } from '@ngx-translate/core';
 
+/**
+ * Selector de categorías: carga categorías (MAIN primero), búsqueda y navegación a /categories.
+ */
 @Component({
   selector: 'app-categories-selector',
   imports: [Header, CommonModule, TranslateModule],
@@ -16,13 +19,17 @@ export class CategoriesSelector implements OnInit {
   private catalogService = inject(CatalogService);
   private router = inject(Router);
 
+  /** Lista de categorías (MAIN primero, luego orden por nombre). */
   categories = signal<Category[]>([]);
+  /** Texto de búsqueda para filtrar categorías. */
   searchQuery = signal<string>('');
 
+  /** Carga categorías al iniciar. */
   ngOnInit() {
     this.loadCategories();
   }
 
+  /** Obtiene categorías y las ordena. */
   loadCategories() {
     this.catalogService.getCategories().subscribe({
       next: (cats) => {
@@ -38,6 +45,7 @@ export class CategoriesSelector implements OnInit {
     });
   }
 
+  /** Categorías filtradas por searchQuery. */
   get filteredCategories(): Category[] {
     const query = this.searchQuery().toLowerCase().trim();
     if (!query) return this.categories();
@@ -49,25 +57,29 @@ export class CategoriesSelector implements OnInit {
     );
   }
 
+  /** Categorías de tipo MAIN. */
   get mainCategories(): Category[] {
     return this.filteredCategories.filter(c => c.type === 'MAIN');
   }
 
+  /** Categorías de tipo SPECIAL. */
   get specialCategories(): Category[] {
     return this.filteredCategories.filter(c => c.type === 'SPECIAL');
   }
 
-  
+  /** Nombre de la categoría padre si tiene parentId. */
   getParentCategoryName(subcategory: Category): string | null {
     if (!subcategory.parentId) return null;
     const parent = this.categories().find(c => c.id === subcategory.parentId);
     return parent ? parent.name : null;
   }
 
+  /** Navega a la ruta de la categoría. */
   navigateToCategory(category: Category) {
     this.router.navigate(['/categories', category.slug]);
   }
 
+  /** Actualiza searchQuery con el valor del input. */
   onSearchInput(event: Event) {
     const target = event.target as HTMLInputElement;
     this.searchQuery.set(target.value);

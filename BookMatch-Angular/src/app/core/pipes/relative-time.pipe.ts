@@ -1,10 +1,23 @@
 import { Pipe, PipeTransform } from '@angular/core';
 
+/**
+ * Pipe que convierte una fecha (ISO string o Date) en texto relativo en español
+ * (ej. "hace 2 horas", "ayer", "hace 3 semanas").
+ *
+ * @example
+ * ```html
+ * {{ post.createdAt | relativeTime }}
+ * ```
+ */
 @Pipe({
   name: 'relativeTime',
   standalone: true
 })
 export class RelativeTimePipe implements PipeTransform {
+  /**
+   * @param value Fecha en formato ISO string o Date; null/undefined devuelve ''
+   * @returns Texto relativo en español o cadena vacía si la fecha no es válida
+   */
   transform(value: string | Date | null | undefined): string {
     if (!value) {
       return '';

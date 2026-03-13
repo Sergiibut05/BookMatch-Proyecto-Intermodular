@@ -8,6 +8,10 @@ import { AuthService } from '@core/services/auth.service';
 import { ConversationUI, MessageUI } from '../../core/models/conversation.model';
 import { Header } from '@shared/components/header/header';
 
+/**
+ * Chat con IA: lista de conversaciones, mensajes en hilo y envío.
+ * Requiere usuario autenticado; usa ConversationService y Firestore.
+ */
 @Component({
   selector: 'app-ai-chat',
   standalone: true,
@@ -20,19 +24,27 @@ export class AiChatComponent implements OnInit, AfterViewChecked {
   private authService = inject(AuthService);
   private router = inject(Router);
 
+  /** Contenedor de mensajes para scroll. */
   @ViewChild('messagesContainer') messagesContainer!: ElementRef<HTMLDivElement>;
-  
-  // Signals
+
+  /** Lista de conversaciones del usuario. */
   conversations = signal<ConversationUI[]>([]);
+  /** ID de la conversación activa. */
   activeConversationId = signal<string | null>(null);
+  /** Mensajes de la conversación activa. */
   messages = signal<MessageUI[]>([]);
+  /** Texto del input de mensaje. */
   currentMessage = signal('');
+  /** Enviando o cargando. */
   isLoading = signal(false);
+  /** Sidebar de conversaciones visible en móvil. */
   showSidebarMobile = signal(false);
-  isNewEmptyConversation = signal(true); // Para saber si es una conversación nueva sin crear
-  
+  /** True si es conversación nueva aún no creada en backend. */
+  isNewEmptyConversation = signal(true);
+
   private shouldScrollToBottom = false;
 
+  /** Comprueba auth, carga conversaciones y deja mensajes vacíos. */
   ngOnInit() {
     const firebaseUser = this.authService.firebaseUser();
     if (!firebaseUser?.uid) {
@@ -45,6 +57,7 @@ export class AiChatComponent implements OnInit, AfterViewChecked {
     this.messages.set([]);
   }
 
+  /** Hace scroll al final si se solicitó. */
   ngAfterViewChecked() {
     if (this.shouldScrollToBottom) {
       this.scrollToBottom();
@@ -52,6 +65,7 @@ export class AiChatComponent implements OnInit, AfterViewChecked {
     }
   }
 
+  /** Carga la lista de conversaciones del usuario. */
   loadConversations(userId: string) {
     this.conversationService.getConversations(userId).subscribe(
       conversations => {
@@ -61,7 +75,8 @@ export class AiChatComponent implements OnInit, AfterViewChecked {
       }
     );
   }
-  
+
+  /** Selecciona una conversación y carga sus mensajes. */
   selectConversation(conversationId: string, closeSidebar: boolean = true) {
     this.activeConversationId.set(conversationId);
     this.isNewEmptyConversation.set(false);
@@ -78,7 +93,8 @@ export class AiChatComponent implements OnInit, AfterViewChecked {
       );
     }
   }
-  
+
+  /** Crea una conversación vacía en UI (sin guardar aún). */
   createNewConversation() {
     // Limpiar la conversación actual y mostrar una vacía
     this.activeConversationId.set(null);
@@ -87,6 +103,7 @@ export class AiChatComponent implements OnInit, AfterViewChecked {
     this.showSidebarMobile.set(false);
     }
 
+  /** Envía el mensaje actual (crea conversación si es nueva). */
   sendMessage() {
     const firebaseUser = this.authService.firebaseUser();
     const content = this.currentMessage().trim();
@@ -134,18 +151,22 @@ export class AiChatComponent implements OnInit, AfterViewChecked {
     });
   }
 
+  /** Alterna la visibilidad del sidebar en móvil. */
   toggleSidebarMobile() {
     this.showSidebarMobile.update(value => !value);
   }
-  
+
+  /** Rellena el input con la sugerencia. */
   useSuggestion(suggestion: string) {
     this.currentMessage.set(suggestion);
   }
-  
+
+  /** Convierte markdown a HTML. */
   renderMarkdown(content: string): string {
     return marked.parse(content) as string;
   }
 
+  /** Envía el mensaje con Enter (sin Shift). */
   onEnterKey(event: KeyboardEvent): void {
     if (event.key === 'Enter' && !event.shiftKey) {
       event.preventDefault();

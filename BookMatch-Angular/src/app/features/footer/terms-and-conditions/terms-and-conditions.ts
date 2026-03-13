@@ -3,6 +3,7 @@ import { RouterLink } from '@angular/router';
 import { Header } from '@shared/components/header/header';
 import { Footer } from '@shared/components/footer/footer';
 
+/** Página estática de términos y condiciones del servicio. */
 @Component({
   selector: 'app-terms-and-conditions',
   imports: [RouterLink, Header, Footer],

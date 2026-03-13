@@ -8,6 +8,10 @@ import { ForumsService } from '@core/services/forums.service';
 import { CatalogBook } from '@shared/models';
 import { Forum } from '@shared/models/forums.model';
 
+/**
+ * Pantalla de resultados de búsqueda: libros o foros según query params (q, type).
+ * Soporta paginación y navegación a detalle de libro o foro.
+ */
 @Component({
   selector: 'app-search-results',
   imports: [CommonModule, Header, TranslateModule],
@@ -20,21 +24,31 @@ export class SearchResultsComponent implements OnInit {
   private catalogService = inject(CatalogService);
   private forumsService = inject(ForumsService);
 
+  /** Término de búsqueda (query param q). */
   searchQuery = signal<string>('');
+  /** Tipo de búsqueda: libro o foro. */
   searchType = signal<'book' | 'forum'>('book');
-  
+
+  /** Resultados de libros. */
   books = signal<CatalogBook[]>([]);
+  /** Resultados de foros. */
   forums = signal<Forum[]>([]);
-  
+
+  /** Cargando resultados. */
   isLoading = signal<boolean>(true);
+  /** Mensaje de error. */
   error = signal<string | null>(null);
-  
-  // Paginación
+
+  /** Página actual. */
   currentPage = signal<number>(1);
+  /** Total de páginas. */
   totalPages = signal<number>(1);
+  /** Total de resultados. */
   totalResults = signal<number>(0);
+  /** Resultados por página. */
   limit = 20;
 
+  /** Lee query params y ejecuta búsqueda si hay término. */
   ngOnInit(): void {
     this.route.queryParams.subscribe(params => {
       const query = params['q'] || '';
@@ -53,6 +67,7 @@ export class SearchResultsComponent implements OnInit {
     });
   }
 
+  /** Ejecuta búsqueda de libros o foros según searchType. */
   performSearch(): void {
     const query = this.searchQuery();
     if (!query) return;
@@ -67,6 +82,7 @@ export class SearchResultsComponent implements OnInit {
     }
   }
 
+  /** Busca libros por término y actualiza books y paginación. */
   searchBooks(query: string): void {
     this.catalogService.searchBooks(query, this.currentPage(), this.limit).subscribe({
       next: (response) => {
@@ -83,6 +99,7 @@ export class SearchResultsComponent implements OnInit {
     });
   }
 
+  /** Busca foros por término y actualiza forums y paginación. */
   searchForums(query: string): void {
     this.forumsService.getForums(this.currentPage(), this.limit, query).subscribe({
       next: (response) => {
@@ -99,6 +116,7 @@ export class SearchResultsComponent implements OnInit {
     });
   }
 
+  /** Cambia de página y vuelve a buscar. */
   goToPage(page: number): void {
     if (page >= 1 && page <= this.totalPages()) {
       this.currentPage.set(page);
@@ -107,26 +125,32 @@ export class SearchResultsComponent implements OnInit {
     }
   }
 
+  /** Navega al detalle del libro. */
   goToBook(bookId: number): void {
     this.router.navigate(['/book-details', bookId]);
   }
 
+  /** Navega al foro. */
   goToForum(forumId: number): void {
     this.router.navigate(['/foro', forumId]);
   }
 
+  /** Nombre del creador del foro o 'Usuario'. */
   getCreatorName(forum: Forum): string {
     return forum.creator?.fullName || 'Usuario';
   }
 
+  /** Avatar del creador o null. */
   getCreatorAvatar(forum: Forum): string | null {
     return forum.creator?.avatarUrl || null;
   }
 
+  /** Número de posts del foro. */
   getTotalPosts(forum: Forum): number {
     return forum._count?.posts || 0;
   }
 
+  /** Array de números de página a mostrar en la paginación. */
   getPageNumbers(): number[] {
     const pages: number[] = [];
     const current = this.currentPage();

@@ -10,18 +10,27 @@ import { environment } from '../../../environments/environment';
  */
 export type VoteType = 'UP' | 'DOWN';
 
+/** Voto registrado: id, usuario, post y tipo (UP/DOWN). */
 export interface Vote {
+  /** ID del voto. */
   id: number;
+  /** ID del usuario. */
   userId: number;
+  /** ID del post. */
   postId: number;
+  /** Tipo UP o DOWN. */
   type: VoteType;
 }
 
+/** DTO para crear o actualizar un voto en un post. */
 export interface CreateVoteDto {
+  /** Tipo de voto. */
   type: VoteType;
 }
 
+/** Respuesta del backend con el score actualizado del post. */
 export interface VoteScoreResponse {
+  /** Score actual del post. */
   score: number;
 }
 

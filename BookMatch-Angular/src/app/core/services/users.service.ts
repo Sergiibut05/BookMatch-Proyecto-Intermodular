@@ -9,21 +9,35 @@ import { environment } from '../../../environments/environment';
  * Perfil de usuario retornado por la API.
  */
 export interface UserProfile {
+  /** ID del usuario. */
   id: number;
+  /** UID de Firebase. */
   firebaseUid: string;
+  /** Email. */
   email: string;
+  /** Nombre completo o null. */
   fullName: string | null;
+  /** URL del avatar o null. */
   avatarUrl: string | null;
+  /** Teléfono o null. */
   phone: string | null;
+  /** Rol USER o ADMIN. */
   role?: 'USER' | 'ADMIN';
+  /** Fecha de creación (ISO). */
   createdAt: string;
+  /** Fecha de actualización (ISO). */
   updatedAt: string;
 }
 
+/** Datos permitidos al actualizar el perfil del usuario (todos opcionales). */
 export interface UpdateProfileData {
+  /** Nuevo nombre completo. */
   fullName?: string | null;
+  /** Nuevo email. */
   email?: string;
+  /** Nueva URL de avatar. */
   avatarUrl?: string | null;
+  /** Nuevo teléfono. */
   phone?: string | null;
 }
 

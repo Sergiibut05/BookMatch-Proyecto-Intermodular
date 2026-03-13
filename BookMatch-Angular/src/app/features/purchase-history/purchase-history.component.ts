@@ -4,6 +4,10 @@ import { OrdersService } from '@core/services/orders.service';
 import { Order } from '@shared/models/orders.model';
 import { TranslateModule } from '@ngx-translate/core';
 
+/**
+ * Historial de compras del usuario: lista de pedidos con ítems, estado y totales.
+ * Formatea precios en EUR y etiquetas/colores por estado (Pendiente, Pagado, etc.).
+ */
 @Component({
   selector: 'app-purchase-history',
   imports: [CommonModule, TranslateModule],
@@ -13,14 +17,19 @@ import { TranslateModule } from '@ngx-translate/core';
 export class PurchaseHistoryComponent implements OnInit {
   private ordersService = inject(OrdersService);
 
+  /** Lista de pedidos del usuario. */
   orders = signal<Order[]>([]);
+  /** Cargando historial. */
   isLoading = signal<boolean>(true);
+  /** Mensaje de error. */
   error = signal<string | null>(null);
 
+  /** Carga el historial al iniciar. */
   ngOnInit(): void {
     this.loadOrderHistory();
   }
 
+  /** Obtiene los pedidos del usuario. */
   loadOrderHistory(): void {
     this.isLoading.set(true);
     this.error.set(null);
@@ -38,6 +47,7 @@ export class PurchaseHistoryComponent implements OnInit {
     });
   }
 
+  /** URL de portada o primera imagen del ítem. */
   getBookImage(orderItem: Order['items'][0]): string {
     return orderItem.catalogBook.coverUrl || 
            (orderItem.catalogBook.imageUrls && orderItem.catalogBook.imageUrls.length > 0 
@@ -45,6 +55,7 @@ export class PurchaseHistoryComponent implements OnInit {
              : '');
   }
 
+  /** Formatea el precio en EUR. */
   formatPrice(price: number | string): string {
     const numPrice = typeof price === 'string' ? parseFloat(price) : price;
     return new Intl.NumberFormat('es-ES', {
@@ -53,6 +64,7 @@ export class PurchaseHistoryComponent implements OnInit {
     }).format(numPrice);
   }
 
+  /** Etiqueta en español del estado. */
   getStatusLabel(status: Order['status']): string {
     const statusMap: Record<Order['status'], string> = {
       'PENDING': 'Pendiente',
@@ -64,6 +76,7 @@ export class PurchaseHistoryComponent implements OnInit {
     return statusMap[status] || status;
   }
 
+  /** Color hex del estado. */
   getStatusColor(status: Order['status']): string {
     const colorMap: Record<Order['status'], string> = {
       'PENDING': '#F59E0B',
@@ -75,6 +88,7 @@ export class PurchaseHistoryComponent implements OnInit {
     return colorMap[status] || '#6B7280';
   }
 
+  /** Color de fondo con opacidad para el estado. */
   getStatusBackgroundColor(status: Order['status']): string {
     if (status === 'PAID') {
       return this.getStatusColor(status) + '40'; 

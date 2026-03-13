@@ -8,9 +8,13 @@ import { AuthService } from '@core/services/auth.service';
  * Mensaje intercambiado en el chat asistido por IA.
  */
 export interface ChatMessage {
+  /** ID único del mensaje. */
   id: string;
+  /** Texto del mensaje. */
   content: string;
+  /** True si es del usuario. */
   isUser: boolean;
+  /** Fecha/hora del mensaje. */
   timestamp: Date;
 }
 

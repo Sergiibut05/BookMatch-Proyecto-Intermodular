@@ -5,6 +5,10 @@ import { UsersService, UserProfile, UpdateProfileData } from '@core/services/use
 import { AuthService } from '@core/services/auth.service';
 import { TranslateModule } from '@ngx-translate/core';
 
+/**
+ * Formulario de edición de perfil: nombre completo.
+ * Emite profileUpdated con el perfil actualizado; sincroniza displayName en Firebase Auth.
+ */
 @Component({
   selector: 'app-profile-edit',
   imports: [CommonModule, ReactiveFormsModule, TranslateModule],
@@ -16,17 +20,22 @@ export class ProfileEditComponent implements OnInit, OnChanges {
   private authService = inject(AuthService);
   private fb = inject(FormBuilder);
 
-  // Input: perfil actual
+  /** Perfil actual a mostrar y editar. */
   @Input() profile!: UserProfile;
-  
-  // Output: evento cuando se actualiza el perfil
+
+  /** Se emite cuando el perfil se actualiza correctamente. */
   @Output() profileUpdated = new EventEmitter<UserProfile>();
 
+  /** Guardando cambios. */
   isSaving = signal<boolean>(false);
+  /** Mensaje de error. */
   error = signal<string | null>(null);
+  /** Modo edición activo. */
   isEditing = signal<boolean>(false);
+  /** Formulario del nombre. */
   editForm!: FormGroup;
 
+  /** Inicializa el formulario con el perfil. */
   ngOnInit(): void {
     
     this.editForm = this.fb.group({
@@ -46,12 +55,14 @@ export class ProfileEditComponent implements OnInit, OnChanges {
     }
   }
 
+  /** Rellena el formulario con los datos del perfil. */
   initializeForm(profile: UserProfile): void {
     this.editForm = this.fb.group({
       fullName: [profile.fullName || '', [Validators.minLength(2)]]
     });
   }
 
+  /** Activa el modo edición. */
   startEditing(): void {
     const currentProfile = this.profile;
     if (!currentProfile) return;
@@ -68,6 +79,7 @@ export class ProfileEditComponent implements OnInit, OnChanges {
     this.error.set(null);
   }
 
+  /** Cancela la edición y restaura valores. */
   cancelEditing(): void {
     this.isEditing.set(false);
     this.error.set(null);
@@ -76,6 +88,7 @@ export class ProfileEditComponent implements OnInit, OnChanges {
     }
   }
 
+  /** Guarda el nombre en backend y Firebase Auth y emite profileUpdated. */
   saveName(): void {
     if (!this.editForm) return;
 
@@ -124,6 +137,7 @@ export class ProfileEditComponent implements OnInit, OnChanges {
     });
   }
 
+  /** Mensaje de error del campo fullName. */
   getFieldError(): string | null {
     const field = this.editForm?.get('fullName');
     if (!field || !field.touched || !field.errors) return null;

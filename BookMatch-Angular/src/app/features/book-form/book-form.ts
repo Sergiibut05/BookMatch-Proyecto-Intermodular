@@ -11,6 +11,10 @@ import { StorageService } from '@core/services/storage';
 import { Category, CreateCatalogBookDto } from '@shared/models';
 import { TranslateService } from '@ngx-translate/core';
 
+/**
+ * Formulario de alta/edición de libro en catálogo (solo admin).
+ * Incluye categorías, portada y subida de imágenes a Firebase Storage.
+ */
 @Component({
     selector: 'app-book-form',
     standalone: true,
@@ -29,18 +33,27 @@ export class BookFormComponent implements OnInit {
     private route = inject(ActivatedRoute);
     private translate = inject(TranslateService);
 
+    /** Formulario reactivo del libro. */
     bookForm!: FormGroup;
+    /** Lista de categorías para el select. */
     categories = signal<Category[]>([]);
-    
+
+    /** True si estamos editando un libro existente. */
     isEditMode = signal<boolean>(false);
+    /** ID del libro en edición. */
     bookId = signal<number | null>(null);
-    
+
+    /** Cargando datos. */
     isLoading = signal<boolean>(false);
+    /** Subiendo imagen. */
     isUploading = signal<boolean>(false);
+    /** Mensaje de error. */
     error = signal<string | null>(null);
-    
+
+    /** URL actual de la portada (edición). */
     currentCoverUrl = signal<string | null>(null);
 
+    /** Comprueba admin, inicializa formulario y carga libro si hay id en ruta. */
     ngOnInit(): void {
         if (!this.authService.isAdmin()) {
         alert(this.translate.instant('BOOK_FORM.ERRORS.ACCESS_DENIED'));

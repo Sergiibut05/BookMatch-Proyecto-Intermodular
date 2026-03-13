@@ -4,13 +4,19 @@ import { TranslateModule } from '@ngx-translate/core';
 import { Header } from '@shared/components/header/header';
 import { Footer } from '@shared/components/footer/footer';
 
+/** Pregunta frecuente: id, texto de pregunta/respuesta (claves i18n) y estado de acordeón. */
 interface FAQ {
+  /** ID único. */
   id: number;
+  /** Clave i18n de la pregunta. */
   question: string;
+  /** Clave i18n de la respuesta. */
   answer: string;
+  /** Si el acordeón está abierto. */
   isOpen: boolean;
 }
 
+/** Página de preguntas frecuentes con acordeón; textos vía TranslateModule. */
 @Component({
   selector: 'app-frequent-questions',
   imports: [TranslateModule, Header, Footer],
