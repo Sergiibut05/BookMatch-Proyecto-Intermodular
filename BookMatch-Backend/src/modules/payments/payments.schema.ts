@@ -14,6 +14,8 @@ export const createCheckoutSessionCartSchema = z.object({
       quantity: z.number().int().positive('La cantidad debe ser un entero positivo').default(1),
     })
   ).min(1, 'Debe haber al menos un item en el carrito'),
+  successUrl: z.string().optional(),
+  cancelUrl: z.string().optional(),
 });
 
 export type CreateCheckoutSessionInput = z.infer<typeof createCheckoutSessionSchema>;

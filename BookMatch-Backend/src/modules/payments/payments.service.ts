@@ -117,8 +117,8 @@ export async function createCheckoutSessionCart(
     line_items: lineItems,
     mode: 'payment',
     shipping_address_collection: { allowed_countries: ['ES', 'FR', 'PT', 'IT', 'DE', 'GB', 'US', 'CA', 'MX', 'AR', 'CL', 'CO', 'PE'] },
-    success_url: `${env.FRONTEND_URL}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url: `${env.FRONTEND_URL}/home`,
+    success_url: input.successUrl || `${env.FRONTEND_URL}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
+    cancel_url: input.cancelUrl || `${env.FRONTEND_URL}/home`,
     metadata: { userId: userId.toString(), bookIds: JSON.stringify(bookIds), items: JSON.stringify(input.items), type: 'cart' },
   });
 

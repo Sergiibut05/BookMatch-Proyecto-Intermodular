@@ -66,6 +66,8 @@ export async function createCheckoutSessionCartCtrl(req: Request, res: Response)
 
     const input: CreateCheckoutSessionCartInput = {
       items: req.body.items,
+      successUrl: req.body.successUrl,
+      cancelUrl: req.body.cancelUrl,
     };
 
     const result = await createCheckoutSessionCart(input, req.user.id);
