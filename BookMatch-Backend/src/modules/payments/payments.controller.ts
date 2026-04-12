@@ -30,6 +30,8 @@ export async function createCheckoutSessionCtrl(req: Request, res: Response) {
     const input: CreateCheckoutSessionInput = {
       bookId: req.body.bookId,
       quantity: req.body.quantity ?? 1,
+      successUrl: req.body.successUrl,
+      cancelUrl: req.body.cancelUrl,
     };
 
     const result = await createCheckoutSession(input, req.user.id);

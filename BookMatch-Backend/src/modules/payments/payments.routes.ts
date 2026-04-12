@@ -45,6 +45,12 @@ const router = Router();
  *                 type: integer
  *                 default: 1
  *                 description: Cantidad de libros
+ *               successUrl:
+ *                 type: string
+ *                 description: URL de retorno tras pago (opcional; por defecto FRONTEND_URL + /payment-success?session_id={CHECKOUT_SESSION_ID})
+ *               cancelUrl:
+ *                 type: string
+ *                 description: URL si el usuario cancela (opcional; por defecto FRONTEND_URL + /book-details/{id})
  *     responses:
  *       200:
  *         description: Sesión de checkout creada
@@ -98,6 +104,12 @@ router.post(
  *                     quantity:
  *                       type: integer
  *                       default: 1
+ *               successUrl:
+ *                 type: string
+ *                 description: URL de retorno tras pago (opcional)
+ *               cancelUrl:
+ *                 type: string
+ *                 description: URL si cancela (opcional; por defecto FRONTEND_URL + /home)
  *     responses:
  *       200:
  *         description: Sesión de checkout creada

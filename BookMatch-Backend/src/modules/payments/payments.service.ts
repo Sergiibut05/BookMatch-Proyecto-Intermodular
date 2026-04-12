@@ -52,8 +52,9 @@ export async function createCheckoutSession(
     }],
     mode: 'payment',
     shipping_address_collection: { allowed_countries: ['ES', 'FR', 'PT', 'IT', 'DE', 'GB', 'US', 'CA', 'MX', 'AR', 'CL', 'CO', 'PE'] },
-    success_url: `${env.FRONTEND_URL}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url: `${env.FRONTEND_URL}/book-details/${book.id}`,
+    success_url:
+      input.successUrl || `${env.FRONTEND_URL}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
+    cancel_url: input.cancelUrl || `${env.FRONTEND_URL}/book-details/${book.id}`,
     metadata: {
       userId: userId.toString(),
       bookId: book.id.toString(),

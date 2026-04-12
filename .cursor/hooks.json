@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "hooks": {
+    "beforeShellExecution": [
+      {
+        "command": "node .cursor/hooks/guard-env-in-git.mjs",
+        "matcher": "git\\s+add"
+      }
+    ]
+  }
+}

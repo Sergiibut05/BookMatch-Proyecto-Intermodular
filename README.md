@@ -1,11 +1,17 @@
 # 📚 BookMatch – Proyecto Intermodular
 
 ![Estado del Proyecto](https://img.shields.io/badge/Estado-En%20Desarrollo-yellow)
-![Angular](https://img.shields.io/badge/Angular-20.3-red)
+![Angular](https://img.shields.io/badge/Angular-21-red)
 ![Firebase](https://img.shields.io/badge/Firebase-11-orange)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue)
 ![Stripe](https://img.shields.io/badge/Stripe-Integrado-purple)
 ![Capacitor](https://img.shields.io/badge/Capacitor-7.4-blue)
+
+---
+
+## 🤖 IA y agentes (Cursor)
+
+Índice de **reglas**, **skills** y **hooks** del monorepo: **[AGENTS.md](./AGENTS.md)**.
 
 ---
 

@@ -4,6 +4,8 @@ import { z } from 'zod';
 export const createCheckoutSessionSchema = z.object({
   bookId: z.number().int().positive('El ID del libro debe ser un entero positivo'),
   quantity: z.number().int().positive('La cantidad debe ser un entero positivo').default(1),
+  successUrl: z.string().optional(),
+  cancelUrl: z.string().optional(),
 });
 
 // Schema para crear sesión de checkout con carrito (preparado para futuro)
