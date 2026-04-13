@@ -1,6 +1,6 @@
 # Guía para agentes e IA (BookMatch)
 
-Este monorepo usa **Cursor**: reglas (`.cursor/rules/*.mdc`), skills (`.cursor/skills/*/SKILL.md`) y hooks (`.cursor/hooks.json`). Léelo al empezar una tarea grande o al incorporarte al proyecto.
+Este monorepo usa **Cursor** y **Antigravity**: reglas/workflows (`.cursor/rules/*.mdc` / `.agents/workflows/*.md`), skills (`.cursor/skills/*/SKILL.md` / `.agents/skills/*/SKILL.md`) y hooks (`.cursor/hooks.json`). Léelo al empezar una tarea grande o al incorporarte al proyecto.
 
 ## Estructura del repositorio
 
@@ -36,11 +36,11 @@ Este monorepo usa **Cursor**: reglas (`.cursor/rules/*.mdc`), skills (`.cursor/s
 
 ## Hooks del proyecto
 
-- **`beforeShellExecution`**: bloquea `git add` si la orden incluye ficheros **`.env`** (evita subir secretos). Ver `.cursor/hooks/guard-env-in-git.mjs`.
+- **`beforeShellExecution`**: bloquea `git add` si la orden incluye ficheros **`.env`** (evita subir secretos). Ver `.cursor/hooks/guard-env-in-git.mjs`. (Nota: en Antigravity u otros editores se recomienda usar un pre-commit hook estándar de git para esto).
 
-## Modos personalizados en Cursor (opcional)
+## Modos y Workflows (Cursor / Antigravity)
 
-En ajustes de Cursor podéis crear modos de chat con instrucciones de sistema; en cada skill de `bookmatch-angular` y `bookmatch-backend` hay un párrafo sugerido para copiar.
+En ajustes de Cursor podéis crear modos de chat con instrucciones de sistema basados en las skills; en Antigravity, disponéis de la carpeta `.agents/workflows/` (ej: llamando con comando `/bookmatch-angular`).
 
 ## Documentación humana
 
@@ -50,9 +50,9 @@ En ajustes de Cursor podéis crear modos de chat con instrucciones de sistema; e
 
 ## Convención rápida
 
-1. Toca código → las reglas con **glob** suelen cargarse solas.  
-2. **Git** (empezar tarea, merge, rama) → **@bookmatch-git-branches** o skill **bookmatch-git-branches**.  
-3. Jira / Confluence → **@** la regla correspondiente.  
+1. Toca código → las reglas con **glob** suelen cargarse solas en Cursor. En Antigravity, puedes invocar su workflow `/slash`.
+2. **Git** (empezar tarea, merge, rama) → **@bookmatch-git-branches** o skill **bookmatch-git-branches** (o workflow `/bookmatch-git-branches`).
+3. Jira / Confluence → **@** la regla correspondiente o bien el workflow **slash command**.
 4. Tarea mixta → skill **bookmatch-fullstack** o **@** varias reglas.
 
 ---
