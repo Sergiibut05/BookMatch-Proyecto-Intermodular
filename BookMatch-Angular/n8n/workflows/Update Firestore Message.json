@@ -1,0 +1,630 @@
+{
+  "name": "Update Firestore Message",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "prueba",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [-256, 128],
+      "id": "b3c2eb5b-e580-43dd-a57b-2095997779a0",
+      "name": "Webhook",
+      "webhookId": "56a4585e-31a0-4e1f-ac4c-9811700a97eb",
+      "retryOnFail": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"success\": true,\n  \"message\": \"Procesando tu mensaje...\"\n}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [0, 0],
+      "id": "39ef7327-4cf7-4d29-a6b4-aa43cfaa847a",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// ============================================================\n// Detectar Intención\n// ------------------------------------------------------------\n// Valida payload, sanea firebase_uid, calcula intent y guarda\n// `startTime` para medir el tiempo total end-to-end.\n// ============================================================\n\nconst payload = $json.body;\nif (!payload) {\n  throw new Error('Request body is missing');\n}\n\nconst { userId, conversationId, messageId, userMessage, baseUrl } = payload;\n\nif (!userId || typeof userId !== 'string') {\n  throw new Error('userId is missing or not a string');\n}\nif (!conversationId || typeof conversationId !== 'string') {\n  throw new Error('conversationId is missing or not a string');\n}\nif (!messageId || typeof messageId !== 'string') {\n  throw new Error('messageId is missing or not a string');\n}\nif (!userMessage || typeof userMessage !== 'string') {\n  throw new Error('userMessage is missing or not a string');\n}\n\n// Firebase UIDs son alfanuméricos (~28 chars). Rechazamos cualquier cosa\n// fuera de patrón para evitar SQL injection al interpolarlos en el prompt.\nif (!/^[A-Za-z0-9]{20,64}$/.test(userId)) {\n  throw new Error(`userId does not match expected firebase_uid pattern: ${userId}`);\n}\n\n// Normaliza texto (minúsculas + sin diacríticos) para matching robusto.\nconst normalized = userMessage\n  .toLowerCase()\n  .normalize('NFD')\n  .replace(/\\p{Diacritic}/gu, '');\n\nconst bookKeywords = [\n  // ES\n  'libro', 'libros', 'recomienda', 'recomendacion', 'recomendaciones',\n  'recomendar', 'leer', 'lectura', 'lecturas', 'autor', 'autora',\n  'novela', 'novelas', 'cuento', 'cuentos', 'ficcion', 'no ficcion',\n  'fantasia', 'romance', 'misterio', 'thriller', 'suspense', 'terror',\n  'ciencia ficcion', 'manga', 'comic', 'clasico', 'clasicos',\n  'biografia', 'ensayo', 'poesia', 'saga', 'bestseller', 'bestsellers',\n  'genero', 'generos', 'sugiere', 'sugerencia', 'biblioteca', 'libreria',\n  // EN\n  'book', 'books', 'recommend', 'recommendation', 'recommendations',\n  'suggest', 'reading', 'read', 'author', 'novel', 'fantasy', 'mystery',\n  'sci-fi', 'sci fi', 'science fiction', 'romance novel', 'biography'\n];\n\nconst casualKeywords = [\n  // ES\n  'hola', 'hey', 'buenos dias', 'buenas tardes', 'buenas noches',\n  'que tal', 'como estas', 'como va', 'gracias', 'adios', 'hasta luego',\n  'saludos', 'genial', 'perfecto',\n  // EN\n  'hi', 'hello', 'good morning', 'good afternoon', 'good evening',\n  'how are you', 'thanks', 'thank you', 'bye', 'goodbye'\n];\n\nconst bookMatches = bookKeywords.filter((k) => normalized.includes(k)).length;\nconst casualMatches = casualKeywords.filter((k) => normalized.includes(k)).length;\n\nlet intentType = 'out_of_scope';\nlet intentConfidence = 0;\n\nif (bookMatches > 0 && bookMatches >= casualMatches) {\n  intentType = 'book_recommendation';\n  intentConfidence = Math.min(1, bookMatches / 4);\n} else if (casualMatches > 0) {\n  intentType = 'casual_chat';\n  intentConfidence = 0.8;\n} else if (normalized.length <= 12 && /[?¿!¡]/.test(userMessage)) {\n  // Mensajes muy cortos con signo de pregunta/exclamación → probablemente casual.\n  intentType = 'casual_chat';\n  intentConfidence = 0.5;\n}\n\nreturn {\n  userId,\n  conversationId,\n  messageId,\n  userMessage,\n  baseUrl: baseUrl || 'http://localhost:4200',\n  intentType,\n  intentConfidence: Number(intentConfidence.toFixed(2)),\n  startTime: Date.now()\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [224, 128],
+      "id": "a7158b62-abe1-4a90-a4ce-0896bc1cca82",
+      "name": "Detectar Intención"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.intentType }}",
+                    "rightValue": "book_recommendation",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "f21ff217-d911-487e-ac69-3ab7793e511f"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Book Recommendation"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "e935d1eb-56b5-4ee4-9ff9-36cab7c1c59d",
+                    "leftValue": "={{ $json.intentType }}",
+                    "rightValue": "casual_chat",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Casual Chat"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra",
+          "ignoreCase": false,
+          "allMatchingOutputs": false
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [448, 208],
+      "id": "36078a90-d484-4c2e-8b59-8f7f631ae3c9",
+      "name": "Switch Intención"
+    },
+    {
+      "parameters": {
+        "url": "=https://firestore.googleapis.com/v1/projects/bookmatch-522d5/databases/(default)/documents/users/{{ $json.userId }}/conversations/{{ $json.conversationId }}/messages",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "pageSize",
+              "value": "10"
+            },
+            {
+              "name": "orderBy",
+              "value": "timestamp desc"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [640, 48],
+      "id": "1f4a3508-aeea-41d3-9789-5cc0d7f05368",
+      "name": "Cargar Contexto",
+      "credentials": {
+        "googleApi": {
+          "id": "6A1fVpwq2hUGNQh4",
+          "name": "Google Service Account account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// ============================================================\n// Normalizar Contexto\n// ------------------------------------------------------------\n// Convierte la respuesta de Firestore en un array plano\n// {role, content} y lo fusiona con los datos de Detectar Intención.\n// ============================================================\n\nconst firestoreData = $input.item.json;\nconst intent = $('Detectar Intención').item.json;\n\nif (!intent?.userId) {\n  throw new Error(`Missing intent data. Keys: ${Object.keys(intent || {}).join(', ')}`);\n}\n\nconst rawDocs = firestoreData.documents || [];\nconst conversationContext = rawDocs\n  .reverse()\n  .map((doc) => ({\n    role: doc?.fields?.role?.stringValue ?? null,\n    content: doc?.fields?.content?.stringValue ?? ''\n  }))\n  .filter((msg) => msg.role === 'user' || msg.role === 'assistant');\n\nreturn {\n  ...intent,\n  conversationContext\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [848, 48],
+      "id": "cffa1008-cd64-432a-af81-26798e97a2b1",
+      "name": "Normalizar Contexto"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// ============================================================\n// Construir Prompt SQL\n// ------------------------------------------------------------\n// Genera el prompt del LLM que producirá el SELECT para buscar\n// libros candidatos. No interpolamos el userId en texto libre:\n// usamos un placeholder marcador que después validamos.\n// ============================================================\n\nconst data = $input.item.json;\n\nconst prompt = `INSTRUCCIÓN CRÍTICA: Responde ÚNICAMENTE con JSON puro. Sin markdown.\nEres un generador de consultas SQL para PostgreSQL.\n\nFORMATO DE RESPUESTA OBLIGATORIO:\n{\n  \"thoughts\": [\"paso 1\", \"paso 2\", \"paso 3\"],\n  \"sqlQuery\": \"SELECT ... FROM ... WHERE ...\"\n}\n\nREGLAS SQL OBLIGATORIAS:\n1. SOLO queries SELECT (nunca INSERT, UPDATE, DELETE, DDL ni multiples sentencias).\n2. Usa JOINs explícitos.\n3. GESTIÓN DE ID DE USUARIO:\n   - Input: 'firebase_uid' (TEXTO). Tablas: 'user_id' (INTEGER).\n   - OBLIGATORIO: Haz JOIN con tabla 'users' (users.firebase_uid = '${data.userId}') y usa 'users.id' para los filtros.\n4. SIEMPRE excluir libros ya interactuados por el usuario.\n5. SELECT OBLIGATORIO: Debes incluir siempre 'id', 'title', 'author', 'description' Y 'cover_url'.\n6. Limita resultados a máximo 10 libros (LIMIT 10). El guardrail lo añadirá si falta, pero es mejor que ya venga.\n7. EXCLUSIÓN DE PEDIDOS (CRÍTICO):\n   - La tabla 'order_items' NO TIENE 'user_id'.\n   - Ruta: order_items -> orders -> users.\n   - EJEMPLO: ... WHERE id NOT IN (SELECT catalog_book_id FROM order_items JOIN orders ON order_items.order_id = orders.id JOIN users ON orders.user_id = users.id WHERE users.firebase_uid = '${data.userId}')\n\nCATEGORÍAS PERMITIDAS (categories.name):\n- Fantasía, Fantasía épica, Fantasía urbana, Mitología y folklore, Fantasía oscura\n- Ciencia Ficción, Distopía, Espacio y exploración, Ciberpunk, Inteligencia artificial / robots\n- Romance, Romance contemporáneo, Romance histórico, Romance juvenil, Romance fantástico\n- Misterio / Thriller, Policíaco, Thriller psicológico, Suspense y terror suave, True crime / Investigación real\n- No Ficción, Biografías y memorias, Historia y sociedad, Ciencia y divulgación, Política y actualidad\n- Autoayuda / Crecimiento personal, Motivación y bienestar, Psicología práctica, Espiritualidad y mindfulness, Finanzas personales / Éxito\n- Juvenil, Aventura juvenil, Coming of age, Fantasía juvenil\n- Clásicos, Literatura universal, Literatura española, Literatura europea, Literatura americana\n- Cómic / Manga, Superhéroes, Manga shōnen, Seinen / Josei, Cómic europeo\n- Novedades\n\nESQUEMA DE BASE DE DATOS:\nusers (id, firebase_uid)\ncatalog_books (id, title, author, description, cover_url)\ncategories (id, name)\ncatalog_book_categories (catalog_book_id, category_id)\nreviews (user_id, catalog_book_id)\norders (id, user_id)\norder_items (catalog_book_id, order_id)\n\nMENSAJE DEL USUARIO:\n\"${data.userMessage}\"\n\n⚡ Responde SOLO con el JSON.`;\n\nconst safePrompt = JSON.stringify(prompt).slice(1, -1);\n\nreturn {\n  ...data,\n  promptContent: safePrompt\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1056, 48],
+      "id": "928462de-a655-42da-b307-109a270a37e8",
+      "name": "Construir Prompt SQL"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ \n{\n  \"model\": \"llama-3.3-70b-versatile\",\n  \"temperature\": 0.1,\n  \"max_tokens\": 800,\n  \"response_format\": { \"type\": \"json_object\" },\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"You are an SQL generator. Respond ONLY with JSON: {\\\"thoughts\\\": [], \\\"sqlQuery\\\": \\\"\\\"}\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": $json.promptContent\n    }\n  ]\n}\n}}",
+        "options": {}
+      },
+      "id": "145247ae-061b-4ebf-add7-7133bf4157b2",
+      "name": "Groq: Generar SQL",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [1248, 48],
+      "retryOnFail": true,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "pgFnL6hTT3nNvglm",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// ============================================================\n// Parsear SQL (Groq)\n// ------------------------------------------------------------\n// Extrae {sqlQuery, thoughts} de la respuesta JSON del LLM y\n// propaga el contexto completo (incluyendo startTime).\n// ============================================================\n\nconst promptCtx = $('Construir Prompt SQL').item.json;\nconst groqResponse = $input.item.json;\n\nconst contentString = groqResponse?.choices?.[0]?.message?.content;\nif (!contentString) {\n  throw new Error('Groq response did not contain choices[0].message.content');\n}\n\nlet parsedContent;\ntry {\n  parsedContent = JSON.parse(contentString);\n} catch (error) {\n  throw new Error(`Error parsing Groq response JSON: ${error.message}. Content: ${contentString}`);\n}\n\nconst sqlQuery = (parsedContent.sqlQuery || '').trim();\nconst thoughts = Array.isArray(parsedContent.thoughts) ? parsedContent.thoughts : [];\n\nif (!sqlQuery) {\n  throw new Error(`No SQL query found. Parsed: ${JSON.stringify(parsedContent)}`);\n}\n\nreturn {\n  ...promptCtx,\n  sqlQuery,\n  thoughts\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1472, 48],
+      "id": "e7d4ce04-b56f-482c-9175-8b75463162b1",
+      "name": "Parsear SQL (Groq)"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// ============================================================\n// Validar SQL (guardrails)\n// ------------------------------------------------------------\n// Guardrails de seguridad y corrección sobre el SQL generado\n// por el LLM antes de ejecutarlo contra Postgres:\n//   - Debe empezar por SELECT.\n//   - Prohíbe DDL/DML, multisentencia y comentarios peligrosos.\n//   - Fuerza LIMIT máximo 10.\n//\n// Nota: `executeQuery` de n8n devuelve las filas del último\n// statement, por lo que mantenemos UNA única sentencia SELECT.\n// El statement_timeout debe configurarse a nivel de credencial\n// de Postgres (DB role con timeout por defecto).\n// ============================================================\n\nconst data = $input.item.json;\nlet query = (data.sqlQuery || '').trim();\n\nif (!query) {\n  throw new Error('sqlQuery vacío tras parseo');\n}\n\n// 1. Normalizar: quitar punto y coma final + comentarios de línea.\nquery = query.replace(/;\\s*$/g, '').replace(/--.*$/gm, '').trim();\n\n// 2. Solo debe haber una sentencia.\nif (query.includes(';')) {\n  throw new Error(`SQL rechazado: múltiples sentencias detectadas.`);\n}\n\n// 3. Debe empezar por SELECT.\nif (!/^\\s*select\\b/i.test(query)) {\n  throw new Error(`SQL rechazado: no empieza por SELECT. Query: ${query.slice(0, 120)}`);\n}\n\n// 4. Lista de bloqueo de keywords destructivas.\nconst forbidden = [\n  'insert', 'update', 'delete', 'drop', 'alter', 'truncate',\n  'create', 'grant', 'revoke', 'merge', 'replace', 'copy',\n  'call', 'execute', 'vacuum', 'analyze', 'pg_read_file',\n  'pg_write_file', 'pg_sleep'\n];\nconst lowered = query.toLowerCase();\nfor (const bad of forbidden) {\n  // \\b garantiza palabra completa (evita falsos positivos tipo \"updated_at\").\n  const re = new RegExp(`\\\\b${bad}\\\\b`);\n  if (re.test(lowered)) {\n    throw new Error(`SQL rechazado: contiene keyword prohibido \"${bad}\".`);\n  }\n}\n\n// 5. Forzar LIMIT máximo 10.\nif (!/\\blimit\\s+\\d+/i.test(query)) {\n  query = `${query}\\nLIMIT 10`;\n} else {\n  query = query.replace(/\\blimit\\s+(\\d+)/i, (_, n) => `LIMIT ${Math.min(Number(n) || 10, 10)}`);\n}\n\nreturn {\n  ...data,\n  sqlQuery: query,\n  sqlQueryRaw: query\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1600, 48],
+      "id": "f1c9b3e2-1a2b-4c3d-9e4f-a1b2c3d4e5f6",
+      "name": "Validar SQL (guardrails)"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "={{ $json.sqlQuery }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [1792, 48],
+      "id": "481d1e4d-8b77-4d1f-8264-5a635ef13871",
+      "name": "Ejecutar SQL (Postgres)",
+      "retryOnFail": false,
+      "credentials": {
+        "postgres": {
+          "id": "zeU51y9XScYtwY9X",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// ============================================================\n// Normalizar Libros\n// ------------------------------------------------------------\n// Recoge los items devueltos por Postgres, los mapea al shape\n// que consume el prompt de respuesta y conserva IDs numéricos\n// únicos (se usan luego para validar las recommendations del LLM).\n// ============================================================\n\nconst sqlResults = $input.all();\nconst previousData = $('Validar SQL (guardrails)').first().json;\n\nconst books = [];\nconst seen = new Set();\n\nfor (const row of sqlResults) {\n  const id = Number(row.json.id);\n  if (!Number.isFinite(id) || id <= 0 || seen.has(id)) continue;\n  seen.add(id);\n  books.push({\n    id,\n    title: row.json.title,\n    author: row.json.author,\n    description: row.json.description,\n    coverUrl: row.json.cover_url || row.json.cover_image || null\n  });\n}\n\nreturn [{\n  json: {\n    userId: previousData.userId,\n    conversationId: previousData.conversationId,\n    messageId: previousData.messageId,\n    userMessage: previousData.userMessage,\n    baseUrl: previousData.baseUrl,\n    intentType: previousData.intentType,\n    intentConfidence: previousData.intentConfidence,\n    conversationContext: previousData.conversationContext || [],\n    sqlQuery: previousData.sqlQueryRaw,\n    sqlThoughts: previousData.thoughts,\n    listaLibros: books,\n    candidateIds: Array.from(seen),\n    startTime: previousData.startTime\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1984, 48],
+      "id": "28f55751-c23e-4aef-8c35-5cd9ae949850",
+      "name": "Normalizar Libros"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// ============================================================\n// Construir Prompt Respuesta\n// ------------------------------------------------------------\n// Compone el prompt que genera la respuesta Markdown al usuario\n// y pide al LLM que marque explícitamente los `bookIds`\n// (los validaremos contra `candidateIds` en el post-proceso).\n// ============================================================\n\nconst data = $input.item.json;\n\nconst systemPrompt = `Eres un asistente experto en recomendacion de libros.\n\nRESPONDE EN FORMATO JSON con esta estructura exacta:\n{\n  \"thoughts\": [\"analisis del mensaje\", \"criterios de seleccion\", \"razonamiento\"],\n  \"response\": \"Tu respuesta en Markdown estricto\",\n  \"bookIds\": [1, 5, 12]\n}\n\nREGLAS CLAVE:\n- El array \"bookIds\" debe contener SOLO enteros tomados de los IDs de la lista \"LIBROS DISPONIBLES\".\n- Maximo 5 recomendaciones.\n- No inventes libros ni IDs. Si no hay libros suficientes, devuelve menos.\n\nFORMATO VISUAL (campo response):\n- Usa UNICAMENTE Markdown.\n- Si el libro tiene 'coverUrl', incluye la imagen (todas con el mismo tamaño, no muy grande).\n\nTEMPLATE POR LIBRO:\n\n![Portada]({coverUrl})\n### 📖 **{Titulo}**\n*De {Autor}*\n\n{Descripción breve y atractiva de 2-3 lineas}\n\n👉 **[Ver ficha](${data.baseUrl}/book-details/{ID})**\n\n---\n\nLENGUAJE:\n- Responde en español, tono amigable y conciso.\n\nESTRUCTURA:\n1. Saludo breve y empatico.\n2. Frase puente (\"He encontrado estas lecturas para ti:\" o similar).\n3. Lista de libros con el template.\n4. Pregunta de cierre.`;\n\nconst userPrompt = `CONTEXTO DE LA CONVERSACION:\n${JSON.stringify(data.conversationContext || [])}\n\nMENSAJE DEL USUARIO:\n${data.userMessage}\n\nLIBROS DISPONIBLES (no inventes otros):\n${JSON.stringify(data.listaLibros)}\n\nANALISIS PREVIO:\n${JSON.stringify(data.sqlThoughts || [])}\n\nGENERA TU RESPUESTA JSON AHORA:`;\n\nreturn {\n  ...data,\n  responsePrompt: JSON.stringify({\n    model: 'llama-3.3-70b-versatile',\n    temperature: 0.7,\n    max_tokens: 2000,\n    response_format: { type: 'json_object' },\n    messages: [\n      { role: 'system', content: systemPrompt },\n      { role: 'user', content: userPrompt }\n    ]\n  })\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2192, 48],
+      "id": "03ac0db7-9187-4ac2-b609-68d2ac544dbf",
+      "name": "Construir Prompt Respuesta"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.parse($json.responsePrompt) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [2400, 48],
+      "id": "61fd8cfc-97c3-4aa1-8254-d8bcaaf3bb55",
+      "name": "Groq: Respuesta con Libros",
+      "retryOnFail": true,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "pgFnL6hTT3nNvglm",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// ============================================================\n// Procesar Respuesta IA\n// ------------------------------------------------------------\n// - Parsea el JSON del LLM (thoughts, response, bookIds).\n// - Normaliza recommendations a enteros positivos únicos.\n// - Filtra contra `candidateIds` (los IDs REALES devueltos por\n//   el SQL) para descartar alucinaciones.\n// - Fallback: si no queda ninguno, toma los 5 primeros del SQL.\n// - Mide processingTime end-to-end (desde el webhook).\n// ============================================================\n\nconst previous = $('Construir Prompt Respuesta').item.json;\nconst groqResponse = $input.item.json;\nconst raw = groqResponse?.choices?.[0]?.message?.content?.trim() ?? '';\n\nlet parsed;\ntry {\n  parsed = JSON.parse(raw);\n} catch (error) {\n  console.error('Error parsing response JSON:', error);\n  parsed = { thoughts: ['Error al generar thoughts estructurados'], response: raw, bookIds: [] };\n}\n\nconst candidateIds = new Set((previous.candidateIds || []).map((id) => Number(id)));\n\n// Normaliza bookIds del LLM a enteros positivos únicos y los intersecta con candidateIds.\nconst seen = new Set();\nconst validated = [];\nfor (const value of parsed.bookIds || []) {\n  const id = typeof value === 'number' ? value : Number(value);\n  if (!Number.isFinite(id) || id <= 0) continue;\n  if (!candidateIds.has(id)) continue;\n  if (seen.has(id)) continue;\n  seen.add(id);\n  validated.push(id);\n}\n\n// Fallback: si el LLM no devolvió nada usable, tomamos los primeros 5 del SQL.\nlet recommendations = validated;\nif (recommendations.length === 0 && previous.listaLibros?.length) {\n  recommendations = previous.listaLibros.slice(0, 5).map((b) => Number(b.id));\n}\n\nconst allThoughts = [\n  ...(previous.sqlThoughts || []).map((t) => `[SQL] ${t}`),\n  ...(parsed.thoughts || []).map((t) => `[Response] ${t}`)\n];\n\nconst startedAt = previous.startTime || Date.now();\n\nreturn {\n  userId: previous.userId,\n  conversationId: previous.conversationId,\n  messageId: previous.messageId,\n  content: parsed.response || raw,\n  metadata: {\n    thoughts: allThoughts,\n    recommendations,\n    used_querys: [previous.sqlQuery],\n    intentType: 'book_recommendation',\n    intentConfidence: previous.intentConfidence ?? null,\n    processingTime: Date.now() - startedAt\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2608, 48],
+      "id": "5ad09a94-714c-4b08-b194-50e135f15e72",
+      "name": "Procesar Respuesta IA"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// ============================================================\n// Construir Prompt Casual\n// ------------------------------------------------------------\n// Prompt más ligero para chat casual (saludos, agradecimientos).\n// ============================================================\n\nconst data = $input.item.json;\n\nconst casualPrompt = `Eres un asistente amigable de una libreria.\n\nRESPONDE EN FORMATO JSON:\n{\n  \"thoughts\": [\"paso 1\", \"paso 2\"],\n  \"response\": \"Tu respuesta en Markdown\"\n}\n\nMENSAJE DEL USUARIO:\n${data.userMessage}\n\nResponde de forma breve y amigable. Menciona que tambien puedes ayudar con recomendaciones de libros.`;\n\nreturn {\n  ...data,\n  casualPrompt: JSON.stringify({\n    model: 'llama-3.3-70b-versatile',\n    temperature: 0.7,\n    max_tokens: 300,\n    response_format: { type: 'json_object' },\n    messages: [\n      { role: 'system', content: 'You are a friendly assistant. Respond ONLY with JSON.' },\n      { role: 'user', content: casualPrompt }\n    ]\n  })\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [848, 288],
+      "id": "b5902619-ec1b-4b58-8626-0e10e4958de4",
+      "name": "Construir Prompt Casual"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.parse($json.casualPrompt) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [1056, 288],
+      "id": "e4b6759a-4935-41e4-85d8-33d70726e616",
+      "name": "Groq: Respuesta Casual",
+      "retryOnFail": true,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "pgFnL6hTT3nNvglm",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// ============================================================\n// Procesar Casual Chat\n// ------------------------------------------------------------\n// Extrae thoughts y response del JSON del LLM y mide el\n// processingTime end-to-end.\n// ============================================================\n\nconst previous = $('Construir Prompt Casual').item.json;\nconst groqResponse = $input.item.json;\nconst raw = groqResponse?.choices?.[0]?.message?.content?.trim() ?? '';\n\nlet parsed;\ntry {\n  parsed = JSON.parse(raw);\n} catch (error) {\n  parsed = { thoughts: ['Respuesta casual generada'], response: raw };\n}\n\nconst startedAt = previous.startTime || Date.now();\n\nreturn {\n  userId: previous.userId,\n  conversationId: previous.conversationId,\n  messageId: previous.messageId,\n  content: parsed.response || raw,\n  metadata: {\n    thoughts: parsed.thoughts || [],\n    recommendations: [],\n    used_querys: [],\n    intentType: 'casual_chat',\n    intentConfidence: previous.intentConfidence ?? null,\n    processingTime: Date.now() - startedAt\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1264, 288],
+      "id": "e3bc2a55-5e19-4a97-bdb7-6fa0d0e6077f",
+      "name": "Procesar Casual Chat"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// ============================================================\n// Respuesta Out of Scope\n// ------------------------------------------------------------\n// Devuelve una respuesta estática pero preserva metadata\n// coherente (incluido processingTime e intentConfidence).\n// ============================================================\n\nconst data = $input.item.json;\nconst startedAt = data.startTime || Date.now();\n\nreturn {\n  userId: data.userId,\n  conversationId: data.conversationId,\n  messageId: data.messageId,\n  content: 'Lo siento, solo puedo ayudarte con recomendaciones de libros y preguntas relacionadas con nuestra biblioteca. ¿Puedo ayudarte a encontrar algún libro?',\n  metadata: {\n    thoughts: ['Mensaje fuera del alcance del asistente'],\n    recommendations: [],\n    used_querys: [],\n    intentType: 'out_of_scope',\n    intentConfidence: data.intentConfidence ?? null,\n    processingTime: Date.now() - startedAt\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [848, 528],
+      "id": "ce49673d-c7c1-4e23-b1b0-4e1dd4618e14",
+      "name": "Respuesta Out of Scope"
+    },
+    {
+      "parameters": {
+        "numberInputs": 3
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [2896, 352],
+      "id": "f09bc98a-c755-4e09-81c5-ac6124b9d0b2",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://firestore.googleapis.com/v1/projects/bookmatch-522d5/databases/(default)/documents/users/{{ $json.userId }}/conversations/{{ $json.conversationId }}/messages/{{ $json.messageId }}?updateMask.fieldPaths=content&updateMask.fieldPaths=status&updateMask.fieldPaths=metadata",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ (() => {\n\n// Helper: arrayValue para strings.\nconst toFirestoreStringArray = (arr) => ({\n  values: (arr || []).map((v) => ({ stringValue: String(v) }))\n});\n\n// Helper: arrayValue para enteros (Firestore REST acepta integerValue como string).\nconst toFirestoreIntArray = (arr) => ({\n  values: (arr || [])\n    .map((v) => (typeof v === 'number' ? v : Number(v)))\n    .filter((n) => Number.isFinite(n))\n    .map((n) => ({ integerValue: String(Math.trunc(n)) }))\n});\n\nconst recommendations = $json.metadata?.recommendations || [];\nconst processingTime = Number($json.metadata?.processingTime) || 0;\nconst intentConfidence = Number($json.metadata?.intentConfidence);\n\nconst metadataFields = {\n  thoughts: { arrayValue: toFirestoreStringArray($json.metadata?.thoughts) },\n  recommendations: { arrayValue: toFirestoreIntArray(recommendations) },\n  recommendationsCount: { integerValue: String(recommendations.length) },\n  used_querys: { arrayValue: toFirestoreStringArray($json.metadata?.used_querys) },\n  intentType: { stringValue: $json.metadata?.intentType || 'unknown' },\n  processingTime: { integerValue: String(Math.trunc(processingTime)) }\n};\n\nif (Number.isFinite(intentConfidence)) {\n  metadataFields.intentConfidence = { doubleValue: intentConfidence };\n}\n\nreturn {\n  fields: {\n    content: { stringValue: $json.content || '' },\n    status: { stringValue: 'completed' },\n    metadata: { mapValue: { fields: metadataFields } }\n  }\n};\n\n})() }}",
+        "options": {}
+      },
+      "id": "bb61ac8d-d2b2-4953-a9c5-4bad123f024f",
+      "name": "Update Firestore (Final)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [3104, 352],
+      "retryOnFail": true,
+      "credentials": {
+        "googleApi": {
+          "id": "6A1fVpwq2hUGNQh4",
+          "name": "Google Service Account account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [-256, 464],
+      "id": "d14a86b6-f576-4273-b77e-bac77da16747",
+      "name": "Error Trigger"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// ============================================================\n// Preparar Error\n// ------------------------------------------------------------\n// Extrae userId/conversationId/messageId del nodo de origen\n// (Webhook o Detectar Intención) para poder escribir el error\n// en el mensaje correcto de Firestore.\n// ============================================================\n\nconst errorData = $input.item.json;\nconst errorMessage = errorData?.error?.message || errorData?.message || 'Error desconocido';\n\nlet userId = null;\nlet conversationId = null;\nlet messageId = null;\n\ntry {\n  const webhookData = $('Webhook').item.json;\n  if (webhookData?.body) {\n    userId = webhookData.body.userId;\n    conversationId = webhookData.body.conversationId;\n    messageId = webhookData.body.messageId;\n  }\n} catch (_) {}\n\ntry {\n  const detectData = $('Detectar Intención').item.json;\n  if (detectData) {\n    userId = userId || detectData.userId;\n    conversationId = conversationId || detectData.conversationId;\n    messageId = messageId || detectData.messageId;\n  }\n} catch (_) {}\n\nif (!userId || !conversationId || !messageId) {\n  console.log('[n8n] Error handler: faltan identificadores para escribir en Firestore', {\n    userId, conversationId, messageId, errorMessage\n  });\n}\n\nreturn {\n  userId: userId || '',\n  conversationId: conversationId || '',\n  messageId: messageId || '',\n  errorContent: `Lo siento, ocurrió un error: ${errorMessage}. Por favor, intenta de nuevo.`\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-16, 464],
+      "id": "023d0fed-0856-435c-b7a4-2123d702a632",
+      "name": "Preparar Error"
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://firestore.googleapis.com/v1/projects/bookmatch-522d5/databases/(default)/documents/users/{{ $json.userId }}/conversations/{{ $json.conversationId }}/messages/{{ $json.messageId }}?updateMask.fieldPaths=content&updateMask.fieldPaths=status&updateMask.fieldPaths=metadata",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"fields\": {\n    \"content\": {\n      \"stringValue\": \"{{ $json.errorContent }}\"\n    },\n    \"status\": {\n      \"stringValue\": \"error\"\n    },\n    \"metadata\": {\n      \"mapValue\": {\n        \"fields\": {\n          \"thoughts\": {\n            \"arrayValue\": {\n              \"values\": [\n                { \"stringValue\": \"Error durante el procesamiento\" }\n              ]\n            }\n          },\n          \"recommendations\": {\n            \"arrayValue\": {\n              \"values\": []\n            }\n          },\n          \"recommendationsCount\": {\n            \"integerValue\": \"0\"\n          },\n          \"used_querys\": {\n            \"arrayValue\": {\n              \"values\": []\n            }\n          },\n          \"intentType\": {\n            \"stringValue\": \"error\"\n          }\n        }\n      }\n    }\n  }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [224, 464],
+      "id": "6704b1b8-f5e2-4734-93f1-b36da18dbe0e",
+      "name": "Update Firestore (Error)",
+      "credentials": {
+        "googleApi": {
+          "id": "6A1fVpwq2hUGNQh4",
+          "name": "Google Service Account account"
+        }
+      }
+    }
+  ],
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "accept": "application/json, text/plain, */*",
+            "content-type": "application/json",
+            "user-agent": "axios/1.13.2",
+            "content-length": "232",
+            "accept-encoding": "gzip, compress, deflate, br",
+            "x-vercel-id": "cdg1::78csr-1776277220125-bc30b213f976",
+            "x-invocation-id": "cdg1::78csr-1776277220125-bc30b213f976",
+            "host": "13.48.29.235:5678",
+            "connection": "keep-alive"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "userId": "c71iY1ab0FOTH1kYzd0QHG0IYqv1",
+            "conversationId": "J22LrYrShqCmlz5iOUPi",
+            "messageId": "KIw6c1d29ksorAZSftD2",
+            "userMessage": "Busco libros de fantasía épica",
+            "baseUrl": "https://book-match-proyecto-intermodular-b8.vercel.app"
+          },
+          "webhookUrl": "http://IP_PUBLICA_DE_TU_EC2:5678/webhook/prueba",
+          "executionMode": "production"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          { "node": "Detectar Intención", "type": "main", "index": 0 },
+          { "node": "Respond to Webhook", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Detectar Intención": {
+      "main": [
+        [
+          { "node": "Switch Intención", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Switch Intención": {
+      "main": [
+        [
+          { "node": "Cargar Contexto", "type": "main", "index": 0 }
+        ],
+        [
+          { "node": "Construir Prompt Casual", "type": "main", "index": 0 }
+        ],
+        [
+          { "node": "Respuesta Out of Scope", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Cargar Contexto": {
+      "main": [
+        [
+          { "node": "Normalizar Contexto", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Normalizar Contexto": {
+      "main": [
+        [
+          { "node": "Construir Prompt SQL", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Construir Prompt SQL": {
+      "main": [
+        [
+          { "node": "Groq: Generar SQL", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Groq: Generar SQL": {
+      "main": [
+        [
+          { "node": "Parsear SQL (Groq)", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Parsear SQL (Groq)": {
+      "main": [
+        [
+          { "node": "Validar SQL (guardrails)", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Validar SQL (guardrails)": {
+      "main": [
+        [
+          { "node": "Ejecutar SQL (Postgres)", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Ejecutar SQL (Postgres)": {
+      "main": [
+        [
+          { "node": "Normalizar Libros", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Normalizar Libros": {
+      "main": [
+        [
+          { "node": "Construir Prompt Respuesta", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Construir Prompt Respuesta": {
+      "main": [
+        [
+          { "node": "Groq: Respuesta con Libros", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Groq: Respuesta con Libros": {
+      "main": [
+        [
+          { "node": "Procesar Respuesta IA", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Procesar Respuesta IA": {
+      "main": [
+        [
+          { "node": "Merge", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Construir Prompt Casual": {
+      "main": [
+        [
+          { "node": "Groq: Respuesta Casual", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Groq: Respuesta Casual": {
+      "main": [
+        [
+          { "node": "Procesar Casual Chat", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Procesar Casual Chat": {
+      "main": [
+        [
+          { "node": "Merge", "type": "main", "index": 1 }
+        ]
+      ]
+    },
+    "Respuesta Out of Scope": {
+      "main": [
+        [
+          { "node": "Merge", "type": "main", "index": 2 }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          { "node": "Update Firestore (Final)", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Error Trigger": {
+      "main": [
+        [
+          { "node": "Preparar Error", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Preparar Error": {
+      "main": [
+        [
+          { "node": "Update Firestore (Error)", "type": "main", "index": 0 }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "saveExecutionProgress": true,
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "9906af64-be2d-40f3-885f-ccddc4de65dc",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "6862a7ac3ffe44fba293032c52994a5d13c8ece19529a32a5136ecc5490c8ee3"
+  },
+  "id": "yUgd7OpQ2rWoE7JT",
+  "tags": []
+}
