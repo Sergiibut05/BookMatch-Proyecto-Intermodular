@@ -1,10 +1,12 @@
 import { Component, OnInit, inject, signal, ViewChild, ElementRef, AfterViewChecked } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { marked } from 'marked';
+import { firstValueFrom } from 'rxjs';
 import { ConversationService } from '../../core/services/conversation.service';
 import { AuthService } from '@core/services/auth.service';
+import { PlaylistService } from '@core/services/playlist.service';
 import { ConversationUI, MessageUI } from '../../core/models/conversation.model';
 import { Header } from '@shared/components/header/header';
 
@@ -15,13 +17,14 @@ import { Header } from '@shared/components/header/header';
 @Component({
   selector: 'app-ai-chat',
   standalone: true,
-  imports: [CommonModule, FormsModule, Header],
+  imports: [CommonModule, FormsModule, RouterLink, Header],
   templateUrl: './ai-chat.component.html',
   styleUrl: './ai-chat.component.scss'
 })
 export class AiChatComponent implements OnInit, AfterViewChecked {
   private conversationService = inject(ConversationService);
   private authService = inject(AuthService);
+  private playlistService = inject(PlaylistService);
   private router = inject(Router);
 
   /** Contenedor de mensajes para scroll. */
@@ -43,6 +46,12 @@ export class AiChatComponent implements OnInit, AfterViewChecked {
   isNewEmptyConversation = signal(true);
 
   private shouldScrollToBottom = false;
+
+  /** ID del mensaje del asistente que se está guardando como playlist (o null). */
+  savingPlaylistForMessageId = signal<string | null>(null);
+  /** Toast con la playlist recién guardada desde el chat (o null). */
+  savedPlaylistToast = signal<{ id: number; title: string } | null>(null);
+  private savedToastTimer: ReturnType<typeof setTimeout> | null = null;
 
   /** Comprueba auth, carga conversaciones y deja mensajes vacíos. */
   ngOnInit() {
@@ -179,5 +188,91 @@ export class AiChatComponent implements OnInit, AfterViewChecked {
       this.messagesContainer.nativeElement.scrollTop = 
         this.messagesContainer.nativeElement.scrollHeight;
     } catch {}
+  }
+
+  /**
+   * Normaliza los IDs de `metadata.recommendations` a números enteros positivos.
+   * Acepta tanto strings como números (compat con workflows n8n antiguos).
+   */
+  recommendationIds(msg: MessageUI): number[] {
+    const raw = msg.metadata?.recommendations ?? [];
+    const parsed = raw
+      .map((value) => (typeof value === 'number' ? value : Number(value)))
+      .filter((id): id is number => Number.isFinite(id) && id > 0);
+    return Array.from(new Set(parsed));
+  }
+
+  /** True si el mensaje del asistente trae recomendaciones válidas. */
+  hasRecommendations(msg: MessageUI): boolean {
+    return this.recommendationIds(msg).length > 0;
+  }
+
+  /**
+   * Crea una playlist a partir de las recomendaciones del mensaje del asistente.
+   * Usa como `aiPrompt` el último mensaje del usuario para contexto.
+   */
+  async saveAsPlaylist(msg: MessageUI): Promise<void> {
+    if (this.savingPlaylistForMessageId() === msg.id) return;
+
+    const itemIds = this.recommendationIds(msg);
+    if (itemIds.length === 0) return;
+
+    this.savingPlaylistForMessageId.set(msg.id);
+
+    const lastUserMessage = [...this.messages()]
+      .filter((m) => m.role === 'user')
+      .pop();
+    const aiPrompt = lastUserMessage?.content ?? null;
+
+    const title = this.buildPlaylistTitle(lastUserMessage?.content);
+
+    try {
+      const playlist = await firstValueFrom(
+        this.playlistService.create({
+          title,
+          description: aiPrompt
+            ? `Generada desde el chat: "${aiPrompt.slice(0, 140)}"`
+            : null,
+          visibility: 'PRIVATE',
+          source: 'AI',
+          aiPrompt,
+          itemIds,
+        }),
+      );
+      this.showSavedPlaylistToast(playlist.id, playlist.title);
+    } catch (err) {
+      console.error('[ai-chat] error guardando playlist', err);
+      window.alert('No se ha podido guardar la playlist.');
+    } finally {
+      this.savingPlaylistForMessageId.set(null);
+    }
+  }
+
+  /** Construye un título legible a partir del último mensaje del usuario. */
+  private buildPlaylistTitle(seed: string | undefined): string {
+    const cleaned = (seed ?? '').trim().replace(/\s+/g, ' ');
+    const base =
+      cleaned.length >= 3
+        ? cleaned.charAt(0).toUpperCase() + cleaned.slice(1)
+        : 'Recomendaciones del chat';
+    const truncated = base.length > 60 ? base.slice(0, 57).trimEnd() + '...' : base;
+    return truncated;
+  }
+
+  /** Muestra el toast de playlist guardada con auto-dismiss a los 6s. */
+  private showSavedPlaylistToast(id: number, title: string): void {
+    this.savedPlaylistToast.set({ id, title });
+    if (this.savedToastTimer) clearTimeout(this.savedToastTimer);
+    this.savedToastTimer = setTimeout(() => {
+      this.savedPlaylistToast.set(null);
+      this.savedToastTimer = null;
+    }, 6000);
+  }
+
+  /** Cierre manual del toast. */
+  dismissSavedPlaylistToast(): void {
+    if (this.savedToastTimer) clearTimeout(this.savedToastTimer);
+    this.savedToastTimer = null;
+    this.savedPlaylistToast.set(null);
   }
 }

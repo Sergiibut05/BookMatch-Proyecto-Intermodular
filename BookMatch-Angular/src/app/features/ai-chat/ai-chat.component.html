@@ -88,6 +88,23 @@
           </div>
             } @else {
               <div class="message-content" [innerHTML]="renderMarkdown(msg.content)"></div>
+
+              @if (hasRecommendations(msg)) {
+                <button
+                  type="button"
+                  class="save-as-playlist-btn"
+                  (click)="saveAsPlaylist(msg)"
+                  [disabled]="savingPlaylistForMessageId() === msg.id"
+                >
+                  @if (savingPlaylistForMessageId() === msg.id) {
+                    <span class="material-symbols-outlined animate-spin">progress_activity</span>
+                    Guardando playlist...
+                  } @else {
+                    <span class="material-symbols-outlined">playlist_add</span>
+                    Guardar como playlist ({{ recommendationIds(msg).length }})
+                  }
+                </button>
+              }
             }
           } @else {
             <!-- Mensaje del usuario -->
@@ -96,6 +113,25 @@
         </div>
       }
     </div>
+
+    @if (savedPlaylistToast(); as toast) {
+      <div class="saved-playlist-toast" role="status" aria-live="polite">
+        <span class="material-symbols-outlined" style="color: #E0A15E">playlist_add_check</span>
+        <div class="toast-body">
+          <p class="toast-title">Playlist guardada</p>
+          <p class="toast-subtitle">"{{ toast.title }}"</p>
+        </div>
+        <a [routerLink]="['/playlists', toast.id]" class="toast-cta">Ver playlist</a>
+        <button
+          type="button"
+          class="toast-dismiss"
+          (click)="dismissSavedPlaylistToast()"
+          aria-label="Cerrar"
+        >
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+    }
 
     <!-- Input area - siempre pegado abajo -->
     <div class="input-area">

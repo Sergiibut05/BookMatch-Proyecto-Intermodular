@@ -38,8 +38,12 @@ export interface Conversation {
 export interface MessageMetadata {
   /** Razonamiento interno de la IA. */
   thoughts?: string[];
-  /** IDs de libros recomendados. */
-  recommendations?: string[];
+  /**
+   * IDs de libros recomendados (CatalogBook.id). Aceptamos `number | string`
+   * por compatibilidad con workflows antiguos que los emitían como strings;
+   * la UI normaliza a número antes de usarlos (ver H1.10 / SCRUM-169).
+   */
+  recommendations?: Array<number | string>;
   /** Queries SQL usadas. */
   used_querys?: string[];
   /** Tipo de intención detectada. */
