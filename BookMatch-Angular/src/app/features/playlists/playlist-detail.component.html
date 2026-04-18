@@ -314,17 +314,162 @@
                     {{ 'PLAYLIST_DETAIL.SAVING' | translate }}
                   </span>
                 }
-                <button
-                  type="button"
-                  (click)="deletePlaylist()"
-                  class="inline-flex items-center justify-center p-2 rounded-lg text-red-600 hover:bg-red-50 transition-colors"
-                  [attr.aria-label]="'PLAYLIST_DETAIL.DELETE' | translate"
-                  [title]="'PLAYLIST_DETAIL.DELETE' | translate"
-                >
-                  <span class="material-symbols-outlined">delete</span>
-                </button>
+                <div class="flex items-center gap-1">
+                  <!-- Compartir -->
+                  <button
+                    type="button"
+                    (click)="toggleSharePanel()"
+                    class="inline-flex items-center justify-center p-2 rounded-lg transition-colors hover:bg-[#F1E6CE]"
+                    style="color: #45332D"
+                    [attr.aria-label]="'PLAYLIST_DETAIL.SHARE' | translate"
+                    [title]="'PLAYLIST_DETAIL.SHARE' | translate"
+                  >
+                    <span class="material-symbols-outlined">
+                      @if (playlist()!.shareToken) { link } @else { share }
+                    </span>
+                  </button>
+                  <!-- Exportar JSON -->
+                  <button
+                    type="button"
+                    (click)="exportAs('json')"
+                    [disabled]="exporting()"
+                    class="inline-flex items-center justify-center p-2 rounded-lg transition-colors hover:bg-[#F1E6CE] disabled:opacity-50"
+                    style="color: #45332D"
+                    [title]="'PLAYLIST_DETAIL.EXPORT_JSON' | translate"
+                    [attr.aria-label]="'PLAYLIST_DETAIL.EXPORT_JSON' | translate"
+                  >
+                    <span class="material-symbols-outlined">download</span>
+                  </button>
+                  <!-- Exportar Markdown -->
+                  <button
+                    type="button"
+                    (click)="exportAs('md')"
+                    [disabled]="exporting()"
+                    class="inline-flex items-center justify-center p-2 rounded-lg transition-colors hover:bg-[#F1E6CE] disabled:opacity-50"
+                    style="color: #45332D"
+                    [title]="'PLAYLIST_DETAIL.EXPORT_MD' | translate"
+                    [attr.aria-label]="'PLAYLIST_DETAIL.EXPORT_MD' | translate"
+                  >
+                    <span class="material-symbols-outlined">description</span>
+                  </button>
+                  <!-- Eliminar -->
+                  <button
+                    type="button"
+                    (click)="deletePlaylist()"
+                    class="inline-flex items-center justify-center p-2 rounded-lg text-red-600 hover:bg-red-50 transition-colors"
+                    [attr.aria-label]="'PLAYLIST_DETAIL.DELETE' | translate"
+                    [title]="'PLAYLIST_DETAIL.DELETE' | translate"
+                  >
+                    <span class="material-symbols-outlined">delete</span>
+                  </button>
+                </div>
               </div>
             </div>
+
+            <!-- Panel de compartir (H1.11) -->
+            @if (shareOpen()) {
+              <div
+                class="mt-4 rounded-lg border p-4"
+                style="background-color: #FFF8EC; border-color: #E9E1D1"
+              >
+                <div class="flex items-start justify-between gap-3">
+                  <div class="flex items-start gap-2">
+                    <span
+                      class="material-symbols-outlined mt-0.5"
+                      style="color: #E0A15E"
+                    >
+                      public
+                    </span>
+                    <div>
+                      <h3 class="font-semibold text-sm" style="color: #45332D">
+                        {{ 'PLAYLIST_DETAIL.SHARE_TITLE' | translate }}
+                      </h3>
+                      <p class="text-xs mt-0.5" style="color: #7a5c4a">
+                        {{ 'PLAYLIST_DETAIL.SHARE_SUBTITLE' | translate }}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    (click)="toggleSharePanel()"
+                    class="text-sm hover:underline"
+                    style="color: #7a5c4a"
+                  >
+                    <span class="material-symbols-outlined text-base">close</span>
+                  </button>
+                </div>
+
+                @if (playlist()!.shareToken && sharePublicUrl()) {
+                  <div class="mt-3 flex items-center gap-2">
+                    <input
+                      type="text"
+                      [value]="sharePublicUrl()"
+                      readonly
+                      class="flex-1 rounded border px-2 py-1.5 text-xs bg-white focus:outline-none focus:ring-2"
+                      style="border-color: #E9E1D1; color: #45332D"
+                      (click)="$any($event.target).select()"
+                    />
+                    <button
+                      type="button"
+                      (click)="copyShareUrl()"
+                      class="inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-semibold shadow-sm"
+                      [style.background-color]="shareCopied() ? '#16a34a' : '#E0A15E'"
+                      style="color: #FCF5E2"
+                    >
+                      <span class="material-symbols-outlined text-base">
+                        @if (shareCopied()) { check } @else { content_copy }
+                      </span>
+                      @if (shareCopied()) {
+                        {{ 'PLAYLIST_DETAIL.SHARE_COPIED' | translate }}
+                      } @else {
+                        {{ 'PLAYLIST_DETAIL.SHARE_COPY' | translate }}
+                      }
+                    </button>
+                  </div>
+                  <div class="mt-3 flex gap-2">
+                    <button
+                      type="button"
+                      (click)="share()"
+                      [disabled]="sharing()"
+                      class="text-xs underline hover:no-underline disabled:opacity-50"
+                      style="color: #7a5c4a"
+                    >
+                      {{ 'PLAYLIST_DETAIL.SHARE_ROTATE' | translate }}
+                    </button>
+                    <span style="color: #B88B65">•</span>
+                    <button
+                      type="button"
+                      (click)="revokeShare()"
+                      [disabled]="sharing()"
+                      class="text-xs underline hover:no-underline text-red-600 disabled:opacity-50"
+                    >
+                      {{ 'PLAYLIST_DETAIL.SHARE_REVOKE' | translate }}
+                    </button>
+                  </div>
+                } @else {
+                  <div class="mt-3">
+                    <button
+                      type="button"
+                      (click)="share()"
+                      [disabled]="sharing()"
+                      class="inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-sm font-semibold shadow-sm disabled:opacity-60"
+                      style="background-color: #E0A15E; color: #FCF5E2"
+                    >
+                      @if (sharing()) {
+                        <span
+                          class="material-symbols-outlined text-base animate-spin"
+                        >
+                          progress_activity
+                        </span>
+                      } @else {
+                        <span class="material-symbols-outlined text-base">link</span>
+                      }
+                      {{ 'PLAYLIST_DETAIL.SHARE_GENERATE' | translate }}
+                    </button>
+                  </div>
+                }
+              </div>
+            }
           </div>
         </div>
       </section>

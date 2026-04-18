@@ -32,6 +32,7 @@ import { Header } from '@shared/components/header/header';
 import {
   CatalogBook,
   Playlist,
+  PlaylistExportFormat,
   PlaylistItem,
   PlaylistItemStatus,
 } from '@shared/models';
@@ -77,6 +78,13 @@ export class PlaylistDetailComponent implements OnInit {
   readonly descriptionDraft = signal<string>('');
   readonly savingMeta = signal<boolean>(false);
   readonly uploadingCover = signal<boolean>(false);
+
+  // H1.11 · Compartir / exportar
+  readonly shareOpen = signal<boolean>(false);
+  readonly sharing = signal<boolean>(false);
+  readonly sharePublicUrl = signal<string | null>(null);
+  readonly shareCopied = signal<boolean>(false);
+  readonly exporting = signal<boolean>(false);
 
   readonly searchOpen = signal<boolean>(false);
   readonly searchTerm = signal<string>('');
@@ -534,5 +542,146 @@ export class PlaylistDetailComponent implements OnInit {
         it.id === itemId ? { ...it, ...patch } : it,
       ),
     });
+  }
+
+  // ---- H1.11 · Compartir / exportar ----
+
+  /** Abre/cierra el panel de compartir. Precalcula la URL si ya existe un token. */
+  toggleSharePanel(): void {
+    const next = !this.shareOpen();
+    this.shareOpen.set(next);
+    this.shareCopied.set(false);
+    if (next) {
+      const p = this.playlist();
+      if (p?.shareToken) {
+        this.sharePublicUrl.set(this.buildLocalPublicUrl(p.shareToken));
+      } else {
+        this.sharePublicUrl.set(null);
+      }
+    }
+  }
+
+  /**
+   * Genera (o rota) el shareToken. El backend marca visibility=PUBLIC.
+   * Prefiere la `publicUrl` del backend y cae a una URL local si no viene.
+   */
+  async share(): Promise<void> {
+    const p = this.playlist();
+    if (!p || this.sharing()) return;
+
+    this.sharing.set(true);
+    this.errorKey.set(null);
+    this.shareCopied.set(false);
+    try {
+      const res = await firstValueFrom(this.playlistService.share(p.id));
+      const current = this.playlist();
+      if (current) {
+        this.playlist.set({
+          ...current,
+          ...res.playlist,
+          items: current.items,
+        });
+      }
+      const url = res.publicUrl?.startsWith('http')
+        ? res.publicUrl
+        : this.buildLocalPublicUrl(res.token);
+      this.sharePublicUrl.set(url);
+      this.shareOpen.set(true);
+    } catch (err) {
+      console.error('[playlist-detail] error compartiendo', err);
+      this.errorKey.set('PLAYLIST_DETAIL.ERROR_SHARE');
+    } finally {
+      this.sharing.set(false);
+    }
+  }
+
+  /** Invalida el shareToken actual. No cambia visibility. */
+  async revokeShare(): Promise<void> {
+    const p = this.playlist();
+    if (!p || !p.shareToken || this.sharing()) return;
+
+    const msg = this.translate.instant('PLAYLIST_DETAIL.UNSHARE_CONFIRM');
+    if (!window.confirm(msg)) return;
+
+    this.sharing.set(true);
+    this.errorKey.set(null);
+    try {
+      const res = await firstValueFrom(this.playlistService.revokeShare(p.id));
+      const current = this.playlist();
+      if (current) {
+        this.playlist.set({
+          ...current,
+          ...res.playlist,
+          items: current.items,
+        });
+      }
+      this.sharePublicUrl.set(null);
+      this.shareCopied.set(false);
+    } catch (err) {
+      console.error('[playlist-detail] error revocando share', err);
+      this.errorKey.set('PLAYLIST_DETAIL.ERROR_SHARE');
+    } finally {
+      this.sharing.set(false);
+    }
+  }
+
+  /** Copia la URL pública al portapapeles con fallback si no hay Clipboard API. */
+  async copyShareUrl(): Promise<void> {
+    const url = this.sharePublicUrl();
+    if (!url) return;
+    try {
+      if (navigator?.clipboard?.writeText) {
+        await navigator.clipboard.writeText(url);
+      } else {
+        const ta = document.createElement('textarea');
+        ta.value = url;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+      }
+      this.shareCopied.set(true);
+      setTimeout(() => this.shareCopied.set(false), 2500);
+    } catch (err) {
+      console.error('[playlist-detail] error copiando', err);
+    }
+  }
+
+  /** Descarga la playlist como JSON o Markdown. */
+  async exportAs(format: PlaylistExportFormat): Promise<void> {
+    const p = this.playlist();
+    if (!p || this.exporting()) return;
+
+    this.exporting.set(true);
+    this.errorKey.set(null);
+    try {
+      const blob = await firstValueFrom(this.playlistService.export(p.id, format));
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `playlist-${p.id}.${format === 'md' ? 'md' : 'json'}`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (err) {
+      console.error('[playlist-detail] error exportando', err);
+      this.errorKey.set('PLAYLIST_DETAIL.ERROR_EXPORT');
+    } finally {
+      this.exporting.set(false);
+    }
+  }
+
+  /**
+   * Construye la URL pública en el host del frontend actual.
+   * Útil como fallback cuando el backend devuelve `/public/...` sin host.
+   */
+  private buildLocalPublicUrl(token: string): string {
+    const origin = typeof window !== 'undefined' && window.location?.origin
+      ? window.location.origin
+      : '';
+    return `${origin}/public/playlists/${token}`;
   }
 }

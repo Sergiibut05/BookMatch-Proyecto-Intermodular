@@ -174,3 +174,39 @@ export interface GeneratePlaylistResponse {
 
 /** Formatos de exportación soportados (H1.4). */
 export type PlaylistExportFormat = 'json' | 'md';
+
+/**
+ * Respuesta del backend al generar/rotar `shareToken` (H1.4 · SCRUM-163).
+ */
+export interface SharePlaylistResponse {
+  /** Token público para construir la URL `/public/playlists/:token`. */
+  token: string;
+  /** URL pública completa (incluye el host del frontend). */
+  publicUrl: string;
+  /** Playlist actualizada (ya con `visibility=PUBLIC` y el token). */
+  playlist: Playlist;
+}
+
+/**
+ * Respuesta del backend al invalidar el `shareToken`.
+ */
+export interface UnsharePlaylistResponse {
+  playlist: Playlist;
+}
+
+/**
+ * Vista pública de una playlist (lo que devuelve `GET /api/playlists/share/:token`).
+ * NO expone `ownerId`, `aiPrompt` ni `deletedAt`.
+ */
+export interface PublicPlaylist {
+  id: number;
+  title: string;
+  description: string | null;
+  coverUrl: string | null;
+  visibility: PlaylistVisibility;
+  source: PlaylistSource;
+  shareToken: string | null;
+  createdAt: string;
+  updatedAt: string;
+  items: PlaylistItem[];
+}

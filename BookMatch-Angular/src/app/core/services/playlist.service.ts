@@ -12,8 +12,11 @@ import {
   PlaylistItem,
   PlaylistListQuery,
   PlaylistListResponse,
+  PublicPlaylist,
   ReorderPlaylistItemsDto,
   ReorderPlaylistItemsResponse,
+  SharePlaylistResponse,
+  UnsharePlaylistResponse,
   UpdatePlaylistDto,
   UpdatePlaylistItemDto,
 } from '@shared/models';
@@ -251,26 +254,39 @@ export class PlaylistService {
   }
 
   /**
-   * Genera un `shareToken` público para la playlist (H1.4 · SCRUM-163).
+   * Genera (o rota) el `shareToken` público para la playlist (H1.4 · SCRUM-163).
+   * El backend marca la visibility=PUBLIC y devuelve token + URL pública.
    */
-  share(id: number): Observable<{ shareToken: string; url: string }> {
+  share(id: number): Observable<SharePlaylistResponse> {
     return this.authHeaders().pipe(
       switchMap((headers) =>
-        this.http.post<{ shareToken: string; url: string }>(
+        this.http.post<SharePlaylistResponse>(
           `${this.apiUrl}/${id}/share`,
           {},
           { headers },
         ),
       ),
+      tap(({ playlist }) => this.patchCache(playlist)),
     );
   }
 
-  /** Revoca el token público de una playlist (H1.4 · SCRUM-163). */
-  revokeShare(id: number): Observable<void> {
+  /** Revoca el `shareToken`. No cambia `visibility` (eso lo decide el usuario). */
+  revokeShare(id: number): Observable<UnsharePlaylistResponse> {
     return this.authHeaders().pipe(
       switchMap((headers) =>
-        this.http.delete<void>(`${this.apiUrl}/${id}/share`, { headers }),
+        this.http.delete<UnsharePlaylistResponse>(`${this.apiUrl}/${id}/share`, { headers }),
       ),
+      tap(({ playlist }) => this.patchCache(playlist)),
+    );
+  }
+
+  /**
+   * Recupera una playlist por su shareToken (vista pública, sin auth).
+   * NO incluye cabecera `Authorization` para no activar CORS preflight innecesario.
+   */
+  getByShareToken(token: string): Observable<PublicPlaylist> {
+    return this.http.get<PublicPlaylist>(
+      `${this.apiUrl}/share/${encodeURIComponent(token)}`,
     );
   }
 

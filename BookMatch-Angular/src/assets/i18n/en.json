@@ -128,7 +128,31 @@
         "COVER_REMOVE_CONFIRM": "Are you sure you want to remove the cover?",
         "COVER_UPLOADING": "Uploading cover...",
         "ERROR_COVER_UPLOAD": "The cover couldn't be uploaded.",
-        "ERROR_COVER_REMOVE": "The cover couldn't be removed."
+        "ERROR_COVER_REMOVE": "The cover couldn't be removed.",
+        "SHARE": "Share",
+        "SHARE_TITLE": "Share this playlist",
+        "SHARE_SUBTITLE": "Anyone with this link can view it (read-only).",
+        "SHARE_GENERATE": "Generate public link",
+        "SHARE_COPY": "Copy",
+        "SHARE_COPIED": "Copied!",
+        "SHARE_ROTATE": "Rotate token",
+        "SHARE_REVOKE": "Stop sharing",
+        "UNSHARE_CONFIRM": "This will invalidate the current link. Continue?",
+        "ERROR_SHARE": "Couldn't update sharing state.",
+        "EXPORT_JSON": "Export to JSON",
+        "EXPORT_MD": "Export to Markdown",
+        "ERROR_EXPORT": "Couldn't export the playlist."
+    },
+    "PLAYLIST_PUBLIC": {
+        "OPEN_APP": "Open BookMatch",
+        "SHARED_PLAYLIST": "Shared playlist",
+        "ITEMS_COUNT": "{{count}} books",
+        "EMPTY": "This playlist doesn't have any books yet.",
+        "FOOTER": "Viewed via a public link · Read-only.",
+        "ERROR_TITLE": "Couldn't load the playlist",
+        "ERROR_INVALID_TOKEN": "The link is invalid.",
+        "ERROR_NOT_FOUND": "This link is no longer active, or the playlist is not public.",
+        "ERROR_GENERIC": "An error occurred while loading the playlist."
     },
     "LOGIN": {
         "SUBTITLE": "Sign in to continue",

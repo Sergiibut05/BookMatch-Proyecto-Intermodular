@@ -140,6 +140,11 @@ export const routes: Routes = [
         loadComponent: () => import('./features/playlists/playlist-detail.component').then(m => m.PlaylistDetailComponent)
       },
       {
+        // Vista pública de una playlist compartida. SIN authGuard.
+        path: 'public/playlists/:token',
+        loadComponent: () => import('./features/playlists/playlist-public.component').then(m => m.PlaylistPublicComponent)
+      },
+      {
         path: '**',
         redirectTo: '/auth/login'
       }

@@ -128,7 +128,31 @@
         "COVER_REMOVE_CONFIRM": "¿Seguro que quieres quitar la portada?",
         "COVER_UPLOADING": "Subiendo portada...",
         "ERROR_COVER_UPLOAD": "No se ha podido subir la portada.",
-        "ERROR_COVER_REMOVE": "No se ha podido quitar la portada."
+        "ERROR_COVER_REMOVE": "No se ha podido quitar la portada.",
+        "SHARE": "Compartir",
+        "SHARE_TITLE": "Compartir esta playlist",
+        "SHARE_SUBTITLE": "Cualquiera con este enlace podrá verla (sin editar).",
+        "SHARE_GENERATE": "Generar enlace público",
+        "SHARE_COPY": "Copiar",
+        "SHARE_COPIED": "¡Copiado!",
+        "SHARE_ROTATE": "Rotar token",
+        "SHARE_REVOKE": "Dejar de compartir",
+        "UNSHARE_CONFIRM": "Vas a invalidar el enlace actual. ¿Continuar?",
+        "ERROR_SHARE": "No se ha podido actualizar el estado de compartir.",
+        "EXPORT_JSON": "Exportar a JSON",
+        "EXPORT_MD": "Exportar a Markdown",
+        "ERROR_EXPORT": "No se ha podido exportar la playlist."
+    },
+    "PLAYLIST_PUBLIC": {
+        "OPEN_APP": "Abrir BookMatch",
+        "SHARED_PLAYLIST": "Playlist compartida",
+        "ITEMS_COUNT": "{{count}} libros",
+        "EMPTY": "Esta playlist aún no tiene libros.",
+        "FOOTER": "Visto desde un enlace público · Solo lectura.",
+        "ERROR_TITLE": "No se pudo cargar la playlist",
+        "ERROR_INVALID_TOKEN": "El enlace no es válido.",
+        "ERROR_NOT_FOUND": "Este enlace ya no está activo o la playlist no es pública.",
+        "ERROR_GENERIC": "Ha ocurrido un error al cargar la playlist."
     },
     "LOGIN": {
         "SUBTITLE": "Inicia sesión para continuar",
