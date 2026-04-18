@@ -90,7 +90,7 @@ export const aiCompletePlaylistSchema = z
     description: z.string().max(2000).nullable().optional(),
     coverUrl: z.string().url().nullable().optional(),
     status: z.enum(['success', 'error']).default('success'),
-    errorMessage: z.string().max(500).optional(),
+    errorMessage: z.string().max(500).nullable().optional(),
     items: z
       .array(
         z.object({
