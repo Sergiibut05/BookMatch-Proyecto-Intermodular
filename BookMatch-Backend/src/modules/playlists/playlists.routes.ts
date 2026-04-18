@@ -24,6 +24,10 @@ import {
   reorderPlaylistItemsCtrl,
   generatePlaylistCtrl,
   aiCompletePlaylistCtrl,
+  sharePlaylistCtrl,
+  unsharePlaylistCtrl,
+  getSharedPlaylistCtrl,
+  exportPlaylistCtrl,
 } from './playlists.controller.js';
 
 /**
@@ -117,6 +121,28 @@ router.get('/', auth, listPlaylistsCtrl);
  *       401: { description: No autenticado }
  */
 router.post('/', auth, validate(createPlaylistSchema), createPlaylistCtrl);
+
+/**
+ * @swagger
+ * /api/playlists/share/{token}:
+ *   get:
+ *     summary: Devuelve una playlist pública por su shareToken (sin auth).
+ *     description: |
+ *       Endpoint público usado por el enlace de "compartir". Solo devuelve
+ *       playlists con `visibility=PUBLIC` y no eliminadas. La respuesta NO
+ *       expone `ownerId`.
+ *     tags: [Playlists]
+ *     parameters:
+ *       - in: path
+ *         name: token
+ *         required: true
+ *         schema: { type: string, minLength: 16 }
+ *     responses:
+ *       200: { description: Playlist pública }
+ *       400: { description: Token inválido }
+ *       404: { description: Playlist no encontrada o no compartida }
+ */
+router.get('/share/:token', getSharedPlaylistCtrl);
 
 /**
  * @swagger
@@ -412,5 +438,83 @@ router.post(
   validate(aiCompletePlaylistSchema),
   aiCompletePlaylistCtrl,
 );
+
+// ============================================================
+// H1.4 · Compartir / exportar (SCRUM-163)
+// ============================================================
+
+/**
+ * @swagger
+ * /api/playlists/{id}/share:
+ *   post:
+ *     summary: Genera (o rota) el shareToken y marca la playlist como PUBLIC.
+ *     tags: [Playlists]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: integer }
+ *     responses:
+ *       200:
+ *         description: Token generado (URL pública incluida).
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 token: { type: string }
+ *                 publicUrl: { type: string, format: uri }
+ *                 playlist: { type: object }
+ *       403: { description: Prohibido }
+ *       404: { description: No encontrada }
+ */
+router.post('/:id/share', auth, sharePlaylistCtrl);
+
+/**
+ * @swagger
+ * /api/playlists/{id}/share:
+ *   delete:
+ *     summary: Invalida el shareToken (deja de ser accesible por enlace).
+ *     tags: [Playlists]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: integer }
+ *     responses:
+ *       200: { description: shareToken invalidado }
+ *       403: { description: Prohibido }
+ *       404: { description: No encontrada }
+ */
+router.delete('/:id/share', auth, unsharePlaylistCtrl);
+
+/**
+ * @swagger
+ * /api/playlists/{id}/export:
+ *   get:
+ *     summary: Exporta la playlist como JSON o Markdown descargable.
+ *     tags: [Playlists]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: integer }
+ *       - in: query
+ *         name: format
+ *         schema: { type: string, enum: [json, md], default: json }
+ *     responses:
+ *       200:
+ *         description: Archivo descargable (Content-Disposition attachment).
+ *       400: { description: Formato inválido }
+ *       403: { description: Prohibido }
+ *       404: { description: No encontrada }
+ */
+router.get('/:id/export', auth, exportPlaylistCtrl);
 
 export default router;

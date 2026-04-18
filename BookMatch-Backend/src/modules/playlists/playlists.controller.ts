@@ -14,6 +14,12 @@ import {
   createAiDraftPlaylist,
   triggerPlaylistWebhook,
   completeAiPlaylist,
+  sharePlaylist,
+  unsharePlaylist,
+  getPlaylistByShareToken,
+  exportPlaylistAsJson,
+  exportPlaylistAsMarkdown,
+  buildPublicShareUrl,
 } from './playlists.service.js';
 import { getPlaylistsQuerySchema } from './playlists.schema.js';
 import { env } from '../../config/env.js';
@@ -278,6 +284,104 @@ export async function aiCompletePlaylistCtrl(req: Request, res: Response) {
       playlist: result.playlist,
       stats: result.stats,
     });
+  } catch (error: any) {
+    handleError(error, res);
+  }
+}
+
+// ============================================================
+// H1.4 · Compartir / exportar (SCRUM-163)
+// ============================================================
+
+/**
+ * POST /api/playlists/:id/share
+ * Genera (o rota) el shareToken y marca visibility=PUBLIC.
+ */
+export async function sharePlaylistCtrl(req: Request, res: Response) {
+  const userId = requireUserId(req, res);
+  if (!userId) return;
+
+  const id = parseIntParam(req.params.id, res, 'ID de playlist');
+  if (!id) return;
+
+  try {
+    const { token, playlist } = await sharePlaylist(id, userId);
+    res.json({
+      token,
+      publicUrl: buildPublicShareUrl(token),
+      playlist,
+    });
+  } catch (error: any) {
+    handleError(error, res);
+  }
+}
+
+/**
+ * DELETE /api/playlists/:id/share
+ * Invalida el shareToken (no toca visibility).
+ */
+export async function unsharePlaylistCtrl(req: Request, res: Response) {
+  const userId = requireUserId(req, res);
+  if (!userId) return;
+
+  const id = parseIntParam(req.params.id, res, 'ID de playlist');
+  if (!id) return;
+
+  try {
+    const playlist = await unsharePlaylist(id, userId);
+    res.json({ playlist });
+  } catch (error: any) {
+    handleError(error, res);
+  }
+}
+
+/**
+ * GET /api/playlists/share/:token
+ * Público, sin auth. Solo devuelve playlists PUBLIC y no eliminadas.
+ * NO expone ownerId.
+ */
+export async function getSharedPlaylistCtrl(req: Request, res: Response) {
+  const token = (req.params.token || '').trim();
+  if (!token || token.length < 16) {
+    return res.status(400).json({ message: 'Token inválido' });
+  }
+
+  try {
+    const playlist = await getPlaylistByShareToken(token);
+    res.json(playlist);
+  } catch (error: any) {
+    handleError(error, res);
+  }
+}
+
+/**
+ * GET /api/playlists/:id/export?format=json|md
+ * Descarga la playlist del usuario autenticado.
+ */
+export async function exportPlaylistCtrl(req: Request, res: Response) {
+  const userId = requireUserId(req, res);
+  if (!userId) return;
+
+  const id = parseIntParam(req.params.id, res, 'ID de playlist');
+  if (!id) return;
+
+  const raw = (req.query.format ?? 'json').toString().toLowerCase();
+  const format = raw === 'markdown' ? 'md' : raw;
+  if (format !== 'json' && format !== 'md') {
+    return res.status(400).json({ message: 'Formato inválido. Usa format=json|md' });
+  }
+
+  try {
+    const payload = format === 'json'
+      ? await exportPlaylistAsJson(id, userId)
+      : await exportPlaylistAsMarkdown(id, userId);
+
+    res.setHeader('Content-Type', payload.mimeType);
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="${payload.filename}"`,
+    );
+    res.send(payload.content);
   } catch (error: any) {
     handleError(error, res);
   }

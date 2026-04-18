@@ -1,3 +1,4 @@
+import crypto from 'node:crypto';
 import axios from 'axios';
 import { prisma } from '../../config/db.js';
 import { env } from '../../config/env.js';
@@ -626,5 +627,189 @@ export async function completeAiPlaylist(
       discardedIds: missingIds,
       failure: isFailure,
     },
+  };
+}
+
+// ============================================================
+// H1.4 · Compartir / exportar (SCRUM-163)
+// ============================================================
+
+/**
+ * Genera un token aleatorio de ≥128 bits (24 bytes → 32 caracteres base64url).
+ */
+function generateShareToken(): string {
+  return crypto.randomBytes(24).toString('base64url');
+}
+
+/**
+ * Selección pública (NO expone `ownerId`, `aiPrompt` ni `deletedAt`).
+ */
+const publicPlaylistSelect = {
+  id: true,
+  title: true,
+  description: true,
+  coverUrl: true,
+  visibility: true,
+  source: true,
+  shareToken: true,
+  createdAt: true,
+  updatedAt: true,
+  items: {
+    select: playlistItemSelect,
+    orderBy: { position: 'asc' as const },
+  },
+} as const;
+
+function mapPlaylistPublic(record: any) {
+  const { items = [], createdAt, updatedAt, ...rest } = record;
+  return {
+    ...rest,
+    createdAt: createdAt instanceof Date ? createdAt.toISOString() : createdAt,
+    updatedAt: updatedAt instanceof Date ? updatedAt.toISOString() : updatedAt,
+    items: items.map(mapItem),
+  };
+}
+
+/**
+ * Construye la URL pública que apunta al frontend.
+ * Si `FRONTEND_URL` no está seteada, devuelve un path relativo.
+ */
+export function buildPublicShareUrl(token: string): string {
+  const frontendUrl = env.FRONTEND_URL?.replace(/\/+$/, '');
+  if (!frontendUrl) return `/public/playlists/${token}`;
+  return `${frontendUrl}/public/playlists/${token}`;
+}
+
+/**
+ * Genera (o rota) el `shareToken` de una playlist y la marca `visibility=PUBLIC`.
+ * Devuelve el token plano (solo se muestra al propietario).
+ */
+export async function sharePlaylist(playlistId: number, userId: number) {
+  await findOwnedPlaylist(playlistId, userId);
+
+  const token = generateShareToken();
+  const updated = await prisma.playlist.update({
+    where: { id: playlistId },
+    data: { shareToken: token, visibility: 'PUBLIC' },
+    select: playlistSelect,
+  });
+
+  return {
+    token,
+    playlist: mapPlaylist(updated),
+  };
+}
+
+/**
+ * Invalida el `shareToken`. Mantiene `visibility` tal cual — si el usuario
+ * quiere volver a PRIVATE debe hacerlo explícitamente con `PATCH /:id`.
+ */
+export async function unsharePlaylist(playlistId: number, userId: number) {
+  await findOwnedPlaylist(playlistId, userId);
+
+  const updated = await prisma.playlist.update({
+    where: { id: playlistId },
+    data: { shareToken: null },
+    select: playlistSelect,
+  });
+
+  return mapPlaylist(updated);
+}
+
+/**
+ * Recupera una playlist por su `shareToken` — público, sin auth.
+ *   - Solo se devuelve si `visibility=PUBLIC` y no está eliminada.
+ *   - La respuesta NO expone `ownerId`.
+ */
+export async function getPlaylistByShareToken(token: string) {
+  const playlist = await prisma.playlist.findUnique({
+    where: { shareToken: token },
+    select: { ...publicPlaylistSelect, deletedAt: true, visibility: true },
+  });
+
+  if (!playlist || (playlist as any).deletedAt) {
+    throw notFound('Playlist no encontrada o no compartida');
+  }
+  if ((playlist as any).visibility !== 'PUBLIC') {
+    throw notFound('Playlist no compartida');
+  }
+
+  // Retiramos campos que no queremos exponer.
+  const { deletedAt: _d, ...safe } = playlist as any;
+  return mapPlaylistPublic(safe);
+}
+
+type ExportPayload = { filename: string; content: string; mimeType: string };
+
+/**
+ * Serializa la playlist del usuario a Markdown.
+ * Formato del criterio: `- *Autor* — **Título** (estado)`.
+ */
+export async function exportPlaylistAsMarkdown(
+  playlistId: number,
+  userId: number,
+): Promise<ExportPayload> {
+  await findOwnedPlaylist(playlistId, userId);
+
+  const playlist = await prisma.playlist.findUnique({
+    where: { id: playlistId },
+    select: playlistSelect,
+  });
+  if (!playlist) throw notFound();
+
+  const mapped = mapPlaylist(playlist);
+
+  const lines: string[] = [];
+  lines.push(`# ${mapped.title}`);
+  if (mapped.description) {
+    lines.push('');
+    lines.push(mapped.description);
+  }
+  lines.push('');
+  lines.push(`> ${mapped.items.length} libros · Visibilidad: ${mapped.visibility}`);
+  lines.push('');
+
+  for (const item of mapped.items) {
+    const book = item.catalogBook;
+    const author = book?.author ? `*${book.author}*` : '*Autor desconocido*';
+    const title = book?.title ? `**${book.title}**` : '**Título desconocido**';
+    const status = item.status ? ` (${item.status})` : '';
+    lines.push(`- ${author} — ${title}${status}`);
+    if (item.note) {
+      lines.push(`  - ${item.note}`);
+    }
+  }
+
+  return {
+    filename: `playlist-${playlistId}.md`,
+    content: lines.join('\n') + '\n',
+    mimeType: 'text/markdown; charset=utf-8',
+  };
+}
+
+/**
+ * Serializa la playlist del usuario a JSON descargable.
+ * NO incluye `ownerId`, `shareToken` ni `deletedAt` para no filtrar datos
+ * internos si el usuario comparte el fichero.
+ */
+export async function exportPlaylistAsJson(
+  playlistId: number,
+  userId: number,
+): Promise<ExportPayload> {
+  await findOwnedPlaylist(playlistId, userId);
+
+  const playlist = await prisma.playlist.findUnique({
+    where: { id: playlistId },
+    select: playlistSelect,
+  });
+  if (!playlist) throw notFound();
+
+  const mapped = mapPlaylist(playlist) as any;
+  const { ownerId: _o, shareToken: _s, deletedAt: _d, ...safe } = mapped;
+
+  return {
+    filename: `playlist-${playlistId}.json`,
+    content: JSON.stringify(safe, null, 2) + '\n',
+    mimeType: 'application/json; charset=utf-8',
   };
 }
