@@ -41,6 +41,8 @@ model User {
   comments      Comment[]
   votes         Vote[]
 
+  playlists Playlist[]
+
   @@map("users")
 }
 
@@ -81,9 +83,10 @@ model CatalogBook {
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
-  orderItems OrderItem[]
-  reviews    Review[]
-  categories CatalogBookCategory[]
+  orderItems    OrderItem[]
+  reviews       Review[]
+  categories    CatalogBookCategory[]
+  playlistItems PlaylistItem[]
 
   @@map("catalog_books")
 }
@@ -258,6 +261,65 @@ model Vote {
   @@unique([userId, postId])
   
   @@map("votes")
+}
+
+// ---------------------------------------------------------------------------
+// Playlists (AI + manuales) — SCRUM-160 (H1.1) bajo SCRUM-158
+// ---------------------------------------------------------------------------
+
+enum PlaylistVisibility {
+  PRIVATE
+  PUBLIC
+}
+
+enum PlaylistSource {
+  MANUAL
+  AI
+  HYBRID
+}
+
+enum ItemStatus {
+  PENDING
+  READING
+  READ
+}
+
+model Playlist {
+  id          Int                @id @default(autoincrement())
+  ownerId     Int                @map("owner_id")
+  title       String
+  description String?
+  coverUrl    String?            @map("cover_url")
+  visibility  PlaylistVisibility @default(PRIVATE)
+  source      PlaylistSource     @default(MANUAL)
+  aiPrompt    String?            @map("ai_prompt")
+  shareToken  String?            @unique @map("share_token")
+  createdAt   DateTime           @default(now()) @map("created_at")
+  updatedAt   DateTime           @updatedAt @map("updated_at")
+  deletedAt   DateTime?          @map("deleted_at")
+
+  owner User           @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  items PlaylistItem[]
+
+  @@index([ownerId])
+  @@map("playlists")
+}
+
+model PlaylistItem {
+  id            Int        @id @default(autoincrement())
+  playlistId    Int        @map("playlist_id")
+  catalogBookId Int        @map("catalog_book_id")
+  position      Int
+  status        ItemStatus @default(PENDING)
+  note          String?
+  addedAt       DateTime   @default(now()) @map("added_at")
+
+  playlist    Playlist    @relation(fields: [playlistId], references: [id], onDelete: Cascade)
+  catalogBook CatalogBook @relation(fields: [catalogBookId], references: [id])
+
+  @@unique([playlistId, catalogBookId])
+  @@index([playlistId, position])
+  @@map("playlist_items")
 }
 
 model Comment {
