@@ -1,4 +1,14 @@
-import { Component, OnInit, inject, signal, ViewChild, ElementRef, AfterViewChecked } from '@angular/core';
+import {
+  AfterViewChecked,
+  Component,
+  ElementRef,
+  OnInit,
+  ViewChild,
+  computed,
+  effect,
+  inject,
+  signal,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -7,9 +17,22 @@ import { marked } from 'marked';
 import { firstValueFrom } from 'rxjs';
 import { ConversationService } from '../../core/services/conversation.service';
 import { AuthService } from '@core/services/auth.service';
+import { CatalogService } from '@core/services/catalog.service';
 import { PlaylistService } from '@core/services/playlist.service';
 import { ConversationUI, MessageUI } from '../../core/models/conversation.model';
+import { CatalogBook } from '@shared/models';
 import { Header } from '@shared/components/header/header';
+
+/**
+ * Grupo de conversaciones para mostrar en el sidebar agrupadas por fecha
+ * (Hoy, Ayer, Esta semana, Anteriores).
+ */
+interface ConversationGroup {
+  /** Clave i18n del grupo (AI_CHAT.GROUP_TODAY, etc.). */
+  labelKey: string;
+  /** Conversaciones del grupo. */
+  items: ConversationUI[];
+}
 
 /**
  * Chat con IA: lista de conversaciones, mensajes en hilo y envío.
@@ -25,12 +48,15 @@ import { Header } from '@shared/components/header/header';
 export class AiChatComponent implements OnInit, AfterViewChecked {
   private conversationService = inject(ConversationService);
   private authService = inject(AuthService);
+  private catalogService = inject(CatalogService);
   private playlistService = inject(PlaylistService);
   private translate = inject(TranslateService);
   private router = inject(Router);
 
   /** Contenedor de mensajes para scroll. */
   @ViewChild('messagesContainer') messagesContainer!: ElementRef<HTMLDivElement>;
+  /** Textarea del input — usado para auto-resize. */
+  @ViewChild('messageInput') messageInput!: ElementRef<HTMLTextAreaElement>;
 
   /** Lista de conversaciones del usuario. */
   conversations = signal<ConversationUI[]>([]);
@@ -67,6 +93,63 @@ export class AiChatComponent implements OnInit, AfterViewChecked {
   /** ID de la conversación actualmente siendo archivada (loading). */
   archivingConversationId = signal<string | null>(null);
 
+  // H2.3 · Cards de libros recomendados
+  /** Mapa id→CatalogBook de las recomendaciones ya cargadas. */
+  booksById = signal<Map<number, CatalogBook>>(new Map());
+  /** Flag de "error al cargar libro" por id (para no reintentar en bucle). */
+  private booksFailed = new Set<number>();
+  /** Flag de "libro en carga" para evitar peticiones duplicadas. */
+  private loadingBooks = new Set<number>();
+
+  /**
+   * Agrupa las conversaciones por franjas de fecha para el sidebar.
+   * El orden original (más recientes primero) se respeta dentro de cada grupo.
+   */
+  readonly groupedConversations = computed<ConversationGroup[]>(() => {
+    const now = new Date();
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    const startOfYesterday = startOfToday - 24 * 60 * 60 * 1000;
+    const startOfWeek = startOfToday - 7 * 24 * 60 * 60 * 1000;
+
+    const groups: Record<string, ConversationUI[]> = {
+      today: [],
+      yesterday: [],
+      week: [],
+      older: [],
+    };
+
+    for (const conv of this.conversations()) {
+      const ts = conv.updatedAt?.getTime?.() ?? 0;
+      if (ts >= startOfToday) groups['today'].push(conv);
+      else if (ts >= startOfYesterday) groups['yesterday'].push(conv);
+      else if (ts >= startOfWeek) groups['week'].push(conv);
+      else groups['older'].push(conv);
+    }
+
+    const ordered: ConversationGroup[] = [
+      { labelKey: 'AI_CHAT.GROUP_TODAY', items: groups['today'] },
+      { labelKey: 'AI_CHAT.GROUP_YESTERDAY', items: groups['yesterday'] },
+      { labelKey: 'AI_CHAT.GROUP_WEEK', items: groups['week'] },
+      { labelKey: 'AI_CHAT.GROUP_OLDER', items: groups['older'] },
+    ];
+
+    return ordered.filter((g) => g.items.length > 0);
+  });
+
+  constructor() {
+    // Cuando cambian los mensajes, pedimos al catálogo los libros recomendados
+    // que aún no tengamos en cache. Esto alimenta las tarjetas de abajo de
+    // cada respuesta del asistente.
+    effect(() => {
+      const ids = new Set<number>();
+      for (const m of this.messages()) {
+        if (m.role !== 'assistant' || m.status === 'processing') continue;
+        for (const id of this.recommendationIds(m)) ids.add(id);
+      }
+      ids.forEach((id) => this.ensureBookLoaded(id));
+    });
+  }
+
   /** Comprueba auth, carga conversaciones y deja mensajes vacíos. */
   ngOnInit() {
     const firebaseUser = this.authService.firebaseUser();
@@ -75,7 +158,6 @@ export class AiChatComponent implements OnInit, AfterViewChecked {
       return;
     }
     this.loadConversations(firebaseUser.uid);
-    // Empezar con una conversación vacía (no creada aún)
     this.isNewEmptyConversation.set(true);
     this.messages.set([]);
   }
@@ -93,8 +175,6 @@ export class AiChatComponent implements OnInit, AfterViewChecked {
     this.conversationService.getConversations(userId).subscribe(
       conversations => {
         this.conversations.set(conversations);
-        // NO seleccionar automáticamente la primera conversación
-        // El usuario empieza con una conversación vacía
       }
     );
   }
@@ -104,7 +184,7 @@ export class AiChatComponent implements OnInit, AfterViewChecked {
     this.activeConversationId.set(conversationId);
     this.isNewEmptyConversation.set(false);
     if (closeSidebar) {
-      this.showSidebarMobile.set(false); // Cerrar sidebar en móvil al seleccionar
+      this.showSidebarMobile.set(false);
     }
     const firebaseUser = this.authService.firebaseUser();
     if (firebaseUser?.uid) {
@@ -119,48 +199,44 @@ export class AiChatComponent implements OnInit, AfterViewChecked {
 
   /** Crea una conversación vacía en UI (sin guardar aún). */
   createNewConversation() {
-    // Limpiar la conversación actual y mostrar una vacía
     this.activeConversationId.set(null);
     this.messages.set([]);
     this.isNewEmptyConversation.set(true);
     this.showSidebarMobile.set(false);
-    }
+  }
 
   /** Envía el mensaje actual (crea conversación si es nueva). */
   sendMessage() {
     const firebaseUser = this.authService.firebaseUser();
     const content = this.currentMessage().trim();
-    
+
     if (!firebaseUser?.uid || !content) return;
-    
-    // Si es una conversación nueva, crearla primero
+
     if (this.isNewEmptyConversation() || !this.activeConversationId()) {
       this.isLoading.set(true);
-      this.currentMessage.set(''); // Limpiar input inmediatamente
-      
+      this.currentMessage.set('');
+      this.resetTextareaHeight();
+
       this.conversationService.createConversation(firebaseUser.uid).subscribe({
         next: (conversationId) => {
-          // Seleccionar la conversación (esto suscribe a los mensajes)
-          // No cerramos el sidebar porque estamos creando una nueva
           this.selectConversation(conversationId, false);
-          // Ahora enviar el mensaje
           this.sendMessageToConversation(firebaseUser.uid, conversationId, content);
         },
         error: (error) => {
           console.error('Error creating conversation:', error);
           this.isLoading.set(false);
-          this.currentMessage.set(content); // Restaurar mensaje en caso de error
+          this.currentMessage.set(content);
         }
       });
     } else {
-      // Conversación ya existe, solo enviar mensaje
       this.sendMessageToConversation(firebaseUser.uid, this.activeConversationId()!, content);
     }
   }
-  
+
   private sendMessageToConversation(userId: string, conversationId: string, content: string) {
     this.isLoading.set(true);
     this.currentMessage.set('');
+    this.resetTextareaHeight();
     this.shouldScrollToBottom = true;
 
     this.conversationService.sendMessage(userId, conversationId, content).subscribe({
@@ -179,14 +255,20 @@ export class AiChatComponent implements OnInit, AfterViewChecked {
     this.showSidebarMobile.update(value => !value);
   }
 
-  /** Rellena el input con la sugerencia. */
+  /** Rellena el input con la sugerencia y enfoca el textarea. */
   useSuggestion(suggestion: string) {
     this.currentMessage.set(suggestion);
+    queueMicrotask(() => {
+      try {
+        this.messageInput?.nativeElement.focus();
+        this.autoResizeTextarea();
+      } catch {}
+    });
   }
 
-  /** Convierte markdown a HTML. */
+  /** Convierte markdown a HTML (GFM, sin sanitización extra — la IA es la única fuente). */
   renderMarkdown(content: string): string {
-    return marked.parse(content) as string;
+    return marked.parse(content, { gfm: true, breaks: true }) as string;
   }
 
   /** Envía el mensaje con Enter (sin Shift). */
@@ -196,10 +278,28 @@ export class AiChatComponent implements OnInit, AfterViewChecked {
       this.sendMessage();
     }
   }
-  
+
+  /**
+   * Ajusta la altura del textarea al contenido hasta un máximo de 6 líneas
+   * aprox. (180px). Llamar en `(input)` y tras limpiar el valor.
+   */
+  autoResizeTextarea(): void {
+    const el = this.messageInput?.nativeElement;
+    if (!el) return;
+    el.style.height = 'auto';
+    const maxPx = 180;
+    el.style.height = Math.min(el.scrollHeight, maxPx) + 'px';
+  }
+
+  private resetTextareaHeight(): void {
+    const el = this.messageInput?.nativeElement;
+    if (!el) return;
+    el.style.height = 'auto';
+  }
+
   private scrollToBottom() {
     try {
-      this.messagesContainer.nativeElement.scrollTop = 
+      this.messagesContainer.nativeElement.scrollTop =
         this.messagesContainer.nativeElement.scrollHeight;
     } catch {}
   }
@@ -219,6 +319,34 @@ export class AiChatComponent implements OnInit, AfterViewChecked {
   /** True si el mensaje del asistente trae recomendaciones válidas. */
   hasRecommendations(msg: MessageUI): boolean {
     return this.recommendationIds(msg).length > 0;
+  }
+
+  /**
+   * Devuelve el libro cacheado o `null` si aún no ha llegado.
+   * La carga la dispara el `effect()` del constructor.
+   */
+  getRecommendedBook(id: number): CatalogBook | null {
+    return this.booksById().get(id) ?? null;
+  }
+
+  /** Carga perezosa de un libro por ID, con deduplicación. */
+  private ensureBookLoaded(id: number): void {
+    if (this.booksById().has(id) || this.loadingBooks.has(id) || this.booksFailed.has(id)) {
+      return;
+    }
+    this.loadingBooks.add(id);
+    this.catalogService.getBookById(id).subscribe({
+      next: (book) => {
+        const next = new Map(this.booksById());
+        next.set(id, book);
+        this.booksById.set(next);
+        this.loadingBooks.delete(id);
+      },
+      error: () => {
+        this.booksFailed.add(id);
+        this.loadingBooks.delete(id);
+      },
+    });
   }
 
   /**
@@ -400,5 +528,10 @@ export class AiChatComponent implements OnInit, AfterViewChecked {
     } finally {
       this.archivingConversationId.set(null);
     }
+  }
+
+  /** Expone el usuario actual al template (avatar, nombre). */
+  get currentUser() {
+    return this.authService.currentUser();
   }
 }
