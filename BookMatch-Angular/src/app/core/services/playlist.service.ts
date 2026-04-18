@@ -1,10 +1,11 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { map, switchMap, tap } from 'rxjs/operators';
+import { Observable, of, throwError, timer } from 'rxjs';
+import { filter, map, switchMap, take, takeWhile, tap } from 'rxjs/operators';
 import {
   AddPlaylistItemDto,
   CreatePlaylistDto,
+  GeneratePlaylistResponse,
   GeneratePlaylistWithAiDto,
   Playlist,
   PlaylistExportFormat,
@@ -188,17 +189,63 @@ export class PlaylistService {
   }
 
   /**
-   * Genera una playlist con IA (endpoint implementado en H1.3 · SCRUM-162).
-   * Mantenemos la firma estable para acoplar UI y webhook n8n.
+   * Dispara la generación IA (H1.3 · SCRUM-162). Devuelve inmediatamente
+   * la playlist en estado borrador (`title = 'Generando...'`); el frontend
+   * debe llamar a `pollGeneration(id)` para esperar la respuesta del
+   * callback n8n.
    */
-  generateWithAi(dto: GeneratePlaylistWithAiDto): Observable<Playlist> {
+  generateWithAi(dto: GeneratePlaylistWithAiDto): Observable<GeneratePlaylistResponse> {
     return this.authHeaders().pipe(
       switchMap((headers) =>
-        this.http.post<Playlist>(`${this.apiUrl}/generate`, dto, { headers }),
+        this.http.post<GeneratePlaylistResponse>(
+          `${this.apiUrl}/generate`,
+          dto,
+          { headers },
+        ),
       ),
-      tap((playlist) => {
+      tap(({ playlist }) => {
         this.playlistsSignal.update((list) => [playlist, ...list]);
         this.selectedPlaylistSignal.set(playlist);
+      }),
+    );
+  }
+
+  /**
+   * Poll cada `intervalMs` a `getById(id)` hasta que la playlist termine
+   * de generarse. Emite cada lectura intermedia y se completa cuando:
+   *   - La playlist tiene items (éxito), o
+   *   - `description` empieza por `[AI_FAILED]` (fallo), o
+   *   - Transcurre `timeoutMs` (emite el último estado y un error).
+   */
+  pollGeneration(
+    id: number,
+    opts: { intervalMs?: number; timeoutMs?: number } = {},
+  ): Observable<Playlist> {
+    const intervalMs = opts.intervalMs ?? 3000;
+    const timeoutMs = opts.timeoutMs ?? 60000;
+    const maxAttempts = Math.max(1, Math.ceil(timeoutMs / intervalMs));
+
+    return timer(0, intervalMs).pipe(
+      takeWhile((i) => i < maxAttempts),
+      switchMap((attempt) =>
+        this.getById(id).pipe(
+          map((playlist) => ({ playlist, attempt })),
+        ),
+      ),
+      // Emitimos sólo cuando la playlist está resuelta o es el último intento.
+      filter(({ playlist, attempt }) => {
+        const failed = playlist.description?.startsWith('[AI_FAILED]') ?? false;
+        const completed = playlist.items.length > 0 || failed;
+        return completed || attempt + 1 >= maxAttempts;
+      }),
+      take(1),
+      switchMap(({ playlist }) => {
+        const failed = playlist.description?.startsWith('[AI_FAILED]') ?? false;
+        const completed = playlist.items.length > 0 || failed;
+        if (completed) return of(playlist);
+        return throwError(
+          () => Object.assign(new Error('AI_GENERATION_TIMEOUT'), { playlist }),
+        );
       }),
     );
   }

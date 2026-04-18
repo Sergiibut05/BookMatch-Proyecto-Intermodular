@@ -24,24 +24,6 @@
       </p>
     </header>
 
-    @if (showGenerateHint()) {
-      <div
-        class="mb-6 rounded-lg border px-4 py-3 text-sm flex items-start gap-3"
-        style="border-color: #E0A15E; background-color: #FFFDF7; color: #45332D"
-        role="status"
-      >
-        <span
-          class="material-symbols-outlined text-xl flex-shrink-0"
-          style="color: #E0A15E"
-        >
-          auto_awesome
-        </span>
-        <p class="m-0">
-          {{ 'PLAYLIST_NEW.GENERATE_HINT' | translate }}
-        </p>
-      </div>
-    }
-
     @if (errorKey()) {
       <div
         class="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"

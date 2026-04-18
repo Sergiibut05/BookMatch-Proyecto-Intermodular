@@ -142,13 +142,34 @@ export interface ReorderPlaylistItemsResponse {
   items: PlaylistItem[];
 }
 
-/** Parámetros para generar una playlist con IA (H1.3). */
+/**
+ * Parámetros para generar una playlist con IA (H1.3 · SCRUM-162).
+ * Alineado con `generatePlaylistSchema` del backend.
+ */
 export interface GeneratePlaylistWithAiDto {
+  /** Prompt libre (5-2000 chars). */
   prompt: string;
-  count?: number;
-  language?: 'es' | 'en';
-  genre?: string;
-  title?: string;
+  /** Número de libros a proponer (3-25, default 8). */
+  size?: number;
+  /** Géneros preferidos, hasta 10 strings cortos. */
+  genres?: string[];
+  /** Estado de ánimo / tono libre. */
+  mood?: string;
+  /** Idioma preferido (código ISO corto: 'es', 'en', ...). */
+  language?: string;
+  /** Visibilidad inicial (default PRIVATE). */
+  visibility?: PlaylistVisibility;
+}
+
+/**
+ * Respuesta 202 del backend al crear un draft IA.
+ * El frontend debe hacer polling a `pollUrl` hasta que la playlist
+ * tenga items o su descripción empiece por `[AI_FAILED]`.
+ */
+export interface GeneratePlaylistResponse {
+  message: string;
+  playlist: Playlist;
+  pollUrl: string;
 }
 
 /** Formatos de exportación soportados (H1.4). */

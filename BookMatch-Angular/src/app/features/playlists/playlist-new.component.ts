@@ -2,7 +2,6 @@ import { CommonModule } from '@angular/common';
 import {
   Component,
   DestroyRef,
-  OnInit,
   computed,
   inject,
   signal,
@@ -13,7 +12,7 @@ import {
   Validators,
 } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { PlaylistService } from '@core/services/playlist.service';
 import { Header } from '@shared/components/header/header';
@@ -22,8 +21,8 @@ import { Header } from '@shared/components/header/header';
  * Formulario de creación manual de playlist (`/playlists/new`).
  *
  * Solo metadatos: título, descripción, visibilidad. Los libros se añaden
- * desde la vista detalle (H1.7). Si se entra con `?generate=1` mostramos
- * un aviso para indicar que la generación por IA vendrá en H1.9.
+ * desde la vista detalle (H1.7). La generación con IA se ofrece ahora a
+ * través del modal `PlaylistGenerateDialogComponent` (H1.9 · SCRUM-168).
  */
 @Component({
   selector: 'app-playlist-new',
@@ -38,11 +37,10 @@ import { Header } from '@shared/components/header/header';
   templateUrl: './playlist-new.component.html',
   styleUrl: './playlist-new.component.scss',
 })
-export class PlaylistNewComponent implements OnInit {
+export class PlaylistNewComponent {
   private fb = inject(FormBuilder);
   private playlistService = inject(PlaylistService);
   private router = inject(Router);
-  private route = inject(ActivatedRoute);
   private destroyRef = inject(DestroyRef);
 
   readonly form = this.fb.nonNullable.group({
@@ -53,20 +51,11 @@ export class PlaylistNewComponent implements OnInit {
 
   readonly submitting = signal<boolean>(false);
   readonly errorKey = signal<string | null>(null);
-  readonly showGenerateHint = signal<boolean>(false);
 
   readonly titleCount = computed(() => this.form.controls.title.value.length);
   readonly descriptionCount = computed(
     () => this.form.controls.description.value.length,
   );
-
-  ngOnInit(): void {
-    this.route.queryParamMap
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((params) => {
-        this.showGenerateHint.set(params.get('generate') === '1');
-      });
-  }
 
   submit(): void {
     if (this.form.invalid || this.submitting()) {

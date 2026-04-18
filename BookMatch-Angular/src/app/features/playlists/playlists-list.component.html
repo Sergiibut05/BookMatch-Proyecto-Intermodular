@@ -286,3 +286,9 @@
     }
   </div>
 </main>
+
+@if (showGenerateDialog()) {
+  <app-playlist-generate-dialog
+    (closeDialog)="onGenerateDialogClose()"
+  ></app-playlist-generate-dialog>
+}

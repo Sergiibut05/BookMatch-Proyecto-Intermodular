@@ -13,6 +13,7 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { PlaylistService } from '@core/services/playlist.service';
 import { Header } from '@shared/components/header/header';
 import { Playlist, PlaylistSource } from '@shared/models';
+import { PlaylistGenerateDialogComponent } from './playlist-generate-dialog.component';
 
 type PlaylistFilter = 'all' | 'ai' | 'manual';
 
@@ -25,7 +26,12 @@ type PlaylistFilter = 'all' | 'ai' | 'manual';
 @Component({
   selector: 'app-playlists-list',
   standalone: true,
-  imports: [CommonModule, TranslateModule, Header],
+  imports: [
+    CommonModule,
+    TranslateModule,
+    Header,
+    PlaylistGenerateDialogComponent,
+  ],
   templateUrl: './playlists-list.component.html',
   styleUrl: './playlists-list.component.scss',
 })
@@ -57,6 +63,9 @@ export class PlaylistsListComponent implements OnInit {
   );
 
   readonly skeletonItems = Array.from({ length: 6 });
+
+  /** Controla la visibilidad del modal «Generar con IA» (H1.9). */
+  readonly showGenerateDialog = signal<boolean>(false);
 
   ngOnInit(): void {
     this.loadPlaylists();
@@ -123,9 +132,13 @@ export class PlaylistsListComponent implements OnInit {
   }
 
   goToGenerate(): void {
-    this.router.navigate(['/playlists/new'], {
-      queryParams: { generate: 1 },
-    });
+    this.showGenerateDialog.set(true);
+  }
+
+  onGenerateDialogClose(): void {
+    this.showGenerateDialog.set(false);
+    // Recargamos para reflejar cambios en caché tras cancelaciones.
+    this.loadPlaylists();
   }
 
   sourceBadgeKey(source: PlaylistSource): string {
