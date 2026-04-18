@@ -14,6 +14,7 @@ import paymentsRoutes from './modules/payments/payments.routes.js';
 import ordersRoutes from './modules/orders/orders.routes.js';
 import forumsRoutes from './modules/forums/forums.routes.js';
 import commentsRoutes from './modules/comments/comments.routes.js';
+import playlistsRoutes from './modules/playlists/playlists.routes.js';
 import aiChatRoutes from './routes/ai-chat.routes.js';
 import { stripeWebhookCtrl } from './modules/payments/payments.controller.js';
 
@@ -98,6 +99,7 @@ app.use('/api/payments', paymentsRoutes);
 app.use('/api/orders', ordersRoutes);
 app.use('/api/forums', forumsRoutes);
 app.use('/api/comments', commentsRoutes);
+app.use('/api/playlists', playlistsRoutes);
 app.use('/api/ai-chat', aiChatRoutes);
 
 app.use(errorHandler);
