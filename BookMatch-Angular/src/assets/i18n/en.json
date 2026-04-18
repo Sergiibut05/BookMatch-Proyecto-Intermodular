@@ -664,5 +664,10 @@
             "MIN_VALUE": "Value must be positive",
             "INVALID": "Invalid field"
         }
+    },
+    "AI_CHAT": {
+        "RENAME": "Rename",
+        "DELETE": "Delete",
+        "DELETE_CONFIRM": "Are you sure you want to delete conversation \"{{title}}\"? This archives the conversation and it will no longer appear in the list."
     }
 }

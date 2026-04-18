@@ -2,6 +2,7 @@ import { Component, OnInit, inject, signal, ViewChild, ElementRef, AfterViewChec
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { marked } from 'marked';
 import { firstValueFrom } from 'rxjs';
 import { ConversationService } from '../../core/services/conversation.service';
@@ -17,7 +18,7 @@ import { Header } from '@shared/components/header/header';
 @Component({
   selector: 'app-ai-chat',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, Header],
+  imports: [CommonModule, FormsModule, RouterLink, TranslateModule, Header],
   templateUrl: './ai-chat.component.html',
   styleUrl: './ai-chat.component.scss'
 })
@@ -25,6 +26,7 @@ export class AiChatComponent implements OnInit, AfterViewChecked {
   private conversationService = inject(ConversationService);
   private authService = inject(AuthService);
   private playlistService = inject(PlaylistService);
+  private translate = inject(TranslateService);
   private router = inject(Router);
 
   /** Contenedor de mensajes para scroll. */
@@ -52,6 +54,18 @@ export class AiChatComponent implements OnInit, AfterViewChecked {
   /** Toast con la playlist recién guardada desde el chat (o null). */
   savedPlaylistToast = signal<{ id: number; title: string } | null>(null);
   private savedToastTimer: ReturnType<typeof setTimeout> | null = null;
+
+  // H2.1 · Rename inline
+  /** ID de la conversación actualmente en modo edición (o null). */
+  editingConversationId = signal<string | null>(null);
+  /** Borrador del título mientras se edita. */
+  titleDraft = signal<string>('');
+  /** Flag para evitar doble guardado por blur + enter simultáneos. */
+  private savingTitle = false;
+
+  // H2.2 · Delete/archive
+  /** ID de la conversación actualmente siendo archivada (loading). */
+  archivingConversationId = signal<string | null>(null);
 
   /** Comprueba auth, carga conversaciones y deja mensajes vacíos. */
   ngOnInit() {
@@ -274,5 +288,117 @@ export class AiChatComponent implements OnInit, AfterViewChecked {
     if (this.savedToastTimer) clearTimeout(this.savedToastTimer);
     this.savedToastTimer = null;
     this.savedPlaylistToast.set(null);
+  }
+
+  // ============================================================
+  // H2.1 · Renombrar conversación
+  // ============================================================
+
+  /**
+   * Activa el modo edición inline del título de la conversación indicada.
+   * Detiene la propagación para que el `click` del item no cambie la
+   * conversación activa.
+   */
+  startEditingTitle(conv: ConversationUI, event?: Event): void {
+    event?.stopPropagation();
+    this.editingConversationId.set(conv.id);
+    this.titleDraft.set(conv.title ?? '');
+  }
+
+  /** Cancela la edición sin persistir cambios. */
+  cancelEditingTitle(event?: Event): void {
+    event?.stopPropagation();
+    this.editingConversationId.set(null);
+    this.titleDraft.set('');
+  }
+
+  /**
+   * Guarda el nuevo título en Firestore. Valida 1..80 caracteres tras trim.
+   * Si está vacío o excede la longitud → cancela sin tocar Firestore.
+   * Si no ha cambiado → también cancela sin llamar a la red.
+   */
+  async saveEditedTitle(conv: ConversationUI, event?: Event): Promise<void> {
+    event?.stopPropagation();
+    if (this.savingTitle) return;
+
+    const firebaseUser = this.authService.firebaseUser();
+    const next = this.titleDraft().trim();
+
+    if (
+      !firebaseUser?.uid ||
+      !next ||
+      next.length > 80 ||
+      next === (conv.title ?? '').trim()
+    ) {
+      this.cancelEditingTitle();
+      return;
+    }
+
+    this.savingTitle = true;
+    try {
+      await firstValueFrom(
+        this.conversationService.updateTitle(firebaseUser.uid, conv.id, next),
+      );
+    } catch (err) {
+      console.error('[ai-chat] error renombrando conversación', err);
+    } finally {
+      this.savingTitle = false;
+      this.editingConversationId.set(null);
+      this.titleDraft.set('');
+    }
+  }
+
+  /**
+   * Handlers de teclado sobre el input de edición.
+   * Enter guarda; Escape cancela.
+   */
+  onEditTitleKeydown(event: KeyboardEvent, conv: ConversationUI): void {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      event.stopPropagation();
+      void this.saveEditedTitle(conv, event);
+    } else if (event.key === 'Escape') {
+      event.preventDefault();
+      event.stopPropagation();
+      this.cancelEditingTitle(event);
+    }
+  }
+
+  // ============================================================
+  // H2.2 · Archivar (soft-delete) conversación
+  // ============================================================
+
+  /**
+   * Confirma con el usuario y archiva la conversación. Si era la activa,
+   * limpia el panel para volver al estado "new empty". La lista se
+   * actualiza sola porque `getConversations` filtra por `status=active`.
+   */
+  async archiveConversation(conv: ConversationUI, event?: Event): Promise<void> {
+    event?.stopPropagation();
+    if (this.archivingConversationId() === conv.id) return;
+
+    const firebaseUser = this.authService.firebaseUser();
+    if (!firebaseUser?.uid) return;
+
+    const msg = this.translate.instant('AI_CHAT.DELETE_CONFIRM', {
+      title: conv.title,
+    });
+    if (!window.confirm(msg)) return;
+
+    this.archivingConversationId.set(conv.id);
+    try {
+      await firstValueFrom(
+        this.conversationService.archiveConversation(firebaseUser.uid, conv.id),
+      );
+      if (this.activeConversationId() === conv.id) {
+        this.activeConversationId.set(null);
+        this.messages.set([]);
+        this.isNewEmptyConversation.set(true);
+      }
+    } catch (err) {
+      console.error('[ai-chat] error archivando conversación', err);
+    } finally {
+      this.archivingConversationId.set(null);
+    }
   }
 }

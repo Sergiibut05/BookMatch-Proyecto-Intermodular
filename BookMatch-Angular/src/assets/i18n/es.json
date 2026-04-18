@@ -665,5 +665,10 @@
             "MIN_VALUE": "El valor debe ser positivo",
             "INVALID": "Campo inválido"
         }
+    },
+    "AI_CHAT": {
+        "RENAME": "Renombrar",
+        "DELETE": "Eliminar",
+        "DELETE_CONFIRM": "¿Seguro que quieres eliminar la conversación \"{{title}}\"? Esta acción archiva la conversación y dejará de aparecer en la lista."
     }
 }

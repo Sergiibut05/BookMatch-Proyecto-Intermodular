@@ -120,5 +120,37 @@ export class ConversationService {
       updatedAt: serverTimestamp()
     }));
   }
+
+  /**
+   * Renombra una conversación (H2.1).
+   * Normaliza el título (trim), rechaza vacío o >80 caracteres y actualiza
+   * también `updatedAt` para que suba en la lista.
+   *
+   * @param userId Firebase UID del usuario
+   * @param conversationId ID de la conversación
+   * @param title Nuevo título (1..80 caracteres tras trim)
+   * @returns Observable que completa cuando se actualizó
+   */
+  updateTitle(
+    userId: string,
+    conversationId: string,
+    title: string,
+  ): Observable<void> {
+    const normalized = (title ?? '').trim().replace(/\s+/g, ' ');
+    if (!normalized || normalized.length > 80) {
+      const err = new Error('INVALID_TITLE');
+      return from(Promise.reject(err));
+    }
+    const conversationRef = doc(
+      this.firestore,
+      `users/${userId}/conversations/${conversationId}`,
+    );
+    return from(
+      updateDoc(conversationRef, {
+        title: normalized,
+        updatedAt: serverTimestamp(),
+      }),
+    );
+  }
 }
 

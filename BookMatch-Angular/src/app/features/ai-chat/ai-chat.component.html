@@ -18,11 +18,49 @@
         </div>
       }
       @for (conv of conversations(); track conv.id) {
-        <div class="conversation-item" 
+        <div class="conversation-item"
              [class.active]="conv.id === activeConversationId()"
+             [class.editing]="editingConversationId() === conv.id"
              (click)="selectConversation(conv.id)">
-          <div class="conv-title">{{ conv.title }}</div>
-          <div class="conv-date">{{ conv.updatedAt | date:'short' }}</div>
+          @if (editingConversationId() === conv.id) {
+            <input
+              type="text"
+              class="conv-title-input"
+              [ngModel]="titleDraft()"
+              (ngModelChange)="titleDraft.set($event)"
+              (click)="$event.stopPropagation()"
+              (keydown)="onEditTitleKeydown($event, conv)"
+              (blur)="saveEditedTitle(conv)"
+              maxlength="80"
+              autofocus
+              [attr.aria-label]="'AI_CHAT.RENAME' | translate" />
+          } @else {
+            <div class="conv-body">
+              <div class="conv-title" [title]="conv.title">{{ conv.title }}</div>
+              <div class="conv-date">{{ conv.updatedAt | date:'short' }}</div>
+            </div>
+            <div class="conv-actions" (click)="$event.stopPropagation()">
+              <button type="button"
+                      class="conv-action-btn"
+                      [attr.aria-label]="'AI_CHAT.RENAME' | translate"
+                      [title]="'AI_CHAT.RENAME' | translate"
+                      (click)="startEditingTitle(conv, $event)">
+                ✏️
+              </button>
+              <button type="button"
+                      class="conv-action-btn conv-action-btn--danger"
+                      [attr.aria-label]="'AI_CHAT.DELETE' | translate"
+                      [title]="'AI_CHAT.DELETE' | translate"
+                      [disabled]="archivingConversationId() === conv.id"
+                      (click)="archiveConversation(conv, $event)">
+                @if (archivingConversationId() === conv.id) {
+                  ⏳
+                } @else {
+                  🗑️
+                }
+              </button>
+            </div>
+          }
         </div>
       }
     </div>
