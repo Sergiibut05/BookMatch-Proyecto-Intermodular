@@ -266,6 +266,16 @@ export class AiChatComponent implements OnInit, AfterViewChecked {
     });
   }
 
+  /**
+   * Resuelve una clave i18n y rellena el input con el texto traducido.
+   * Evita usar el pipe `translate` dentro de expresiones `(click)`, donde
+   * los pipes no están permitidos por el parser de Angular.
+   */
+  useSuggestionKey(key: string) {
+    const text = this.translate.instant(key);
+    this.useSuggestion(typeof text === 'string' ? text : key);
+  }
+
   /** Convierte markdown a HTML (GFM, sin sanitización extra — la IA es la única fuente). */
   renderMarkdown(content: string): string {
     return marked.parse(content, { gfm: true, breaks: true }) as string;
