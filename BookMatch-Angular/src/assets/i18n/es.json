@@ -122,7 +122,13 @@
         "ERROR_SAVE": "No se han podido guardar los cambios.",
         "ERROR_DELETE": "No se ha podido eliminar la playlist.",
         "ERROR_ADD_ITEM": "No se ha podido añadir el libro.",
-        "ERROR_REORDER": "No se ha podido guardar el nuevo orden."
+        "ERROR_REORDER": "No se ha podido guardar el nuevo orden.",
+        "COVER_CHANGE": "Cambiar portada",
+        "COVER_REMOVE": "Quitar portada",
+        "COVER_REMOVE_CONFIRM": "¿Seguro que quieres quitar la portada?",
+        "COVER_UPLOADING": "Subiendo portada...",
+        "ERROR_COVER_UPLOAD": "No se ha podido subir la portada.",
+        "ERROR_COVER_REMOVE": "No se ha podido quitar la portada."
     },
     "LOGIN": {
         "SUBTITLE": "Inicia sesión para continuar",

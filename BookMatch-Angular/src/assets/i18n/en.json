@@ -122,7 +122,13 @@
         "ERROR_SAVE": "Changes couldn't be saved.",
         "ERROR_DELETE": "The playlist couldn't be deleted.",
         "ERROR_ADD_ITEM": "The book couldn't be added.",
-        "ERROR_REORDER": "The new order couldn't be saved."
+        "ERROR_REORDER": "The new order couldn't be saved.",
+        "COVER_CHANGE": "Change cover",
+        "COVER_REMOVE": "Remove cover",
+        "COVER_REMOVE_CONFIRM": "Are you sure you want to remove the cover?",
+        "COVER_UPLOADING": "Uploading cover...",
+        "ERROR_COVER_UPLOAD": "The cover couldn't be uploaded.",
+        "ERROR_COVER_REMOVE": "The cover couldn't be removed."
     },
     "LOGIN": {
         "SUBTITLE": "Sign in to continue",

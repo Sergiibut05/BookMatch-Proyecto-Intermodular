@@ -27,6 +27,7 @@ import {
 } from 'rxjs/operators';
 import { CatalogService } from '@core/services/catalog.service';
 import { PlaylistService } from '@core/services/playlist.service';
+import { StorageService } from '@core/services/storage';
 import { Header } from '@shared/components/header/header';
 import {
   CatalogBook,
@@ -64,6 +65,7 @@ export class PlaylistDetailComponent implements OnInit {
   private translate = inject(TranslateService);
   private playlistService = inject(PlaylistService);
   private catalogService = inject(CatalogService);
+  private storageService = inject(StorageService);
 
   readonly playlist = signal<Playlist | null>(null);
   readonly loading = signal<boolean>(true);
@@ -74,6 +76,7 @@ export class PlaylistDetailComponent implements OnInit {
   readonly editingDescription = signal<boolean>(false);
   readonly descriptionDraft = signal<string>('');
   readonly savingMeta = signal<boolean>(false);
+  readonly uploadingCover = signal<boolean>(false);
 
   readonly searchOpen = signal<boolean>(false);
   readonly searchTerm = signal<string>('');
@@ -245,6 +248,79 @@ export class PlaylistDetailComponent implements OnInit {
       console.error('[playlist-detail] error cambiando visibilidad', err);
       this.playlist.set({ ...p, visibility: previous });
       this.errorKey.set('PLAYLIST_DETAIL.ERROR_SAVE');
+    }
+  }
+
+  /**
+   * Lanza el picker de imagen, sube la foto a Firebase Storage y actualiza
+   * `coverUrl` en el backend. Aplica preview optimista y rollback en error.
+   * La imagen anterior se borra desde el `StorageService` sólo si estaba
+   * alojada en nuestro bucket (evita tocar URLs externas/IA).
+   */
+  async changeCover(): Promise<void> {
+    const p = this.playlist();
+    if (!p || this.uploadingCover()) return;
+
+    const photo = await this.storageService.takePhoto();
+    if (!photo) return;
+
+    const previousCover = p.coverUrl;
+    this.uploadingCover.set(true);
+    this.errorKey.set(null);
+
+    try {
+      const newUrl = await this.storageService.uploadPlaylistCover(
+        photo,
+        p.id,
+        previousCover,
+      );
+
+      this.playlist.set({ ...p, coverUrl: newUrl });
+
+      await firstValueFrom(
+        this.playlistService.update(p.id, { coverUrl: newUrl }),
+      );
+    } catch (err) {
+      console.error('[playlist-detail] error subiendo portada', err);
+      this.playlist.set({ ...p, coverUrl: previousCover });
+      this.errorKey.set('PLAYLIST_DETAIL.ERROR_COVER_UPLOAD');
+    } finally {
+      this.uploadingCover.set(false);
+    }
+  }
+
+  /**
+   * Quita la portada actual: persiste `coverUrl = null` en el backend
+   * y borra el fichero de Firebase Storage si corresponde.
+   */
+  async removeCover(): Promise<void> {
+    const p = this.playlist();
+    if (!p || !p.coverUrl || this.uploadingCover()) return;
+
+    const msg = this.translate.instant('PLAYLIST_DETAIL.COVER_REMOVE_CONFIRM');
+    if (!window.confirm(msg)) return;
+
+    const previousCover = p.coverUrl;
+    this.uploadingCover.set(true);
+    this.errorKey.set(null);
+
+    try {
+      this.playlist.set({ ...p, coverUrl: null });
+      await firstValueFrom(
+        this.playlistService.update(p.id, { coverUrl: null }),
+      );
+      // Intento de limpieza de Storage: fallo silencioso si no es nuestra URL.
+      try {
+        await this.storageService.deletePhoto(previousCover);
+      } catch {
+        // el StorageService ya maneja object-not-found; aquí ignoramos.
+      }
+    } catch (err) {
+      console.error('[playlist-detail] error quitando portada', err);
+      this.playlist.set({ ...p, coverUrl: previousCover });
+      this.errorKey.set('PLAYLIST_DETAIL.ERROR_COVER_REMOVE');
+    } finally {
+      this.uploadingCover.set(false);
     }
   }
 

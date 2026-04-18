@@ -80,7 +80,7 @@
         <div class="flex flex-col md:flex-row gap-5 md:gap-8">
           <!-- Cover -->
           <div
-            class="w-full md:w-56 aspect-[4/3] md:aspect-auto md:h-40 rounded-lg overflow-hidden flex-shrink-0"
+            class="relative group w-full md:w-56 aspect-[4/3] md:aspect-auto md:h-40 rounded-lg overflow-hidden flex-shrink-0"
             style="background-color: #F1E6CE"
           >
             @if (playlist()!.coverUrl) {
@@ -101,6 +101,48 @@
                 </span>
               </div>
             }
+
+            <!-- Overlay acciones de portada -->
+            <div
+              class="absolute inset-0 flex items-center justify-center gap-2 bg-black/40 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity"
+              [class.opacity-100]="uploadingCover()"
+            >
+              @if (uploadingCover()) {
+                <span
+                  class="material-symbols-outlined text-white animate-spin text-3xl"
+                  aria-hidden="true"
+                >
+                  progress_activity
+                </span>
+                <span class="sr-only">
+                  {{ 'PLAYLIST_DETAIL.COVER_UPLOADING' | translate }}
+                </span>
+              } @else {
+                <button
+                  type="button"
+                  (click)="changeCover()"
+                  [title]="'PLAYLIST_DETAIL.COVER_CHANGE' | translate"
+                  [attr.aria-label]="'PLAYLIST_DETAIL.COVER_CHANGE' | translate"
+                  class="inline-flex items-center justify-center h-10 w-10 rounded-full bg-white/90 hover:bg-white shadow-md transition-colors"
+                >
+                  <span
+                    class="material-symbols-outlined"
+                    style="color: #45332D"
+                  >photo_camera</span>
+                </button>
+                @if (playlist()!.coverUrl) {
+                  <button
+                    type="button"
+                    (click)="removeCover()"
+                    [title]="'PLAYLIST_DETAIL.COVER_REMOVE' | translate"
+                    [attr.aria-label]="'PLAYLIST_DETAIL.COVER_REMOVE' | translate"
+                    class="inline-flex items-center justify-center h-10 w-10 rounded-full bg-white/90 hover:bg-red-600 hover:text-white shadow-md transition-colors"
+                  >
+                    <span class="material-symbols-outlined">delete</span>
+                  </button>
+                }
+              }
+            </div>
           </div>
 
           <!-- Meta + acciones -->
