@@ -45,6 +45,12 @@
           <span class="font-medium">Asistente de Recomendaciones</span>
         </a>
       </div>
+      <div class="menu-item w-full">
+        <a routerLink="/playlists" (click)="closeMenu()" class="menu-link flex items-center justify-start gap-3 w-full p-2 cursor-pointer">
+          <span class="material-symbols-outlined text-xl">queue_music</span>
+          <span class="font-medium">{{ 'HEADER.PLAYLISTS' | translate }}</span>
+        </a>
+      </div>
       <div *isAdmin class="menu-item w-full">
         <a routerLink="/admin/books/create" (click)="closeMenu()" class="menu-link flex items-center justify-start gap-3 w-full p-2 cursor-pointer" style="color: #E0A15E;">
           <span class="material-symbols-outlined text-xl">add_circle</span>

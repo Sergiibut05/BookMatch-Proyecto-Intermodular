@@ -125,6 +125,11 @@ export const routes: Routes = [
         loadComponent: () => import('./features/ai-chat/ai-chat.component').then(m => m.AiChatComponent)
       },
       {
+        path: 'playlists',
+        canActivate: [authGuard],
+        loadComponent: () => import('./features/playlists/playlists-list.component').then(m => m.PlaylistsListComponent)
+      },
+      {
         path: '**',
         redirectTo: '/auth/login'
       }
