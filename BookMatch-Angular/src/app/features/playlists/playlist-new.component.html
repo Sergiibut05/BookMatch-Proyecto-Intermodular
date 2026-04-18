@@ -1,0 +1,235 @@
+<app-header></app-header>
+
+<main class="min-h-screen bg-[#FCF5E2]">
+  <div class="container mx-auto px-4 py-6 md:py-10 max-w-3xl">
+    <nav class="mb-4 text-sm" style="color: #7a5c4a">
+      <a routerLink="/playlists" class="hover:underline">
+        {{ 'PLAYLISTS.TITLE' | translate }}
+      </a>
+      <span class="mx-2">/</span>
+      <span style="color: #45332D">
+        {{ 'PLAYLIST_NEW.BREADCRUMB' | translate }}
+      </span>
+    </nav>
+
+    <header class="mb-6 md:mb-8">
+      <h1
+        class="text-2xl md:text-3xl font-bold"
+        style="color: #45332D"
+      >
+        {{ 'PLAYLIST_NEW.TITLE' | translate }}
+      </h1>
+      <p class="text-sm md:text-base mt-2" style="color: #7a5c4a">
+        {{ 'PLAYLIST_NEW.SUBTITLE' | translate }}
+      </p>
+    </header>
+
+    @if (showGenerateHint()) {
+      <div
+        class="mb-6 rounded-lg border px-4 py-3 text-sm flex items-start gap-3"
+        style="border-color: #E0A15E; background-color: #FFFDF7; color: #45332D"
+        role="status"
+      >
+        <span
+          class="material-symbols-outlined text-xl flex-shrink-0"
+          style="color: #E0A15E"
+        >
+          auto_awesome
+        </span>
+        <p class="m-0">
+          {{ 'PLAYLIST_NEW.GENERATE_HINT' | translate }}
+        </p>
+      </div>
+    }
+
+    @if (errorKey()) {
+      <div
+        class="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"
+        role="alert"
+      >
+        {{ errorKey()! | translate }}
+      </div>
+    }
+
+    <form
+      [formGroup]="form"
+      (ngSubmit)="submit()"
+      class="space-y-6 rounded-xl bg-white border border-[#E9E1D1] shadow-sm p-6 md:p-8"
+      novalidate
+    >
+      <!-- Título -->
+      <div>
+        <label
+          for="playlist-title"
+          class="block text-sm font-semibold mb-1"
+          style="color: #45332D"
+        >
+          {{ 'PLAYLIST_NEW.FIELD_TITLE' | translate }}
+          <span style="color: #E0A15E">*</span>
+        </label>
+        <input
+          id="playlist-title"
+          type="text"
+          formControlName="title"
+          maxlength="80"
+          autocomplete="off"
+          class="block w-full rounded-lg border px-3 py-2 text-sm md:text-base focus:outline-none focus:ring-2"
+          [class.border-red-400]="
+            form.controls.title.invalid && form.controls.title.touched
+          "
+          style="border-color: #E9E1D1; background-color: #FFFDF7"
+        />
+        <div
+          class="mt-1 flex items-center justify-between text-xs"
+          style="color: #7a5c4a"
+        >
+          <span>
+            @if (form.controls.title.touched && form.controls.title.hasError('required')) {
+              <span class="text-red-600">
+                {{ 'PLAYLIST_NEW.ERROR_TITLE_REQUIRED' | translate }}
+              </span>
+            } @else if (
+              form.controls.title.touched && form.controls.title.hasError('minlength')
+            ) {
+              <span class="text-red-600">
+                {{ 'PLAYLIST_NEW.ERROR_TITLE_MIN' | translate }}
+              </span>
+            }
+          </span>
+          <span>{{ titleCount() }} / 80</span>
+        </div>
+      </div>
+
+      <!-- Descripción -->
+      <div>
+        <label
+          for="playlist-description"
+          class="block text-sm font-semibold mb-1"
+          style="color: #45332D"
+        >
+          {{ 'PLAYLIST_NEW.FIELD_DESCRIPTION' | translate }}
+        </label>
+        <textarea
+          id="playlist-description"
+          formControlName="description"
+          maxlength="1000"
+          rows="4"
+          class="block w-full rounded-lg border px-3 py-2 text-sm md:text-base focus:outline-none focus:ring-2 resize-y"
+          style="border-color: #E9E1D1; background-color: #FFFDF7"
+        ></textarea>
+        <div
+          class="mt-1 flex justify-end text-xs"
+          style="color: #7a5c4a"
+        >
+          {{ descriptionCount() }} / 1000
+        </div>
+      </div>
+
+      <!-- Visibilidad -->
+      <fieldset>
+        <legend
+          class="block text-sm font-semibold mb-2"
+          style="color: #45332D"
+        >
+          {{ 'PLAYLIST_NEW.FIELD_VISIBILITY' | translate }}
+        </legend>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <label
+            class="flex items-start gap-3 rounded-lg border p-3 cursor-pointer transition-colors"
+            [style.border-color]="
+              form.controls.visibility.value === 'PRIVATE'
+                ? '#E0A15E'
+                : '#E9E1D1'
+            "
+            [style.background-color]="
+              form.controls.visibility.value === 'PRIVATE'
+                ? '#FFF8EC'
+                : '#FFFFFF'
+            "
+          >
+            <input
+              type="radio"
+              formControlName="visibility"
+              value="PRIVATE"
+              class="mt-1"
+            />
+            <span>
+              <span
+                class="block text-sm font-semibold"
+                style="color: #45332D"
+              >
+                {{ 'PLAYLIST_NEW.VISIBILITY_PRIVATE' | translate }}
+              </span>
+              <span class="block text-xs mt-0.5" style="color: #7a5c4a">
+                {{ 'PLAYLIST_NEW.VISIBILITY_PRIVATE_HINT' | translate }}
+              </span>
+            </span>
+          </label>
+
+          <label
+            class="flex items-start gap-3 rounded-lg border p-3 cursor-pointer transition-colors"
+            [style.border-color]="
+              form.controls.visibility.value === 'PUBLIC'
+                ? '#E0A15E'
+                : '#E9E1D1'
+            "
+            [style.background-color]="
+              form.controls.visibility.value === 'PUBLIC'
+                ? '#FFF8EC'
+                : '#FFFFFF'
+            "
+          >
+            <input
+              type="radio"
+              formControlName="visibility"
+              value="PUBLIC"
+              class="mt-1"
+            />
+            <span>
+              <span
+                class="block text-sm font-semibold"
+                style="color: #45332D"
+              >
+                {{ 'PLAYLIST_NEW.VISIBILITY_PUBLIC' | translate }}
+              </span>
+              <span class="block text-xs mt-0.5" style="color: #7a5c4a">
+                {{ 'PLAYLIST_NEW.VISIBILITY_PUBLIC_HINT' | translate }}
+              </span>
+            </span>
+          </label>
+        </div>
+      </fieldset>
+
+      <!-- Acciones -->
+      <div class="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-3 pt-2">
+        <a
+          routerLink="/playlists"
+          class="inline-flex items-center justify-center px-4 py-2 rounded-lg text-sm font-medium border transition-colors"
+          style="border-color: #E9E1D1; color: #45332D; background-color: #FFFFFF"
+        >
+          {{ 'PLAYLIST_NEW.CANCEL' | translate }}
+        </a>
+        <button
+          type="submit"
+          [disabled]="form.invalid || submitting()"
+          class="inline-flex items-center justify-center gap-2 px-5 py-2 rounded-lg font-medium text-sm md:text-base shadow-sm transition-opacity"
+          [style.background-color]="
+            form.invalid || submitting() ? '#D7B796' : '#E0A15E'
+          "
+          style="color: #FCF5E2"
+          [attr.aria-busy]="submitting()"
+        >
+          @if (submitting()) {
+            <span class="material-symbols-outlined text-lg animate-spin">
+              progress_activity
+            </span>
+            {{ 'PLAYLIST_NEW.SUBMITTING' | translate }}
+          } @else {
+            <span class="material-symbols-outlined text-lg">check</span>
+            {{ 'PLAYLIST_NEW.SUBMIT' | translate }}
+          }
+        </button>
+      </div>
+    </form>
+  </div>
+</main>

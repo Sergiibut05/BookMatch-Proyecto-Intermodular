@@ -34,6 +34,25 @@
         "ERROR_LOAD": "We couldn't load your playlists.",
         "ERROR_DELETE": "The playlist couldn't be deleted."
     },
+    "PLAYLIST_NEW": {
+        "BREADCRUMB": "New",
+        "TITLE": "Create new playlist",
+        "SUBTITLE": "Fill in the basics; you'll be able to add books from the detail view.",
+        "GENERATE_HINT": "AI generation will be available in the next iteration. In the meantime, you can create the playlist manually.",
+        "FIELD_TITLE": "Title",
+        "FIELD_DESCRIPTION": "Description",
+        "FIELD_VISIBILITY": "Visibility",
+        "VISIBILITY_PRIVATE": "Private",
+        "VISIBILITY_PRIVATE_HINT": "Only you will see it.",
+        "VISIBILITY_PUBLIC": "Public",
+        "VISIBILITY_PUBLIC_HINT": "You'll be able to share it with a link.",
+        "ERROR_TITLE_REQUIRED": "Title is required.",
+        "ERROR_TITLE_MIN": "Title must be at least 3 characters long.",
+        "ERROR_CREATE": "The playlist couldn't be created.",
+        "SUBMIT": "Create playlist",
+        "SUBMITTING": "Creating...",
+        "CANCEL": "Cancel"
+    },
     "LOGIN": {
         "SUBTITLE": "Sign in to continue",
         "EMAIL_LABEL": "Email",

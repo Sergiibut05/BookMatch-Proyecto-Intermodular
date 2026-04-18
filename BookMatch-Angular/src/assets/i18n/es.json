@@ -34,6 +34,25 @@
         "ERROR_LOAD": "No se han podido cargar tus playlists.",
         "ERROR_DELETE": "No se ha podido eliminar la playlist."
     },
+    "PLAYLIST_NEW": {
+        "BREADCRUMB": "Nueva",
+        "TITLE": "Crear nueva playlist",
+        "SUBTITLE": "Define los datos básicos; podrás añadir libros desde la página de detalle.",
+        "GENERATE_HINT": "La generación con IA estará disponible en la próxima iteración. Mientras tanto, puedes crear la playlist manualmente.",
+        "FIELD_TITLE": "Título",
+        "FIELD_DESCRIPTION": "Descripción",
+        "FIELD_VISIBILITY": "Visibilidad",
+        "VISIBILITY_PRIVATE": "Privada",
+        "VISIBILITY_PRIVATE_HINT": "Solo tú puedes verla.",
+        "VISIBILITY_PUBLIC": "Pública",
+        "VISIBILITY_PUBLIC_HINT": "Podrás compartirla con un enlace.",
+        "ERROR_TITLE_REQUIRED": "El título es obligatorio.",
+        "ERROR_TITLE_MIN": "El título debe tener al menos 3 caracteres.",
+        "ERROR_CREATE": "No se ha podido crear la playlist.",
+        "SUBMIT": "Crear playlist",
+        "SUBMITTING": "Creando...",
+        "CANCEL": "Cancelar"
+    },
     "LOGIN": {
         "SUBTITLE": "Inicia sesión para continuar",
         "EMAIL_LABEL": "Correo electrónico",
