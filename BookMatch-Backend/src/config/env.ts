@@ -15,7 +15,13 @@ export const env = {
   STRIPE_SECRET_KEY: required(process.env.STRIPE_SECRET_KEY, 'STRIPE_SECRET_KEY'),
   STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET?.trim(),
   FRONTEND_URL: process.env.FRONTEND_URL ?? 'http://localhost:4200',
+  /** URL pública del backend, usada como `callbackUrl` al disparar webhooks de n8n. */
+  BACKEND_PUBLIC_URL: process.env.BACKEND_PUBLIC_URL?.trim() || '',
   /** URL del webhook de n8n para el chat con IA. Ej: https://tu-instancia.app.n8n.cloud/webhook/ID_REAL */
   N8N_WEBHOOK_URL: process.env.N8N_WEBHOOK_URL?.trim() || '',
+  /** URL del webhook de n8n para la generación de playlists por IA (H1.3 / SCRUM-162). */
+  N8N_WEBHOOK_PLAYLIST_URL: process.env.N8N_WEBHOOK_PLAYLIST_URL?.trim() || '',
+  /** Secret compartido entre backend y n8n para el callback `POST /api/playlists/:id/ai-complete`. */
+  N8N_CALLBACK_SECRET: process.env.N8N_CALLBACK_SECRET?.trim() || '',
 };
 

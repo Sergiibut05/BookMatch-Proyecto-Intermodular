@@ -1,0 +1,209 @@
+{
+  "name": "Generate Playlist (AI)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "playlist-generate",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [-320, 96],
+      "id": "7a2b3e0a-9a1c-4c8c-9e45-111111111111",
+      "name": "Webhook",
+      "webhookId": "playlist-generate-webhook"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"success\": true,\n  \"message\": \"Generando playlist...\"\n}",
+        "options": {
+          "responseCode": 202
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [-80, -48],
+      "id": "7a2b3e0a-9a1c-4c8c-9e45-222222222222",
+      "name": "Respond 202"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// ============================================================\n// Validar Payload\n// ------------------------------------------------------------\n// El backend BookMatch nos envía:\n//   { playlistId, userId, prompt, size, genres, mood, language,\n//     catalogSample: [{ id, title, author }], callbackUrl, callbackSecret }\n// Validamos y normalizamos antes de ir al LLM.\n// ============================================================\n\nconst payload = $json.body;\nif (!payload) {\n  throw new Error('Request body is missing');\n}\n\nconst {\n  playlistId,\n  userId,\n  prompt,\n  size,\n  genres,\n  mood,\n  language,\n  catalogSample,\n  callbackUrl,\n  callbackSecret\n} = payload;\n\nif (!Number.isInteger(playlistId) || playlistId <= 0) {\n  throw new Error(`playlistId inválido: ${playlistId}`);\n}\nif (!Number.isInteger(userId) || userId <= 0) {\n  throw new Error(`userId inválido: ${userId}`);\n}\nif (!prompt || typeof prompt !== 'string' || prompt.length < 5) {\n  throw new Error('prompt vacío o demasiado corto');\n}\nif (!callbackUrl || typeof callbackUrl !== 'string' || !/^https?:\\/\\//.test(callbackUrl)) {\n  throw new Error(`callbackUrl inválido: ${callbackUrl}`);\n}\nif (!Array.isArray(catalogSample) || catalogSample.length === 0) {\n  throw new Error('catalogSample vacío: el backend debe enviar al menos un libro');\n}\n\nconst safeSample = catalogSample\n  .filter((b) => Number.isInteger(b?.id) && typeof b?.title === 'string')\n  .slice(0, 80);\n\nconst allowedIds = safeSample.map((b) => b.id);\n\nreturn {\n  playlistId,\n  userId,\n  prompt: prompt.trim(),\n  size: Number.isInteger(size) ? Math.max(3, Math.min(25, size)) : 8,\n  genres: Array.isArray(genres) ? genres.slice(0, 10) : [],\n  mood: typeof mood === 'string' ? mood.slice(0, 80) : null,\n  language: typeof language === 'string' ? language.slice(0, 20) : 'es',\n  catalogSample: safeSample,\n  allowedIds,\n  callbackUrl,\n  callbackSecret: callbackSecret || null,\n  startTime: Date.now()\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-80, 176],
+      "id": "7a2b3e0a-9a1c-4c8c-9e45-333333333333",
+      "name": "Validar Payload"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// ============================================================\n// Construir Prompt LLM\n// ------------------------------------------------------------\n// Prepara `systemPrompt` y `userPrompt` en formato JSON-strict\n// para que el modelo solo use IDs del `catalogSample` real.\n// ============================================================\n\nconst data = $json;\n\nconst sampleList = data.catalogSample\n  .map((b) => `- [${b.id}] ${b.title}${b.author ? ' — ' + b.author : ''}`)\n  .join('\\n');\n\nconst systemPrompt = `Eres BookMatch, un asistente experto en libros.\nTu tarea es generar una playlist de lectura basada en la petición del usuario\nseleccionando EXCLUSIVAMENTE libros del catálogo proporcionado.\n\nReglas estrictas:\n1. Usa únicamente IDs presentes en CATALOGO. Si inventas un ID, la playlist se rechaza.\n2. No repitas el mismo id.\n3. Devuelve entre 3 y ${data.size} libros.\n4. El idioma de title/description es \"${data.language}\".\n5. Responde ÚNICAMENTE con JSON válido que cumpla este esquema:\n{\n  \"title\": string (<= 80 chars),\n  \"description\": string (<= 400 chars),\n  \"items\": [ { \"catalogBookId\": number, \"note\": string | null } ]\n}\nNada de texto fuera del JSON.`;\n\nconst userPrompt = `PETICIÓN DEL USUARIO:\n\"\"\"\n${data.prompt}\n\"\"\"\n\nGéneros preferidos: ${data.genres.length ? data.genres.join(', ') : 'no especificados'}\nEstado de ánimo: ${data.mood || 'no especificado'}\nTamaño deseado: ${data.size} libros\n\nCATALOGO (id — título — autor):\n${sampleList}`;\n\nreturn {\n  ...data,\n  systemPrompt,\n  userPrompt\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [160, 176],
+      "id": "7a2b3e0a-9a1c-4c8c-9e45-444444444444",
+      "name": "Construir Prompt"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/chat/completions",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "groqApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {\n  model: 'llama-3.3-70b-versatile',\n  messages: [\n    { role: 'system', content: $json.systemPrompt },\n    { role: 'user',   content: $json.userPrompt }\n  ],\n  response_format: { type: 'json_object' },\n  temperature: 0.4,\n  max_tokens: 1024\n} }}",
+        "options": {
+          "timeout": 45000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [400, 176],
+      "id": "7a2b3e0a-9a1c-4c8c-9e45-555555555555",
+      "name": "Groq · Chat Completion",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// ============================================================\n// Parsear Respuesta LLM\n// ------------------------------------------------------------\n// Extrae el JSON del `choices[0].message.content`, valida campos\n// e intersecta `catalogBookId` contra `allowedIds` para descartar\n// libros inventados por el modelo.\n// ============================================================\n\nconst prev = $('Construir Prompt').item.json;\nconst response = $json;\n\nlet parsed = null;\ntry {\n  const content = response?.choices?.[0]?.message?.content || '';\n  parsed = typeof content === 'string' ? JSON.parse(content) : content;\n} catch (err) {\n  throw new Error('Respuesta LLM no es JSON válido: ' + (err?.message || err));\n}\n\nif (!parsed || typeof parsed !== 'object') {\n  throw new Error('Respuesta LLM vacía o no es un objeto');\n}\n\nconst allowed = new Set(prev.allowedIds);\n\nconst rawItems = Array.isArray(parsed.items) ? parsed.items : [];\nconst cleanItems = [];\nconst seen = new Set();\nfor (const it of rawItems) {\n  const id = Number(it?.catalogBookId);\n  if (!Number.isInteger(id) || !allowed.has(id) || seen.has(id)) continue;\n  seen.add(id);\n  cleanItems.push({\n    catalogBookId: id,\n    position: cleanItems.length + 1,\n    note: typeof it?.note === 'string' ? it.note.slice(0, 500) : null\n  });\n  if (cleanItems.length >= prev.size) break;\n}\n\nif (cleanItems.length === 0) {\n  return {\n    ...prev,\n    aiStatus: 'error',\n    aiErrorMessage: 'El modelo no devolvió IDs válidos del catálogo.',\n    aiTitle: null,\n    aiDescription: null,\n    aiItems: []\n  };\n}\n\nreturn {\n  ...prev,\n  aiStatus: 'success',\n  aiErrorMessage: null,\n  aiTitle: typeof parsed.title === 'string' ? parsed.title.slice(0, 100) : null,\n  aiDescription: typeof parsed.description === 'string' ? parsed.description.slice(0, 2000) : null,\n  aiItems: cleanItems,\n  processingTime: Date.now() - (prev.startTime || Date.now())\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [640, 176],
+      "id": "7a2b3e0a-9a1c-4c8c-9e45-666666666666",
+      "name": "Parsear Respuesta LLM"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.callbackUrl }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "x-n8n-secret",
+              "value": "={{ $json.callbackSecret || '' }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {\n  status: $json.aiStatus,\n  errorMessage: $json.aiErrorMessage,\n  title: $json.aiTitle,\n  description: $json.aiDescription,\n  items: $json.aiItems\n} }}",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [880, 176],
+      "id": "7a2b3e0a-9a1c-4c8c-9e45-777777777777",
+      "name": "Callback Backend (success)"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// ============================================================\n// Preparar Error\n// ------------------------------------------------------------\n// Rama de fallo: si Groq o el parser dejan el pipeline sin salida\n// usable, notificamos al backend con status='error' para que\n// marque la playlist como fallida (`[AI_FAILED] ...`).\n// ============================================================\n\nconst prev = $('Validar Payload').item.json;\nconst err = $json.error || $json;\n\nreturn {\n  ...prev,\n  aiStatus: 'error',\n  aiErrorMessage: (err?.message || 'Fallo en generación IA').slice(0, 500),\n  aiTitle: null,\n  aiDescription: null,\n  aiItems: []\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [640, 400],
+      "id": "7a2b3e0a-9a1c-4c8c-9e45-888888888888",
+      "name": "Preparar Error"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.callbackUrl }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "x-n8n-secret",
+              "value": "={{ $json.callbackSecret || '' }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {\n  status: 'error',\n  errorMessage: $json.aiErrorMessage,\n  title: null,\n  description: null,\n  items: []\n} }}",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [880, 400],
+      "id": "7a2b3e0a-9a1c-4c8c-9e45-999999999999",
+      "name": "Callback Backend (error)"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          { "node": "Respond 202", "type": "main", "index": 0 },
+          { "node": "Validar Payload", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Validar Payload": {
+      "main": [
+        [ { "node": "Construir Prompt", "type": "main", "index": 0 } ]
+      ]
+    },
+    "Construir Prompt": {
+      "main": [
+        [ { "node": "Groq · Chat Completion", "type": "main", "index": 0 } ]
+      ]
+    },
+    "Groq · Chat Completion": {
+      "main": [
+        [ { "node": "Parsear Respuesta LLM", "type": "main", "index": 0 } ],
+        [ { "node": "Preparar Error", "type": "main", "index": 0 } ]
+      ]
+    },
+    "Parsear Respuesta LLM": {
+      "main": [
+        [ { "node": "Callback Backend (success)", "type": "main", "index": 0 } ]
+      ]
+    },
+    "Preparar Error": {
+      "main": [
+        [ { "node": "Callback Backend (error)", "type": "main", "index": 0 } ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {},
+  "meta": {
+    "description": "H1.3 · SCRUM-162. Recibe prompt de BookMatch-Backend (POST /api/playlists/generate) con una muestra del catálogo y devuelve items vía callback `POST /api/playlists/:id/ai-complete` (header x-n8n-secret). Anti-alucinaciones: intersección LLM ↔ allowedIds."
+  }
+}

@@ -1,12 +1,16 @@
+import type { Request, Response, NextFunction } from 'express';
 import { Router } from 'express';
 import { auth } from '../../middleware/auth.js';
 import { validate } from '../../middleware/validate.js';
+import { env } from '../../config/env.js';
 import {
   createPlaylistSchema,
   updatePlaylistSchema,
   addPlaylistItemSchema,
   updatePlaylistItemSchema,
   reorderPlaylistItemsSchema,
+  generatePlaylistSchema,
+  aiCompletePlaylistSchema,
 } from './playlists.schema.js';
 import {
   listPlaylistsCtrl,
@@ -18,7 +22,27 @@ import {
   updatePlaylistItemCtrl,
   removePlaylistItemCtrl,
   reorderPlaylistItemsCtrl,
+  generatePlaylistCtrl,
+  aiCompletePlaylistCtrl,
 } from './playlists.controller.js';
+
+/**
+ * Middleware que protege el callback de n8n. Si `N8N_CALLBACK_SECRET`
+ * está definido, exige el header `x-n8n-secret` exacto; si no, deja
+ * pasar (modo dev sin secret configurado).
+ */
+function requireN8nSecret(req: Request, res: Response, next: NextFunction) {
+  const secret = env.N8N_CALLBACK_SECRET;
+  if (!secret) {
+    console.warn('[playlists:ai-complete] N8N_CALLBACK_SECRET no configurada; aceptando callback sin autenticación');
+    return next();
+  }
+  const got = req.header('x-n8n-secret');
+  if (got !== secret) {
+    return res.status(401).json({ message: 'Secret inválido' });
+  }
+  next();
+}
 
 const router = Router();
 
@@ -297,5 +321,96 @@ router.patch(
  *       204: { description: Item eliminado }
  */
 router.delete('/:id/items/:itemId', auth, removePlaylistItemCtrl);
+
+// ============================================================
+// H1.3 · Generación IA (SCRUM-162)
+// ============================================================
+
+/**
+ * @swagger
+ * /api/playlists/generate:
+ *   post:
+ *     summary: Genera una playlist con IA (vía n8n). Crea un draft y responde 202.
+ *     tags: [Playlists]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [prompt]
+ *             properties:
+ *               prompt: { type: string, minLength: 5, maxLength: 2000 }
+ *               size: { type: integer, minimum: 3, maximum: 25 }
+ *               genres:
+ *                 type: array
+ *                 items: { type: string }
+ *               mood: { type: string }
+ *               language: { type: string }
+ *               visibility: { type: string, enum: [PRIVATE, PUBLIC], default: PRIVATE }
+ *     responses:
+ *       202: { description: Generación en curso; devuelve el draft para polling }
+ *       400: { description: Payload inválido }
+ *       401: { description: No autenticado }
+ *       502: { description: No se pudo contactar con n8n }
+ *       503: { description: Servicio de IA no configurado }
+ */
+router.post(
+  '/generate',
+  auth,
+  validate(generatePlaylistSchema),
+  generatePlaylistCtrl,
+);
+
+/**
+ * @swagger
+ * /api/playlists/{id}/ai-complete:
+ *   post:
+ *     summary: Callback desde n8n. Rellena la playlist con los resultados IA.
+ *     description: Protegido por header `x-n8n-secret` (shared secret).
+ *     tags: [Playlists]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: integer }
+ *       - in: header
+ *         name: x-n8n-secret
+ *         required: true
+ *         schema: { type: string }
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               title: { type: string }
+ *               description: { type: string, nullable: true }
+ *               coverUrl: { type: string, format: uri, nullable: true }
+ *               status: { type: string, enum: [success, error], default: success }
+ *               errorMessage: { type: string }
+ *               items:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   required: [catalogBookId]
+ *                   properties:
+ *                     catalogBookId: { type: integer }
+ *                     position: { type: integer }
+ *                     note: { type: string, nullable: true }
+ *     responses:
+ *       200: { description: Playlist actualizada; incluye stats (accepted/discarded) }
+ *       401: { description: Secret inválido }
+ *       404: { description: Playlist no encontrada }
+ */
+router.post(
+  '/:id/ai-complete',
+  requireN8nSecret,
+  validate(aiCompletePlaylistSchema),
+  aiCompletePlaylistCtrl,
+);
 
 export default router;

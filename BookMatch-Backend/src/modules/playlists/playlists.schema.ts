@@ -65,9 +65,50 @@ export const reorderPlaylistItemsSchema = z
   })
   .strict();
 
+// ------------------------------------------------------------
+// H1.3 · Generación IA (SCRUM-162)
+// ------------------------------------------------------------
+
+export const generatePlaylistSchema = z
+  .object({
+    prompt: z
+      .string()
+      .trim()
+      .min(5, 'El prompt debe tener al menos 5 caracteres')
+      .max(2000, 'El prompt no puede exceder 2000 caracteres'),
+    size: z.number().int().min(3).max(25).optional(),
+    genres: z.array(z.string().trim().min(1).max(80)).max(10).optional(),
+    mood: z.string().trim().min(2).max(80).optional(),
+    language: z.string().trim().min(2).max(20).optional(),
+    visibility: visibilityEnum.default('PRIVATE'),
+  })
+  .strict();
+
+export const aiCompletePlaylistSchema = z
+  .object({
+    title: z.string().trim().min(1).max(100).optional(),
+    description: z.string().max(2000).nullable().optional(),
+    coverUrl: z.string().url().nullable().optional(),
+    status: z.enum(['success', 'error']).default('success'),
+    errorMessage: z.string().max(500).optional(),
+    items: z
+      .array(
+        z.object({
+          catalogBookId: z.number().int().positive(),
+          position: z.number().int().positive().optional(),
+          note: z.string().max(500).nullable().optional(),
+        }),
+      )
+      .max(50, 'La IA no puede devolver más de 50 items')
+      .default([]),
+  })
+  .strict();
+
 export type CreatePlaylistInput = z.infer<typeof createPlaylistSchema>;
 export type UpdatePlaylistInput = z.infer<typeof updatePlaylistSchema>;
 export type GetPlaylistsQuery = z.infer<typeof getPlaylistsQuerySchema>;
 export type AddPlaylistItemInput = z.infer<typeof addPlaylistItemSchema>;
 export type UpdatePlaylistItemInput = z.infer<typeof updatePlaylistItemSchema>;
 export type ReorderPlaylistItemsInput = z.infer<typeof reorderPlaylistItemsSchema>;
+export type GeneratePlaylistInput = z.infer<typeof generatePlaylistSchema>;
+export type AiCompletePlaylistInput = z.infer<typeof aiCompletePlaylistSchema>;

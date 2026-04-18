@@ -1,4 +1,6 @@
+import axios from 'axios';
 import { prisma } from '../../config/db.js';
+import { env } from '../../config/env.js';
 import type {
   CreatePlaylistInput,
   UpdatePlaylistInput,
@@ -6,6 +8,8 @@ import type {
   AddPlaylistItemInput,
   UpdatePlaylistItemInput,
   ReorderPlaylistItemsInput,
+  GeneratePlaylistInput,
+  AiCompletePlaylistInput,
 } from './playlists.schema.js';
 
 const playlistItemSelect = {
@@ -425,4 +429,202 @@ export async function reorderPlaylistItems(
   });
 
   return refreshed.map(mapItem);
+}
+
+// ============================================================
+// H1.3 · Generación de playlists con IA (SCRUM-162)
+// ============================================================
+
+/**
+ * Devuelve la URL del webhook de n8n para playlists si está correctamente
+ * configurada. `null` en otro caso (el caller devuelve 503).
+ */
+export function getPlaylistWebhookUrl(): string | null {
+  const url = env.N8N_WEBHOOK_PLAYLIST_URL;
+  if (!url || url.includes('TU_ID_PLAYLIST')) return null;
+  return url;
+}
+
+/**
+ * Construye el `callbackUrl` que enviamos a n8n. Prioriza
+ * `BACKEND_PUBLIC_URL` (configurable) y cae al host/protocol del request
+ * original si no está seteada (útil en dev tras ngrok/tunnel).
+ */
+export function buildCallbackBaseUrl(reqProtocol: string, reqHost: string): string {
+  if (env.BACKEND_PUBLIC_URL) return env.BACKEND_PUBLIC_URL.replace(/\/+$/, '');
+  return `${reqProtocol}://${reqHost}`;
+}
+
+/**
+ * Muestra de libros del catálogo que pasamos a n8n como contexto.
+ * Limitada en tamaño para no desbordar el prompt del LLM.
+ */
+async function buildCatalogSample(limit = 60): Promise<Array<{ id: number; title: string; author: string | null }>> {
+  const books = await prisma.catalogBook.findMany({
+    take: limit,
+    orderBy: { id: 'desc' },
+    select: { id: true, title: true, author: true },
+  });
+  return books.map((b: any) => ({ id: b.id, title: b.title, author: b.author }));
+}
+
+/**
+ * Crea una playlist en estado "borrador IA":
+ *   - `source = AI`
+ *   - `title = 'Generando...'`
+ *   - `aiPrompt = prompt`
+ *   - `visibility` según input (default PRIVATE).
+ * No crea items; los rellena el callback `ai-complete`.
+ */
+export async function createAiDraftPlaylist(userId: number, input: GeneratePlaylistInput) {
+  const created = await prisma.playlist.create({
+    data: {
+      ownerId: userId,
+      title: 'Generando...',
+      description: null,
+      visibility: input.visibility,
+      source: 'AI',
+      aiPrompt: input.prompt,
+    },
+    select: playlistSelect,
+  });
+
+  return mapPlaylist(created);
+}
+
+/**
+ * Dispara el webhook de n8n pasándole toda la información necesaria.
+ * Fire-and-forget: lanza excepción si el POST falla, pero el caller
+ * debe asumir que el usuario ya tiene un draft y puede reintentar.
+ */
+export async function triggerPlaylistWebhook(params: {
+  webhookUrl: string;
+  callbackBaseUrl: string;
+  playlistId: number;
+  userId: number;
+  input: GeneratePlaylistInput;
+}): Promise<void> {
+  const { webhookUrl, callbackBaseUrl, playlistId, userId, input } = params;
+
+  const catalogSample = await buildCatalogSample();
+
+  const payload = {
+    playlistId,
+    userId,
+    prompt: input.prompt,
+    size: input.size ?? 8,
+    genres: input.genres ?? [],
+    mood: input.mood ?? null,
+    language: input.language ?? null,
+    catalogSample,
+    callbackUrl: `${callbackBaseUrl}/api/playlists/${playlistId}/ai-complete`,
+    callbackSecret: env.N8N_CALLBACK_SECRET || null,
+  };
+
+  await axios.post(webhookUrl, payload, { timeout: 10_000 });
+}
+
+/**
+ * Rellena una playlist a partir del callback de n8n.
+ *   - Filtra `catalogBookId` que no existan (log) y elimina duplicados.
+ *   - Si `items` queda vacío o `status === 'error'`: marca como fallo en
+ *     la descripción (`[AI_FAILED] …`) pero mantiene `source = AI`.
+ *   - Sustituye atómicamente los items existentes (por si hay reintento).
+ */
+export async function completeAiPlaylist(
+  playlistId: number,
+  input: AiCompletePlaylistInput,
+) {
+  const existing = await prisma.playlist.findUnique({
+    where: { id: playlistId },
+    select: { id: true, deletedAt: true, source: true },
+  });
+  if (!existing || existing.deletedAt) {
+    throw notFound();
+  }
+
+  // Normalizamos IDs únicos y validamos contra el catálogo.
+  const requestedIds = Array.from(new Set(input.items.map((it) => it.catalogBookId)));
+  let validIds: number[] = [];
+  let missingIds: number[] = [];
+
+  if (requestedIds.length > 0) {
+    const found = await prisma.catalogBook.findMany({
+      where: { id: { in: requestedIds } },
+      select: { id: true },
+    });
+    const foundSet = new Set(found.map((b: any) => b.id));
+    validIds = requestedIds.filter((id) => foundSet.has(id));
+    missingIds = requestedIds.filter((id) => !foundSet.has(id));
+    if (missingIds.length > 0) {
+      console.warn(
+        `[playlists:ai-complete] playlistId=${playlistId} descartando catalogBookIds inexistentes: ${missingIds.join(', ')}`,
+      );
+    }
+  }
+
+  const isFailure = input.status === 'error' || validIds.length === 0;
+
+  // Si falla, dejamos título heurístico y descripción marcada.
+  const failurePrefix = '[AI_FAILED]';
+  let nextTitle = input.title?.trim() || 'Generando...';
+  let nextDescription: string | null = input.description?.trim() || null;
+
+  if (isFailure) {
+    nextTitle = input.title?.trim() || 'Playlist generada (sin resultados)';
+    const reason = input.errorMessage?.trim()
+      || 'La IA no devolvió libros válidos del catálogo. Vuelve a intentarlo con otro prompt.';
+    nextDescription = `${failurePrefix} ${reason}`;
+  }
+
+  // Ordenamos items por position si viene, si no por orden de aparición.
+  const orderedItems = [...input.items]
+    .filter((it) => validIds.includes(it.catalogBookId))
+    .sort((a, b) => (a.position ?? Number.MAX_SAFE_INTEGER) - (b.position ?? Number.MAX_SAFE_INTEGER));
+
+  // Reasignamos posiciones 1..N de forma determinista.
+  const itemsToCreate = orderedItems.map((it, index) => ({
+    catalogBookId: it.catalogBookId,
+    position: index + 1,
+    note: it.note ?? null,
+  }));
+
+  // Sustitución atómica: delete previos + update metadata + create nuevos.
+  await prisma.$transaction([
+    prisma.playlistItem.deleteMany({ where: { playlistId } }),
+    prisma.playlist.update({
+      where: { id: playlistId },
+      data: {
+        title: nextTitle,
+        description: nextDescription,
+        ...(input.coverUrl !== undefined ? { coverUrl: input.coverUrl } : {}),
+      },
+    }),
+    ...itemsToCreate.map((it) =>
+      prisma.playlistItem.create({
+        data: {
+          playlistId,
+          catalogBookId: it.catalogBookId,
+          position: it.position,
+          note: it.note,
+        },
+      }),
+    ),
+  ]);
+
+  const refreshed = await prisma.playlist.findUnique({
+    where: { id: playlistId },
+    select: playlistSelect,
+  });
+
+  return {
+    playlist: refreshed ? mapPlaylist(refreshed) : null,
+    stats: {
+      requested: requestedIds.length,
+      accepted: validIds.length,
+      discarded: missingIds.length,
+      discardedIds: missingIds,
+      failure: isFailure,
+    },
+  };
 }
