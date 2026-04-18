@@ -1,0 +1,28 @@
+:host {
+  display: block;
+}
+
+// Estilos específicos del drag-and-drop (Angular CDK):
+// el preview flotante y el placeholder del hueco no son alcanzables solo
+// con Tailwind, así que los mantenemos aquí de forma mínima.
+
+.cdk-drag-preview {
+  box-shadow: 0 5px 20px -5px rgba(69, 51, 45, 0.25);
+  border-radius: 0.5rem;
+  background-color: #ffffff;
+}
+
+.cdk-drag-placeholder {
+  opacity: 0.35;
+  background-color: #fff8ec;
+  border: 2px dashed #e0a15e;
+  border-radius: 0.5rem;
+}
+
+.cdk-drag-animating {
+  transition: transform 200ms cubic-bezier(0, 0, 0.2, 1);
+}
+
+:host ::ng-deep .cdk-drop-list-dragging li:not(.cdk-drag-placeholder) {
+  transition: transform 200ms cubic-bezier(0, 0, 0.2, 1);
+}

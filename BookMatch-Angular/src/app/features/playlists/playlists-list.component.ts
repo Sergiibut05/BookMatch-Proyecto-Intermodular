@@ -8,7 +8,7 @@ import {
   signal,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { PlaylistService } from '@core/services/playlist.service';
 import { Header } from '@shared/components/header/header';
@@ -25,7 +25,7 @@ type PlaylistFilter = 'all' | 'ai' | 'manual';
 @Component({
   selector: 'app-playlists-list',
   standalone: true,
-  imports: [CommonModule, RouterLink, TranslateModule, Header],
+  imports: [CommonModule, TranslateModule, Header],
   templateUrl: './playlists-list.component.html',
   styleUrl: './playlists-list.component.scss',
 })

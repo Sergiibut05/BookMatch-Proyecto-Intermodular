@@ -135,6 +135,11 @@ export const routes: Routes = [
         loadComponent: () => import('./features/playlists/playlist-new.component').then(m => m.PlaylistNewComponent)
       },
       {
+        path: 'playlists/:id',
+        canActivate: [authGuard],
+        loadComponent: () => import('./features/playlists/playlist-detail.component').then(m => m.PlaylistDetailComponent)
+      },
+      {
         path: '**',
         redirectTo: '/auth/login'
       }
