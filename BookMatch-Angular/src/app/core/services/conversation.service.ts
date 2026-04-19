@@ -97,10 +97,20 @@ export class ConversationService {
    * @param content Texto del mensaje
    * @returns Observable que completa cuando el mensaje se envió
    */
-  sendMessage(userId: string, conversationId: string, content: string): Observable<void> {
+  sendMessage(
+    userId: string,
+    conversationId: string,
+    content: string,
+    options?: { mode?: 'chat' | 'playlist_builder'; maxItems?: number }
+  ): Observable<void> {
+    const mode = options?.mode ?? 'chat';
+    const body: Record<string, unknown> = { userId, conversationId, content, mode };
+    if (mode === 'playlist_builder' && options?.maxItems) {
+      body['maxItems'] = options.maxItems;
+    }
     return this.http.post<void>(
       `${environment.apiUrl}/ai-chat/send-message`,
-      { userId, conversationId, content }
+      body
     );
   }
 

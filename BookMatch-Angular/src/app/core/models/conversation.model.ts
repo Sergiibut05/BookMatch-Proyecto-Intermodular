@@ -32,6 +32,30 @@ export interface Conversation {
 }
 
 /**
+ * Ítem de un borrador de playlist conversacional.
+ * El LLM devuelve el borrador completo cada turno; el frontend lo renderiza
+ * en un panel visual y permite guardar la playlist al final.
+ */
+export interface PlaylistDraftItem {
+  /** ID del libro del catálogo (backend Postgres). */
+  catalogBookId: number;
+  /** Posición 1-based dentro de la playlist. */
+  position: number;
+  /** Nota opcional del curador (máx. 200 chars). */
+  note?: string | null;
+}
+
+/** Borrador de playlist generado por la IA en modo conversacional. */
+export interface PlaylistDraft {
+  /** Título propuesto (3-6 palabras). */
+  title: string;
+  /** Descripción corta (1-2 frases). */
+  description?: string;
+  /** Lista ordenada de libros. */
+  items: PlaylistDraftItem[];
+}
+
+/**
  * Metadatos de un mensaje del asistente: razonamiento, recomendaciones, queries usadas,
  * tipo de intención y tiempo de procesamiento.
  */
@@ -50,6 +74,12 @@ export interface MessageMetadata {
   intentType?: 'book_recommendation' | 'casual_chat' | 'out_of_scope';
   /** Tiempo de procesamiento en ms. */
   processingTime?: number;
+  /** Modo en que se envió el mensaje del usuario. */
+  mode?: 'chat' | 'playlist_builder';
+  /** Máximo de libros para esta iteración (modo playlist). */
+  maxItems?: number;
+  /** Borrador de playlist (solo en modo playlist_builder). */
+  playlistDraft?: PlaylistDraft;
 }
 
 /**
