@@ -67,6 +67,30 @@ export class PlaylistsListComponent implements OnInit {
   /** Controla la visibilidad del modal «Generar con IA» (H1.9). */
   readonly showGenerateDialog = signal<boolean>(false);
 
+  /**
+   * Playlist que el usuario está a punto de eliminar. Al setearse abre el
+   * modal de confirmación (sustituto del `window.confirm` nativo, que
+   * rompía la estética cálida del resto de la app).
+   */
+  readonly playlistToDelete = signal<Playlist | null>(null);
+  readonly deleting = signal<boolean>(false);
+
+  // ------------------------------------------------------------------
+  // Stats del hero. Evitan queries extra: solo contamos sobre el array
+  // en memoria, que ya trae `itemsCount` por playlist.
+  // ------------------------------------------------------------------
+  readonly totalCount = computed(() => this.playlists().length);
+  readonly aiCount = computed(() =>
+    this.playlists().filter((p) => p.source === 'AI' || p.source === 'HYBRID')
+      .length,
+  );
+  readonly manualCount = computed(() =>
+    this.playlists().filter((p) => p.source === 'MANUAL').length,
+  );
+  readonly booksCount = computed(() =>
+    this.playlists().reduce((acc, p) => acc + (p.itemsCount ?? 0), 0),
+  );
+
   ngOnInit(): void {
     this.loadPlaylists();
   }
@@ -103,14 +127,28 @@ export class PlaylistsListComponent implements OnInit {
     this.router.navigate(['/playlists', playlist.id]);
   }
 
+  /**
+   * Punto de entrada del flujo de eliminación. En vez de mostrar un
+   * `window.confirm()` nativo, abre el modal custom (bottom-sheet en
+   * móvil, centrado en desktop). La eliminación real la ejecuta
+   * `confirmDeletePlaylist()` cuando el usuario acepta.
+   */
   deletePlaylist(event: Event, playlist: Playlist): void {
     event.stopPropagation();
+    if (this.deleting()) return;
+    this.playlistToDelete.set(playlist);
+  }
 
-    const message = this.translate.instant('PLAYLISTS.DELETE_CONFIRM', {
-      title: playlist.title,
-    });
-    if (!window.confirm(message)) return;
+  cancelDeletePlaylist(): void {
+    if (this.deleting()) return;
+    this.playlistToDelete.set(null);
+  }
 
+  confirmDeletePlaylist(): void {
+    const playlist = this.playlistToDelete();
+    if (!playlist || this.deleting()) return;
+
+    this.deleting.set(true);
     this.playlistService
       .delete(playlist.id)
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -119,10 +157,14 @@ export class PlaylistsListComponent implements OnInit {
           this.playlists.update((list) =>
             list.filter((p) => p.id !== playlist.id),
           );
+          this.deleting.set(false);
+          this.playlistToDelete.set(null);
         },
         error: (err) => {
           console.error('[playlists-list] error eliminando playlist', err);
           this.errorKey.set('PLAYLISTS.ERROR_DELETE');
+          this.deleting.set(false);
+          this.playlistToDelete.set(null);
         },
       });
   }

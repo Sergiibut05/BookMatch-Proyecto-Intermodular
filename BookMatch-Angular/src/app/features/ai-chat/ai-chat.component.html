@@ -183,15 +183,25 @@
           </button>
         }
 
+        <!-- Toggle modo playlist:
+             · Icono siempre visible (móvil y desktop).
+             · Etiqueta "Playlist" desde md:+ para hacer la función descubrible
+               sin ensuciar la UI en móvil.
+             · Punto pulsante (is-new) la primera vez que el usuario ve el chat,
+               hasta que pulsa el botón o descarta el hint → `playlistHintVisible`. -->
         <button
           type="button"
           (click)="togglePlaylistMode()"
-          class="press-target playlist-mode-btn is-icon-only"
+          class="press-target playlist-mode-btn"
           [class.is-active]="playlistMode()"
+          [class.is-new]="playlistHintVisible() && !playlistMode()"
           [attr.aria-pressed]="playlistMode()"
           [attr.aria-label]="'AI_CHAT.PLAYLIST_MODE_TOGGLE' | translate"
           [title]="(playlistMode() ? 'AI_CHAT.PLAYLIST_MODE_ON' : 'AI_CHAT.PLAYLIST_MODE_OFF') | translate">
           <span class="material-symbols-outlined">collections_bookmark</span>
+          <span class="hidden md:inline text-[13px] font-medium">
+            {{ (playlistMode() ? 'AI_CHAT.PLAYLIST_MODE_LABEL_ON' : 'AI_CHAT.PLAYLIST_MODE_LABEL_OFF') | translate }}
+          </span>
         </button>
       </div>
     </div>
@@ -213,39 +223,84 @@
               {{ 'AI_CHAT.WELCOME_SUBTITLE' | translate }}
             </p>
 
+            @if (playlistHintVisible() && !playlistMode()) {
+              <!-- On-boarding hint sobre el modo playlist. Se muestra una vez
+                   por usuario (persistido en localStorage) para que pueda
+                   descubrir qué hace el botón del toolbar. -->
+              <div class="playlist-hint" role="note">
+                <span class="playlist-hint-icon" aria-hidden="true">
+                  <span class="material-symbols-outlined">collections_bookmark</span>
+                </span>
+                <p class="playlist-hint-text">
+                  {{ 'AI_CHAT.PLAYLIST_MODE_HINT' | translate }}
+                </p>
+                <button
+                  type="button"
+                  class="playlist-hint-close press-target"
+                  (click)="dismissPlaylistHint()"
+                  [attr.aria-label]="'AI_CHAT.PLAYLIST_MODE_HINT_CLOSE' | translate"
+                  [title]="'AI_CHAT.PLAYLIST_MODE_HINT_CLOSE' | translate">
+                  <span class="material-symbols-outlined">close</span>
+                </button>
+              </div>
+            }
+
             <div class="chat-stagger mt-8 grid w-full grid-cols-1 gap-3 sm:grid-cols-3">
+              <!-- Cada chip usa flex-col + justify-between para que el bloque
+                   superior (icono + label) y el inferior (descripción) queden
+                   anclados a top/bottom. Así, si la descripción ocupa 2 líneas
+                   en una tarjeta y 1 en otra, los iconos y títulos siguen
+                   alineados horizontalmente entre tarjetas. -->
               <button
                 type="button"
                 [style.--i]="0"
                 (click)="useSuggestionKey('AI_CHAT.SUGGESTION_FANTASY')"
-                class="suggestion-chip press-target">
-                <span class="suggestion-icon" aria-hidden="true">
-                  <span class="material-symbols-outlined">castle</span>
+                class="suggestion-chip press-target flex flex-col">
+                <span class="suggestion-chip-head">
+                  <span class="suggestion-icon" aria-hidden="true">
+                    <span class="material-symbols-outlined">castle</span>
+                  </span>
+                  <span class="block text-base font-semibold leading-snug text-[#45332d]">
+                    {{ 'AI_CHAT.SUGGESTION_FANTASY_LABEL' | translate }}
+                  </span>
                 </span>
-                <span class="block text-base font-semibold text-[#45332d]">{{ 'AI_CHAT.SUGGESTION_FANTASY_LABEL' | translate }}</span>
-                <span class="mt-1 block text-sm text-[#8a6a52]">{{ 'AI_CHAT.SUGGESTION_FANTASY' | translate }}</span>
+                <span class="mt-2 block text-sm leading-snug text-[#8a6a52]">
+                  {{ 'AI_CHAT.SUGGESTION_FANTASY' | translate }}
+                </span>
               </button>
               <button
                 type="button"
                 [style.--i]="1"
                 (click)="useSuggestionKey('AI_CHAT.SUGGESTION_SCIFI')"
-                class="suggestion-chip press-target">
-                <span class="suggestion-icon" aria-hidden="true">
-                  <span class="material-symbols-outlined">rocket_launch</span>
+                class="suggestion-chip press-target flex flex-col">
+                <span class="suggestion-chip-head">
+                  <span class="suggestion-icon" aria-hidden="true">
+                    <span class="material-symbols-outlined">rocket_launch</span>
+                  </span>
+                  <span class="block text-base font-semibold leading-snug text-[#45332d]">
+                    {{ 'AI_CHAT.SUGGESTION_SCIFI_LABEL' | translate }}
+                  </span>
                 </span>
-                <span class="block text-base font-semibold text-[#45332d]">{{ 'AI_CHAT.SUGGESTION_SCIFI_LABEL' | translate }}</span>
-                <span class="mt-1 block text-sm text-[#8a6a52]">{{ 'AI_CHAT.SUGGESTION_SCIFI' | translate }}</span>
+                <span class="mt-2 block text-sm leading-snug text-[#8a6a52]">
+                  {{ 'AI_CHAT.SUGGESTION_SCIFI' | translate }}
+                </span>
               </button>
               <button
                 type="button"
                 [style.--i]="2"
                 (click)="useSuggestionKey('AI_CHAT.SUGGESTION_MYSTERY')"
-                class="suggestion-chip press-target">
-                <span class="suggestion-icon" aria-hidden="true">
-                  <span class="material-symbols-outlined">search_insights</span>
+                class="suggestion-chip press-target flex flex-col">
+                <span class="suggestion-chip-head">
+                  <span class="suggestion-icon" aria-hidden="true">
+                    <span class="material-symbols-outlined">search_insights</span>
+                  </span>
+                  <span class="block text-base font-semibold leading-snug text-[#45332d]">
+                    {{ 'AI_CHAT.SUGGESTION_MYSTERY_LABEL' | translate }}
+                  </span>
                 </span>
-                <span class="block text-base font-semibold text-[#45332d]">{{ 'AI_CHAT.SUGGESTION_MYSTERY_LABEL' | translate }}</span>
-                <span class="mt-1 block text-sm text-[#8a6a52]">{{ 'AI_CHAT.SUGGESTION_MYSTERY' | translate }}</span>
+                <span class="mt-2 block text-sm leading-snug text-[#8a6a52]">
+                  {{ 'AI_CHAT.SUGGESTION_MYSTERY' | translate }}
+                </span>
               </button>
             </div>
           </div>
@@ -639,3 +694,55 @@
     }
   </aside>
 </div>
+
+<!-- Modal de confirmación para eliminar conversación.
+     Reemplaza al antiguo `window.confirm()` por un diálogo custom que
+     respeta el theme de la app, cierra con ESC / click fuera y está
+     preparado para ser accesible (role=dialog + aria-modal). -->
+@if (conversationToDelete(); as convToDelete) {
+  <div
+    class="confirm-modal-overlay"
+    role="presentation"
+    (click)="cancelDeleteConversation()"
+    (keydown.escape)="cancelDeleteConversation()"
+    tabindex="-1">
+    <div
+      class="confirm-modal"
+      role="alertdialog"
+      aria-modal="true"
+      aria-labelledby="delete-conv-title"
+      aria-describedby="delete-conv-body"
+      (click)="$event.stopPropagation()">
+      <div class="confirm-modal-icon" aria-hidden="true">
+        <span class="material-symbols-outlined">delete_outline</span>
+      </div>
+      <h2 id="delete-conv-title" class="confirm-modal-title">
+        {{ 'AI_CHAT.DELETE_TITLE' | translate }}
+      </h2>
+      <p id="delete-conv-body" class="confirm-modal-body">
+        {{ 'AI_CHAT.DELETE_BODY' | translate: { title: convToDelete.title } }}
+      </p>
+      <div class="confirm-modal-actions">
+        <button
+          type="button"
+          class="confirm-modal-btn is-cancel press-target"
+          [disabled]="!!archivingConversationId()"
+          (click)="cancelDeleteConversation()">
+          {{ 'AI_CHAT.DELETE_CANCEL' | translate }}
+        </button>
+        <button
+          type="button"
+          class="confirm-modal-btn is-danger press-target"
+          [disabled]="!!archivingConversationId()"
+          (click)="confirmDeleteConversation()">
+          @if (archivingConversationId()) {
+            <span class="material-symbols-outlined animate-spin text-[18px]">progress_activity</span>
+          } @else {
+            <span class="material-symbols-outlined text-[18px]">delete</span>
+          }
+          {{ 'AI_CHAT.DELETE_CONFIRM_BTN' | translate }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
