@@ -3,6 +3,7 @@ import { getFirestore } from '../utils/firebaseAdmin.js';
 import { FieldValue } from 'firebase-admin/firestore';
 import axios from 'axios';
 import { env } from '../config/env.js';
+import { prisma } from '../config/db.js';
 
 const router = Router();
 
@@ -141,6 +142,41 @@ router.post('/send-message', async (req, res) => {
         message: 'El webhook de n8n no está configurado. Configura N8N_WEBHOOK_URL en el servidor.'
       });
     }
+    // En modo playlist con borrador vivo: cargar los libros del borrador
+    // desde el catalogo para enviarlos a n8n ya hidratados. Sin esto, la
+    // IA solo ve los libros del SQL nuevo (p.ej. "policial") y descarta
+    // los del borrador porque no los tiene en "LIBROS DISPONIBLES".
+    let draftBooks: Array<{
+      id: number;
+      title: string;
+      author: string;
+      description: string | null;
+      coverUrl: string | null;
+    }> = [];
+    if (currentDraft && currentDraft.items.length > 0) {
+      try {
+        const ids = currentDraft.items.map((it) => it.catalogBookId);
+        const rows = await prisma.catalogBook.findMany({
+          where: { id: { in: ids } },
+          select: { id: true, title: true, author: true, description: true, coverUrl: true }
+        });
+        const byId = new Map(rows.map((r) => [r.id, r]));
+        // Respetamos el orden del borrador del usuario.
+        draftBooks = ids
+          .map((id) => byId.get(id))
+          .filter((b): b is NonNullable<typeof b> => !!b)
+          .map((b) => ({
+            id: b.id,
+            title: b.title,
+            author: b.author,
+            description: b.description,
+            coverUrl: b.coverUrl
+          }));
+      } catch (err) {
+        console.error('[ai-chat] no se pudieron cargar los libros del borrador', err);
+      }
+    }
+
     await axios.post(webhookUrl, {
       userId,
       conversationId,
@@ -149,7 +185,8 @@ router.post('/send-message', async (req, res) => {
       baseUrl: req.headers.origin || env.FRONTEND_URL,
       mode,
       ...(maxItems ? { maxItems } : {}),
-      ...(currentDraft ? { currentDraft } : {})
+      ...(currentDraft ? { currentDraft } : {}),
+      ...(draftBooks.length > 0 ? { draftBooks } : {})
     });
 
     res.status(200).json({
