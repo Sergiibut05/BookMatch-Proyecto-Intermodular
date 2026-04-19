@@ -1,3 +1,76 @@
-:host {
-  display: contents;
+/* Estilos específicos del modal «Generar con IA». Las primitivas
+ * (`.pl-modal*`, `.pl-field*`, `.pl-radio-card`, `.pl-chip-tag`)
+ * viven en src/styles.scss para reutilizarlas en otros modales.
+ */
+
+.generate-row-2 {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+
+  @media (min-width: 480px) {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.generate-genre-input {
+  display: flex;
+  gap: 0.5rem;
+
+  .pl-field-input { flex: 1; }
+}
+
+.generate-genre-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.1rem;
+}
+
+.generate-fieldset {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.generate-radio-group {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.5rem;
+
+  @media (min-width: 480px) {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.generate-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.65rem 0.85rem;
+  border-radius: 10px;
+  font-size: 0.85rem;
+
+  .material-symbols-outlined {
+    font-size: 18px;
+    flex-shrink: 0;
+    font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 20;
+  }
+
+  &.is-error {
+    background: #fef2f2;
+    border: 1px solid #f5c7c7;
+    color: #8b1e1e;
+  }
+
+  &.is-info {
+    background: #fff4dc;
+    border: 1px solid rgba(107, 77, 57, 0.2);
+    color: #45332d;
+
+    .material-symbols-outlined { color: #8a6a52; }
+  }
 }

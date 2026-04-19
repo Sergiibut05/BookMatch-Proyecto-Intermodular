@@ -1,3 +1,554 @@
 :host {
   display: block;
+  background: #fbf5e7;
+  min-height: calc(100vh - 80px);
+}
+
+/* ============================================================
+ * SHELL
+ * ============================================================ */
+.playlists-shell {
+  max-width: 76rem;
+  margin: 0 auto;
+  padding: 1.25rem 1rem 4rem;
+
+  @media (min-width: 640px) {
+    padding: 1.75rem 1.5rem 5rem;
+  }
+}
+
+/* ============================================================
+ * HERO · estilo editorial
+ * ------------------------------------------------------------
+ * Plano (sin gradients). Rule fina inferior y serif para el
+ * título, dando un aire más "portadilla de libro" que "dashboard".
+ * ============================================================ */
+.playlists-hero {
+  position: relative;
+  padding: 0.75rem 0 1.5rem;
+  border-bottom: 1px solid rgba(107, 77, 57, 0.15);
+  margin-bottom: 1.75rem;
+
+  @media (min-width: 640px) {
+    padding: 1rem 0 2rem;
+    margin-bottom: 2.25rem;
+  }
+}
+
+.playlists-hero-inner {
+  display: grid;
+  gap: 1.25rem;
+
+  @media (min-width: 768px) {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+    gap: 2rem;
+  }
+}
+
+.playlists-hero-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-width: 38rem;
+}
+
+.playlists-hero-eyebrow {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #8a6a52;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.playlists-hero-title {
+  margin: 0;
+  font-size: clamp(1.75rem, 4vw, 2.6rem);
+  font-weight: 700;
+  color: #3a2820;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  /* Si hay una serif disponible en el stack la usamos para dar
+     personalidad; si no, cae a la sans del proyecto. */
+  font-family: 'Lora', 'Georgia', 'Times New Roman', serif;
+}
+
+.playlists-hero-subtitle {
+  margin: 0.25rem 0 0;
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: #6b4d39;
+  max-width: 34rem;
+
+  @media (min-width: 640px) {
+    font-size: 1rem;
+  }
+}
+
+/* Stats inline: ficha bibliográfica, no chips. Las reglas de
+   `.stat-item` / `.stat-sep` / `strong` viven en styles.scss para
+   ser reutilizables (detail usa el mismo patrón). */
+.playlists-hero-stats {
+  margin: 0.85rem 0 0;
+}
+
+/* ============================================================
+ * HERO · CTAs (planos)
+ * ------------------------------------------------------------
+ * `.btn-solid` y `.btn-outline` viven ahora en styles.scss
+ * para ser reutilizados entre detail, list y modales.
+ * ============================================================ */
+.playlists-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  align-self: start;
+
+  @media (min-width: 768px) {
+    align-self: end;
+  }
+}
+
+/* ============================================================
+ * BODY
+ * ============================================================ */
+.playlists-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+/* ============================================================
+ * SEGMENTED CONTROL · sobrio
+ * ------------------------------------------------------------
+ * Pill deslizante pero sin brillos: fondo crema con borde fino.
+ * ============================================================ */
+.segmented {
+  --seg-index: 0;
+  position: relative;
+  /* Grid de 3 columnas iguales: así el indicador (que se traslada
+     en incrementos de 100% de columna) queda SIEMPRE alineado con
+     el item activo, independientemente del largo de los textos. */
+  display: grid;
+  grid-template-columns: repeat(3, minmax(4.5rem, 1fr));
+  padding: 3px;
+  border-radius: 10px;
+  background: #f4ead0;
+  border: 1px solid rgba(107, 77, 57, 0.18);
+  width: fit-content;
+  align-self: flex-start;
+}
+
+.segmented-indicator {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: calc((100% - 6px) / 3);
+  height: calc(100% - 6px);
+  background: #fffaf0;
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(69, 51, 45, 0.12);
+  transform: translateX(calc(var(--seg-index) * 100%));
+  transition: transform 300ms var(--ease-out-strong);
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+}
+
+.segmented-item {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  padding: 0.4rem 1rem;
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: #8a6a52;
+  border-radius: 8px;
+  background: transparent;
+  white-space: nowrap;
+  transition: color 200ms var(--ease-out-strong);
+
+  &.is-active { color: #3a2820; }
+
+  &:not(.is-active) {
+    @media (hover: hover) and (pointer: fine) {
+      &:hover { color: #45332d; }
+    }
+  }
+}
+
+/* ============================================================
+ * ERROR BANNER
+ * ============================================================ */
+.playlists-error {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.75rem 1rem;
+  border-radius: 10px;
+  background: #fef2f2;
+  border: 1px solid #f5c7c7;
+  color: #8b1e1e;
+  font-size: 0.9rem;
+
+  .material-symbols-outlined { font-size: 20px; }
+}
+
+.playlists-error-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 8px;
+  background: #8b1e1e;
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 600;
+
+  @media (hover: hover) and (pointer: fine) {
+    &:hover { background: #6f1818; }
+  }
+}
+
+/* ============================================================
+ * GRID
+ * ============================================================ */
+.playlists-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1rem;
+
+  @media (min-width: 1024px) {
+    gap: 1.2rem;
+  }
+}
+
+/* ============================================================
+ * PLAYLIST CARD · editorial
+ * ------------------------------------------------------------
+ * Sin shine, sin degradados llamativos. Solo portada + ficha.
+ * Hover: eleva 3px, borde más oscuro, zoom sutil de la portada.
+ * ============================================================ */
+.playlist-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background: #fffaf0;
+  border: 1px solid rgba(107, 77, 57, 0.15);
+  border-radius: 14px;
+  overflow: hidden;
+  cursor: pointer;
+  transition:
+    transform 260ms var(--ease-out-strong),
+    box-shadow 260ms var(--ease-out-strong),
+    border-color 200ms var(--ease-out-strong);
+  box-shadow: 0 1px 2px rgba(69, 51, 45, 0.06);
+
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 14px 26px -18px rgba(69, 51, 45, 0.3);
+      border-color: rgba(107, 77, 57, 0.32);
+
+      .playlist-card-cover { transform: scale(1.04); }
+      .playlist-card-delete { opacity: 1; transform: scale(1); pointer-events: auto; }
+      .playlist-card-arrow { transform: translateX(2px); }
+    }
+  }
+
+  &:focus-visible {
+    outline: 2px solid #45332d;
+    outline-offset: 3px;
+  }
+}
+
+.playlist-card-cover-wrap {
+  position: relative;
+  aspect-ratio: 3 / 4;
+  overflow: hidden;
+  background: #f0e1c6;
+}
+
+.playlist-card-cover {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 600ms var(--ease-out-strong);
+  will-change: transform;
+}
+
+.playlist-card-cover-fallback {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(107, 77, 57, 0.4);
+
+  .material-symbols-outlined {
+    font-size: 48px;
+    font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 48;
+  }
+}
+
+/* Sombra inferior minimal: solo donde vive el contador. */
+.playlist-card-gradient {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to top,
+    rgba(58, 40, 32, 0.45) 0%,
+    rgba(58, 40, 32, 0) 32%
+  );
+  pointer-events: none;
+}
+
+.playlist-card-badges {
+  position: absolute;
+  top: 0.55rem;
+  left: 0.55rem;
+  right: 0.55rem;
+  display: flex;
+  gap: 0.3rem;
+  flex-wrap: wrap;
+}
+
+/* `.badge-pill` vive en styles.scss como clase global para que el
+   detail y los modales puedan usar el mismo sticker editorial. */
+
+.playlist-card-count {
+  position: absolute;
+  left: 0.6rem;
+  bottom: 0.6rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.25rem 0.55rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #fffaf0;
+  background: rgba(45, 30, 25, 0.55);
+
+  .material-symbols-outlined {
+    font-size: 14px;
+    font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 20;
+  }
+}
+
+.playlist-card-delete {
+  position: absolute;
+  top: 0.55rem;
+  right: 0.55rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: #fffaf0;
+  color: #6b4d39;
+  border: 1px solid rgba(107, 77, 57, 0.2);
+  opacity: 0;
+  transform: scale(0.92);
+  pointer-events: none;
+  transition:
+    opacity 200ms var(--ease-out-strong),
+    transform 200ms var(--ease-out-strong),
+    background-color 180ms var(--ease-out-strong),
+    color 180ms var(--ease-out-strong);
+
+  .material-symbols-outlined {
+    font-size: 16px;
+    font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 20;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      background: #45332d;
+      color: #fbf5e7;
+      border-color: #45332d;
+    }
+  }
+
+  /* En touch lo dejamos siempre visible. */
+  @media (hover: none) {
+    opacity: 1;
+    transform: scale(1);
+    pointer-events: auto;
+  }
+}
+
+.playlist-card-body {
+  padding: 0.85rem 0.95rem 0.95rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  flex: 1;
+}
+
+.playlist-card-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #3a2820;
+  line-height: 1.25;
+  letter-spacing: -0.005em;
+
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.playlist-card-desc {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #6b4d39;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.playlist-card-foot {
+  margin-top: auto;
+  padding-top: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.72rem;
+  color: #8a6a52;
+  border-top: 1px solid rgba(107, 77, 57, 0.08);
+}
+
+.playlist-card-time {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+
+  .material-symbols-outlined {
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20;
+  }
+}
+
+.playlist-card-arrow {
+  color: #8a6a52;
+  transition: transform 220ms var(--ease-out-strong);
+
+  .material-symbols-outlined {
+    font-size: 16px;
+    font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 20;
+  }
+}
+
+/* ============================================================
+ * SKELETONS · shimmer suave
+ * ============================================================ */
+.playlist-skel {
+  background: #fffaf0;
+  border: 1px solid rgba(107, 77, 57, 0.15);
+  border-radius: 14px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.playlist-skel-cover {
+  aspect-ratio: 3 / 4;
+  background: linear-gradient(90deg, #f0e1c6 0%, #fff4dc 50%, #f0e1c6 100%);
+  background-size: 200% 100%;
+  animation: skel-shimmer 1.6s linear infinite;
+}
+
+.playlist-skel-meta {
+  padding: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.playlist-skel-line {
+  height: 9px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, #eadfbe 0%, #fff4dc 50%, #eadfbe 100%);
+  background-size: 200% 100%;
+  animation: skel-shimmer 1.6s linear infinite;
+}
+
+@keyframes skel-shimmer {
+  from { background-position: 200% 0; }
+  to { background-position: -200% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .playlist-skel-cover, .playlist-skel-line { animation: none; }
+}
+
+/* ============================================================
+ * EMPTY STATE · editorial
+ * ============================================================ */
+.playlists-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 3.5rem 1.5rem;
+  gap: 0.75rem;
+}
+
+.playlists-empty-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 72px;
+  height: 72px;
+  border-radius: 999px;
+  background: #f4ead0;
+  border: 1px solid rgba(107, 77, 57, 0.18);
+  color: #8a6a52;
+  margin-bottom: 0.5rem;
+
+  .material-symbols-outlined {
+    font-size: 32px;
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 40;
+  }
+}
+
+.playlists-empty-title {
+  margin: 0;
+  font-family: 'Lora', 'Georgia', 'Times New Roman', serif;
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #3a2820;
+}
+
+.playlists-empty-subtitle {
+  margin: 0;
+  max-width: 30rem;
+  font-size: 0.95rem;
+  color: #6b4d39;
+  line-height: 1.55;
+}
+
+.playlists-empty-actions {
+  margin-top: 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  justify-content: center;
+}
+
+.playlists-filter-empty {
+  text-align: center;
+  color: #8a6a52;
+  padding: 2rem 1rem;
+  font-size: 0.9rem;
 }

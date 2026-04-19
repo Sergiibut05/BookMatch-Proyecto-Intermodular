@@ -105,6 +105,17 @@ export class AiChatComponent implements OnInit, AfterViewChecked {
   /** Guardando la playlist definitiva a backend. */
   savingFinalPlaylist = signal<boolean>(false);
 
+  /** Conversación que el usuario está a punto de eliminar (modal confirm). */
+  conversationToDelete = signal<ConversationUI | null>(null);
+
+  /**
+   * Hint on-boarding del modo playlist. Se muestra la primera vez que el
+   * usuario aterriza en el chat si nunca ha activado el modo. Se oculta
+   * solo cuando se pulsa "Entendido" o cuando se activa el modo playlist
+   * (evento que ya demuestra que el usuario descubrió el botón).
+   */
+  playlistHintVisible = signal<boolean>(this.readPlaylistHintPref());
+
   /**
    * Último borrador de playlist vigente: override manual si existe, o el
    * draft del último mensaje del asistente. Null si no hay ninguno.
@@ -255,6 +266,19 @@ export class AiChatComponent implements OnInit, AfterViewChecked {
     const next = !this.playlistMode();
     this.playlistMode.set(next);
     if (!next) this.playlistPanelOpen.set(false);
+    // El usuario acaba de descubrir/activar el botón → ocultamos el hint
+    // para siempre. Lo persistimos para futuras sesiones.
+    if (next) this.dismissPlaylistHint();
+  }
+
+  /** Oculta el onboarding hint del modo playlist y lo persiste. */
+  dismissPlaylistHint(): void {
+    this.playlistHintVisible.set(false);
+    try {
+      localStorage.setItem('bm_chat_playlist_hint_seen', '1');
+    } catch {
+      /* storage bloqueado: el hint reaparecerá, no es grave */
+    }
   }
 
   /** Abre/cierra el panel de borrador manualmente. */
@@ -577,6 +601,16 @@ export class AiChatComponent implements OnInit, AfterViewChecked {
     if (typeof window === 'undefined') return false;
     try {
       return localStorage.getItem('bm_chat_sidebar_collapsed') === '1';
+    } catch {
+      return false;
+    }
+  }
+
+  /** Lee si el hint del modo playlist ya fue descartado antes. */
+  private readPlaylistHintPref(): boolean {
+    if (typeof window === 'undefined') return false;
+    try {
+      return localStorage.getItem('bm_chat_playlist_hint_seen') !== '1';
     } catch {
       return false;
     }
@@ -959,21 +993,32 @@ export class AiChatComponent implements OnInit, AfterViewChecked {
   // ============================================================
 
   /**
-   * Confirma con el usuario y archiva la conversación. Si era la activa,
-   * limpia el panel para volver al estado "new empty". La lista se
-   * actualiza sola porque `getConversations` filtra por `status=active`.
+   * Abre el modal de confirmación para archivar una conversación.
+   * La acción real ocurre en `confirmDeleteConversation` cuando el usuario
+   * acepta. Sustituye al antiguo `window.confirm()` nativo.
    */
-  async archiveConversation(conv: ConversationUI, event?: Event): Promise<void> {
+  archiveConversation(conv: ConversationUI, event?: Event): void {
     event?.stopPropagation();
     if (this.archivingConversationId() === conv.id) return;
+    this.conversationToDelete.set(conv);
+  }
 
+  /** Cierra el modal sin hacer nada. */
+  cancelDeleteConversation(): void {
+    if (this.archivingConversationId()) return;
+    this.conversationToDelete.set(null);
+  }
+
+  /**
+   * Ejecuta el archivo (soft-delete) de la conversación pendiente. Si era la
+   * activa, limpia el panel para volver al estado "new empty". La lista se
+   * actualiza sola porque `getConversations` filtra por `status=active`.
+   */
+  async confirmDeleteConversation(): Promise<void> {
+    const conv = this.conversationToDelete();
+    if (!conv) return;
     const firebaseUser = this.authService.firebaseUser();
     if (!firebaseUser?.uid) return;
-
-    const msg = this.translate.instant('AI_CHAT.DELETE_CONFIRM', {
-      title: conv.title,
-    });
-    if (!window.confirm(msg)) return;
 
     this.archivingConversationId.set(conv.id);
     try {
@@ -985,6 +1030,7 @@ export class AiChatComponent implements OnInit, AfterViewChecked {
         this.messages.set([]);
         this.isNewEmptyConversation.set(true);
       }
+      this.conversationToDelete.set(null);
     } catch (err) {
       console.error('[ai-chat] error archivando conversación', err);
     } finally {

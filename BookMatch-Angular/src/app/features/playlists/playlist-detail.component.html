@@ -1,741 +1,633 @@
 <app-header></app-header>
 
-<main class="min-h-screen bg-[#FCF5E2]">
-  <div class="container mx-auto px-4 py-6 md:py-10 max-w-5xl">
-    <nav class="mb-4 text-sm" style="color: #7a5c4a">
-      <a routerLink="/playlists" class="hover:underline">
-        {{ 'PLAYLISTS.TITLE' | translate }}
-      </a>
-      <span class="mx-2">/</span>
-      <span style="color: #45332D">
-        @if (playlist()) {
-          {{ playlist()!.title }}
-        } @else {
-          {{ 'PLAYLIST_DETAIL.LOADING' | translate }}
-        }
-      </span>
-    </nav>
+<main class="detail-shell">
+  <!-- Breadcrumb sobrio -->
+  <nav class="detail-breadcrumb pl-fade-in" aria-label="Breadcrumb">
+    <a routerLink="/playlists" class="detail-breadcrumb-link">
+      {{ 'PLAYLISTS.TITLE' | translate }}
+    </a>
+    <span class="detail-breadcrumb-sep" aria-hidden="true">/</span>
+    <span class="detail-breadcrumb-current">
+      @if (playlist()) {
+        {{ playlist()!.title }}
+      } @else {
+        {{ 'PLAYLIST_DETAIL.LOADING' | translate }}
+      }
+    </span>
+  </nav>
 
-    <!-- Loading -->
-    @if (loading()) {
-      <div
-        class="rounded-xl bg-white border border-[#E9E1D1] shadow-sm p-6 animate-pulse"
-        aria-busy="true"
-      >
-        <div class="h-8 bg-[#F1E6CE] rounded w-1/2 mb-3"></div>
-        <div class="h-4 bg-[#F1E6CE] rounded w-2/3 mb-6"></div>
-        <div class="space-y-2">
-          @for (_ of [1,2,3,4]; track $index) {
-            <div class="h-16 bg-[#F1E6CE] rounded"></div>
+  <!-- Loading -->
+  @if (loading()) {
+    <div class="detail-card detail-loading pl-fade-in" aria-busy="true">
+      <div class="detail-skel-line w-1-2"></div>
+      <div class="detail-skel-line w-2-3 mt-3"></div>
+      <div class="detail-skel-list mt-6">
+        @for (_ of [1, 2, 3, 4]; track $index) {
+          <div class="detail-skel-row"></div>
+        }
+      </div>
+    </div>
+  } @else if (!playlist()) {
+    <!-- Not found / error -->
+    <div class="detail-card detail-not-found pl-fade-in">
+      <span class="material-symbols-outlined detail-not-found-icon" aria-hidden="true">
+        search_off
+      </span>
+      <h2 class="detail-not-found-title">
+        {{ (errorKey() ?? 'PLAYLIST_DETAIL.ERROR_NOT_FOUND') | translate }}
+      </h2>
+      <a routerLink="/playlists" class="btn-solid press-target">
+        {{ 'PLAYLIST_DETAIL.BACK_TO_LIST' | translate }}
+      </a>
+    </div>
+  } @else {
+    <!-- Error banner (non-fatal) -->
+    @if (errorKey()) {
+      <div class="detail-error pl-fade-in" role="alert">
+        <span class="material-symbols-outlined" aria-hidden="true">error</span>
+        <span class="flex-1">{{ errorKey()! | translate }}</span>
+        <button
+          type="button"
+          class="detail-error-dismiss press-target"
+          (click)="errorKey.set(null)"
+        >
+          {{ 'PLAYLIST_DETAIL.DISMISS' | translate }}
+        </button>
+      </div>
+    }
+
+    <!-- ============================================================
+         HERO · portada + ficha editorial
+         ============================================================ -->
+    <section class="detail-hero pl-fade-in">
+      <!-- Portada -->
+      <div class="detail-hero-cover">
+        @if (playlist()!.coverUrl) {
+          <img
+            [src]="playlist()!.coverUrl"
+            [alt]="playlist()!.title"
+            class="detail-hero-cover-img"
+            loading="lazy"
+            decoding="async"
+          />
+        } @else {
+          <div class="detail-hero-cover-fallback" aria-hidden="true">
+            <span class="material-symbols-outlined">menu_book</span>
+          </div>
+        }
+
+        <!-- Overlay acciones -->
+        <div
+          class="detail-hero-cover-overlay"
+          [class.is-visible]="uploadingCover()"
+        >
+          @if (uploadingCover()) {
+            <span
+              class="material-symbols-outlined animate-spin text-[28px] text-white"
+              aria-hidden="true"
+            >progress_activity</span>
+            <span class="sr-only">{{ 'PLAYLIST_DETAIL.COVER_UPLOADING' | translate }}</span>
+          } @else {
+            <button
+              type="button"
+              (click)="changeCover()"
+              class="detail-hero-cover-btn press-target"
+              [title]="'PLAYLIST_DETAIL.COVER_CHANGE' | translate"
+              [attr.aria-label]="'PLAYLIST_DETAIL.COVER_CHANGE' | translate"
+            >
+              <span class="material-symbols-outlined">photo_camera</span>
+            </button>
+            @if (playlist()!.coverUrl) {
+              <button
+                type="button"
+                (click)="removeCover()"
+                class="detail-hero-cover-btn is-danger press-target"
+                [title]="'PLAYLIST_DETAIL.COVER_REMOVE' | translate"
+                [attr.aria-label]="'PLAYLIST_DETAIL.COVER_REMOVE' | translate"
+              >
+                <span class="material-symbols-outlined">delete</span>
+              </button>
+            }
           }
         </div>
       </div>
-    } @else if (!playlist()) {
-      <!-- Not found / error -->
-      <div
-        class="rounded-xl bg-white border border-[#E9E1D1] shadow-sm p-8 text-center"
-      >
-        <span
-          class="material-symbols-outlined text-5xl"
-          style="color: #E0A15E"
-        >
-          search_off
-        </span>
-        <h2
-          class="mt-3 text-xl font-bold"
-          style="color: #45332D"
-        >
-          {{ (errorKey() ?? 'PLAYLIST_DETAIL.ERROR_NOT_FOUND') | translate }}
-        </h2>
-        <a
-          routerLink="/playlists"
-          class="mt-5 inline-flex items-center justify-center px-4 py-2 rounded-lg font-medium text-sm shadow-sm"
-          style="background-color: #E0A15E; color: #FCF5E2"
-        >
-          {{ 'PLAYLIST_DETAIL.BACK_TO_LIST' | translate }}
-        </a>
-      </div>
-    } @else {
-      <!-- Error banner (non-fatal) -->
-      @if (errorKey()) {
-        <div
-          class="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 flex items-center justify-between"
-          role="alert"
-        >
-          <span>{{ errorKey()! | translate }}</span>
+
+      <!-- Ficha -->
+      <div class="detail-hero-meta">
+        <!-- Badges -->
+        <div class="detail-hero-badges">
+          <span
+            class="badge-pill"
+            [class.is-ai]="playlist()!.source === 'AI' || playlist()!.source === 'HYBRID'"
+            [class.is-manual]="playlist()!.source === 'MANUAL'"
+          >
+            @switch (playlist()!.source) {
+              @case ('AI') { {{ 'PLAYLISTS.BADGE_AI' | translate }} }
+              @case ('HYBRID') { {{ 'PLAYLISTS.BADGE_HYBRID' | translate }} }
+              @default { {{ 'PLAYLISTS.BADGE_MANUAL' | translate }} }
+            }
+          </span>
+
+          <!-- Toggle visibilidad (clic-able) -->
           <button
             type="button"
-            (click)="errorKey.set(null)"
-            class="text-red-800 underline hover:no-underline"
+            (click)="toggleVisibility()"
+            class="badge-pill is-toggle press-target"
+            [class.is-public]="playlist()!.visibility === 'PUBLIC'"
+            [title]="'PLAYLIST_DETAIL.TOGGLE_VISIBILITY' | translate"
           >
-            {{ 'PLAYLIST_DETAIL.DISMISS' | translate }}
+            <span class="material-symbols-outlined" aria-hidden="true">
+              @if (playlist()!.visibility === 'PUBLIC') { public } @else { lock }
+            </span>
+            @if (playlist()!.visibility === 'PUBLIC') {
+              {{ 'PLAYLISTS.BADGE_PUBLIC' | translate }}
+            } @else {
+              {{ 'PLAYLIST_DETAIL.BADGE_PRIVATE' | translate }}
+            }
           </button>
         </div>
-      }
 
-      <!-- Header card -->
-      <section
-        class="rounded-xl bg-white border border-[#E9E1D1] shadow-sm p-5 md:p-8 mb-6"
-      >
-        <div class="flex flex-col md:flex-row gap-5 md:gap-8">
-          <!-- Cover -->
-          <div
-            class="relative group w-full md:w-56 aspect-[4/3] md:aspect-auto md:h-40 rounded-lg overflow-hidden flex-shrink-0"
-            style="background-color: #F1E6CE"
+        <!-- Title (inline edit) -->
+        @if (editingTitle()) {
+          <input
+            type="text"
+            [value]="titleDraft()"
+            (input)="titleDraft.set($any($event.target).value)"
+            (keydown.enter)="saveTitle()"
+            (keydown.escape)="cancelEditTitle()"
+            (blur)="saveTitle()"
+            maxlength="80"
+            minlength="3"
+            class="detail-hero-title-input"
+            autofocus
+          />
+        } @else {
+          <h1
+            class="detail-hero-title"
+            (click)="startEditTitle()"
+            [title]="'PLAYLIST_DETAIL.CLICK_TO_EDIT' | translate"
           >
-            @if (playlist()!.coverUrl) {
-              <img
-                [src]="playlist()!.coverUrl"
-                [alt]="playlist()!.title"
-                class="h-full w-full object-cover"
-                loading="lazy"
-                decoding="async"
-              />
-            } @else {
-              <div
-                class="h-full w-full flex items-center justify-center"
-                style="color: #B88B65"
-              >
-                <span class="material-symbols-outlined text-6xl">
-                  menu_book
-                </span>
-              </div>
-            }
+            {{ playlist()!.title }}
+            <span class="detail-edit-hint material-symbols-outlined" aria-hidden="true">
+              edit
+            </span>
+          </h1>
+        }
 
-            <!-- Overlay acciones de portada -->
-            <div
-              class="absolute inset-0 flex items-center justify-center gap-2 bg-black/40 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity"
-              [class.opacity-100]="uploadingCover()"
-            >
-              @if (uploadingCover()) {
-                <span
-                  class="material-symbols-outlined text-white animate-spin text-3xl"
-                  aria-hidden="true"
-                >
-                  progress_activity
-                </span>
-                <span class="sr-only">
-                  {{ 'PLAYLIST_DETAIL.COVER_UPLOADING' | translate }}
-                </span>
-              } @else {
+        <!-- Description (inline edit) -->
+        @if (editingDescription()) {
+          <textarea
+            [value]="descriptionDraft()"
+            (input)="descriptionDraft.set($any($event.target).value)"
+            (keydown.escape)="cancelEditDescription()"
+            (blur)="saveDescription()"
+            maxlength="1000"
+            rows="3"
+            class="detail-hero-desc-input"
+            autofocus
+          ></textarea>
+        } @else if (playlist()!.description) {
+          <p
+            class="detail-hero-desc"
+            (click)="startEditDescription()"
+            [title]="'PLAYLIST_DETAIL.CLICK_TO_EDIT' | translate"
+          >
+            {{ playlist()!.description }}
+          </p>
+        } @else {
+          <button
+            type="button"
+            (click)="startEditDescription()"
+            class="detail-hero-desc-add"
+          >
+            + {{ 'PLAYLIST_DETAIL.ADD_DESCRIPTION' | translate }}
+          </button>
+        }
+
+        <!-- Meta line -->
+        <div class="detail-hero-stats">
+          <span class="stat-item">
+            <strong>{{ playlist()!.itemsCount }}</strong>
+            {{ 'PLAYLISTS.STAT_BOOKS_LABEL' | translate }}
+          </span>
+          <span class="stat-sep" aria-hidden="true">·</span>
+          <span class="stat-item">
+            <span class="material-symbols-outlined" aria-hidden="true">update</span>
+            {{ playlist()!.updatedAt | date: 'short' }}
+          </span>
+          @if (savingMeta()) {
+            <span class="stat-sep" aria-hidden="true">·</span>
+            <span class="stat-item is-saving">
+              <span class="material-symbols-outlined animate-spin" aria-hidden="true">
+                progress_activity
+              </span>
+              {{ 'PLAYLIST_DETAIL.SAVING' | translate }}
+            </span>
+          }
+        </div>
+
+        <!-- Acciones rápidas -->
+        <div class="detail-hero-actions">
+          <button
+            type="button"
+            (click)="toggleSharePanel()"
+            class="btn-outline press-target"
+            [attr.aria-label]="'PLAYLIST_DETAIL.SHARE' | translate"
+          >
+            <span class="material-symbols-outlined">
+              @if (playlist()!.shareToken) { link } @else { share }
+            </span>
+            {{ 'PLAYLIST_DETAIL.SHARE' | translate }}
+          </button>
+
+          <button
+            type="button"
+            (click)="exportAs('json')"
+            [disabled]="exporting()"
+            class="btn-ghost press-target"
+            [title]="'PLAYLIST_DETAIL.EXPORT_JSON' | translate"
+          >
+            <span class="material-symbols-outlined">download</span>
+            JSON
+          </button>
+
+          <button
+            type="button"
+            (click)="exportAs('md')"
+            [disabled]="exporting()"
+            class="btn-ghost press-target"
+            [title]="'PLAYLIST_DETAIL.EXPORT_MD' | translate"
+          >
+            <span class="material-symbols-outlined">description</span>
+            MD
+          </button>
+
+          <button
+            type="button"
+            (click)="deletePlaylist()"
+            class="btn-ghost is-danger press-target"
+            [attr.aria-label]="'PLAYLIST_DETAIL.DELETE' | translate"
+            [title]="'PLAYLIST_DETAIL.DELETE' | translate"
+          >
+            <span class="material-symbols-outlined">delete</span>
+            {{ 'PLAYLIST_DETAIL.DELETE' | translate }}
+          </button>
+        </div>
+
+        <!-- Share panel -->
+        @if (shareOpen()) {
+          <div class="detail-share pl-fade-in">
+            <div class="detail-share-head">
+              <div>
+                <h3 class="detail-share-title">
+                  {{ 'PLAYLIST_DETAIL.SHARE_TITLE' | translate }}
+                </h3>
+                <p class="detail-share-sub">
+                  {{ 'PLAYLIST_DETAIL.SHARE_SUBTITLE' | translate }}
+                </p>
+              </div>
+              <button
+                type="button"
+                (click)="toggleSharePanel()"
+                class="detail-share-close press-target"
+                aria-label="Close"
+              >
+                <span class="material-symbols-outlined">close</span>
+              </button>
+            </div>
+
+            @if (playlist()!.shareToken && sharePublicUrl()) {
+              <div class="detail-share-row">
+                <input
+                  type="text"
+                  [value]="sharePublicUrl()"
+                  readonly
+                  class="detail-share-input"
+                  (click)="$any($event.target).select()"
+                />
                 <button
                   type="button"
-                  (click)="changeCover()"
-                  [title]="'PLAYLIST_DETAIL.COVER_CHANGE' | translate"
-                  [attr.aria-label]="'PLAYLIST_DETAIL.COVER_CHANGE' | translate"
-                  class="inline-flex items-center justify-center h-10 w-10 rounded-full bg-white/90 hover:bg-white shadow-md transition-colors"
+                  (click)="copyShareUrl()"
+                  class="btn-solid press-target"
+                  [class.is-success]="shareCopied()"
                 >
-                  <span
-                    class="material-symbols-outlined"
-                    style="color: #45332D"
-                  >photo_camera</span>
+                  <span class="material-symbols-outlined">
+                    @if (shareCopied()) { check } @else { content_copy }
+                  </span>
+                  @if (shareCopied()) {
+                    {{ 'PLAYLIST_DETAIL.SHARE_COPIED' | translate }}
+                  } @else {
+                    {{ 'PLAYLIST_DETAIL.SHARE_COPY' | translate }}
+                  }
                 </button>
-                @if (playlist()!.coverUrl) {
-                  <button
-                    type="button"
-                    (click)="removeCover()"
-                    [title]="'PLAYLIST_DETAIL.COVER_REMOVE' | translate"
-                    [attr.aria-label]="'PLAYLIST_DETAIL.COVER_REMOVE' | translate"
-                    class="inline-flex items-center justify-center h-10 w-10 rounded-full bg-white/90 hover:bg-red-600 hover:text-white shadow-md transition-colors"
-                  >
-                    <span class="material-symbols-outlined">delete</span>
-                  </button>
-                }
-              }
-            </div>
-          </div>
-
-          <!-- Meta + acciones -->
-          <div class="flex-1 min-w-0">
-            <div class="flex items-start justify-between gap-3">
-              <div class="min-w-0 flex-1">
-                <!-- Badges -->
-                <div class="flex flex-wrap items-center gap-2 mb-2">
-                  <span
-                    class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold shadow-sm"
-                    [style.background-color]="
-                      playlist()!.source === 'MANUAL' ? '#FFFFFF' : '#E0A15E'
-                    "
-                    [style.color]="
-                      playlist()!.source === 'MANUAL' ? '#45332D' : '#FCF5E2'
-                    "
-                    [style.border]="
-                      playlist()!.source === 'MANUAL'
-                        ? '1px solid #E9E1D1'
-                        : 'none'
-                    "
-                  >
-                    @if (playlist()!.source !== 'MANUAL') {
-                      <span class="material-symbols-outlined text-[14px]">
-                        auto_awesome
-                      </span>
-                    }
-                    @switch (playlist()!.source) {
-                      @case ('AI') {
-                        {{ 'PLAYLISTS.BADGE_AI' | translate }}
-                      }
-                      @case ('HYBRID') {
-                        {{ 'PLAYLISTS.BADGE_HYBRID' | translate }}
-                      }
-                      @default {
-                        {{ 'PLAYLISTS.BADGE_MANUAL' | translate }}
-                      }
-                    }
-                  </span>
-
-                  <button
-                    type="button"
-                    (click)="toggleVisibility()"
-                    class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold border transition-colors"
-                    [style.background-color]="
-                      playlist()!.visibility === 'PUBLIC' ? '#E0A15E' : '#FFFFFF'
-                    "
-                    [style.color]="
-                      playlist()!.visibility === 'PUBLIC' ? '#FCF5E2' : '#45332D'
-                    "
-                    [style.border-color]="
-                      playlist()!.visibility === 'PUBLIC'
-                        ? '#E0A15E'
-                        : '#E9E1D1'
-                    "
-                    [title]="'PLAYLIST_DETAIL.TOGGLE_VISIBILITY' | translate"
-                  >
-                    <span class="material-symbols-outlined text-[14px]">
-                      @if (playlist()!.visibility === 'PUBLIC') {
-                        public
-                      } @else {
-                        lock
-                      }
-                    </span>
-                    @if (playlist()!.visibility === 'PUBLIC') {
-                      {{ 'PLAYLISTS.BADGE_PUBLIC' | translate }}
-                    } @else {
-                      {{ 'PLAYLIST_DETAIL.BADGE_PRIVATE' | translate }}
-                    }
-                  </button>
-                </div>
-
-                <!-- Title (inline edit) -->
-                @if (editingTitle()) {
-                  <div class="flex items-center gap-2">
-                    <input
-                      type="text"
-                      [value]="titleDraft()"
-                      (input)="titleDraft.set($any($event.target).value)"
-                      (keydown.enter)="saveTitle()"
-                      (keydown.escape)="cancelEditTitle()"
-                      (blur)="saveTitle()"
-                      maxlength="80"
-                      minlength="3"
-                      class="flex-1 text-2xl md:text-3xl font-bold rounded border px-2 py-1 focus:outline-none focus:ring-2"
-                      style="border-color: #E0A15E; color: #45332D"
-                      autofocus
-                    />
-                  </div>
-                } @else {
-                  <h1
-                    class="text-2xl md:text-3xl font-bold cursor-text hover:bg-[#FFF8EC] rounded px-2 -mx-2 py-0.5 inline-block"
-                    style="color: #45332D"
-                    (click)="startEditTitle()"
-                    [title]="'PLAYLIST_DETAIL.CLICK_TO_EDIT' | translate"
-                  >
-                    {{ playlist()!.title }}
-                  </h1>
-                }
-
-                <!-- Description (inline edit) -->
-                @if (editingDescription()) {
-                  <textarea
-                    [value]="descriptionDraft()"
-                    (input)="descriptionDraft.set($any($event.target).value)"
-                    (keydown.escape)="cancelEditDescription()"
-                    (blur)="saveDescription()"
-                    maxlength="1000"
-                    rows="3"
-                    class="mt-3 block w-full rounded border px-3 py-2 text-sm md:text-base focus:outline-none focus:ring-2 resize-y"
-                    style="border-color: #E0A15E; color: #45332D; background-color: #FFFDF7"
-                    autofocus
-                  ></textarea>
-                } @else if (playlist()!.description) {
-                  <p
-                    class="mt-2 text-sm md:text-base cursor-text hover:bg-[#FFF8EC] rounded px-2 -mx-2 py-0.5"
-                    style="color: #7a5c4a"
-                    (click)="startEditDescription()"
-                    [title]="'PLAYLIST_DETAIL.CLICK_TO_EDIT' | translate"
-                  >
-                    {{ playlist()!.description }}
-                  </p>
-                } @else {
-                  <button
-                    type="button"
-                    (click)="startEditDescription()"
-                    class="mt-2 text-sm underline hover:no-underline"
-                    style="color: #B88B65"
-                  >
-                    {{ 'PLAYLIST_DETAIL.ADD_DESCRIPTION' | translate }}
-                  </button>
-                }
-
-                <!-- Meta line -->
-                <div
-                  class="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs md:text-sm"
-                  style="color: #7a5c4a"
+              </div>
+              <div class="detail-share-links">
+                <button
+                  type="button"
+                  (click)="share()"
+                  [disabled]="sharing()"
+                  class="detail-share-textlink"
                 >
-                  <span class="inline-flex items-center gap-1">
-                    <span class="material-symbols-outlined text-base">
-                      collections_bookmark
-                    </span>
-                    {{
-                      'PLAYLISTS.ITEM_COUNT'
-                        | translate: { count: playlist()!.itemsCount }
-                    }}
-                  </span>
-                  <span class="inline-flex items-center gap-1">
-                    <span class="material-symbols-outlined text-base">
-                      update
-                    </span>
-                    {{ playlist()!.updatedAt | date: 'short' }}
-                  </span>
-                </div>
+                  {{ 'PLAYLIST_DETAIL.SHARE_ROTATE' | translate }}
+                </button>
+                <span class="detail-share-bullet" aria-hidden="true">·</span>
+                <button
+                  type="button"
+                  (click)="revokeShare()"
+                  [disabled]="sharing()"
+                  class="detail-share-textlink is-danger"
+                >
+                  {{ 'PLAYLIST_DETAIL.SHARE_REVOKE' | translate }}
+                </button>
               </div>
-
-              <!-- Acciones rápidas -->
-              <div class="flex flex-col items-end gap-2">
-                @if (savingMeta()) {
-                  <span
-                    class="text-xs inline-flex items-center gap-1"
-                    style="color: #7a5c4a"
-                  >
-                    <span
-                      class="material-symbols-outlined text-base animate-spin"
-                    >
-                      progress_activity
-                    </span>
-                    {{ 'PLAYLIST_DETAIL.SAVING' | translate }}
-                  </span>
-                }
-                <div class="flex items-center gap-1">
-                  <!-- Compartir -->
-                  <button
-                    type="button"
-                    (click)="toggleSharePanel()"
-                    class="inline-flex items-center justify-center p-2 rounded-lg transition-colors hover:bg-[#F1E6CE]"
-                    style="color: #45332D"
-                    [attr.aria-label]="'PLAYLIST_DETAIL.SHARE' | translate"
-                    [title]="'PLAYLIST_DETAIL.SHARE' | translate"
-                  >
-                    <span class="material-symbols-outlined">
-                      @if (playlist()!.shareToken) { link } @else { share }
-                    </span>
-                  </button>
-                  <!-- Exportar JSON -->
-                  <button
-                    type="button"
-                    (click)="exportAs('json')"
-                    [disabled]="exporting()"
-                    class="inline-flex items-center justify-center p-2 rounded-lg transition-colors hover:bg-[#F1E6CE] disabled:opacity-50"
-                    style="color: #45332D"
-                    [title]="'PLAYLIST_DETAIL.EXPORT_JSON' | translate"
-                    [attr.aria-label]="'PLAYLIST_DETAIL.EXPORT_JSON' | translate"
-                  >
-                    <span class="material-symbols-outlined">download</span>
-                  </button>
-                  <!-- Exportar Markdown -->
-                  <button
-                    type="button"
-                    (click)="exportAs('md')"
-                    [disabled]="exporting()"
-                    class="inline-flex items-center justify-center p-2 rounded-lg transition-colors hover:bg-[#F1E6CE] disabled:opacity-50"
-                    style="color: #45332D"
-                    [title]="'PLAYLIST_DETAIL.EXPORT_MD' | translate"
-                    [attr.aria-label]="'PLAYLIST_DETAIL.EXPORT_MD' | translate"
-                  >
-                    <span class="material-symbols-outlined">description</span>
-                  </button>
-                  <!-- Eliminar -->
-                  <button
-                    type="button"
-                    (click)="deletePlaylist()"
-                    class="inline-flex items-center justify-center p-2 rounded-lg text-red-600 hover:bg-red-50 transition-colors"
-                    [attr.aria-label]="'PLAYLIST_DETAIL.DELETE' | translate"
-                    [title]="'PLAYLIST_DETAIL.DELETE' | translate"
-                  >
-                    <span class="material-symbols-outlined">delete</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <!-- Panel de compartir (H1.11) -->
-            @if (shareOpen()) {
-              <div
-                class="mt-4 rounded-lg border p-4"
-                style="background-color: #FFF8EC; border-color: #E9E1D1"
+            } @else {
+              <button
+                type="button"
+                (click)="share()"
+                [disabled]="sharing()"
+                class="btn-solid press-target mt-3"
               >
-                <div class="flex items-start justify-between gap-3">
-                  <div class="flex items-start gap-2">
-                    <span
-                      class="material-symbols-outlined mt-0.5"
-                      style="color: #E0A15E"
-                    >
-                      public
-                    </span>
-                    <div>
-                      <h3 class="font-semibold text-sm" style="color: #45332D">
-                        {{ 'PLAYLIST_DETAIL.SHARE_TITLE' | translate }}
-                      </h3>
-                      <p class="text-xs mt-0.5" style="color: #7a5c4a">
-                        {{ 'PLAYLIST_DETAIL.SHARE_SUBTITLE' | translate }}
-                      </p>
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    (click)="toggleSharePanel()"
-                    class="text-sm hover:underline"
-                    style="color: #7a5c4a"
-                  >
-                    <span class="material-symbols-outlined text-base">close</span>
-                  </button>
-                </div>
-
-                @if (playlist()!.shareToken && sharePublicUrl()) {
-                  <div class="mt-3 flex items-center gap-2">
-                    <input
-                      type="text"
-                      [value]="sharePublicUrl()"
-                      readonly
-                      class="flex-1 rounded border px-2 py-1.5 text-xs bg-white focus:outline-none focus:ring-2"
-                      style="border-color: #E9E1D1; color: #45332D"
-                      (click)="$any($event.target).select()"
-                    />
-                    <button
-                      type="button"
-                      (click)="copyShareUrl()"
-                      class="inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-semibold shadow-sm"
-                      [style.background-color]="shareCopied() ? '#16a34a' : '#E0A15E'"
-                      style="color: #FCF5E2"
-                    >
-                      <span class="material-symbols-outlined text-base">
-                        @if (shareCopied()) { check } @else { content_copy }
-                      </span>
-                      @if (shareCopied()) {
-                        {{ 'PLAYLIST_DETAIL.SHARE_COPIED' | translate }}
-                      } @else {
-                        {{ 'PLAYLIST_DETAIL.SHARE_COPY' | translate }}
-                      }
-                    </button>
-                  </div>
-                  <div class="mt-3 flex gap-2">
-                    <button
-                      type="button"
-                      (click)="share()"
-                      [disabled]="sharing()"
-                      class="text-xs underline hover:no-underline disabled:opacity-50"
-                      style="color: #7a5c4a"
-                    >
-                      {{ 'PLAYLIST_DETAIL.SHARE_ROTATE' | translate }}
-                    </button>
-                    <span style="color: #B88B65">•</span>
-                    <button
-                      type="button"
-                      (click)="revokeShare()"
-                      [disabled]="sharing()"
-                      class="text-xs underline hover:no-underline text-red-600 disabled:opacity-50"
-                    >
-                      {{ 'PLAYLIST_DETAIL.SHARE_REVOKE' | translate }}
-                    </button>
-                  </div>
+                @if (sharing()) {
+                  <span class="material-symbols-outlined animate-spin">progress_activity</span>
                 } @else {
-                  <div class="mt-3">
-                    <button
-                      type="button"
-                      (click)="share()"
-                      [disabled]="sharing()"
-                      class="inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-sm font-semibold shadow-sm disabled:opacity-60"
-                      style="background-color: #E0A15E; color: #FCF5E2"
-                    >
-                      @if (sharing()) {
-                        <span
-                          class="material-symbols-outlined text-base animate-spin"
-                        >
-                          progress_activity
-                        </span>
-                      } @else {
-                        <span class="material-symbols-outlined text-base">link</span>
-                      }
-                      {{ 'PLAYLIST_DETAIL.SHARE_GENERATE' | translate }}
-                    </button>
-                  </div>
+                  <span class="material-symbols-outlined">link</span>
                 }
-              </div>
-            }
-          </div>
-        </div>
-      </section>
-
-      <!-- Add books panel -->
-      <section
-        class="rounded-xl bg-white border border-[#E9E1D1] shadow-sm mb-6 overflow-hidden"
-      >
-        <button
-          type="button"
-          (click)="toggleSearch()"
-          class="w-full flex items-center justify-between px-5 py-3 text-left hover:bg-[#FFF8EC] transition-colors"
-        >
-          <span class="inline-flex items-center gap-2 font-semibold" style="color: #45332D">
-            <span class="material-symbols-outlined" style="color: #E0A15E">
-              library_add
-            </span>
-            {{ 'PLAYLIST_DETAIL.ADD_BOOKS' | translate }}
-          </span>
-          <span class="material-symbols-outlined" style="color: #7a5c4a">
-            @if (searchOpen()) { expand_less } @else { expand_more }
-          </span>
-        </button>
-
-        @if (searchOpen()) {
-          <div class="px-5 py-4 border-t" style="border-color: #E9E1D1">
-            <div class="relative">
-              <input
-                type="text"
-                [value]="searchTerm()"
-                (input)="onSearchInput($any($event.target).value)"
-                [placeholder]="'PLAYLIST_DETAIL.SEARCH_PLACEHOLDER' | translate"
-                class="block w-full rounded-lg border px-3 py-2 pr-10 text-sm md:text-base focus:outline-none focus:ring-2"
-                style="border-color: #E9E1D1; background-color: #FFFDF7"
-              />
-              <span
-                class="absolute right-3 top-1/2 -translate-y-1/2 material-symbols-outlined"
-                style="color: #7a5c4a"
-              >
-                @if (searchLoading()) {
-                  <span class="animate-spin">progress_activity</span>
-                } @else {
-                  search
-                }
-              </span>
-            </div>
-
-            @if (searchTerm().trim().length >= 2 && !searchLoading() && searchResults().length === 0) {
-              <p
-                class="mt-3 text-sm text-center"
-                style="color: #7a5c4a"
-              >
-                {{ 'PLAYLIST_DETAIL.SEARCH_EMPTY' | translate }}
-              </p>
-            }
-
-            @if (searchResults().length > 0) {
-              <ul class="mt-3 divide-y" style="border-color: #E9E1D1">
-                @for (book of searchResults(); track trackBookById($index, book)) {
-                  <li class="py-2 flex items-center gap-3">
-                    <div
-                      class="w-10 h-14 rounded overflow-hidden flex-shrink-0"
-                      style="background-color: #F1E6CE"
-                    >
-                      @if (book.coverUrl) {
-                        <img
-                          [src]="book.coverUrl"
-                          [alt]="book.title"
-                          class="h-full w-full object-cover"
-                          loading="lazy"
-                          decoding="async"
-                        />
-                      }
-                    </div>
-                    <div class="flex-1 min-w-0">
-                      <p
-                        class="text-sm font-semibold line-clamp-1"
-                        style="color: #45332D"
-                      >
-                        {{ book.title }}
-                      </p>
-                      <p
-                        class="text-xs line-clamp-1"
-                        style="color: #7a5c4a"
-                      >
-                        {{ book.author }}
-                      </p>
-                    </div>
-                    <button
-                      type="button"
-                      (click)="addBook(book)"
-                      [disabled]="isBookAlreadyInPlaylist(book.id)"
-                      class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                      [style.background-color]="
-                        isBookAlreadyInPlaylist(book.id) ? '#D7B796' : '#E0A15E'
-                      "
-                      style="color: #FCF5E2"
-                    >
-                      @if (isBookAlreadyInPlaylist(book.id)) {
-                        <span class="material-symbols-outlined text-base">check</span>
-                        {{ 'PLAYLIST_DETAIL.ALREADY_ADDED' | translate }}
-                      } @else {
-                        <span class="material-symbols-outlined text-base">add</span>
-                        {{ 'PLAYLIST_DETAIL.ADD' | translate }}
-                      }
-                    </button>
-                  </li>
-                }
-              </ul>
+                {{ 'PLAYLIST_DETAIL.SHARE_GENERATE' | translate }}
+              </button>
             }
           </div>
         }
-      </section>
+      </div>
+    </section>
 
-      <!-- Items list -->
-      <section
-        class="rounded-xl bg-white border border-[#E9E1D1] shadow-sm p-5 md:p-6"
+    <!-- ============================================================
+         BUSCADOR · añadir libros
+         ============================================================ -->
+    <section class="detail-section pl-fade-in" style="animation-delay: 80ms">
+      <button
+        type="button"
+        (click)="toggleSearch()"
+        class="detail-section-head"
+        [class.is-open]="searchOpen()"
       >
-        <h2
-          class="text-lg md:text-xl font-bold mb-4"
-          style="color: #45332D"
-        >
+        <span class="detail-section-label">
+          <span class="material-symbols-outlined" aria-hidden="true">library_add</span>
+          {{ 'PLAYLIST_DETAIL.ADD_BOOKS' | translate }}
+        </span>
+        <span class="detail-section-chevron material-symbols-outlined" aria-hidden="true">
+          expand_more
+        </span>
+      </button>
+
+      @if (searchOpen()) {
+        <div class="detail-section-body">
+          <div class="detail-search-field">
+            <span
+              class="material-symbols-outlined detail-search-icon"
+              aria-hidden="true"
+            >
+              @if (searchLoading()) {
+                <span class="animate-spin">progress_activity</span>
+              } @else {
+                search
+              }
+            </span>
+            <input
+              type="text"
+              [value]="searchTerm()"
+              (input)="onSearchInput($any($event.target).value)"
+              [placeholder]="'PLAYLIST_DETAIL.SEARCH_PLACEHOLDER' | translate"
+              class="detail-search-input"
+            />
+          </div>
+
+          @if (searchTerm().trim().length >= 2 && !searchLoading() && searchResults().length === 0) {
+            <p class="detail-search-empty">
+              {{ 'PLAYLIST_DETAIL.SEARCH_EMPTY' | translate }}
+            </p>
+          }
+
+          @if (searchResults().length > 0) {
+            <ul class="detail-search-results pl-stagger-auto">
+              @for (book of searchResults(); track trackBookById($index, book)) {
+                <li class="detail-search-result">
+                  <div class="detail-search-result-cover">
+                    @if (book.coverUrl) {
+                      <img
+                        [src]="book.coverUrl"
+                        [alt]="book.title"
+                        loading="lazy"
+                        decoding="async"
+                      />
+                    } @else {
+                      <span class="material-symbols-outlined" aria-hidden="true">menu_book</span>
+                    }
+                  </div>
+                  <div class="detail-search-result-meta">
+                    <p class="detail-search-result-title">{{ book.title }}</p>
+                    <p class="detail-search-result-author">{{ book.author }}</p>
+                  </div>
+                  <button
+                    type="button"
+                    (click)="addBook(book)"
+                    [disabled]="isBookAlreadyInPlaylist(book.id)"
+                    class="press-target"
+                    [class.btn-ghost]="isBookAlreadyInPlaylist(book.id)"
+                    [class.btn-solid]="!isBookAlreadyInPlaylist(book.id)"
+                  >
+                    @if (isBookAlreadyInPlaylist(book.id)) {
+                      <span class="material-symbols-outlined">check</span>
+                      {{ 'PLAYLIST_DETAIL.ALREADY_ADDED' | translate }}
+                    } @else {
+                      <span class="material-symbols-outlined">add</span>
+                      {{ 'PLAYLIST_DETAIL.ADD' | translate }}
+                    }
+                  </button>
+                </li>
+              }
+            </ul>
+          }
+        </div>
+      }
+    </section>
+
+    <!-- ============================================================
+         LISTA DE ITEMS
+         ============================================================ -->
+    <section class="detail-section pl-fade-in" style="animation-delay: 140ms">
+      <div class="detail-section-static-head">
+        <h2 class="detail-section-title">
           {{ 'PLAYLIST_DETAIL.ITEMS_TITLE' | translate }}
         </h2>
+      </div>
 
-        @if (isEmpty()) {
-          <div
-            class="rounded-xl border-2 border-dashed p-6 md:p-10 text-center"
-            style="border-color: #E0A15E; background-color: #FFFDF7"
+      @if (isEmpty()) {
+        <div class="detail-empty">
+          <span class="detail-empty-icon material-symbols-outlined" aria-hidden="true">
+            bookmarks
+          </span>
+          <p class="detail-empty-title">
+            {{ 'PLAYLIST_DETAIL.EMPTY_TITLE' | translate }}
+          </p>
+          <p class="detail-empty-sub">
+            {{ 'PLAYLIST_DETAIL.EMPTY_SUBTITLE' | translate }}
+          </p>
+          <button
+            type="button"
+            (click)="toggleSearch()"
+            class="btn-solid press-target mt-4"
           >
-            <span
-              class="material-symbols-outlined text-5xl"
-              style="color: #E0A15E"
-            >
-              library_add
-            </span>
-            <p
-              class="mt-3 text-base font-semibold"
-              style="color: #45332D"
-            >
-              {{ 'PLAYLIST_DETAIL.EMPTY_TITLE' | translate }}
-            </p>
-            <p class="mt-1 text-sm" style="color: #7a5c4a">
-              {{ 'PLAYLIST_DETAIL.EMPTY_SUBTITLE' | translate }}
-            </p>
-            <button
-              type="button"
-              (click)="toggleSearch()"
-              class="mt-5 inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-medium text-sm shadow-sm"
-              style="background-color: #E0A15E; color: #FCF5E2"
-            >
-              <span class="material-symbols-outlined text-lg">library_add</span>
-              {{ 'PLAYLIST_DETAIL.ADD_BOOKS' | translate }}
-            </button>
-          </div>
-        } @else {
-          <ul
-            cdkDropList
-            (cdkDropListDropped)="onDrop($event)"
-            class="space-y-2"
-          >
-            @for (item of items(); track trackItemById($index, item)) {
-              <li
-                cdkDrag
-                class="rounded-lg border bg-white flex items-start gap-3 p-3 transition-shadow"
-                style="border-color: #E9E1D1"
+            <span class="material-symbols-outlined">library_add</span>
+            {{ 'PLAYLIST_DETAIL.ADD_BOOKS' | translate }}
+          </button>
+        </div>
+      } @else {
+        <ul
+          cdkDropList
+          (cdkDropListDropped)="onDrop($event)"
+          class="detail-items-list pl-stagger-auto"
+        >
+          @for (item of items(); track trackItemById($index, item)) {
+            <li cdkDrag class="detail-item">
+              <!-- Drag handle -->
+              <button
+                type="button"
+                cdkDragHandle
+                class="detail-item-handle"
+                [attr.aria-label]="'PLAYLIST_DETAIL.DRAG_HANDLE' | translate"
               >
-                <!-- Drag handle -->
-                <button
-                  type="button"
-                  cdkDragHandle
-                  class="mt-1 p-1 rounded cursor-grab active:cursor-grabbing hover:bg-[#FFF8EC]"
-                  style="color: #7a5c4a"
-                  [attr.aria-label]="'PLAYLIST_DETAIL.DRAG_HANDLE' | translate"
-                >
-                  <span class="material-symbols-outlined">drag_indicator</span>
-                </button>
+                <span class="material-symbols-outlined">drag_indicator</span>
+              </button>
 
-                <!-- Position -->
-                <span
-                  class="mt-1 flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold flex-shrink-0"
-                  style="background-color: #FFF8EC; color: #45332D"
-                >
-                  {{ item.position }}
-                </span>
+              <!-- Position -->
+              <span class="detail-item-position" aria-hidden="true">
+                {{ item.position }}
+              </span>
 
-                <!-- Cover -->
-                <a
-                  [routerLink]="['/book-details', item.catalogBookId]"
-                  class="w-12 h-16 rounded overflow-hidden flex-shrink-0"
-                  style="background-color: #F1E6CE"
-                >
-                  @if (item.catalogBook?.coverUrl) {
-                    <img
-                      [src]="item.catalogBook!.coverUrl"
-                      [alt]="item.catalogBook?.title ?? ''"
-                      class="h-full w-full object-cover"
-                      loading="lazy"
-                      decoding="async"
-                    />
-                  }
-                </a>
+              <!-- Cover -->
+              <a
+                [routerLink]="['/book-details', item.catalogBookId]"
+                class="detail-item-cover"
+              >
+                @if (item.catalogBook?.coverUrl) {
+                  <img
+                    [src]="item.catalogBook!.coverUrl"
+                    [alt]="item.catalogBook?.title ?? ''"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                }
+              </a>
 
-                <!-- Book info + controls -->
-                <div class="flex-1 min-w-0">
-                  <div class="flex items-start justify-between gap-3">
-                    <div class="min-w-0">
-                      <a
-                        [routerLink]="['/book-details', item.catalogBookId]"
-                        class="text-sm md:text-base font-semibold line-clamp-1 hover:underline"
-                        style="color: #45332D"
-                      >
-                        {{ item.catalogBook?.title ?? ('PLAYLIST_DETAIL.UNKNOWN_BOOK' | translate) }}
-                      </a>
-                      @if (item.catalogBook?.author) {
-                        <p
-                          class="text-xs md:text-sm line-clamp-1"
-                          style="color: #7a5c4a"
-                        >
-                          {{ item.catalogBook!.author }}
-                        </p>
-                      }
-                    </div>
-
-                    <!-- Status select -->
-                    <select
-                      [value]="item.status"
-                      (change)="updateItemStatus(item, $any($event.target).value)"
-                      class="text-xs md:text-sm rounded border px-2 py-1 focus:outline-none focus:ring-2 flex-shrink-0"
-                      style="border-color: #E9E1D1; background-color: #FFFDF7; color: #45332D"
+              <!-- Book info + controls -->
+              <div class="detail-item-body">
+                <div class="detail-item-head">
+                  <div class="detail-item-head-text">
+                    <a
+                      [routerLink]="['/book-details', item.catalogBookId]"
+                      class="detail-item-title"
                     >
-                      @for (status of itemStatuses; track status) {
-                        <option [value]="status">
-                          {{ statusKey(status) | translate }}
-                        </option>
-                      }
-                    </select>
+                      {{ item.catalogBook?.title ?? ('PLAYLIST_DETAIL.UNKNOWN_BOOK' | translate) }}
+                    </a>
+                    @if (item.catalogBook?.author) {
+                      <p class="detail-item-author">
+                        {{ item.catalogBook!.author }}
+                      </p>
+                    }
                   </div>
 
-                  <!-- Note (optional) -->
-                  <textarea
-                    [value]="item.note ?? ''"
-                    (blur)="saveItemNote(item, $any($event.target).value)"
-                    [placeholder]="'PLAYLIST_DETAIL.NOTE_PLACEHOLDER' | translate"
-                    maxlength="500"
-                    rows="1"
-                    class="mt-2 block w-full rounded border px-2 py-1 text-xs md:text-sm focus:outline-none focus:ring-2 resize-y"
-                    style="border-color: #E9E1D1; background-color: #FFFDF7; color: #45332D"
-                  ></textarea>
+                  <!-- Status select -->
+                  <select
+                    [value]="item.status"
+                    (change)="updateItemStatus(item, $any($event.target).value)"
+                    class="detail-item-status"
+                  >
+                    @for (status of itemStatuses; track status) {
+                      <option [value]="status">
+                        {{ statusKey(status) | translate }}
+                      </option>
+                    }
+                  </select>
                 </div>
 
-                <!-- Remove -->
-                <button
-                  type="button"
-                  (click)="removeItem(item)"
-                  class="p-1.5 rounded text-red-600 hover:bg-red-50 flex-shrink-0"
-                  [attr.aria-label]="'PLAYLIST_DETAIL.REMOVE' | translate"
-                  [title]="'PLAYLIST_DETAIL.REMOVE' | translate"
-                >
-                  <span class="material-symbols-outlined">close</span>
-                </button>
-              </li>
+                <!-- Note (optional) -->
+                <textarea
+                  [value]="item.note ?? ''"
+                  (blur)="saveItemNote(item, $any($event.target).value)"
+                  [placeholder]="'PLAYLIST_DETAIL.NOTE_PLACEHOLDER' | translate"
+                  maxlength="500"
+                  rows="1"
+                  class="detail-item-note"
+                ></textarea>
+              </div>
+
+              <!-- Remove -->
+              <button
+                type="button"
+                (click)="removeItem(item)"
+                class="detail-item-remove press-target"
+                [attr.aria-label]="'PLAYLIST_DETAIL.REMOVE' | translate"
+                [title]="'PLAYLIST_DETAIL.REMOVE' | translate"
+              >
+                <span class="material-symbols-outlined">close</span>
+              </button>
+            </li>
+          }
+        </ul>
+      }
+    </section>
+  }
+
+  <!-- ============================================================
+       MODAL DE CONFIRMACIÓN custom (sustituye a window.confirm)
+       ============================================================ -->
+  @if (confirmAction(); as action) {
+    <div
+      class="confirm-modal-overlay"
+      role="presentation"
+      (click)="cancelConfirm()"
+    >
+      <div
+        class="confirm-modal"
+        role="dialog"
+        aria-modal="true"
+        [attr.aria-labelledby]="'detail-confirm-title'"
+        (click)="$event.stopPropagation()"
+      >
+        <div class="confirm-modal-icon" aria-hidden="true">
+          <span class="material-symbols-outlined">{{ action.icon }}</span>
+        </div>
+        <h3 id="detail-confirm-title" class="confirm-modal-title">
+          {{ action.titleKey | translate }}
+        </h3>
+        <p class="confirm-modal-body">
+          {{ action.bodyKey | translate: (action.bodyParams ?? {}) }}
+        </p>
+        <div class="confirm-modal-actions">
+          <button
+            type="button"
+            class="confirm-modal-btn is-cancel press-target"
+            (click)="cancelConfirm()"
+            [disabled]="confirmRunning()"
+          >
+            {{ action.cancelKey | translate }}
+          </button>
+          <button
+            type="button"
+            class="confirm-modal-btn is-danger press-target"
+            (click)="acceptConfirm()"
+            [disabled]="confirmRunning()"
+          >
+            @if (confirmRunning()) {
+              <span
+                class="material-symbols-outlined animate-spin"
+                aria-hidden="true"
+              >progress_activity</span>
             }
-          </ul>
-        }
-      </section>
-    }
-  </div>
+            {{ action.confirmKey | translate }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
 </main>
