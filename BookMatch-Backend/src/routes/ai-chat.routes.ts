@@ -33,6 +33,47 @@ function normalizeMaxItems(raw: unknown, mode: ChatMode): number | null {
   return clamped;
 }
 
+type CurrentDraftItem = { catalogBookId: number; position: number; note: string | null };
+type CurrentDraft = {
+  title: string | null;
+  description: string | null;
+  items: CurrentDraftItem[];
+};
+
+/**
+ * Normaliza el `currentDraft` que el frontend envía cuando el usuario ha
+ * estado iterando sobre una playlist en modo playlist_builder. Rechaza
+ * items inválidos, aplica límites y devuelve `null` si no hay items útiles.
+ *
+ * Solo aplica en modo playlist; en modo chat normal se ignora.
+ */
+function normalizeCurrentDraft(raw: unknown, mode: ChatMode): CurrentDraft | null {
+  if (mode !== 'playlist_builder') return null;
+  if (!raw || typeof raw !== 'object') return null;
+  const d = raw as Record<string, unknown>;
+  if (!Array.isArray(d['items'])) return null;
+
+  const items: CurrentDraftItem[] = [];
+  const seen = new Set<number>();
+  for (const rawItem of d['items']) {
+    if (items.length >= MAX_ITEMS_HARD_CAP) break;
+    if (!rawItem || typeof rawItem !== 'object') continue;
+    const obj = rawItem as Record<string, unknown>;
+    const id = typeof obj['catalogBookId'] === 'number'
+      ? obj['catalogBookId']
+      : Number(obj['catalogBookId']);
+    if (!Number.isFinite(id) || id <= 0 || seen.has(id)) continue;
+    seen.add(id);
+    const note = typeof obj['note'] === 'string' ? obj['note'].slice(0, 200) : null;
+    items.push({ catalogBookId: Math.trunc(id), position: items.length + 1, note });
+  }
+  if (items.length === 0) return null;
+
+  const title = typeof d['title'] === 'string' ? d['title'].slice(0, 120) : null;
+  const description = typeof d['description'] === 'string' ? d['description'].slice(0, 500) : null;
+  return { title, description, items };
+}
+
 // POST /api/ai-chat/send-message
 router.post('/send-message', async (req, res) => {
   try {
@@ -54,6 +95,8 @@ router.post('/send-message', async (req, res) => {
     // Modo conversacional: chat (default) | playlist_builder (con co-curación de libros)
     const mode = normalizeMode(req.body?.mode);
     const maxItems = normalizeMaxItems(req.body?.maxItems, mode);
+    // Borrador actual (para que la IA itere sobre él en vez de crear otra playlist).
+    const currentDraft = normalizeCurrentDraft(req.body?.currentDraft, mode);
 
     const firestore = getFirestore();
 
@@ -105,7 +148,8 @@ router.post('/send-message', async (req, res) => {
       userMessage: trimmed,
       baseUrl: req.headers.origin || env.FRONTEND_URL,
       mode,
-      ...(maxItems ? { maxItems } : {})
+      ...(maxItems ? { maxItems } : {}),
+      ...(currentDraft ? { currentDraft } : {})
     });
 
     res.status(200).json({
@@ -113,7 +157,8 @@ router.post('/send-message', async (req, res) => {
       userMessageId: userMessageRef.id,
       assistantMessageId: assistantMessageRef.id,
       mode,
-      ...(maxItems ? { maxItems } : {})
+      ...(maxItems ? { maxItems } : {}),
+      ...(currentDraft ? { hadCurrentDraft: true } : {})
     });
 
   } catch (error) {

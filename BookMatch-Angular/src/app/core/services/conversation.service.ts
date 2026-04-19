@@ -8,7 +8,7 @@ import { Observable, from } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
-import { Conversation, Message, ConversationUI, MessageUI } from '../models/conversation.model';
+import { Conversation, Message, ConversationUI, MessageUI, PlaylistDraft } from '../models/conversation.model';
 
 /**
  * Servicio de conversaciones con IA: crea y lista conversaciones en Firestore,
@@ -101,12 +101,32 @@ export class ConversationService {
     userId: string,
     conversationId: string,
     content: string,
-    options?: { mode?: 'chat' | 'playlist_builder'; maxItems?: number }
+    options?: {
+      mode?: 'chat' | 'playlist_builder';
+      maxItems?: number;
+      /**
+       * Borrador actual del panel (con ediciones manuales del usuario).
+       * Se envía al backend para que el LLM ITERE sobre él en vez de
+       * crear una playlist nueva desde cero.
+       */
+      currentDraft?: PlaylistDraft;
+    }
   ): Observable<void> {
     const mode = options?.mode ?? 'chat';
     const body: Record<string, unknown> = { userId, conversationId, content, mode };
-    if (mode === 'playlist_builder' && options?.maxItems) {
-      body['maxItems'] = options.maxItems;
+    if (mode === 'playlist_builder') {
+      if (options?.maxItems) body['maxItems'] = options.maxItems;
+      if (options?.currentDraft && Array.isArray(options.currentDraft.items) && options.currentDraft.items.length > 0) {
+        body['currentDraft'] = {
+          title: options.currentDraft.title ?? null,
+          description: options.currentDraft.description ?? null,
+          items: options.currentDraft.items.map((it, idx) => ({
+            catalogBookId: it.catalogBookId,
+            position: idx + 1,
+            note: it.note ?? null,
+          })),
+        };
+      }
     }
     return this.http.post<void>(
       `${environment.apiUrl}/ai-chat/send-message`,
