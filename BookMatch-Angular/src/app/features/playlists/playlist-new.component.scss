@@ -1,3 +1,120 @@
 :host {
   display: block;
+  background: #fbf5e7;
+  min-height: calc(100vh - 80px);
+}
+
+.new-shell {
+  max-width: 48rem;
+  margin: 0 auto;
+  padding: 1.25rem 1rem 4rem;
+
+  @media (min-width: 640px) { padding: 1.75rem 1.5rem 5rem; }
+}
+
+.new-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.82rem;
+  color: #8a6a52;
+  margin-bottom: 1rem;
+}
+
+.new-breadcrumb-link {
+  color: #8a6a52;
+  transition: color 160ms var(--ease-out-strong);
+
+  @media (hover: hover) and (pointer: fine) {
+    &:hover { color: #45332d; text-decoration: underline; }
+  }
+}
+
+.new-breadcrumb-sep { color: rgba(107, 77, 57, 0.4); }
+
+.new-breadcrumb-current {
+  color: #45332d;
+  font-weight: 600;
+}
+
+.new-header {
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid rgba(107, 77, 57, 0.15);
+  margin-bottom: 1.5rem;
+}
+
+.new-title {
+  margin: 0;
+  font-family: 'Lora', 'Georgia', 'Times New Roman', serif;
+  font-size: clamp(1.6rem, 3.5vw, 2.2rem);
+  font-weight: 700;
+  color: #3a2820;
+  line-height: 1.1;
+  letter-spacing: -0.015em;
+}
+
+.new-subtitle {
+  margin: 0.5rem 0 0;
+  font-size: 0.95rem;
+  color: #6b4d39;
+  line-height: 1.55;
+  max-width: 36rem;
+}
+
+.new-error {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.75rem 1rem;
+  border-radius: 10px;
+  background: #fef2f2;
+  border: 1px solid #f5c7c7;
+  color: #8b1e1e;
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+
+  .flex-1 { flex: 1; }
+}
+
+.new-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding: 1.5rem;
+  background: #fffaf0;
+  border: 1px solid rgba(107, 77, 57, 0.15);
+  border-radius: 14px;
+
+  @media (min-width: 640px) { padding: 2rem; }
+}
+
+.new-fieldset {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.new-radio-group {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.6rem;
+
+  @media (min-width: 640px) {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.new-actions {
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 0.6rem;
+  padding-top: 0.5rem;
+
+  @media (min-width: 640px) {
+    flex-direction: row;
+    justify-content: flex-end;
+  }
 }

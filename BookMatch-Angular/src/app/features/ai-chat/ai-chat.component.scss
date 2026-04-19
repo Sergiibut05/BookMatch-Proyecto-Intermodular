@@ -202,12 +202,18 @@
 // Suggestion chips (sin emojis, con iconos Material cálidos)
 // ============================================================
 .suggestion-chip {
-  display: block;
+  // `flex flex-col` viene desde la plantilla. Fijamos altura mínima e
+  // `justify-content: space-between` para que la cabecera (icono + título)
+  // quede siempre pegada al top y la descripción al bottom, aun si el
+  // título o la descripción ocupan una línea más en una tarjeta. Así los
+  // tres chips mantienen los iconos visualmente alineados entre sí.
   padding: 1rem 1rem 1.1rem;
   background: #ffffff;
   border: 1px solid rgba(224, 161, 94, 0.25);
   border-radius: 1rem;
   text-align: left;
+  min-height: 128px;
+  justify-content: space-between;
   box-shadow: 0 1px 3px rgba(69, 51, 45, 0.04);
   transition:
     border-color 160ms var(--ease-out),
@@ -223,13 +229,25 @@
   }
 }
 
+// Cabecera del chip: icono + título. Bloque superior que puede crecer
+// (si el título ocupa 2 líneas) sin empujar la descripción, porque la
+// descripción ancla al fondo con `justify-content: space-between`.
+.suggestion-chip-head {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.55rem;
+}
+
 .suggestion-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   width: 36px;
   height: 36px;
-  margin-bottom: 0.75rem;
+  // El espacio entre icono y label ahora lo gestiona el `gap` del
+  // contenedor `.suggestion-chip-head`, así que no necesitamos margin.
+  margin-bottom: 0;
   border-radius: 10px;
   background: linear-gradient(135deg, #fce8c9 0%, #f6d39a 100%);
   color: #8c5a25;
@@ -767,7 +785,102 @@
     color: #5a3a20;
     box-shadow: 0 2px 10px -2px rgba(224, 161, 94, 0.5);
   }
+
+  // Primer encuentro: marcador "nuevo" para que el usuario descubra el
+  // botón. Un punto pulsante en la esquina, muy leve (no invasivo) que
+  // desaparece al activar el modo o al cerrar el hint banner.
+  &.is-new::after {
+    content: '';
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    background: #E0A15E;
+    box-shadow: 0 0 0 2px #fff8ec;
+    animation: pl-dot-pulse 1.8s ease-in-out infinite;
+  }
+
+  // Necesario para posicionar el punto ::after.
+  position: relative;
 }
+
+@keyframes pl-dot-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.25); opacity: 0.75; }
+}
+
+// =========================================================
+// Hint on-boarding del modo playlist (debajo del welcome).
+// =========================================================
+.playlist-hint {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+  padding: 0.85rem 0.9rem 0.85rem 0.9rem;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #fff8ec 0%, #fce8c9 100%);
+  border: 1px solid rgba(224, 161, 94, 0.35);
+  max-width: 40rem;
+  opacity: 0;
+  transform: translateY(6px);
+  animation: pl-fade-up 420ms var(--ease-out-strong) 120ms forwards;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.playlist-hint-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  background: #E0A15E;
+  color: #fff8ec;
+  flex-shrink: 0;
+  .material-symbols-outlined { font-size: 18px; }
+}
+
+.playlist-hint-text {
+  flex: 1 1 auto;
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.35;
+  color: #5a3a20;
+}
+
+.playlist-hint-close {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  color: #8a6a52;
+  background: transparent;
+  transition: background-color 160ms var(--ease-out-strong), color 160ms var(--ease-out-strong);
+
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      background: rgba(69, 51, 45, 0.08);
+      color: #45332d;
+    }
+  }
+
+  .material-symbols-outlined { font-size: 18px; }
+}
+
+// Los estilos de .confirm-modal* viven ahora en src/styles.scss
+// para poder reutilizarlos desde cualquier componente (chat,
+// lista de playlists, etc.).
 
 // Botón con contador (icono + badge) para abrir el panel desde la topbar.
 .playlist-count-btn {

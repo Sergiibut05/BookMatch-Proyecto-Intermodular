@@ -16,7 +16,7 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { TranslateModule } from '@ngx-translate/core';
 import { Subject, firstValueFrom, of } from 'rxjs';
 import {
   catchError,
@@ -63,7 +63,6 @@ export class PlaylistDetailComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private destroyRef = inject(DestroyRef);
-  private translate = inject(TranslateService);
   private playlistService = inject(PlaylistService);
   private catalogService = inject(CatalogService);
   private storageService = inject(StorageService);
@@ -92,6 +91,25 @@ export class PlaylistDetailComponent implements OnInit {
   readonly searchLoading = signal<boolean>(false);
 
   readonly itemStatuses: PlaylistItemStatus[] = ['PENDING', 'READING', 'READ'];
+
+  /**
+   * Estado del modal de confirmación genérico. Cuando no es `null` se
+   * muestra un diálogo custom (bottom-sheet en móvil, dialog en desktop)
+   * con el título/cuerpo traducidos y ejecuta `onConfirm()` al aceptar.
+   * Sustituye a `window.confirm()` (que el user pidió quitar para
+   * unificar estética).
+   */
+  readonly confirmAction = signal<{
+    titleKey: string;
+    bodyKey: string;
+    bodyParams?: Record<string, unknown>;
+    confirmKey: string;
+    cancelKey: string;
+    tone: 'danger' | 'neutral';
+    icon: string;
+    onConfirm: () => void | Promise<void>;
+  } | null>(null);
+  readonly confirmRunning = signal<boolean>(false);
 
   readonly items = computed<PlaylistItem[]>(
     () => this.playlist()?.items ?? [],
@@ -301,12 +319,24 @@ export class PlaylistDetailComponent implements OnInit {
    * Quita la portada actual: persiste `coverUrl = null` en el backend
    * y borra el fichero de Firebase Storage si corresponde.
    */
-  async removeCover(): Promise<void> {
+  /** Pide confirmación antes de borrar la portada. */
+  removeCover(): void {
     const p = this.playlist();
     if (!p || !p.coverUrl || this.uploadingCover()) return;
+    this.openConfirm({
+      titleKey: 'PLAYLIST_DETAIL.COVER_REMOVE_TITLE',
+      bodyKey: 'PLAYLIST_DETAIL.COVER_REMOVE_BODY',
+      confirmKey: 'PLAYLIST_DETAIL.COVER_REMOVE_CONFIRM_BTN',
+      cancelKey: 'PLAYLIST_DETAIL.COVER_REMOVE_CANCEL',
+      tone: 'danger',
+      icon: 'delete',
+      onConfirm: () => this.doRemoveCover(),
+    });
+  }
 
-    const msg = this.translate.instant('PLAYLIST_DETAIL.COVER_REMOVE_CONFIRM');
-    if (!window.confirm(msg)) return;
+  private async doRemoveCover(): Promise<void> {
+    const p = this.playlist();
+    if (!p || !p.coverUrl) return;
 
     const previousCover = p.coverUrl;
     this.uploadingCover.set(true);
@@ -317,11 +347,10 @@ export class PlaylistDetailComponent implements OnInit {
       await firstValueFrom(
         this.playlistService.update(p.id, { coverUrl: null }),
       );
-      // Intento de limpieza de Storage: fallo silencioso si no es nuestra URL.
       try {
         await this.storageService.deletePhoto(previousCover);
       } catch {
-        // el StorageService ya maneja object-not-found; aquí ignoramos.
+        /* ya gestionado por StorageService */
       }
     } catch (err) {
       console.error('[playlist-detail] error quitando portada', err);
@@ -332,15 +361,24 @@ export class PlaylistDetailComponent implements OnInit {
     }
   }
 
-  async deletePlaylist(): Promise<void> {
+  deletePlaylist(): void {
     const p = this.playlist();
     if (!p) return;
-    const msg = this.translate.instant('PLAYLIST_DETAIL.DELETE_CONFIRM', {
-      title: p.title,
+    this.openConfirm({
+      titleKey: 'PLAYLIST_DETAIL.DELETE_TITLE',
+      bodyKey: 'PLAYLIST_DETAIL.DELETE_BODY',
+      bodyParams: { title: p.title },
+      confirmKey: 'PLAYLIST_DETAIL.DELETE_CONFIRM_BTN',
+      cancelKey: 'PLAYLIST_DETAIL.DELETE_CANCEL',
+      tone: 'danger',
+      icon: 'delete',
+      onConfirm: () => this.doDeletePlaylist(p.id),
     });
-    if (!window.confirm(msg)) return;
+  }
+
+  private async doDeletePlaylist(id: number): Promise<void> {
     try {
-      await firstValueFrom(this.playlistService.delete(p.id));
+      await firstValueFrom(this.playlistService.delete(id));
       this.router.navigate(['/playlists']);
     } catch (err) {
       console.error('[playlist-detail] error eliminando playlist', err);
@@ -433,18 +471,27 @@ export class PlaylistDetailComponent implements OnInit {
     }
   }
 
-  async removeItem(item: PlaylistItem): Promise<void> {
+  removeItem(item: PlaylistItem): void {
     const p = this.playlist();
     if (!p) return;
-    const title = item.catalogBook?.title ?? '';
-    const msg = this.translate.instant('PLAYLIST_DETAIL.REMOVE_CONFIRM', {
-      title,
+    const title = item.catalogBook?.title ?? '—';
+    this.openConfirm({
+      titleKey: 'PLAYLIST_DETAIL.REMOVE_TITLE',
+      bodyKey: 'PLAYLIST_DETAIL.REMOVE_BODY',
+      bodyParams: { title },
+      confirmKey: 'PLAYLIST_DETAIL.REMOVE_CONFIRM_BTN',
+      cancelKey: 'PLAYLIST_DETAIL.REMOVE_CANCEL',
+      tone: 'danger',
+      icon: 'remove_circle',
+      onConfirm: () => this.doRemoveItem(item),
     });
-    if (!window.confirm(msg)) return;
+  }
+
+  private async doRemoveItem(item: PlaylistItem): Promise<void> {
+    const p = this.playlist();
+    if (!p) return;
     try {
-      await firstValueFrom(
-        this.playlistService.removeItem(p.id, item.id),
-      );
+      await firstValueFrom(this.playlistService.removeItem(p.id, item.id));
       const current = this.playlist();
       if (!current) return;
       this.playlist.set({
@@ -596,13 +643,23 @@ export class PlaylistDetailComponent implements OnInit {
   }
 
   /** Invalida el shareToken actual. No cambia visibility. */
-  async revokeShare(): Promise<void> {
+  revokeShare(): void {
     const p = this.playlist();
     if (!p || !p.shareToken || this.sharing()) return;
+    this.openConfirm({
+      titleKey: 'PLAYLIST_DETAIL.UNSHARE_TITLE',
+      bodyKey: 'PLAYLIST_DETAIL.UNSHARE_BODY',
+      confirmKey: 'PLAYLIST_DETAIL.UNSHARE_CONFIRM_BTN',
+      cancelKey: 'PLAYLIST_DETAIL.UNSHARE_CANCEL',
+      tone: 'danger',
+      icon: 'link_off',
+      onConfirm: () => this.doRevokeShare(),
+    });
+  }
 
-    const msg = this.translate.instant('PLAYLIST_DETAIL.UNSHARE_CONFIRM');
-    if (!window.confirm(msg)) return;
-
+  private async doRevokeShare(): Promise<void> {
+    const p = this.playlist();
+    if (!p || !p.shareToken) return;
     this.sharing.set(true);
     this.errorKey.set(null);
     try {
@@ -671,6 +728,30 @@ export class PlaylistDetailComponent implements OnInit {
       this.errorKey.set('PLAYLIST_DETAIL.ERROR_EXPORT');
     } finally {
       this.exporting.set(false);
+    }
+  }
+
+  // ---- Modal de confirmación genérico (sustituye a window.confirm) ----
+
+  private openConfirm(config: NonNullable<ReturnType<typeof this.confirmAction>>): void {
+    if (this.confirmRunning()) return;
+    this.confirmAction.set(config);
+  }
+
+  cancelConfirm(): void {
+    if (this.confirmRunning()) return;
+    this.confirmAction.set(null);
+  }
+
+  async acceptConfirm(): Promise<void> {
+    const action = this.confirmAction();
+    if (!action || this.confirmRunning()) return;
+    this.confirmRunning.set(true);
+    try {
+      await action.onConfirm();
+    } finally {
+      this.confirmRunning.set(false);
+      this.confirmAction.set(null);
     }
   }
 

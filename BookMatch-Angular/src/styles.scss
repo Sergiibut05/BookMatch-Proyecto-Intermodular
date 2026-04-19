@@ -89,3 +89,803 @@ body.loader-active ::view-transition-new(root) {
         opacity: 1;
     }
 }
+
+/* ============================================================
+ * Primitivas de UI (design-engineering)
+ * ------------------------------------------------------------
+ * Variables de easing y utility classes reutilizables en
+ * cualquier componente. Diseñadas siguiendo la filosofía de
+ * Emil Kowalski (animations.dev): transform/opacity only,
+ * ease-out fuerte, interruptible, hover gated a pointer fine,
+ * y respeto total de `prefers-reduced-motion`.
+ * ============================================================ */
+:root {
+    /* Curvas de salida fuertes: más "punchy" que las CSS por defecto. */
+    --ease-out-strong: cubic-bezier(0.23, 1, 0.32, 1);
+    --ease-in-out-strong: cubic-bezier(0.77, 0, 0.175, 1);
+    /* Curva iOS-like para drawers / bottom sheets. */
+    --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+/* Scale-on-press sutil para que los elementos interactivos se sientan "vivos". */
+.pl-press {
+    transition: transform 160ms var(--ease-out-strong);
+
+    &:active:not(:disabled) {
+        transform: scale(0.97);
+    }
+}
+
+/* Card con elevación al hover, sólo en dispositivos con pointer fino. */
+.pl-card-hover {
+    transition:
+        transform 240ms var(--ease-out-strong),
+        box-shadow 240ms var(--ease-out-strong),
+        border-color 180ms var(--ease-out-strong);
+
+    @media (hover: hover) and (pointer: fine) {
+        &:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 14px 30px -18px rgba(69, 51, 45, 0.35);
+        }
+    }
+
+    &:active:not(:disabled) {
+        transform: translateY(0) scale(0.995);
+    }
+}
+
+/* Botones de la paleta de la app con feedback consistente. */
+.pl-btn-primary {
+    background-color: #E0A15E;
+    color: #FCF5E2;
+    transition:
+        background-color 160ms var(--ease-out-strong),
+        transform 160ms var(--ease-out-strong),
+        box-shadow 160ms var(--ease-out-strong);
+
+    &:active:not(:disabled) {
+        transform: scale(0.97);
+    }
+
+    @media (hover: hover) and (pointer: fine) {
+        &:hover:not(:disabled) {
+            background-color: #c88f4e;
+        }
+    }
+
+    &:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+    }
+}
+
+.pl-btn-secondary {
+    background-color: #FFFDF7;
+    color: #45332D;
+    border: 1px solid #E0A15E;
+    transition:
+        background-color 160ms var(--ease-out-strong),
+        transform 160ms var(--ease-out-strong);
+
+    &:active:not(:disabled) {
+        transform: scale(0.97);
+    }
+
+    @media (hover: hover) and (pointer: fine) {
+        &:hover:not(:disabled) {
+            background-color: #F5EAD4;
+        }
+    }
+
+    &:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+    }
+}
+
+/* Reveal suave al montar: ideal para hero/headers de página. */
+.pl-fade-in {
+    opacity: 0;
+    transform: translateY(6px);
+    animation: pl-fade-up 460ms var(--ease-out-strong) forwards;
+}
+
+/* Stagger automático: cada hijo entra ~40ms después del anterior.
+   Usamos :nth-child hasta 24 elementos (suficiente para grids/listas
+   paginadas). Variante más personalizable: `.pl-stagger`, donde
+   cada hijo declara su orden con `style="--i:N"`. */
+.pl-stagger-auto>* {
+    opacity: 0;
+    transform: translateY(8px);
+    animation: pl-fade-up 380ms var(--ease-out-strong) forwards;
+}
+
+@for $i from 1 through 24 {
+    .pl-stagger-auto > *:nth-child(#{$i}) {
+        animation-delay: #{ ($i - 1) * 40 + 60 }ms;
+    }
+}
+
+.pl-stagger>* {
+    opacity: 0;
+    transform: translateY(8px);
+    animation: pl-fade-up 380ms var(--ease-out-strong) forwards;
+    animation-delay: calc(var(--i, 0) * 40ms + 60ms);
+}
+
+@keyframes pl-fade-up {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Respeto del modo "reduced motion": quitamos motion pero mantenemos
+   opacity para que la UI siga dando feedback de que algo cambió. */
+@media (prefers-reduced-motion: reduce) {
+
+    .pl-press,
+    .pl-card-hover,
+    .pl-btn-primary,
+    .pl-btn-secondary {
+        transition: opacity 160ms ease !important;
+        transform: none !important;
+    }
+
+    .pl-card-hover:hover {
+        transform: none !important;
+        box-shadow: none !important;
+    }
+
+    .pl-stagger>*,
+    .pl-stagger-auto>*,
+    .pl-fade-in {
+        animation: pl-fade-in-reduced 200ms ease forwards !important;
+    }
+
+    @keyframes pl-fade-in-reduced {
+        to {
+            opacity: 1;
+            transform: none;
+        }
+    }
+}
+
+/* ============================================================
+ * press-target · helper global
+ * ------------------------------------------------------------
+ * Clase utilitaria para que cualquier elemento interactivo
+ * reciba el "sink" de ~97% al pulsar. Idéntica a .pl-press
+ * pero con un nombre más semántico para componentes.
+ * ============================================================ */
+.press-target {
+    transition: transform 160ms var(--ease-out-strong);
+
+    &:active:not(:disabled):not([aria-disabled="true"]) {
+        transform: scale(0.97);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        transition: none;
+        &:active { transform: none; }
+    }
+}
+
+/* ============================================================
+ * Botones editoriales globales · btn-solid / btn-outline
+ * ------------------------------------------------------------
+ * Estilo "librería": walnut sólido + outline beige, sin
+ * gradients ni glows. Usados en la lista de playlists, detalle
+ * y modales para que la jerarquía sea consistente en toda la
+ * feature de Playlists (y potencialmente en otras).
+ * ============================================================ */
+.btn-solid {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.65rem 1.1rem;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    background: #45332d;
+    color: #fbf5e7;
+    border: 1px solid #45332d;
+    transition:
+        background-color 180ms var(--ease-out-strong),
+        border-color 180ms var(--ease-out-strong),
+        transform 160ms var(--ease-out-strong);
+
+    .material-symbols-outlined {
+        font-size: 18px;
+        font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 20;
+    }
+
+    @media (hover: hover) and (pointer: fine) {
+        &:hover:not(:disabled) {
+            background: #2e1f1a;
+            border-color: #2e1f1a;
+        }
+    }
+
+    &:disabled { opacity: 0.55; cursor: not-allowed; }
+}
+
+.btn-outline {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.65rem 1.1rem;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    background: transparent;
+    color: #45332d;
+    border: 1px solid rgba(107, 77, 57, 0.4);
+    transition:
+        background-color 180ms var(--ease-out-strong),
+        border-color 180ms var(--ease-out-strong),
+        transform 160ms var(--ease-out-strong);
+
+    .material-symbols-outlined {
+        font-size: 18px;
+        color: #8a6a52;
+        font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 20;
+    }
+
+    @media (hover: hover) and (pointer: fine) {
+        &:hover:not(:disabled) {
+            background: rgba(224, 161, 94, 0.08);
+            border-color: rgba(107, 77, 57, 0.6);
+        }
+    }
+
+    &:disabled { opacity: 0.55; cursor: not-allowed; }
+}
+
+/* Variante "ghost" / tonal: mismo shape pero sin borde, para
+   acciones secundarias dentro de cards o filas. */
+.btn-ghost {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    padding: 0.5rem 0.9rem;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    background: transparent;
+    color: #6b4d39;
+    border: 0;
+    transition:
+        background-color 180ms var(--ease-out-strong),
+        color 180ms var(--ease-out-strong);
+
+    .material-symbols-outlined {
+        font-size: 18px;
+        color: #8a6a52;
+        font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 20;
+    }
+
+    @media (hover: hover) and (pointer: fine) {
+        &:hover:not(:disabled) {
+            background: rgba(224, 161, 94, 0.14);
+            color: #45332d;
+        }
+    }
+
+    &:disabled { opacity: 0.55; cursor: not-allowed; }
+
+    /* Variante peligro: acciones destructivas (eliminar). */
+    &.is-danger {
+        color: #8b1e1e;
+
+        .material-symbols-outlined { color: #b32f2f; }
+
+        @media (hover: hover) and (pointer: fine) {
+            &:hover:not(:disabled) {
+                background: rgba(176, 47, 47, 0.1);
+                color: #8b1e1e;
+            }
+        }
+    }
+}
+
+/* ============================================================
+ * Badge pill · etiqueta editorial global
+ * ============================================================ */
+.badge-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.15rem 0.55rem;
+    border-radius: 6px;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    background: #fffaf0;
+    color: #6b4d39;
+    border: 1px solid rgba(107, 77, 57, 0.25);
+
+    .material-symbols-outlined {
+        font-size: 12px;
+        font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 20;
+    }
+
+    &.is-ai {
+        background: #f0e1c6;
+        color: #6b4d39;
+        border-color: rgba(107, 77, 57, 0.3);
+    }
+
+    &.is-manual {
+        background: #fffaf0;
+        color: #6b4d39;
+        border-color: rgba(107, 77, 57, 0.25);
+    }
+
+    &.is-public {
+        background: #e8f0e2;
+        color: #4a6636;
+        border-color: rgba(74, 102, 54, 0.3);
+    }
+
+    /* Variante clicable (badge-as-button). */
+    &.is-toggle {
+        cursor: pointer;
+        transition: background-color 180ms var(--ease-out-strong);
+
+        @media (hover: hover) and (pointer: fine) {
+            &:hover:not(:disabled) { background: #f4ead0; }
+            &:hover.is-public { background: #dde9d4; }
+        }
+    }
+}
+
+/* ============================================================
+ * Stats inline ("12 playlists · 42 libros · 3 con IA")
+ * ============================================================ */
+.playlists-hero-stats,
+.detail-hero-stats {
+    font-size: 0.85rem;
+    color: #6b4d39;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.45rem;
+
+    strong {
+        color: #3a2820;
+        font-weight: 700;
+        margin-right: 0.15rem;
+    }
+}
+
+.stat-item {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.25rem;
+    white-space: nowrap;
+
+    .material-symbols-outlined {
+        font-size: 15px;
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20;
+        color: #8a6a52;
+        transform: translateY(2px);
+    }
+
+    &.is-saving { color: #8a6a52; }
+}
+
+.stat-sep {
+    color: rgba(107, 77, 57, 0.45);
+    font-weight: 700;
+}
+
+/* ============================================================
+ * Primitivas de FORMULARIO · estilo editorial
+ * ------------------------------------------------------------
+ * Inputs y labels con paleta crema coherente con el resto de
+ * la app. Evita tener que reescribir Tailwind inline en cada
+ * formulario (creación playlist, modal IA, etc.).
+ * ============================================================ */
+.pl-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+}
+
+.pl-field-label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #45332d;
+    letter-spacing: 0.02em;
+
+    &.is-required::after {
+        content: ' *';
+        color: #8a5a2b;
+    }
+}
+
+.pl-field-input,
+.pl-field-textarea,
+.pl-field-select {
+    width: 100%;
+    border: 1px solid rgba(107, 77, 57, 0.22);
+    border-radius: 10px;
+    padding: 0.6rem 0.8rem;
+    background: #fffaf0;
+    color: #3a2820;
+    font-size: 0.9rem;
+    font-family: inherit;
+    line-height: 1.45;
+    transition: border-color 160ms var(--ease-out-strong);
+
+    &::placeholder { color: rgba(107, 77, 57, 0.45); }
+
+    &:focus {
+        outline: 2px solid #45332d;
+        outline-offset: 1px;
+        border-color: transparent;
+    }
+
+    &[aria-invalid="true"],
+    &.is-invalid {
+        border-color: #c05050;
+    }
+}
+
+.pl-field-textarea { resize: vertical; }
+
+.pl-field-hint-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    font-size: 0.72rem;
+    color: #8a6a52;
+    margin-top: 0.2rem;
+}
+
+.pl-field-hint { color: #8a6a52; }
+.pl-field-error { color: #a72f2f; font-weight: 500; }
+.pl-field-counter { color: #8a6a52; font-variant-numeric: tabular-nums; }
+
+/* Radio-card: etiqueta grande seleccionable (visibilidad, etc.) */
+.pl-radio-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.6rem;
+    padding: 0.75rem 0.85rem;
+    border-radius: 10px;
+    border: 1px solid rgba(107, 77, 57, 0.22);
+    background: #fffaf0;
+    cursor: pointer;
+    transition:
+        border-color 160ms var(--ease-out-strong),
+        background-color 160ms var(--ease-out-strong);
+
+    input[type="radio"] {
+        margin-top: 0.2rem;
+        accent-color: #45332d;
+    }
+
+    &-title {
+        display: block;
+        font-size: 0.88rem;
+        font-weight: 600;
+        color: #3a2820;
+    }
+
+    &-hint {
+        display: block;
+        margin-top: 0.15rem;
+        font-size: 0.78rem;
+        color: #6b4d39;
+        line-height: 1.4;
+    }
+
+    @media (hover: hover) and (pointer: fine) {
+        &:hover { border-color: rgba(107, 77, 57, 0.4); }
+    }
+
+    &:has(input[type="radio"]:checked) {
+        border-color: #45332d;
+        background: #fff4dc;
+        box-shadow: 0 0 0 1px #45332d inset;
+    }
+}
+
+/* Chip tag con botón X (géneros seleccionados, etc.) */
+.pl-chip-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.2rem 0.4rem 0.2rem 0.6rem;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 500;
+    background: #f4ead0;
+    color: #45332d;
+    border: 1px solid rgba(107, 77, 57, 0.18);
+
+    .pl-chip-tag-close {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 18px;
+        height: 18px;
+        border-radius: 999px;
+        color: #6b4d39;
+        transition:
+            background-color 140ms var(--ease-out-strong),
+            color 140ms var(--ease-out-strong);
+
+        .material-symbols-outlined { font-size: 14px; }
+
+        @media (hover: hover) and (pointer: fine) {
+            &:hover { background: #45332d; color: #fbf5e7; }
+        }
+    }
+}
+
+/* Modal shell (usado por el generate-dialog y futuros modales) */
+.pl-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 80;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding: 1rem;
+    background: rgba(45, 30, 20, 0.5);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    animation: pl-overlay-in 180ms var(--ease-out-strong) forwards;
+
+    @media (min-width: 640px) { align-items: center; }
+
+    @media (prefers-reduced-motion: reduce) { animation: none; }
+}
+
+.pl-modal {
+    position: relative;
+    width: 100%;
+    max-width: 34rem;
+    background: #fffaf0;
+    border: 1px solid rgba(107, 77, 57, 0.2);
+    border-radius: 18px 18px 0 0;
+    box-shadow: 0 30px 60px -24px rgba(69, 51, 45, 0.4);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    max-height: 90vh;
+    transform: translateY(100%);
+    opacity: 0;
+    animation: pl-modal-in-mobile 280ms var(--ease-drawer) 40ms forwards;
+
+    @media (min-width: 640px) {
+        border-radius: 18px;
+        transform: scale(0.95);
+        animation: pl-modal-in-desktop 220ms var(--ease-out-strong) 40ms forwards;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        animation: pl-fade-in-reduced 180ms ease forwards !important;
+        transform: none;
+    }
+}
+
+.pl-modal-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1.1rem 1.25rem 0.9rem;
+    border-bottom: 1px solid rgba(107, 77, 57, 0.12);
+}
+
+.pl-modal-title {
+    margin: 0;
+    font-family: 'Lora', 'Georgia', 'Times New Roman', serif;
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #3a2820;
+    line-height: 1.2;
+}
+
+.pl-modal-sub {
+    margin: 0.2rem 0 0;
+    font-size: 0.82rem;
+    color: #6b4d39;
+    line-height: 1.45;
+}
+
+.pl-modal-close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 999px;
+    background: transparent;
+    color: #8a6a52;
+    transition:
+        background-color 160ms var(--ease-out-strong),
+        color 160ms var(--ease-out-strong);
+
+    .material-symbols-outlined {
+        font-size: 18px;
+        font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 20;
+    }
+
+    @media (hover: hover) and (pointer: fine) {
+        &:hover { background: rgba(107, 77, 57, 0.1); color: #45332d; }
+    }
+}
+
+.pl-modal-body {
+    flex: 1;
+    padding: 1.1rem 1.25rem;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.pl-modal-foot {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    padding: 0.85rem 1.25rem;
+    border-top: 1px solid rgba(107, 77, 57, 0.12);
+    background: #fbf5e7;
+}
+
+/* ============================================================
+ * Confirm modal · reutilizable entre features
+ * ------------------------------------------------------------
+ * Antes vivía dentro de ai-chat.component.scss, pero varios
+ * componentes (chat, lista de playlists, etc.) lo usan, así
+ * que lo movemos al layer global. Mobile: bottom-sheet con
+ * drawer-easing. Desktop: dialog centrado con pop-in sutil.
+ * ============================================================ */
+.confirm-modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding: 1rem;
+    background: rgba(45, 30, 20, 0.45);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    animation: pl-overlay-in 180ms var(--ease-out-strong) forwards;
+
+    @media (min-width: 640px) { align-items: center; }
+
+    @media (prefers-reduced-motion: reduce) {
+        animation: none;
+    }
+}
+
+@keyframes pl-overlay-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.confirm-modal {
+    width: 100%;
+    max-width: 28rem;
+    background: #fff8ec;
+    border: 1px solid rgba(224, 161, 94, 0.3);
+    border-radius: 18px 18px 0 0;
+    padding: 1.35rem 1.25rem 1.15rem;
+    box-shadow: 0 30px 60px -20px rgba(69, 51, 45, 0.4);
+    transform: translateY(100%);
+    opacity: 0;
+    animation: pl-modal-in-mobile 260ms var(--ease-drawer) 40ms forwards;
+
+    @media (min-width: 640px) {
+        border-radius: 18px;
+        transform: scale(0.95);
+        animation: pl-modal-in-desktop 220ms var(--ease-out-strong) 40ms forwards;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        animation: pl-fade-in-reduced 180ms ease forwards !important;
+        transform: none;
+    }
+}
+
+@keyframes pl-modal-in-mobile {
+    to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes pl-modal-in-desktop {
+    to { transform: scale(1); opacity: 1; }
+}
+
+.confirm-modal-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 999px;
+    background: rgba(220, 38, 38, 0.1);
+    color: #b91c1c;
+    margin-bottom: 0.85rem;
+
+    .material-symbols-outlined {
+        font-size: 24px;
+        font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 24;
+    }
+}
+
+.confirm-modal-title {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #45332d;
+    line-height: 1.25;
+}
+
+.confirm-modal-body {
+    margin: 0.45rem 0 1.15rem;
+    font-size: 0.9rem;
+    line-height: 1.45;
+    color: #6b4d39;
+}
+
+.confirm-modal-actions {
+    display: flex;
+    gap: 0.6rem;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+}
+
+.confirm-modal-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    min-height: 40px;
+    padding: 0 1rem;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    transition:
+        background-color 160ms var(--ease-out-strong),
+        color 160ms var(--ease-out-strong),
+        border-color 160ms var(--ease-out-strong);
+
+    &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+
+    &.is-cancel {
+        background: transparent;
+        color: #6b4d39;
+        border: 1px solid rgba(224, 161, 94, 0.5);
+
+        @media (hover: hover) and (pointer: fine) {
+            &:hover:not(:disabled) { background: rgba(224, 161, 94, 0.12); }
+        }
+    }
+
+    &.is-danger {
+        background: #dc2626;
+        color: #fff8ec;
+        border: 1px solid #b91c1c;
+
+        @media (hover: hover) and (pointer: fine) {
+            &:hover:not(:disabled) { background: #b91c1c; }
+        }
+    }
+}

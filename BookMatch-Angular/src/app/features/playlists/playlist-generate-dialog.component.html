@@ -1,42 +1,32 @@
 <div
-  class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
-  role="dialog"
-  aria-modal="true"
-  [attr.aria-labelledby]="'playlist-generate-title'"
+  class="pl-modal-backdrop"
+  role="presentation"
   (click)="onBackdropClick($event)"
 >
   <div
-    class="relative w-full max-w-xl rounded-2xl shadow-xl overflow-hidden"
-    style="background-color: #FFFDF7"
+    class="pl-modal"
+    role="dialog"
+    aria-modal="true"
+    [attr.aria-labelledby]="'playlist-generate-title'"
+    (click)="$event.stopPropagation()"
   >
     <!-- Header -->
-    <div
-      class="flex items-start justify-between gap-3 px-6 py-4 border-b"
-      style="border-color: #E9E1D1; background-color: #FCF5E2"
-    >
+    <div class="pl-modal-head">
       <div>
-        <h2
-          id="playlist-generate-title"
-          class="text-lg md:text-xl font-bold flex items-center gap-2"
-          style="color: #45332D"
-        >
-          <span
-            class="material-symbols-outlined"
-            style="color: #E0A15E"
-          >auto_awesome</span>
+        <h2 id="playlist-generate-title" class="pl-modal-title">
           {{ 'PLAYLIST_GENERATE.TITLE' | translate }}
         </h2>
-        <p class="text-sm mt-1" style="color: #7a5c4a">
+        <p class="pl-modal-sub">
           {{ 'PLAYLIST_GENERATE.SUBTITLE' | translate }}
         </p>
       </div>
       <button
         type="button"
         (click)="requestClose()"
-        class="p-1.5 rounded-lg hover:bg-black/5 transition-colors"
+        class="pl-modal-close press-target"
         [attr.aria-label]="'PLAYLIST_GENERATE.CLOSE' | translate"
       >
-        <span class="material-symbols-outlined" style="color: #45332D">close</span>
+        <span class="material-symbols-outlined">close</span>
       </button>
     </div>
 
@@ -44,51 +34,44 @@
     <form
       [formGroup]="form"
       (ngSubmit)="submit()"
-      class="px-6 py-5 space-y-4 max-h-[75vh] overflow-y-auto"
+      class="pl-modal-body"
+      novalidate
     >
       <!-- Prompt -->
-      <div>
-        <label
-          for="ai-prompt"
-          class="block text-sm font-semibold mb-1"
-          style="color: #45332D"
-        >
+      <div class="pl-field">
+        <label for="ai-prompt" class="pl-field-label is-required">
           {{ 'PLAYLIST_GENERATE.FIELD_PROMPT' | translate }}
-          <span style="color: #B22" aria-hidden="true">*</span>
         </label>
         <textarea
           id="ai-prompt"
           formControlName="prompt"
           rows="4"
           [attr.placeholder]="'PLAYLIST_GENERATE.PROMPT_PLACEHOLDER' | translate"
-          class="block w-full rounded-lg border px-3 py-2 text-sm resize-y focus:outline-none focus:ring-2"
-          style="border-color: #E9E1D1; background-color: #FFFFFF; color: #45332D"
-          [style.--tw-ring-color]="'#E0A15E'"
+          class="pl-field-textarea"
+          [class.is-invalid]="
+            form.controls.prompt.touched && form.controls.prompt.invalid
+          "
         ></textarea>
-        <div class="flex items-center justify-between mt-1 text-xs" style="color: #7a5c4a">
+        <div class="pl-field-hint-row">
           <span>
             @if (hasError(form.controls.prompt, 'required')) {
-              <span style="color: #B22">
+              <span class="pl-field-error">
                 {{ 'PLAYLIST_GENERATE.ERROR_PROMPT_REQUIRED' | translate }}
               </span>
             } @else if (hasError(form.controls.prompt, 'minlength')) {
-              <span style="color: #B22">
+              <span class="pl-field-error">
                 {{ 'PLAYLIST_GENERATE.ERROR_PROMPT_MIN' | translate }}
               </span>
             }
           </span>
-          <span>{{ promptCount() }}/2000</span>
+          <span class="pl-field-counter">{{ promptCount() }} / 2000</span>
         </div>
       </div>
 
       <!-- Tamaño + idioma -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div>
-          <label
-            for="ai-size"
-            class="block text-sm font-semibold mb-1"
-            style="color: #45332D"
-          >
+      <div class="generate-row-2">
+        <div class="pl-field">
+          <label for="ai-size" class="pl-field-label">
             {{ 'PLAYLIST_GENERATE.FIELD_SIZE' | translate }}
           </label>
           <input
@@ -97,27 +80,21 @@
             formControlName="size"
             min="3"
             max="25"
-            class="block w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2"
-            style="border-color: #E9E1D1; background-color: #FFFFFF; color: #45332D"
+            class="pl-field-input"
           />
-          <p class="text-xs mt-1" style="color: #7a5c4a">
+          <span class="pl-field-hint">
             {{ 'PLAYLIST_GENERATE.FIELD_SIZE_HINT' | translate }}
-          </p>
+          </span>
         </div>
 
-        <div>
-          <label
-            for="ai-language"
-            class="block text-sm font-semibold mb-1"
-            style="color: #45332D"
-          >
+        <div class="pl-field">
+          <label for="ai-language" class="pl-field-label">
             {{ 'PLAYLIST_GENERATE.FIELD_LANGUAGE' | translate }}
           </label>
           <select
             id="ai-language"
             formControlName="language"
-            class="block w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2"
-            style="border-color: #E9E1D1; background-color: #FFFFFF; color: #45332D"
+            class="pl-field-select"
           >
             <option value="es">{{ 'PLAYLIST_GENERATE.LANG_ES' | translate }}</option>
             <option value="en">{{ 'PLAYLIST_GENERATE.LANG_EN' | translate }}</option>
@@ -126,12 +103,8 @@
       </div>
 
       <!-- Mood -->
-      <div>
-        <label
-          for="ai-mood"
-          class="block text-sm font-semibold mb-1"
-          style="color: #45332D"
-        >
+      <div class="pl-field">
+        <label for="ai-mood" class="pl-field-label">
           {{ 'PLAYLIST_GENERATE.FIELD_MOOD' | translate }}
         </label>
         <input
@@ -140,96 +113,80 @@
           formControlName="mood"
           maxlength="80"
           [attr.placeholder]="'PLAYLIST_GENERATE.MOOD_PLACEHOLDER' | translate"
-          class="block w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2"
-          style="border-color: #E9E1D1; background-color: #FFFFFF; color: #45332D"
+          class="pl-field-input"
         />
       </div>
 
       <!-- Genres -->
-      <div>
-        <label
-          for="ai-genre-input"
-          class="block text-sm font-semibold mb-1"
-          style="color: #45332D"
-        >
+      <div class="pl-field">
+        <label for="ai-genre-input" class="pl-field-label">
           {{ 'PLAYLIST_GENERATE.FIELD_GENRES' | translate }}
         </label>
-        <div class="flex gap-2">
+        <div class="generate-genre-input">
           <input
             id="ai-genre-input"
             type="text"
             formControlName="genreInput"
             maxlength="80"
             [attr.placeholder]="'PLAYLIST_GENERATE.GENRE_PLACEHOLDER' | translate"
-            class="flex-1 rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2"
-            style="border-color: #E9E1D1; background-color: #FFFFFF; color: #45332D"
+            class="pl-field-input"
             (keydown.enter)="$event.preventDefault(); addGenre()"
           />
           <button
             type="button"
             (click)="addGenre()"
             [disabled]="genres().length >= 10"
-            class="px-3 py-2 rounded-lg text-sm font-medium border transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            style="border-color: #E0A15E; color: #45332D; background-color: #FFFDF7"
+            class="btn-outline press-target"
           >
             {{ 'PLAYLIST_GENERATE.GENRE_ADD' | translate }}
           </button>
         </div>
         @if (genres().length > 0) {
-          <div class="flex flex-wrap gap-2 mt-2">
+          <div class="generate-genre-list">
             @for (g of genres(); track g) {
-              <span
-                class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium"
-                style="background-color: #F5EAD4; color: #45332D"
-              >
+              <span class="pl-chip-tag">
                 {{ g }}
                 <button
                   type="button"
                   (click)="removeGenre(g)"
-                  class="hover:opacity-70"
+                  class="pl-chip-tag-close press-target"
                   [attr.aria-label]="'PLAYLIST_GENERATE.GENRE_REMOVE' | translate"
                 >
-                  <span class="material-symbols-outlined text-sm">close</span>
+                  <span class="material-symbols-outlined">close</span>
                 </button>
               </span>
             }
           </div>
         }
-        <p class="text-xs mt-1" style="color: #7a5c4a">
+        <span class="pl-field-hint">
           {{ 'PLAYLIST_GENERATE.FIELD_GENRES_HINT' | translate: { max: 10 } }}
-        </p>
+        </span>
       </div>
 
       <!-- Visibility -->
-      <fieldset>
-        <legend class="block text-sm font-semibold mb-1" style="color: #45332D">
+      <fieldset class="generate-fieldset">
+        <legend class="pl-field-label">
           {{ 'PLAYLIST_GENERATE.FIELD_VISIBILITY' | translate }}
         </legend>
-        <div class="flex gap-3">
-          <label
-            class="flex-1 flex items-start gap-2 rounded-lg border px-3 py-2 cursor-pointer"
-            style="border-color: #E9E1D1; background-color: #FFFFFF"
-          >
+        <div class="generate-radio-group">
+          <label class="pl-radio-card">
             <input type="radio" formControlName="visibility" value="PRIVATE" />
             <span>
-              <span class="block text-sm font-medium" style="color: #45332D">
+              <span class="pl-radio-card-title">
                 {{ 'PLAYLIST_GENERATE.VISIBILITY_PRIVATE' | translate }}
               </span>
-              <span class="block text-xs" style="color: #7a5c4a">
+              <span class="pl-radio-card-hint">
                 {{ 'PLAYLIST_GENERATE.VISIBILITY_PRIVATE_HINT' | translate }}
               </span>
             </span>
           </label>
-          <label
-            class="flex-1 flex items-start gap-2 rounded-lg border px-3 py-2 cursor-pointer"
-            style="border-color: #E9E1D1; background-color: #FFFFFF"
-          >
+          <label class="pl-radio-card">
             <input type="radio" formControlName="visibility" value="PUBLIC" />
             <span>
-              <span class="block text-sm font-medium" style="color: #45332D">
+              <span class="pl-radio-card-title">
                 {{ 'PLAYLIST_GENERATE.VISIBILITY_PUBLIC' | translate }}
               </span>
-              <span class="block text-xs" style="color: #7a5c4a">
+              <span class="pl-radio-card-hint">
                 {{ 'PLAYLIST_GENERATE.VISIBILITY_PUBLIC_HINT' | translate }}
               </span>
             </span>
@@ -239,26 +196,18 @@
 
       <!-- Error banner -->
       @if (errorKey(); as key) {
-        <div
-          class="rounded-lg border px-3 py-2 text-sm flex items-start gap-2"
-          style="border-color: #F5C2C2; background-color: #FDECEC; color: #7A1F1F"
-          role="alert"
-        >
-          <span class="material-symbols-outlined text-base">error</span>
+        <div class="generate-banner is-error" role="alert">
+          <span class="material-symbols-outlined" aria-hidden="true">error</span>
           <span>{{ key | translate: errorParams() || {} }}</span>
         </div>
       }
 
       <!-- Loading banner -->
       @if (generating()) {
-        <div
-          class="rounded-lg border px-3 py-2 text-sm flex items-center gap-2"
-          style="border-color: #E0A15E; background-color: #FFF4E0; color: #45332D"
-          aria-live="polite"
-        >
+        <div class="generate-banner is-info" aria-live="polite">
           <span
             class="material-symbols-outlined animate-spin"
-            style="color: #E0A15E"
+            aria-hidden="true"
           >progress_activity</span>
           <span>{{ 'PLAYLIST_GENERATE.GENERATING' | translate }}</span>
         </div>
@@ -266,15 +215,11 @@
     </form>
 
     <!-- Footer -->
-    <div
-      class="flex items-center justify-end gap-2 px-6 py-3 border-t"
-      style="border-color: #E9E1D1; background-color: #FCF5E2"
-    >
+    <div class="pl-modal-foot">
       <button
         type="button"
         (click)="requestClose()"
-        class="px-4 py-2 rounded-lg text-sm font-medium border transition-colors"
-        style="border-color: #E9E1D1; color: #45332D; background-color: #FFFFFF"
+        class="btn-outline press-target"
       >
         {{ 'PLAYLIST_GENERATE.CANCEL' | translate }}
       </button>
@@ -282,13 +227,10 @@
         type="button"
         (click)="submit()"
         [disabled]="form.invalid || generating()"
-        class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold shadow-sm transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-        style="background-color: #E0A15E; color: #FCF5E2"
+        class="btn-solid press-target"
       >
         @if (generating()) {
-          <span
-            class="material-symbols-outlined animate-spin"
-          >progress_activity</span>
+          <span class="material-symbols-outlined animate-spin">progress_activity</span>
         } @else {
           <span class="material-symbols-outlined">auto_awesome</span>
         }
