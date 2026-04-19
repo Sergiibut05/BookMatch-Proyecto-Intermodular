@@ -178,7 +178,7 @@
             class="press-target playlist-count-btn"
             [attr.aria-label]="'AI_CHAT.OPEN_PLAYLIST_PANEL' | translate"
             [title]="'AI_CHAT.OPEN_PLAYLIST_PANEL' | translate">
-            <span class="material-symbols-outlined">queue_music</span>
+            <span class="material-symbols-outlined">collections_bookmark</span>
             <span class="playlist-count-badge">{{ currentPlaylistDraft()!.items.length }}</span>
           </button>
         }
@@ -192,7 +192,7 @@
           [attr.aria-pressed]="playlistMode()"
           [attr.aria-label]="'AI_CHAT.PLAYLIST_MODE_TOGGLE' | translate"
           [title]="(playlistMode() ? 'AI_CHAT.PLAYLIST_MODE_ON' : 'AI_CHAT.PLAYLIST_MODE_OFF') | translate">
-          <span class="material-symbols-outlined">library_music</span>
+          <span class="material-symbols-outlined">collections_bookmark</span>
           <span class="hidden sm:inline">
             {{ (playlistMode() ? 'AI_CHAT.PLAYLIST_MODE_LABEL_ON' : 'AI_CHAT.PLAYLIST_MODE_LABEL_OFF') | translate }}
           </span>
@@ -487,11 +487,25 @@
     [class.is-open]="playlistPanelOpen() && !!currentPlaylistDraft()"
     [attr.aria-hidden]="!playlistPanelOpen() || !currentPlaylistDraft()">
     @if (currentPlaylistDraft(); as draft) {
+      <!-- Sheet handle (solo móvil): botón accesible que además acepta gesto
+           drag-to-dismiss. Ver onPanelSheet* en el componente. -->
+      <button
+        type="button"
+        class="playlist-panel-sheet-handle md:hidden"
+        (touchstart)="onPanelSheetTouchStart($event)"
+        (touchmove)="onPanelSheetTouchMove($event)"
+        (touchend)="onPanelSheetTouchEnd($event)"
+        (touchcancel)="onPanelSheetTouchEnd($event)"
+        (click)="togglePlaylistPanel()"
+        [attr.aria-label]="'AI_CHAT.CLOSE_PLAYLIST_PANEL' | translate">
+        <span class="playlist-panel-sheet-handle-bar" aria-hidden="true"></span>
+      </button>
+
       <!-- Header del panel -->
       <div class="playlist-panel-head">
         <div class="flex min-w-0 flex-1 items-center gap-2">
           <span class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#E0A15E]/15 text-[#c0803f]">
-            <span class="material-symbols-outlined text-[20px]">queue_music</span>
+            <span class="material-symbols-outlined text-[20px]">collections_bookmark</span>
           </span>
           <div class="min-w-0 flex-1">
             <p class="truncate text-[11px] font-semibold uppercase tracking-[0.08em] text-[#a88464]">

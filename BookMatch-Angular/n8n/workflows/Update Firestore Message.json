@@ -10,7 +10,10 @@
       },
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2.1,
-      "position": [-256, 128],
+      "position": [
+        -256,
+        128
+      ],
       "id": "b3c2eb5b-e580-43dd-a57b-2095997779a0",
       "name": "Webhook",
       "webhookId": "56a4585e-31a0-4e1f-ac4c-9811700a97eb",
@@ -27,18 +30,24 @@
       },
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.5,
-      "position": [0, 0],
+      "position": [
+        0,
+        0
+      ],
       "id": "39ef7327-4cf7-4d29-a6b4-aa43cfaa847a",
       "name": "Respond to Webhook"
     },
     {
       "parameters": {
         "mode": "runOnceForEachItem",
-        "jsCode": "// ============================================================\n// Detectar Intención\n// ------------------------------------------------------------\n// Valida payload, sanea firebase_uid, calcula intent y guarda\n// `startTime` para medir el tiempo total end-to-end.\n//\n// Si el payload trae `mode === 'playlist_builder'`, forzamos el\n// intent a book_recommendation (la IA co-cura la playlist con más\n// libros y campos extra). También normalizamos `maxItems`.\n// ============================================================\n\nconst payload = $json.body;\nif (!payload) {\n  throw new Error('Request body is missing');\n}\n\nconst { userId, conversationId, messageId, userMessage, baseUrl, mode: rawMode, maxItems: rawMaxItems } = payload;\n\nif (!userId || typeof userId !== 'string') {\n  throw new Error('userId is missing or not a string');\n}\nif (!conversationId || typeof conversationId !== 'string') {\n  throw new Error('conversationId is missing or not a string');\n}\nif (!messageId || typeof messageId !== 'string') {\n  throw new Error('messageId is missing or not a string');\n}\nif (!userMessage || typeof userMessage !== 'string') {\n  throw new Error('userMessage is missing or not a string');\n}\n\n// Firebase UIDs son alfanuméricos (~28 chars). Rechazamos cualquier cosa\n// fuera de patrón para evitar SQL injection al interpolarlos en el prompt.\nif (!/^[A-Za-z0-9]{20,64}$/.test(userId)) {\n  throw new Error(`userId does not match expected firebase_uid pattern: ${userId}`);\n}\n\n// Normaliza texto (minúsculas + sin diacríticos) para matching robusto.\nconst normalized = userMessage\n  .toLowerCase()\n  .normalize('NFD')\n  .replace(/\\p{Diacritic}/gu, '');\n\nconst bookKeywords = [\n  // ES\n  'libro', 'libros', 'recomienda', 'recomendacion', 'recomendaciones',\n  'recomendar', 'leer', 'lectura', 'lecturas', 'autor', 'autora',\n  'novela', 'novelas', 'cuento', 'cuentos', 'ficcion', 'no ficcion',\n  'fantasia', 'romance', 'misterio', 'thriller', 'suspense', 'terror',\n  'ciencia ficcion', 'manga', 'comic', 'clasico', 'clasicos',\n  'biografia', 'ensayo', 'poesia', 'saga', 'bestseller', 'bestsellers',\n  'genero', 'generos', 'sugiere', 'sugerencia', 'biblioteca', 'libreria',\n  // EN\n  'book', 'books', 'recommend', 'recommendation', 'recommendations',\n  'suggest', 'reading', 'read', 'author', 'novel', 'fantasy', 'mystery',\n  'sci-fi', 'sci fi', 'science fiction', 'romance novel', 'biography'\n];\n\nconst casualKeywords = [\n  // ES\n  'hola', 'hey', 'buenos dias', 'buenas tardes', 'buenas noches',\n  'que tal', 'como estas', 'como va', 'gracias', 'adios', 'hasta luego',\n  'saludos', 'genial', 'perfecto',\n  // EN\n  'hi', 'hello', 'good morning', 'good afternoon', 'good evening',\n  'how are you', 'thanks', 'thank you', 'bye', 'goodbye'\n];\n\nconst bookMatches = bookKeywords.filter((k) => normalized.includes(k)).length;\nconst casualMatches = casualKeywords.filter((k) => normalized.includes(k)).length;\n\nlet intentType = 'out_of_scope';\nlet intentConfidence = 0;\n\nif (bookMatches > 0 && bookMatches >= casualMatches) {\n  intentType = 'book_recommendation';\n  intentConfidence = Math.min(1, bookMatches / 4);\n} else if (casualMatches > 0) {\n  intentType = 'casual_chat';\n  intentConfidence = 0.8;\n} else if (normalized.length <= 12 && /[?¿!¡]/.test(userMessage)) {\n  // Mensajes muy cortos con signo de pregunta/exclamación → probablemente casual.\n  intentType = 'casual_chat';\n  intentConfidence = 0.5;\n}\n\n// Modo: 'chat' (default) | 'playlist_builder' (co-curación de playlist).\n// En modo playlist_builder forzamos el intent a book_recommendation y\n// ajustamos maxItems (3-20, default 8).\nconst mode = rawMode === 'playlist_builder' ? 'playlist_builder' : 'chat';\nlet maxItems = null;\nif (mode === 'playlist_builder') {\n  const n = Number(rawMaxItems);\n  maxItems = Number.isFinite(n) ? Math.max(3, Math.min(20, Math.trunc(n))) : 8;\n  intentType = 'book_recommendation';\n  intentConfidence = 1;\n}\n\nreturn {\n  userId,\n  conversationId,\n  messageId,\n  userMessage,\n  baseUrl: baseUrl || 'http://localhost:4200',\n  intentType,\n  intentConfidence: Number(intentConfidence.toFixed(2)),\n  mode,\n  maxItems,\n  startTime: Date.now()\n};"
+        "jsCode": "// ============================================================\n// Detectar Intención\n// ------------------------------------------------------------\n// Valida payload, sanea firebase_uid, calcula intent y guarda\n// `startTime` para medir el tiempo total end-to-end.\n//\n// Si el payload trae `mode === 'playlist_builder'`, forzamos el\n// intent a book_recommendation (la IA co-cura la playlist con más\n// libros y campos extra). También normalizamos `maxItems`.\n// ============================================================\n\nconst payload = $json.body;\nif (!payload) {\n  throw new Error('Request body is missing');\n}\n\nconst { userId, conversationId, messageId, userMessage, baseUrl, mode: rawMode, maxItems: rawMaxItems, currentDraft: rawCurrentDraft } = payload;\n\nif (!userId || typeof userId !== 'string') {\n  throw new Error('userId is missing or not a string');\n}\nif (!conversationId || typeof conversationId !== 'string') {\n  throw new Error('conversationId is missing or not a string');\n}\nif (!messageId || typeof messageId !== 'string') {\n  throw new Error('messageId is missing or not a string');\n}\nif (!userMessage || typeof userMessage !== 'string') {\n  throw new Error('userMessage is missing or not a string');\n}\n\n// Firebase UIDs son alfanuméricos (~28 chars). Rechazamos cualquier cosa\n// fuera de patrón para evitar SQL injection al interpolarlos en el prompt.\nif (!/^[A-Za-z0-9]{20,64}$/.test(userId)) {\n  throw new Error(`userId does not match expected firebase_uid pattern: ${userId}`);\n}\n\n// Normaliza texto (minúsculas + sin diacríticos) para matching robusto.\nconst normalized = userMessage\n  .toLowerCase()\n  .normalize('NFD')\n  .replace(/\\p{Diacritic}/gu, '');\n\nconst bookKeywords = [\n  // ES\n  'libro', 'libros', 'recomienda', 'recomendacion', 'recomendaciones',\n  'recomendar', 'leer', 'lectura', 'lecturas', 'autor', 'autora',\n  'novela', 'novelas', 'cuento', 'cuentos', 'ficcion', 'no ficcion',\n  'fantasia', 'romance', 'misterio', 'thriller', 'suspense', 'terror',\n  'ciencia ficcion', 'manga', 'comic', 'clasico', 'clasicos',\n  'biografia', 'ensayo', 'poesia', 'saga', 'bestseller', 'bestsellers',\n  'genero', 'generos', 'sugiere', 'sugerencia', 'biblioteca', 'libreria',\n  // EN\n  'book', 'books', 'recommend', 'recommendation', 'recommendations',\n  'suggest', 'reading', 'read', 'author', 'novel', 'fantasy', 'mystery',\n  'sci-fi', 'sci fi', 'science fiction', 'romance novel', 'biography'\n];\n\nconst casualKeywords = [\n  // ES\n  'hola', 'hey', 'buenos dias', 'buenas tardes', 'buenas noches',\n  'que tal', 'como estas', 'como va', 'gracias', 'adios', 'hasta luego',\n  'saludos', 'genial', 'perfecto',\n  // EN\n  'hi', 'hello', 'good morning', 'good afternoon', 'good evening',\n  'how are you', 'thanks', 'thank you', 'bye', 'goodbye'\n];\n\nconst bookMatches = bookKeywords.filter((k) => normalized.includes(k)).length;\nconst casualMatches = casualKeywords.filter((k) => normalized.includes(k)).length;\n\nlet intentType = 'out_of_scope';\nlet intentConfidence = 0;\n\nif (bookMatches > 0 && bookMatches >= casualMatches) {\n  intentType = 'book_recommendation';\n  intentConfidence = Math.min(1, bookMatches / 4);\n} else if (casualMatches > 0) {\n  intentType = 'casual_chat';\n  intentConfidence = 0.8;\n} else if (normalized.length <= 12 && /[?¿!¡]/.test(userMessage)) {\n  // Mensajes muy cortos con signo de pregunta/exclamación → probablemente casual.\n  intentType = 'casual_chat';\n  intentConfidence = 0.5;\n}\n\n// Modo: 'chat' (default) | 'playlist_builder' (co-curación de playlist).\n// En modo playlist_builder forzamos el intent a book_recommendation y\n// ajustamos maxItems (3-20, default 8).\nconst mode = rawMode === 'playlist_builder' ? 'playlist_builder' : 'chat';\nlet maxItems = null;\nif (mode === 'playlist_builder') {\n  const n = Number(rawMaxItems);\n  maxItems = Number.isFinite(n) ? Math.max(3, Math.min(20, Math.trunc(n))) : 8;\n  intentType = 'book_recommendation';\n  intentConfidence = 1;\n}\n\n// Borrador actual (viene del frontend cuando el usuario ya ha empezado a\n// iterar sobre una playlist). Lo saneamos levemente para protegernos de\n// inputs rotos: items con catalogBookId numérico, nota acotada a 200 chars.\nlet currentDraft = null;\nif (mode === 'playlist_builder' && rawCurrentDraft && typeof rawCurrentDraft === 'object' && Array.isArray(rawCurrentDraft.items)) {\n  const cleanItems = [];\n  const seenDraft = new Set();\n  for (const it of rawCurrentDraft.items) {\n    if (cleanItems.length >= 20) break;\n    const id = Number(it?.catalogBookId);\n    if (!Number.isFinite(id) || id <= 0 || seenDraft.has(id)) continue;\n    seenDraft.add(id);\n    const note = typeof it?.note === 'string' ? it.note.slice(0, 200) : null;\n    cleanItems.push({ catalogBookId: id, position: cleanItems.length + 1, note });\n  }\n  if (cleanItems.length > 0) {\n    currentDraft = {\n      title: typeof rawCurrentDraft.title === 'string' ? rawCurrentDraft.title.slice(0, 120) : null,\n      description: typeof rawCurrentDraft.description === 'string' ? rawCurrentDraft.description.slice(0, 500) : null,\n      items: cleanItems\n    };\n  }\n}\n\nreturn {\n  userId,\n  conversationId,\n  messageId,\n  userMessage,\n  baseUrl: baseUrl || 'http://localhost:4200',\n  intentType,\n  intentConfidence: Number(intentConfidence.toFixed(2)),\n  mode,\n  maxItems,\n  currentDraft,\n  startTime: Date.now()\n};"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [224, 128],
+      "position": [
+        224,
+        128
+      ],
       "id": "a7158b62-abe1-4a90-a4ce-0896bc1cca82",
       "name": "Detectar Intención"
     },
@@ -105,7 +114,10 @@
       },
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.4,
-      "position": [448, 208],
+      "position": [
+        448,
+        208
+      ],
       "id": "36078a90-d484-4c2e-8b59-8f7f631ae3c9",
       "name": "Switch Intención"
     },
@@ -131,7 +143,10 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [640, 48],
+      "position": [
+        640,
+        48
+      ],
       "id": "1f4a3508-aeea-41d3-9789-5cc0d7f05368",
       "name": "Cargar Contexto",
       "credentials": {
@@ -148,7 +163,10 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [848, 48],
+      "position": [
+        848,
+        48
+      ],
       "id": "cffa1008-cd64-432a-af81-26798e97a2b1",
       "name": "Normalizar Contexto"
     },
@@ -159,7 +177,10 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1056, 48],
+      "position": [
+        1056,
+        48
+      ],
       "id": "928462de-a655-42da-b307-109a270a37e8",
       "name": "Construir Prompt SQL"
     },
@@ -178,7 +199,10 @@
       "name": "Groq: Generar SQL",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [1248, 48],
+      "position": [
+        1248,
+        48
+      ],
       "retryOnFail": true,
       "credentials": {
         "httpHeaderAuth": {
@@ -194,7 +218,10 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1472, 48],
+      "position": [
+        1472,
+        48
+      ],
       "id": "e7d4ce04-b56f-482c-9175-8b75463162b1",
       "name": "Parsear SQL (Groq)"
     },
@@ -205,7 +232,10 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1600, 48],
+      "position": [
+        1600,
+        48
+      ],
       "id": "f1c9b3e2-1a2b-4c3d-9e4f-a1b2c3d4e5f6",
       "name": "Validar SQL (guardrails)"
     },
@@ -217,7 +247,10 @@
       },
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
-      "position": [1792, 48],
+      "position": [
+        1792,
+        48
+      ],
       "id": "481d1e4d-8b77-4d1f-8264-5a635ef13871",
       "name": "Ejecutar SQL (Postgres)",
       "retryOnFail": true,
@@ -235,11 +268,14 @@
     {
       "parameters": {
         "mode": "runOnceForAllItems",
-        "jsCode": "// ============================================================\n// Normalizar Libros\n// ------------------------------------------------------------\n// Recoge los items devueltos por Postgres, los mapea al shape\n// que consume el prompt de respuesta y conserva IDs numéricos\n// únicos (se usan luego para validar las recommendations del LLM).\n//\n// Robustez: Postgres viene con retryOnFail + alwaysOutputData +\n// continueOnFail, por lo que puede llegar:\n//   - Sin filas (error o simplemente 0 resultados) → items vacíos o\n//     con { error, ... }.\n//   - Con filas válidas.\n// Marcamos `needsFallback: true` si no hay libros válidos para que\n// el IF posterior dispare la query de respaldo en lugar de reventar.\n// ============================================================\n\nconst sqlResults = $input.all();\nconst previousData = $('Validar SQL (guardrails)').first().json;\n\nconst books = [];\nconst seen = new Set();\n\nfor (const row of sqlResults) {\n  const j = row?.json;\n  // Si Postgres falla (continueOnFail) devuelve items con `error` o vacíos.\n  if (!j || j.error) continue;\n  const id = Number(j.id);\n  if (!Number.isFinite(id) || id <= 0 || seen.has(id)) continue;\n  seen.add(id);\n  books.push({\n    id,\n    title: j.title,\n    author: j.author,\n    description: j.description,\n    coverUrl: j.cover_url || j.cover_image || null\n  });\n}\n\nreturn [{\n  json: {\n    userId: previousData.userId,\n    conversationId: previousData.conversationId,\n    messageId: previousData.messageId,\n    userMessage: previousData.userMessage,\n    baseUrl: previousData.baseUrl,\n    intentType: previousData.intentType,\n    intentConfidence: previousData.intentConfidence,\n    mode: previousData.mode || 'chat',\n    maxItems: previousData.maxItems || null,\n    conversationContext: previousData.conversationContext || [],\n    sqlQuery: previousData.sqlQueryRaw,\n    sqlThoughts: previousData.thoughts,\n    listaLibros: books,\n    candidateIds: Array.from(seen),\n    needsFallback: books.length === 0,\n    startTime: previousData.startTime\n  }\n}];"
+        "jsCode": "// ============================================================\n// Normalizar Libros\n// ------------------------------------------------------------\n// Recoge los items devueltos por Postgres, los mapea al shape\n// que consume el prompt de respuesta y conserva IDs numéricos\n// únicos (se usan luego para validar las recommendations del LLM).\n//\n// Robustez: Postgres viene con retryOnFail + alwaysOutputData +\n// continueOnFail, por lo que puede llegar:\n//   - Sin filas (error o simplemente 0 resultados) → items vacíos o\n//     con { error, ... }.\n//   - Con filas válidas.\n// Marcamos `needsFallback: true` si no hay libros válidos para que\n// el IF posterior dispare la query de respaldo en lugar de reventar.\n// ============================================================\n\nconst sqlResults = $input.all();\nconst previousData = $('Validar SQL (guardrails)').first().json;\n\nconst books = [];\nconst seen = new Set();\n\nfor (const row of sqlResults) {\n  const j = row?.json;\n  // Si Postgres falla (continueOnFail) devuelve items con `error` o vacíos.\n  if (!j || j.error) continue;\n  const id = Number(j.id);\n  if (!Number.isFinite(id) || id <= 0 || seen.has(id)) continue;\n  seen.add(id);\n  books.push({\n    id,\n    title: j.title,\n    author: j.author,\n    description: j.description,\n    coverUrl: j.cover_url || j.cover_image || null\n  });\n}\n\nreturn [{\n  json: {\n    userId: previousData.userId,\n    conversationId: previousData.conversationId,\n    messageId: previousData.messageId,\n    userMessage: previousData.userMessage,\n    baseUrl: previousData.baseUrl,\n    intentType: previousData.intentType,\n    intentConfidence: previousData.intentConfidence,\n    mode: previousData.mode || 'chat',\n    maxItems: previousData.maxItems || null,\n    currentDraft: previousData.currentDraft || null,\n    conversationContext: previousData.conversationContext || [],\n    sqlQuery: previousData.sqlQueryRaw,\n    sqlThoughts: previousData.thoughts,\n    listaLibros: books,\n    candidateIds: Array.from(seen),\n    needsFallback: books.length === 0,\n    startTime: previousData.startTime\n  }\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1984, 48],
+      "position": [
+        1984,
+        48
+      ],
       "id": "28f55751-c23e-4aef-8c35-5cd9ae949850",
       "name": "Normalizar Libros"
     },
@@ -269,7 +305,10 @@
       },
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
-      "position": [2128, 48],
+      "position": [
+        2128,
+        48
+      ],
       "id": "c9f1e2d3-b4a5-46c7-8910-1112131415aa",
       "name": "¿Hay libros?"
     },
@@ -281,7 +320,10 @@
       },
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
-      "position": [2128, 240],
+      "position": [
+        2128,
+        240
+      ],
       "id": "b7a3c2d1-e5f6-4788-91a0-b2c3d4e5f6a7",
       "name": "SQL Fallback",
       "retryOnFail": true,
@@ -303,18 +345,24 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [2336, 240],
+      "position": [
+        2336,
+        240
+      ],
       "id": "d8e9f0a1-b2c3-4d45-9678-9a0b1c2d3e4f",
       "name": "Normalizar Libros Fallback"
     },
     {
       "parameters": {
         "mode": "runOnceForEachItem",
-        "jsCode": "// ============================================================\n// Construir Prompt Respuesta\n// ------------------------------------------------------------\n// Compone el prompt que genera la respuesta Markdown al usuario y\n// pide al LLM que marque explícitamente los `bookIds` (se validan\n// contra `candidateIds` en el post-proceso).\n//\n// DISEÑO (H2.3): el frontend ya renderiza tarjetas bonitas con la\n// portada, título y autor de cada libro recomendado a partir de\n// `metadata.recommendations`. Por eso aquí el LLM NO debe incluir\n// imágenes ni enlaces \"Ver ficha\" ni repetir cada libro con su\n// portada: quedaría duplicado y feo. Solo genera texto limpio:\n// saludo + intro + mini-resumen de 1-2 frases por libro + cierre.\n//\n// Primera interacción: además pedimos `suggestedTitle` para no\n// dejar la conversación como \"Nueva conversación\".\n// ============================================================\n\nconst data = $input.item.json;\n\n// ¿Primera interacción? (solo hay 1 mensaje del usuario en el contexto).\nconst previousUserMessages = (data.conversationContext || []).filter((m) => m.role === 'user').length;\nconst isFirstInteraction = previousUserMessages <= 1;\n\nconst isPlaylistBuilder = data.mode === 'playlist_builder';\nconst maxItems = isPlaylistBuilder ? (Number(data.maxItems) || 8) : 5;\n\n// ============================================================\n// Prompt de sistema\n// ============================================================\nconst systemPromptChat = `Eres un asistente experto en recomendación de libros, amigable y cálido.\n\nRESPONDE EN FORMATO JSON EXACTO (sin texto extra, sin \\`\\`\\`):\n{\n  \"thoughts\": [\"análisis del mensaje\", \"criterios de selección\", \"razonamiento breve\"],\n  \"response\": \"Tu respuesta final en Markdown limpio\",\n  \"bookIds\": [12, 45, 78]${isFirstInteraction ? ',\\n  \"suggestedTitle\": \"Título muy corto (3-6 palabras) que resuma de qué va esta conversación\"' : ''}\n}\n\nREGLAS DE \"bookIds\":\n- Solo enteros tomados de la lista \"LIBROS DISPONIBLES\".\n- Máximo ${maxItems} recomendaciones. Puedes devolver menos si no hay suficientes coincidencias.\n- No inventes IDs ni libros.\n\nREGLAS DE \"response\" (¡MUY IMPORTANTES!):\n- Texto en español, tono natural y cercano (no robótico, no corporativo).\n- Markdown estricto. NADA de HTML.\n- NO incluyas imágenes. El frontend ya muestra las portadas en tarjetas.\n- NO incluyas enlaces \"Ver ficha\" ni URLs a \"/book-details/...\".\n- NO uses tablas, no uses bloques de código.\n- Longitud objetivo: 80-160 palabras en total. Sé conciso.\n\nFORMATO RECOMENDADO DEL CAMPO \"response\":\n1. Una o dos frases de saludo y puente, empatizando con lo que pide el usuario.\n2. Una lista numerada con los libros recomendados. Formato por línea:\n   \"1. **{Título}** — *{Autor}*: una frase breve (máx. 20 palabras) explicando por qué encaja con la petición.\"\n3. (Opcional) Una frase final de cierre o pregunta abierta invitando a refinar la búsqueda.\n${isFirstInteraction ? '\\nREGLAS DE \"suggestedTitle\":\\n- 3-6 palabras, SIN comillas y SIN puntuación final.\\n- Debe reflejar la temática concreta que pide el usuario (género, autor, estado de ánimo, etc.).\\n- Evita títulos genéricos como \"Recomendaciones\", \"Libros\", \"Nueva conversación\".\\n' : ''}\nIDIOMA:\n- Responde SIEMPRE en el idioma del último mensaje del usuario (español por defecto).`;\n\n// Variante para MODO PLAYLIST: la IA actúa de co-curadora. Devuelve un\n// `playlistDraft` estructurado que el frontend renderiza en un panel\n// visual (portadas, orden, nota por libro). La conversación mantiene un\n// único borrador: cada turno devuelve el borrador ACTUALIZADO completo.\nconst systemPromptPlaylist = `Eres una co-curadora experta de playlists de libros en BookMatch.\n\nMODO: PLAYLIST_BUILDER. El usuario y tú estáis montando UNA playlist concreta a través de conversación.\nCada turno devuelves el borrador COMPLETO y actualizado (no solo los cambios).\n\nRESPONDE EN FORMATO JSON EXACTO (sin \\`\\`\\`, sin texto extra):\n{\n  \"thoughts\": [\"breve análisis de lo que pide el usuario\", \"criterios\", \"cambios respecto al borrador anterior\"],\n  \"response\": \"Tu respuesta conversacional en Markdown breve (60-120 palabras). Explica qué has incluido o cambiado y pregunta si quiere ajustar algo (quitar, añadir, reordenar, cambiar tono).\",\n  \"bookIds\": [12, 45, 78, ...],\n  \"playlistDraft\": {\n    \"title\": \"Título de la playlist (3-6 palabras)\",\n    \"description\": \"Descripción de 1-2 frases sobre la vibra de la playlist\",\n    \"items\": [\n      { \"catalogBookId\": 12, \"note\": \"Frase corta (máx 20 palabras) sobre por qué este libro encaja\" },\n      ...\n    ]\n  }${isFirstInteraction ? ',\\n  \"suggestedTitle\": \"Título corto (3-6 palabras) para esta conversación\"' : ''}\n}\n\nREGLAS DE \"bookIds\" y \"playlistDraft.items\":\n- Exactamente ${maxItems} libros por defecto, salvo que el usuario pida más o menos explícitamente.\n- Solo IDs presentes en \"LIBROS DISPONIBLES\".\n- El ORDEN del array es el orden final de la playlist (primero = posición 1).\n- No repitas libros. Cada catalogBookId aparece una sola vez.\n- \"note\" es una descripción corta del papel del libro en la playlist (no lo confundas con la sinopsis del libro).\n\nREGLAS DE \"response\":\n- Markdown limpio. NO listes los libros uno a uno (el panel visual los muestra).\n- Céntrate en explicar la curación: \"He abierto con X para marcar el tono, y cerrado con Y para un golpe final.\"\n- Termina invitando a iterar: \"¿Cambiamos el cierre?\", \"¿Más thriller o más introspección?\".\n- NO imágenes, NO enlaces, NO tablas.\n\nREGLAS DE \"playlistDraft.title\":\n- 3-6 palabras, evocador, sin comillas ni puntuación final.\n\n${isFirstInteraction ? 'REGLAS DE \"suggestedTitle\":\\n- Mismo estilo que playlistDraft.title pero para nombrar la CONVERSACIÓN.\\n\\n' : ''}IDIOMA:\n- Responde SIEMPRE en el idioma del último mensaje del usuario (español por defecto).`;\n\nconst systemPrompt = isPlaylistBuilder ? systemPromptPlaylist : systemPromptChat;\n\nconst userPrompt = `CONTEXTO DE LA CONVERSACIÓN (últimos mensajes):\n${JSON.stringify(data.conversationContext || [])}\n\nMENSAJE DEL USUARIO:\n${data.userMessage}\n\nLIBROS DISPONIBLES (elige solo de aquí; cada uno trae id, title, author, description):\n${JSON.stringify(data.listaLibros)}\n\nANÁLISIS PREVIO (del paso SQL):\n${JSON.stringify(data.sqlThoughts || [])}\n\n${isPlaylistBuilder ? `OBJETIVO: Construye una playlist de ~${maxItems} libros y devuelve el borrador ACTUALIZADO COMPLETO en \"playlistDraft\".` : 'GENERA AHORA EL JSON.'}`;\n\nreturn {\n  ...data,\n  isFirstInteraction,\n  isPlaylistBuilder,\n  maxItems,\n  responsePrompt: JSON.stringify({\n    model: 'llama-3.3-70b-versatile',\n    temperature: 0.7,\n    // En modo playlist necesitamos más tokens (array grande de items con notas).\n    max_tokens: isPlaylistBuilder ? 2000 : 1200,\n    response_format: { type: 'json_object' },\n    messages: [\n      { role: 'system', content: systemPrompt },\n      { role: 'user', content: userPrompt }\n    ]\n  })\n};"
+        "jsCode": "// ============================================================\n// Construir Prompt Respuesta\n// ------------------------------------------------------------\n// Compone el prompt que genera la respuesta Markdown al usuario y\n// pide al LLM que marque explícitamente los `bookIds` (se validan\n// contra `candidateIds` en el post-proceso).\n//\n// DISEÑO (H2.3): el frontend ya renderiza tarjetas bonitas con la\n// portada, título y autor de cada libro recomendado a partir de\n// `metadata.recommendations`. Por eso aquí el LLM NO debe incluir\n// imágenes ni enlaces \"Ver ficha\" ni repetir cada libro con su\n// portada: quedaría duplicado y feo. Solo genera texto limpio:\n// saludo + intro + mini-resumen de 1-2 frases por libro + cierre.\n//\n// RETENCIÓN DEL BORRADOR (modo playlist_builder):\n// Si el frontend envió `currentDraft` (el usuario ya ha estado\n// iterando sobre una playlist), la IA DEBE partir de ese borrador\n// y aplicar SOLO los cambios pedidos. Sin esto, en cada mensaje la\n// IA creaba una playlist nueva desde 0 y el usuario perdía sus\n// ediciones manuales / el tamaño original.\n//\n// Primera interacción: además pedimos `suggestedTitle` para no\n// dejar la conversación como \"Nueva conversación\".\n// ============================================================\n\nconst data = $input.item.json;\n\n// ¿Primera interacción? (solo hay 1 mensaje del usuario en el contexto).\nconst previousUserMessages = (data.conversationContext || []).filter((m) => m.role === 'user').length;\nconst isFirstInteraction = previousUserMessages <= 1;\n\nconst isPlaylistBuilder = data.mode === 'playlist_builder';\nconst maxItems = isPlaylistBuilder ? (Number(data.maxItems) || 8) : 5;\n\n// ¿Tenemos un borrador vivo desde el frontend? → iteramos sobre él.\nconst hasCurrentDraft = !!(\n  isPlaylistBuilder\n  && data.currentDraft\n  && Array.isArray(data.currentDraft.items)\n  && data.currentDraft.items.length > 0\n);\nconst currentDraftSize = hasCurrentDraft ? data.currentDraft.items.length : 0;\n// Tamaño objetivo: respetar el borrador actual a no ser que el usuario pida menos.\nconst targetSize = hasCurrentDraft ? Math.max(currentDraftSize, maxItems) : maxItems;\n\n// ============================================================\n// Prompt de sistema\n// ============================================================\nconst systemPromptChat = `Eres un asistente experto en recomendación de libros, amigable y cálido.\n\nRESPONDE EN FORMATO JSON EXACTO (sin texto extra, sin \\`\\`\\`):\n{\n  \"thoughts\": [\"análisis del mensaje\", \"criterios de selección\", \"razonamiento breve\"],\n  \"response\": \"Tu respuesta final en Markdown limpio\",\n  \"bookIds\": [12, 45, 78]${isFirstInteraction ? ',\\n  \"suggestedTitle\": \"Título muy corto (3-6 palabras) que resuma de qué va esta conversación\"' : ''}\n}\n\nREGLAS DE \"bookIds\":\n- Solo enteros tomados de la lista \"LIBROS DISPONIBLES\".\n- Máximo ${maxItems} recomendaciones. Puedes devolver menos si no hay suficientes coincidencias.\n- No inventes IDs ni libros.\n\nREGLAS DE \"response\" (¡MUY IMPORTANTES!):\n- Texto en español, tono natural y cercano (no robótico, no corporativo).\n- Markdown estricto. NADA de HTML.\n- NO incluyas imágenes. El frontend ya muestra las portadas en tarjetas.\n- NO incluyas enlaces \"Ver ficha\" ni URLs a \"/book-details/...\".\n- NO uses tablas, no uses bloques de código.\n- Longitud objetivo: 80-160 palabras en total. Sé conciso.\n\nFORMATO RECOMENDADO DEL CAMPO \"response\":\n1. Una o dos frases de saludo y puente, empatizando con lo que pide el usuario.\n2. Una lista numerada con los libros recomendados. Formato por línea:\n   \"1. **{Título}** — *{Autor}*: una frase breve (máx. 20 palabras) explicando por qué encaja con la petición.\"\n3. (Opcional) Una frase final de cierre o pregunta abierta invitando a refinar la búsqueda.\n${isFirstInteraction ? '\\nREGLAS DE \"suggestedTitle\":\\n- 3-6 palabras, SIN comillas y SIN puntuación final.\\n- Debe reflejar la temática concreta que pide el usuario (género, autor, estado de ánimo, etc.).\\n- Evita títulos genéricos como \"Recomendaciones\", \"Libros\", \"Nueva conversación\".\\n' : ''}\nIDIOMA:\n- Responde SIEMPRE en el idioma del último mensaje del usuario (español por defecto).`;\n\n// Variante para MODO PLAYLIST: la IA actúa de co-curadora. Devuelve un\n// `playlistDraft` estructurado que el frontend renderiza en un panel\n// visual (portadas, orden, nota por libro). La conversación mantiene un\n// único borrador: cada turno devuelve el borrador ACTUALIZADO completo.\nconst systemPromptPlaylist = `Eres una co-curadora experta de playlists de libros en BookMatch.\n\nMODO: PLAYLIST_BUILDER. El usuario y tú estáis montando UNA playlist concreta a través de conversación.\nCada turno devuelves el borrador COMPLETO y actualizado (no solo los cambios).\n\n${hasCurrentDraft ? `⚠️ CONTINUIDAD DEL BORRADOR (MUY IMPORTANTE):\nEl usuario YA tiene un borrador en marcha con ${currentDraftSize} libros (ver \"BORRADOR ACTUAL\" más abajo).\nDEBES PARTIR DE ESE BORRADOR y aplicar SOLO los cambios que pida el usuario en su último mensaje:\n\n- \"Añade 2 libros más\" → ${currentDraftSize} existentes + 2 nuevos = ${currentDraftSize + 2} libros.\n- \"Quita el 3º\" / \"No me gusta X\" → mismos libros menos ese uno.\n- \"Cambia el último por otro más oscuro\" → sustituye ese item, mantén el resto intactos.\n- \"Reordena\" / \"Pon primero X\" → aplica la nueva orden sin cambiar los libros.\n- NO CAMBIES libros que el usuario no haya mencionado. Respeta su curación.\n- Solo recrea desde cero si el usuario lo pide EXPLÍCITAMENTE (\"empieza de nuevo\", \"cambia toda la playlist\").\n\nTamaño esperado del borrador nuevo ≈ ${targetSize} items (ajústalo arriba/abajo SOLO si el usuario lo pide).\nJAMÁS devuelvas una playlist mini de 2-3 libros cuando el borrador actual tiene ${currentDraftSize}.\n\n` : ''}RESPONDE EN FORMATO JSON EXACTO (sin \\`\\`\\`, sin texto extra):\n{\n  \"thoughts\": [\"breve análisis de lo que pide el usuario\", \"criterios\", \"cambios respecto al borrador anterior\"],\n  \"response\": \"Tu respuesta conversacional en Markdown breve (60-120 palabras). Explica qué has incluido o cambiado y pregunta si quiere ajustar algo.\",\n  \"bookIds\": [12, 45, 78, ...],\n  \"playlistDraft\": {\n    \"title\": \"Título de la playlist (3-6 palabras)\",\n    \"description\": \"Descripción de 1-2 frases sobre la vibra de la playlist\",\n    \"items\": [\n      { \"catalogBookId\": 12, \"note\": \"Frase corta (máx 20 palabras) sobre por qué este libro encaja\" }\n    ]\n  }${isFirstInteraction ? ',\\n  \"suggestedTitle\": \"Título corto (3-6 palabras) para esta conversación\"' : ''}\n}\n\nREGLAS DE \"bookIds\" y \"playlistDraft.items\":\n- ${hasCurrentDraft\n  ? `Tamaño esperado ≈ ${targetSize} libros (ajusta SOLO si el usuario pide más/menos). Mantén los items del BORRADOR ACTUAL excepto los que el usuario cambie.`\n  : `Exactamente ${maxItems} libros por defecto, salvo que el usuario pida más o menos explícitamente.`}\n- Solo IDs presentes en \"LIBROS DISPONIBLES\".\n- El ORDEN del array es el orden final de la playlist (primero = posición 1).\n- No repitas libros. Cada catalogBookId aparece una sola vez.\n- \"note\" es una descripción corta del papel del libro en la playlist (no lo confundas con la sinopsis del libro).\n\nREGLAS DE \"response\":\n- Markdown limpio. NO listes los libros uno a uno (el panel visual los muestra).\n- Céntrate en explicar qué has AÑADIDO/QUITADO/CAMBIADO respecto al borrador anterior.\n- Termina invitando a iterar: \"¿Cambiamos el cierre?\", \"¿Más thriller o más introspección?\".\n- NO imágenes, NO enlaces, NO tablas.\n\nREGLAS DE \"playlistDraft.title\":\n- 3-6 palabras, evocador, sin comillas ni puntuación final.${hasCurrentDraft ? `\\n- Si el BORRADOR ACTUAL ya tiene título, MANTENLO salvo que el usuario pida renombrarlo.` : ''}\n\n${isFirstInteraction ? 'REGLAS DE \"suggestedTitle\":\\n- Mismo estilo que playlistDraft.title pero para nombrar la CONVERSACIÓN.\\n\\n' : ''}IDIOMA:\n- Responde SIEMPRE en el idioma del último mensaje del usuario (español por defecto).`;\n\nconst systemPrompt = isPlaylistBuilder ? systemPromptPlaylist : systemPromptChat;\n\n// Sección BORRADOR ACTUAL: solo aparece si el usuario ya tenía uno.\n// Usamos el catálogo disponible para enriquecer cada item con título/autor.\nconst draftSection = hasCurrentDraft\n  ? `\n\nBORRADOR ACTUAL (el usuario YA tiene esto en su panel — NO lo tires, itera sobre él):\n${JSON.stringify({\n  title: data.currentDraft.title || null,\n  description: data.currentDraft.description || null,\n  items: data.currentDraft.items.map((it) => {\n    const book = (data.listaLibros || []).find((b) => Number(b.id) === Number(it.catalogBookId));\n    return {\n      position: it.position,\n      catalogBookId: it.catalogBookId,\n      title: book?.title || null,\n      author: book?.author || null,\n      note: it.note || null\n    };\n  })\n}, null, 2)}`\n  : '';\n\nconst userPrompt = `CONTEXTO DE LA CONVERSACIÓN (últimos mensajes):\n${JSON.stringify(data.conversationContext || [])}\n\nMENSAJE DEL USUARIO:\n${data.userMessage}${draftSection}\n\nLIBROS DISPONIBLES (elige solo de aquí; cada uno trae id, title, author, description):\n${JSON.stringify(data.listaLibros)}\n\nANÁLISIS PREVIO (del paso SQL):\n${JSON.stringify(data.sqlThoughts || [])}\n\n${isPlaylistBuilder\n  ? (hasCurrentDraft\n      ? `OBJETIVO: Aplica al BORRADOR ACTUAL los cambios que pide el usuario y devuelve el borrador actualizado completo. Mantén lo que no pida cambiar.`\n      : `OBJETIVO: Construye una playlist de ~${maxItems} libros y devuelve el borrador ACTUALIZADO COMPLETO en \"playlistDraft\".`)\n  : 'GENERA AHORA EL JSON.'}`;\n\nreturn {\n  ...data,\n  isFirstInteraction,\n  isPlaylistBuilder,\n  maxItems,\n  hasCurrentDraft,\n  responsePrompt: JSON.stringify({\n    model: 'llama-3.3-70b-versatile',\n    temperature: hasCurrentDraft ? 0.4 : 0.7,\n    // En modo playlist necesitamos más tokens (array grande de items con notas).\n    max_tokens: isPlaylistBuilder ? 2000 : 1200,\n    response_format: { type: 'json_object' },\n    messages: [\n      { role: 'system', content: systemPrompt },\n      { role: 'user', content: userPrompt }\n    ]\n  })\n};"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [2192, 48],
+      "position": [
+        2192,
+        48
+      ],
       "id": "03ac0db7-9187-4ac2-b609-68d2ac544dbf",
       "name": "Construir Prompt Respuesta"
     },
@@ -331,7 +379,10 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [2400, 48],
+      "position": [
+        2400,
+        48
+      ],
       "id": "61fd8cfc-97c3-4aa1-8254-d8bcaaf3bb55",
       "name": "Groq: Respuesta con Libros",
       "retryOnFail": true,
@@ -349,7 +400,10 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [2608, 48],
+      "position": [
+        2608,
+        48
+      ],
       "id": "5ad09a94-714c-4b08-b194-50e135f15e72",
       "name": "Procesar Respuesta IA"
     },
@@ -360,7 +414,10 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [848, 288],
+      "position": [
+        848,
+        288
+      ],
       "id": "b5902619-ec1b-4b58-8626-0e10e4958de4",
       "name": "Construir Prompt Casual"
     },
@@ -377,7 +434,10 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [1056, 288],
+      "position": [
+        1056,
+        288
+      ],
       "id": "e4b6759a-4935-41e4-85d8-33d70726e616",
       "name": "Groq: Respuesta Casual",
       "retryOnFail": true,
@@ -395,7 +455,10 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1264, 288],
+      "position": [
+        1264,
+        288
+      ],
       "id": "e3bc2a55-5e19-4a97-bdb7-6fa0d0e6077f",
       "name": "Procesar Casual Chat"
     },
@@ -406,7 +469,10 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [848, 528],
+      "position": [
+        848,
+        528
+      ],
       "id": "ce49673d-c7c1-4e23-b1b0-4e1dd4618e14",
       "name": "Respuesta Out of Scope"
     },
@@ -416,7 +482,10 @@
       },
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
-      "position": [2896, 352],
+      "position": [
+        2896,
+        352
+      ],
       "id": "f09bc98a-c755-4e09-81c5-ac6124b9d0b2",
       "name": "Merge"
     },
@@ -435,7 +504,10 @@
       "name": "Update Firestore (Final)",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [3104, 352],
+      "position": [
+        3104,
+        352
+      ],
       "retryOnFail": true,
       "credentials": {
         "googleApi": {
@@ -471,7 +543,10 @@
       },
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
-      "position": [3104, 528],
+      "position": [
+        3104,
+        528
+      ],
       "id": "9f4e1ae1-7a16-41bb-b212-2b3b0ee4ab01",
       "name": "¿Hay título nuevo?"
     },
@@ -488,7 +563,10 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [3328, 528],
+      "position": [
+        3328,
+        528
+      ],
       "id": "2d60a1b7-40a2-4d42-b8f2-7d71e1b0a812",
       "name": "Update Conversation Title",
       "credentials": {
@@ -503,7 +581,10 @@
       "parameters": {},
       "type": "n8n-nodes-base.errorTrigger",
       "typeVersion": 1,
-      "position": [-256, 464],
+      "position": [
+        -256,
+        464
+      ],
       "id": "d14a86b6-f576-4273-b77e-bac77da16747",
       "name": "Error Trigger"
     },
@@ -514,7 +595,10 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [-16, 464],
+      "position": [
+        -16,
+        464
+      ],
       "id": "023d0fed-0856-435c-b7a4-2123d702a632",
       "name": "Preparar Error"
     },
@@ -531,7 +615,10 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [224, 464],
+      "position": [
+        224,
+        464
+      ],
       "id": "6704b1b8-f5e2-4734-93f1-b36da18dbe0e",
       "name": "Update Firestore (Error)",
       "credentials": {
@@ -579,172 +666,284 @@
     "Webhook": {
       "main": [
         [
-          { "node": "Detectar Intención", "type": "main", "index": 0 },
-          { "node": "Respond to Webhook", "type": "main", "index": 0 }
+          {
+            "node": "Detectar Intención",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
     "Detectar Intención": {
       "main": [
         [
-          { "node": "Switch Intención", "type": "main", "index": 0 }
+          {
+            "node": "Switch Intención",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
     "Switch Intención": {
       "main": [
         [
-          { "node": "Cargar Contexto", "type": "main", "index": 0 }
+          {
+            "node": "Cargar Contexto",
+            "type": "main",
+            "index": 0
+          }
         ],
         [
-          { "node": "Construir Prompt Casual", "type": "main", "index": 0 }
+          {
+            "node": "Construir Prompt Casual",
+            "type": "main",
+            "index": 0
+          }
         ],
         [
-          { "node": "Respuesta Out of Scope", "type": "main", "index": 0 }
+          {
+            "node": "Respuesta Out of Scope",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
     "Cargar Contexto": {
       "main": [
         [
-          { "node": "Normalizar Contexto", "type": "main", "index": 0 }
+          {
+            "node": "Normalizar Contexto",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
     "Normalizar Contexto": {
       "main": [
         [
-          { "node": "Construir Prompt SQL", "type": "main", "index": 0 }
+          {
+            "node": "Construir Prompt SQL",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
     "Construir Prompt SQL": {
       "main": [
         [
-          { "node": "Groq: Generar SQL", "type": "main", "index": 0 }
+          {
+            "node": "Groq: Generar SQL",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
     "Groq: Generar SQL": {
       "main": [
         [
-          { "node": "Parsear SQL (Groq)", "type": "main", "index": 0 }
+          {
+            "node": "Parsear SQL (Groq)",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
     "Parsear SQL (Groq)": {
       "main": [
         [
-          { "node": "Validar SQL (guardrails)", "type": "main", "index": 0 }
+          {
+            "node": "Validar SQL (guardrails)",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
     "Validar SQL (guardrails)": {
       "main": [
         [
-          { "node": "Ejecutar SQL (Postgres)", "type": "main", "index": 0 }
+          {
+            "node": "Ejecutar SQL (Postgres)",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
     "Ejecutar SQL (Postgres)": {
       "main": [
         [
-          { "node": "Normalizar Libros", "type": "main", "index": 0 }
+          {
+            "node": "Normalizar Libros",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
     "Normalizar Libros": {
       "main": [
         [
-          { "node": "¿Hay libros?", "type": "main", "index": 0 }
+          {
+            "node": "¿Hay libros?",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
     "¿Hay libros?": {
       "main": [
         [
-          { "node": "Construir Prompt Respuesta", "type": "main", "index": 0 }
+          {
+            "node": "Construir Prompt Respuesta",
+            "type": "main",
+            "index": 0
+          }
         ],
         [
-          { "node": "SQL Fallback", "type": "main", "index": 0 }
+          {
+            "node": "SQL Fallback",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
     "SQL Fallback": {
       "main": [
         [
-          { "node": "Normalizar Libros Fallback", "type": "main", "index": 0 }
+          {
+            "node": "Normalizar Libros Fallback",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
     "Normalizar Libros Fallback": {
       "main": [
         [
-          { "node": "Construir Prompt Respuesta", "type": "main", "index": 0 }
+          {
+            "node": "Construir Prompt Respuesta",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
     "Construir Prompt Respuesta": {
       "main": [
         [
-          { "node": "Groq: Respuesta con Libros", "type": "main", "index": 0 }
+          {
+            "node": "Groq: Respuesta con Libros",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
     "Groq: Respuesta con Libros": {
       "main": [
         [
-          { "node": "Procesar Respuesta IA", "type": "main", "index": 0 }
+          {
+            "node": "Procesar Respuesta IA",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
     "Procesar Respuesta IA": {
       "main": [
         [
-          { "node": "Merge", "type": "main", "index": 0 }
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
     "Construir Prompt Casual": {
       "main": [
         [
-          { "node": "Groq: Respuesta Casual", "type": "main", "index": 0 }
+          {
+            "node": "Groq: Respuesta Casual",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
     "Groq: Respuesta Casual": {
       "main": [
         [
-          { "node": "Procesar Casual Chat", "type": "main", "index": 0 }
+          {
+            "node": "Procesar Casual Chat",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
     "Procesar Casual Chat": {
       "main": [
         [
-          { "node": "Merge", "type": "main", "index": 1 }
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
         ]
       ]
     },
     "Respuesta Out of Scope": {
       "main": [
         [
-          { "node": "Merge", "type": "main", "index": 2 }
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 2
+          }
         ]
       ]
     },
     "Merge": {
       "main": [
         [
-          { "node": "Update Firestore (Final)", "type": "main", "index": 0 },
-          { "node": "¿Hay título nuevo?", "type": "main", "index": 0 }
+          {
+            "node": "Update Firestore (Final)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "¿Hay título nuevo?",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
     "¿Hay título nuevo?": {
       "main": [
         [
-          { "node": "Update Conversation Title", "type": "main", "index": 0 }
+          {
+            "node": "Update Conversation Title",
+            "type": "main",
+            "index": 0
+          }
         ],
         []
       ]
@@ -752,14 +951,22 @@
     "Error Trigger": {
       "main": [
         [
-          { "node": "Preparar Error", "type": "main", "index": 0 }
+          {
+            "node": "Preparar Error",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
     "Preparar Error": {
       "main": [
         [
-          { "node": "Update Firestore (Error)", "type": "main", "index": 0 }
+          {
+            "node": "Update Firestore (Error)",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     }

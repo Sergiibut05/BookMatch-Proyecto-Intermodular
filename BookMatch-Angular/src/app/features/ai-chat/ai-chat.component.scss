@@ -857,18 +857,50 @@
       pointer-events: auto;
     }
 
-    // Handle decorativo arriba (affordance de bottom sheet).
-    &::before {
-      content: '';
-      position: absolute;
-      top: 8px;
-      left: 50%;
-      width: 36px;
-      height: 4px;
-      border-radius: 999px;
-      background: rgba(224, 161, 94, 0.4);
-      transform: translateX(-50%);
+    // Transición en vivo durante el drag-to-close (sheet handle).
+    &.is-dragging {
+      transition: none !important;
     }
+  }
+}
+
+// Handle del bottom sheet (móvil). Funciona a la vez como:
+//   - affordance visual (barra crema arriba del panel),
+//   - botón accesible (click/tap cierra el panel),
+//   - zona de gesto (arrastra hacia abajo para cerrar).
+// Ver onPanelSheet* en el componente.
+.playlist-panel-sheet-handle {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  width: 100%;
+  padding: 12px 0 8px;
+  background: transparent;
+  border: 0;
+  cursor: grab;
+  touch-action: none; // deja al JS gestionar el gesto
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+
+  &:active {
+    cursor: grabbing;
+  }
+
+  .playlist-panel-sheet-handle-bar {
+    display: block;
+    width: 40px;
+    height: 4px;
+    border-radius: 999px;
+    background: rgba(224, 161, 94, 0.45);
+    transition: background-color 160ms var(--ease-out, ease-out),
+                width 160ms var(--ease-out, ease-out);
+  }
+
+  &:hover .playlist-panel-sheet-handle-bar,
+  &:focus-visible .playlist-panel-sheet-handle-bar {
+    background: rgba(224, 161, 94, 0.7);
+    width: 52px;
   }
 }
 
@@ -878,10 +910,6 @@
   gap: 0.5rem;
   padding: 1rem 1.25rem 0.5rem;
   border-bottom: 1px solid rgba(224, 161, 94, 0.15);
-
-  @media (max-width: 768px) {
-    padding-top: 1.35rem; // deja espacio para el handle
-  }
 }
 
 .playlist-panel-list {
