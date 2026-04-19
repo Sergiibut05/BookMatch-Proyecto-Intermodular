@@ -302,20 +302,37 @@ export class AiChatComponent implements OnInit, AfterViewChecked {
 
   onPanelSheetTouchEnd(event: TouchEvent): void {
     const panel = this.getPanelEl(event.currentTarget);
-    if (panel) {
-      panel.classList.remove('is-dragging');
-      panel.style.transform = '';
-    }
     const delta = this.sheetDragLastDelta;
     this.sheetDragStartY = null;
     this.sheetDragLastDelta = 0;
-    // Threshold de cierre: 90px. Si el usuario soltó antes, el panel
-    // vuelve solo (por la transición CSS).
-    if (delta > 90) {
-      this.playlistPanelOpen.set(false);
-      // Evita que el click-sintético tras el touchend reabra/toggle el panel.
-      event.preventDefault();
+
+    if (!panel) return;
+
+    panel.classList.remove('is-dragging');
+
+    // Threshold de cierre: 90px. Por debajo, el panel vuelve solo a su sitio
+    // (el translateY inline se borra y CSS anima el retorno).
+    if (delta <= 90) {
+      panel.style.transform = '';
+      return;
     }
+
+    // Cierre con gesto: animamos el panel hacia abajo fuera del viewport para
+    // que se sienta continuo con el arrastre. Después bajamos el flag y
+    // limpiamos el estilo inline para que al reabrir vuelva limpio.
+    panel.style.transition = 'transform 220ms cubic-bezier(0.2, 0, 0, 1), opacity 220ms cubic-bezier(0.2, 0, 0, 1)';
+    panel.style.transform = 'translateY(100%)';
+    panel.style.opacity = '0';
+
+    window.setTimeout(() => {
+      this.playlistPanelOpen.set(false);
+      panel.style.transition = '';
+      panel.style.transform = '';
+      panel.style.opacity = '';
+    }, 230);
+
+    // Evita que el click-sintético tras el touchend reabra/toggle el panel.
+    event.preventDefault();
   }
 
   /** Reordenar un item del borrador (drag-and-drop). */
@@ -350,12 +367,22 @@ export class AiChatComponent implements OnInit, AfterViewChecked {
     const itemIds = draft.items.map((it) => it.catalogBookId);
     const lastUserMessage = [...this.messages()].filter((m) => m.role === 'user').pop();
     const aiPrompt = lastUserMessage?.content ?? null;
+    const title = draft.title || 'Playlist creada en el chat';
+    const description = draft.description || (aiPrompt ? `Generada en el chat: "${aiPrompt.slice(0, 140)}"` : null);
+
+    // Portada generada por IA: misma receta que usa n8n para las playlists
+    // generadas "en un paso" (Pollinations / modelo flux). La frase de prompt
+    // se construye a partir del título del borrador para que la imagen
+    // encaje temáticamente. Si Pollinations falla, el backend simplemente
+    // guarda la playlist sin portada (coverUrl es opcional).
+    const coverUrl = this.buildAiCoverUrl(title);
 
     try {
       const playlist = await firstValueFrom(
         this.playlistService.create({
-          title: draft.title || 'Playlist creada en el chat',
-          description: draft.description || (aiPrompt ? `Generada en el chat: "${aiPrompt.slice(0, 140)}"` : null),
+          title,
+          description,
+          coverUrl,
           visibility: 'PRIVATE',
           source: 'AI',
           aiPrompt,
@@ -373,6 +400,31 @@ export class AiChatComponent implements OnInit, AfterViewChecked {
     } finally {
       this.savingFinalPlaylist.set(false);
     }
+  }
+
+  /**
+   * Construye una URL de Pollinations (modelo flux) para usar como portada
+   * de la playlist. Es el mismo proveedor que usa el workflow de n8n para
+   * las generaciones one-shot, así la estética queda consistente entre los
+   * dos flujos (chat en modo playlist vs. "generar con IA" normal).
+   *
+   * @param title Título del borrador; se usa como seed estilística.
+   * @returns URL absoluta estable (usa un seed derivado del título).
+   */
+  private buildAiCoverUrl(title: string): string {
+    const seed = Math.abs(this.hashCode(title)) % 10000;
+    const clean = title.trim().replace(/\s+/g, ' ').slice(0, 80);
+    const prompt = `book collection cover art, ${clean}, stylized vibrant painterly minimalist no text no letters`;
+    return `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=800&height=800&nologo=true&model=flux&seed=${seed}`;
+  }
+
+  /** Hash determinista estable para construir seeds desde el título. */
+  private hashCode(s: string): number {
+    let h = 0;
+    for (let i = 0; i < s.length; i++) {
+      h = ((h << 5) - h + s.charCodeAt(i)) | 0;
+    }
+    return h;
   }
 
   /** Comprueba auth, carga conversaciones y deja mensajes vacíos. */

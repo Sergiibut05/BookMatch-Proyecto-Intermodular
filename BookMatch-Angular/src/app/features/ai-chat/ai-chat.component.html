@@ -129,38 +129,39 @@
        Área principal de chat
        ============================================================ -->
   <section class="chat-main">
-    <!-- Header propio del chat · sustituye al global · visible en todos los breakpoints -->
+    <!-- Header propio del chat · sustituye al global · visible en todos los breakpoints.
+         Estructura en 3 columnas (grid) para que el título quede SIEMPRE
+         perfectamente centrado, sin importar cuántos botones haya a los lados. -->
     <div class="chat-topbar">
-      <!-- Volver (← home) -->
-      <button
-        type="button"
-        (click)="goBack()"
-        class="press-target inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-[#6b4d39] hover:bg-[#E0A15E]/10"
-        [attr.aria-label]="'AI_CHAT.BACK' | translate"
-        [title]="'AI_CHAT.BACK' | translate">
-        <span class="material-symbols-outlined">arrow_back</span>
-      </button>
+      <!-- COLUMNA IZQUIERDA: volver + toggle sidebar -->
+      <div class="flex items-center gap-1 justify-self-start">
+        <button
+          type="button"
+          (click)="goBack()"
+          class="press-target inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-[#6b4d39] hover:bg-[#E0A15E]/10"
+          [attr.aria-label]="'AI_CHAT.BACK' | translate"
+          [title]="'AI_CHAT.BACK' | translate">
+          <span class="material-symbols-outlined">arrow_back</span>
+        </button>
 
-      <!-- Divisor sutil entre "volver" y acciones del chat -->
-      <span class="topbar-divider" aria-hidden="true"></span>
+        <span class="topbar-divider" aria-hidden="true"></span>
 
-      <!-- Toggle del panel: móvil abre drawer, desktop colapsa -->
-      <button
-        type="button"
-        (click)="toggleSidebar()"
-        class="press-target inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-[#6b4d39] hover:bg-[#E0A15E]/10"
-        [attr.aria-label]="'AI_CHAT.TOGGLE_SIDEBAR' | translate"
-        [title]="'AI_CHAT.TOGGLE_SIDEBAR' | translate">
-        <!-- Icono depende del estado: cerrado en desktop → panel abierto; lo contrario → panel cerrado -->
-        @if (showSidebarMobile() || !sidebarCollapsedDesktop()) {
-          <span class="material-symbols-outlined">left_panel_close</span>
-        } @else {
-          <span class="material-symbols-outlined">left_panel_open</span>
-        }
-      </button>
+        <button
+          type="button"
+          (click)="toggleSidebar()"
+          class="press-target inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-[#6b4d39] hover:bg-[#E0A15E]/10"
+          [attr.aria-label]="'AI_CHAT.TOGGLE_SIDEBAR' | translate"
+          [title]="'AI_CHAT.TOGGLE_SIDEBAR' | translate">
+          @if (showSidebarMobile() || !sidebarCollapsedDesktop()) {
+            <span class="material-symbols-outlined">left_panel_close</span>
+          } @else {
+            <span class="material-symbols-outlined">left_panel_open</span>
+          }
+        </button>
+      </div>
 
-      <!-- Título centrado: conversación activa o neutro (sin duplicar WELCOME_TITLE) -->
-      <h1 class="min-w-0 flex-1 truncate text-center text-[15px] font-semibold text-[#45332d]">
+      <!-- COLUMNA CENTRAL: título (centrado por grid, no por flex) -->
+      <h1 class="min-w-0 truncate text-center text-[15px] font-semibold text-[#45332d]">
         @if (activeConversation(); as conv) {
           {{ conv.title }}
         } @else {
@@ -168,9 +169,8 @@
         }
       </h1>
 
-      <!-- Acciones de la derecha: toggle "modo playlist" + (si hay borrador) abrir panel -->
-      <div class="flex items-center gap-1 shrink-0">
-        <!-- Abrir panel del borrador (solo si hay uno y modo playlist) -->
+      <!-- COLUMNA DERECHA: abrir panel + toggle modo playlist (solo iconos) -->
+      <div class="flex items-center gap-1 justify-self-end">
         @if (playlistMode() && currentPlaylistDraft()) {
           <button
             type="button"
@@ -183,19 +183,15 @@
           </button>
         }
 
-        <!-- Toggle modo playlist -->
         <button
           type="button"
           (click)="togglePlaylistMode()"
-          class="press-target playlist-mode-btn"
+          class="press-target playlist-mode-btn is-icon-only"
           [class.is-active]="playlistMode()"
           [attr.aria-pressed]="playlistMode()"
           [attr.aria-label]="'AI_CHAT.PLAYLIST_MODE_TOGGLE' | translate"
           [title]="(playlistMode() ? 'AI_CHAT.PLAYLIST_MODE_ON' : 'AI_CHAT.PLAYLIST_MODE_OFF') | translate">
           <span class="material-symbols-outlined">collections_bookmark</span>
-          <span class="hidden sm:inline">
-            {{ (playlistMode() ? 'AI_CHAT.PLAYLIST_MODE_LABEL_ON' : 'AI_CHAT.PLAYLIST_MODE_LABEL_OFF') | translate }}
-          </span>
         </button>
       </div>
     </div>
