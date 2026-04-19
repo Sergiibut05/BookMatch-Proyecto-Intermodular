@@ -220,7 +220,11 @@
       "position": [1792, 48],
       "id": "481d1e4d-8b77-4d1f-8264-5a635ef13871",
       "name": "Ejecutar SQL (Postgres)",
-      "retryOnFail": false,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 1500,
+      "alwaysOutputData": true,
+      "continueOnFail": true,
       "credentials": {
         "postgres": {
           "id": "zeU51y9XScYtwY9X",
@@ -231,13 +235,77 @@
     {
       "parameters": {
         "mode": "runOnceForAllItems",
-        "jsCode": "// ============================================================\n// Normalizar Libros\n// ------------------------------------------------------------\n// Recoge los items devueltos por Postgres, los mapea al shape\n// que consume el prompt de respuesta y conserva IDs numéricos\n// únicos (se usan luego para validar las recommendations del LLM).\n// ============================================================\n\nconst sqlResults = $input.all();\nconst previousData = $('Validar SQL (guardrails)').first().json;\n\nconst books = [];\nconst seen = new Set();\n\nfor (const row of sqlResults) {\n  const id = Number(row.json.id);\n  if (!Number.isFinite(id) || id <= 0 || seen.has(id)) continue;\n  seen.add(id);\n  books.push({\n    id,\n    title: row.json.title,\n    author: row.json.author,\n    description: row.json.description,\n    coverUrl: row.json.cover_url || row.json.cover_image || null\n  });\n}\n\nreturn [{\n  json: {\n    userId: previousData.userId,\n    conversationId: previousData.conversationId,\n    messageId: previousData.messageId,\n    userMessage: previousData.userMessage,\n    baseUrl: previousData.baseUrl,\n    intentType: previousData.intentType,\n    intentConfidence: previousData.intentConfidence,\n    conversationContext: previousData.conversationContext || [],\n    sqlQuery: previousData.sqlQueryRaw,\n    sqlThoughts: previousData.thoughts,\n    listaLibros: books,\n    candidateIds: Array.from(seen),\n    startTime: previousData.startTime\n  }\n}];"
+        "jsCode": "// ============================================================\n// Normalizar Libros\n// ------------------------------------------------------------\n// Recoge los items devueltos por Postgres, los mapea al shape\n// que consume el prompt de respuesta y conserva IDs numéricos\n// únicos (se usan luego para validar las recommendations del LLM).\n//\n// Robustez: Postgres viene con retryOnFail + alwaysOutputData +\n// continueOnFail, por lo que puede llegar:\n//   - Sin filas (error o simplemente 0 resultados) → items vacíos o\n//     con { error, ... }.\n//   - Con filas válidas.\n// Marcamos `needsFallback: true` si no hay libros válidos para que\n// el IF posterior dispare la query de respaldo en lugar de reventar.\n// ============================================================\n\nconst sqlResults = $input.all();\nconst previousData = $('Validar SQL (guardrails)').first().json;\n\nconst books = [];\nconst seen = new Set();\n\nfor (const row of sqlResults) {\n  const j = row?.json;\n  // Si Postgres falla (continueOnFail) devuelve items con `error` o vacíos.\n  if (!j || j.error) continue;\n  const id = Number(j.id);\n  if (!Number.isFinite(id) || id <= 0 || seen.has(id)) continue;\n  seen.add(id);\n  books.push({\n    id,\n    title: j.title,\n    author: j.author,\n    description: j.description,\n    coverUrl: j.cover_url || j.cover_image || null\n  });\n}\n\nreturn [{\n  json: {\n    userId: previousData.userId,\n    conversationId: previousData.conversationId,\n    messageId: previousData.messageId,\n    userMessage: previousData.userMessage,\n    baseUrl: previousData.baseUrl,\n    intentType: previousData.intentType,\n    intentConfidence: previousData.intentConfidence,\n    mode: previousData.mode || 'chat',\n    maxItems: previousData.maxItems || null,\n    conversationContext: previousData.conversationContext || [],\n    sqlQuery: previousData.sqlQueryRaw,\n    sqlThoughts: previousData.thoughts,\n    listaLibros: books,\n    candidateIds: Array.from(seen),\n    needsFallback: books.length === 0,\n    startTime: previousData.startTime\n  }\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [1984, 48],
       "id": "28f55751-c23e-4aef-8c35-5cd9ae949850",
       "name": "Normalizar Libros"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "a1b2c3d4-5678-90ab-cdef-1234567890ab",
+              "leftValue": "={{ ($json.listaLibros || []).length }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [2128, 48],
+      "id": "c9f1e2d3-b4a5-46c7-8910-1112131415aa",
+      "name": "¿Hay libros?"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "=SELECT cb.id, cb.title, cb.author, cb.description, cb.cover_url\nFROM catalog_books cb\nWHERE cb.id NOT IN (\n  SELECT oi.catalog_book_id\n  FROM order_items oi\n  JOIN orders o ON oi.order_id = o.id\n  JOIN users u ON o.user_id = u.id\n  WHERE u.firebase_uid = '{{ $json.userId }}'\n)\nORDER BY RANDOM()\nLIMIT 10",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [2128, 240],
+      "id": "b7a3c2d1-e5f6-4788-91a0-b2c3d4e5f6a7",
+      "name": "SQL Fallback",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 1500,
+      "alwaysOutputData": true,
+      "continueOnFail": true,
+      "credentials": {
+        "postgres": {
+          "id": "zeU51y9XScYtwY9X",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// ============================================================\n// Normalizar Libros Fallback\n// ------------------------------------------------------------\n// Se dispara cuando el SQL inicial (del LLM) no devolvió nada o\n// falló tras sus 3 reintentos automáticos. Ejecutamos antes una\n// query genérica `SQL Fallback` (aleatoria sobre catalog_books no\n// comprados por el usuario) con su propio retry automático.\n//\n// Aquí reusamos el contexto ya preparado en `Normalizar Libros`\n// (userId, conversationId, conversationContext, mode, etc.) y solo\n// reemplazamos `listaLibros` / `candidateIds` con las filas del\n// fallback. Si el fallback también devolvió vacío, `listaLibros`\n// queda [] pero el flujo continúa: el LLM responderá una disculpa\n// cordial en vez de romper la ejecución.\n// ============================================================\n\nconst sqlResults = $input.all();\nconst previousData = $('Normalizar Libros').first().json;\n\nconst books = [];\nconst seen = new Set();\n\nfor (const row of sqlResults) {\n  const j = row?.json;\n  if (!j || j.error) continue;\n  const id = Number(j.id);\n  if (!Number.isFinite(id) || id <= 0 || seen.has(id)) continue;\n  seen.add(id);\n  books.push({\n    id,\n    title: j.title,\n    author: j.author,\n    description: j.description,\n    coverUrl: j.cover_url || j.cover_image || null\n  });\n}\n\nreturn [{\n  json: {\n    ...previousData,\n    listaLibros: books,\n    candidateIds: Array.from(seen),\n    needsFallback: false,\n    usedFallback: true,\n    sqlThoughts: [\n      ...(previousData.sqlThoughts || []),\n      `Fallback aplicado: el SQL original no devolvió resultados. Usada query genérica (${books.length} libros).`\n    ]\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2336, 240],
+      "id": "d8e9f0a1-b2c3-4d45-9678-9a0b1c2d3e4f",
+      "name": "Normalizar Libros Fallback"
     },
     {
       "parameters": {
@@ -586,6 +654,30 @@
       ]
     },
     "Normalizar Libros": {
+      "main": [
+        [
+          { "node": "¿Hay libros?", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "¿Hay libros?": {
+      "main": [
+        [
+          { "node": "Construir Prompt Respuesta", "type": "main", "index": 0 }
+        ],
+        [
+          { "node": "SQL Fallback", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "SQL Fallback": {
+      "main": [
+        [
+          { "node": "Normalizar Libros Fallback", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Normalizar Libros Fallback": {
       "main": [
         [
           { "node": "Construir Prompt Respuesta", "type": "main", "index": 0 }
