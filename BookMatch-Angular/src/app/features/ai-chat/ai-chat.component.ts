@@ -262,6 +262,62 @@ export class AiChatComponent implements OnInit, AfterViewChecked {
     this.playlistPanelOpen.update((v) => !v);
   }
 
+  // ============================================================
+  // Drag-to-close del bottom sheet (solo móvil).
+  // ------------------------------------------------------------
+  // Usamos el handle como zona de gesto: al arrastrar el panel
+  // hacia abajo, aplicamos translateY en vivo; al soltar, si se
+  // superó el threshold (90px) lo cerramos, si no volvemos a su
+  // sitio. Si no hubo arrastre apreciable, el click del botón
+  // sigue funcionando (cierre con un simple tap).
+  // ============================================================
+  private sheetDragStartY: number | null = null;
+  private sheetDragLastDelta = 0;
+
+  private getPanelEl(target: EventTarget | null): HTMLElement | null {
+    const start = target instanceof HTMLElement ? target : null;
+    return start ? (start.closest('.playlist-panel') as HTMLElement | null) : null;
+  }
+
+  onPanelSheetTouchStart(event: TouchEvent): void {
+    const touch = event.touches[0];
+    if (!touch) return;
+    this.sheetDragStartY = touch.clientY;
+    this.sheetDragLastDelta = 0;
+    const panel = this.getPanelEl(event.currentTarget);
+    if (panel) panel.classList.add('is-dragging');
+  }
+
+  onPanelSheetTouchMove(event: TouchEvent): void {
+    if (this.sheetDragStartY == null) return;
+    const touch = event.touches[0];
+    if (!touch) return;
+    const delta = Math.max(0, touch.clientY - this.sheetDragStartY);
+    this.sheetDragLastDelta = delta;
+    const panel = this.getPanelEl(event.currentTarget);
+    if (panel) panel.style.transform = `translateY(${delta}px)`;
+    // Si hay arrastre real evitamos que el tap dispare el click del botón.
+    if (delta > 4) event.preventDefault();
+  }
+
+  onPanelSheetTouchEnd(event: TouchEvent): void {
+    const panel = this.getPanelEl(event.currentTarget);
+    if (panel) {
+      panel.classList.remove('is-dragging');
+      panel.style.transform = '';
+    }
+    const delta = this.sheetDragLastDelta;
+    this.sheetDragStartY = null;
+    this.sheetDragLastDelta = 0;
+    // Threshold de cierre: 90px. Si el usuario soltó antes, el panel
+    // vuelve solo (por la transición CSS).
+    if (delta > 90) {
+      this.playlistPanelOpen.set(false);
+      // Evita que el click-sintético tras el touchend reabra/toggle el panel.
+      event.preventDefault();
+    }
+  }
+
   /** Reordenar un item del borrador (drag-and-drop). */
   onDraftReorder(event: CdkDragDrop<PlaylistDraftItem[]>): void {
     const draft = this.currentPlaylistDraft();
@@ -408,8 +464,16 @@ export class AiChatComponent implements OnInit, AfterViewChecked {
     this.resetTextareaHeight();
     this.shouldScrollToBottom = true;
 
+    // En modo playlist enviamos también el borrador actual (con las ediciones
+    // manuales del usuario: reorder, delete) para que la IA ITERE sobre él
+    // en vez de crear otra playlist desde cero. La primera vez no existe aún
+    // y se envía undefined → la IA crea el borrador inicial.
     const options = this.playlistMode()
-      ? { mode: 'playlist_builder' as const, maxItems: this.preferredMaxItems() }
+      ? {
+          mode: 'playlist_builder' as const,
+          maxItems: this.preferredMaxItems(),
+          currentDraft: this.currentPlaylistDraft() ?? undefined,
+        }
       : { mode: 'chat' as const };
 
     this.conversationService.sendMessage(userId, conversationId, content, options).subscribe({
