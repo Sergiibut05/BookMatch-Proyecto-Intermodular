@@ -61,10 +61,18 @@ export class ConversationService {
     );
 
     return collectionData(q, { idField: 'id' }).pipe(
+      // IMPORTANTE: cuando la conversación se acaba de crear con
+      // `serverTimestamp()`, el snapshot LOCAL inicial (optimista) que emite
+      // Firestore tiene `createdAt`/`updatedAt` a null hasta que el servidor
+      // confirma. Si hacemos `.toDate()` sobre null, RxJS propaga un
+      // TypeError, corta el stream y el sidebar deja de recibir nuevas
+      // conversaciones hasta un refresh manual. Por eso hacemos fallback a
+      // la fecha de cliente para ese evento intermedio (se reemplaza
+      // automáticamente cuando llega el snapshot del servidor).
       map(conversations => conversations.map(conv => ({
         ...conv,
-        createdAt: (conv['createdAt'] as Timestamp).toDate(),
-        updatedAt: (conv['updatedAt'] as Timestamp).toDate()
+        createdAt: (conv['createdAt'] as Timestamp | null)?.toDate() ?? new Date(),
+        updatedAt: (conv['updatedAt'] as Timestamp | null)?.toDate() ?? new Date(),
       })) as ConversationUI[])
     );
   }
@@ -83,9 +91,12 @@ export class ConversationService {
     const q = query(messagesRef, orderBy('timestamp', 'asc'));
 
     return collectionData(q, { idField: 'id' }).pipe(
+      // Mismo fallback que en getConversations: el snapshot local de un
+      // mensaje recién añadido puede emitir timestamp null hasta que el
+      // servidor confirma.
       map(messages => messages.map(msg => ({
         ...msg,
-        timestamp: (msg['timestamp'] as Timestamp).toDate()
+        timestamp: (msg['timestamp'] as Timestamp | null)?.toDate() ?? new Date(),
       })) as MessageUI[])
     );
   }
