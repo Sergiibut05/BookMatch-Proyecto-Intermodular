@@ -488,14 +488,12 @@ export class AiChatComponent implements OnInit, AfterViewChecked {
   }
 
   /**
-   * Si el usuario ha eliminado libros del borrador manualmente, pedimos a la
-   * IA que se ajuste a ese tamaño (mínimo 3, máximo 20). Si no, 8 por defecto.
+   * Tamaño por defecto para playlists NUEVAS (cuando no hay borrador aún).
+   * Cuando ya existe un borrador, el tamaño lo decide el usuario a través del
+   * propio mensaje ("añade 3 más", "quítame 2", etc.) y la IA lo interpreta;
+   * por eso no lo atamos aquí al tamaño actual del panel.
    */
   private preferredMaxItems(): number {
-    const override = this.manualDraftOverride();
-    if (override && override.items.length > 0) {
-      return Math.max(3, Math.min(20, override.items.length));
-    }
     return 8;
   }
 
@@ -689,6 +687,48 @@ export class AiChatComponent implements OnInit, AfterViewChecked {
   /** True si el mensaje del asistente trae recomendaciones válidas. */
   hasRecommendations(msg: MessageUI): boolean {
     return this.recommendationIds(msg).length > 0;
+  }
+
+  /**
+   * IDs de mensajes cuyas recommendations se han expandido manualmente.
+   * Por defecto solo se muestran las cards del ÚLTIMO mensaje con
+   * recomendaciones; en los anteriores el usuario puede hacer click en
+   * "Ver N libros recomendados" para desplegarlas.
+   */
+  private expandedRecommendations = signal<ReadonlySet<string>>(new Set<string>());
+
+  /**
+   * ID del último mensaje del asistente con recomendaciones válidas.
+   * Ese es el único que se muestra con las cards visibles por defecto.
+   */
+  readonly lastRecommendationMessageId = computed<string | null>(() => {
+    const msgs = this.messages();
+    for (let i = msgs.length - 1; i >= 0; i--) {
+      const m = msgs[i];
+      if (m.role === 'assistant' && this.hasRecommendations(m)) {
+        return m.id;
+      }
+    }
+    return null;
+  });
+
+  /**
+   * True si las cards de recomendaciones de este mensaje están visibles:
+   * es el último con recommendations o el usuario las ha expandido.
+   */
+  isRecommendationsVisible(msg: MessageUI): boolean {
+    if (msg.id === this.lastRecommendationMessageId()) return true;
+    return this.expandedRecommendations().has(msg.id);
+  }
+
+  /** Alterna manualmente la visibilidad de las cards en un mensaje pasado. */
+  toggleRecommendations(msg: MessageUI): void {
+    this.expandedRecommendations.update((current) => {
+      const next = new Set(current);
+      if (next.has(msg.id)) next.delete(msg.id);
+      else next.add(msg.id);
+      return next;
+    });
   }
 
   /**

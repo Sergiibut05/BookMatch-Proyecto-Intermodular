@@ -691,6 +691,8 @@
         "THINKING": "Pensando…",
         "THOUGHTS": "Razonamiento ({{count}} pasos)",
         "RECOMMENDATIONS": "Libros recomendados ({{count}})",
+        "SHOW_RECOMMENDATIONS": "Ver {{count}} libros recomendados",
+        "HIDE_RECOMMENDATIONS": "Ocultar",
         "SAVE_PLAYLIST": "Guardar como playlist",
         "SAVING_PLAYLIST": "Guardando…",
         "PLAYLIST_SAVED": "Playlist guardada",
