@@ -690,6 +690,8 @@
         "THINKING": "Thinking…",
         "THOUGHTS": "Reasoning ({{count}} steps)",
         "RECOMMENDATIONS": "Recommended books ({{count}})",
+        "SHOW_RECOMMENDATIONS": "Show {{count}} recommended books",
+        "HIDE_RECOMMENDATIONS": "Hide",
         "SAVE_PLAYLIST": "Save as playlist",
         "SAVING_PLAYLIST": "Saving…",
         "PLAYLIST_SAVED": "Playlist saved",
