@@ -12,25 +12,62 @@ function getN8nWebhookUrl(): string | null {
   return url;
 }
 
+type ChatMode = 'chat' | 'playlist_builder';
+
+const VALID_MODES: ReadonlySet<ChatMode> = new Set(['chat', 'playlist_builder']);
+const MAX_ITEMS_DEFAULT_PLAYLIST = 8;
+const MAX_ITEMS_HARD_CAP = 20;
+
+function normalizeMode(raw: unknown): ChatMode {
+  if (typeof raw === 'string' && VALID_MODES.has(raw as ChatMode)) {
+    return raw as ChatMode;
+  }
+  return 'chat';
+}
+
+function normalizeMaxItems(raw: unknown, mode: ChatMode): number | null {
+  if (mode !== 'playlist_builder') return null;
+  const n = typeof raw === 'number' ? raw : Number(raw);
+  if (!Number.isFinite(n)) return MAX_ITEMS_DEFAULT_PLAYLIST;
+  const clamped = Math.max(3, Math.min(MAX_ITEMS_HARD_CAP, Math.trunc(n)));
+  return clamped;
+}
+
 // POST /api/ai-chat/send-message
 router.post('/send-message', async (req, res) => {
   try {
-    const { userId, conversationId, content } = req.body;
+    const { userId, conversationId, content } = req.body as Record<string, unknown>;
 
     if (!userId || !conversationId || !content) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
+    if (typeof userId !== 'string' || typeof conversationId !== 'string' || typeof content !== 'string') {
+      return res.status(400).json({ error: 'userId, conversationId and content must be strings' });
+    }
+
+    const trimmed = content.trim();
+    if (!trimmed) {
+      return res.status(400).json({ error: 'content cannot be empty' });
+    }
+
+    // Modo conversacional: chat (default) | playlist_builder (con co-curación de libros)
+    const mode = normalizeMode(req.body?.mode);
+    const maxItems = normalizeMaxItems(req.body?.maxItems, mode);
+
     const firestore = getFirestore();
-    
+
     // 1. Crear documento de mensaje del usuario en Firestore
     const userMessageRef = await firestore
       .collection(`users/${userId}/conversations/${conversationId}/messages`)
       .add({
         role: 'user',
-        content: content.trim(),
+        content: trimmed,
         timestamp: FieldValue.serverTimestamp(),
-        status: 'completed'
+        status: 'completed',
+        // Guardamos el modo en metadata por si el front lo necesita para
+        // re-render o auditoría posterior.
+        metadata: { mode, ...(maxItems ? { maxItems } : {}) }
       });
 
     // 2. Crear documento placeholder para respuesta de IA
@@ -41,7 +78,7 @@ router.post('/send-message', async (req, res) => {
         content: '',
         timestamp: FieldValue.serverTimestamp(),
         status: 'processing',
-        metadata: {}
+        metadata: { mode, ...(maxItems ? { maxItems } : {}) }
       });
 
     // 3. Actualizar contador de mensajes en conversación
@@ -65,14 +102,18 @@ router.post('/send-message', async (req, res) => {
       userId,
       conversationId,
       messageId: assistantMessageRef.id,
-      userMessage: content,
-      baseUrl: req.headers.origin || env.FRONTEND_URL
+      userMessage: trimmed,
+      baseUrl: req.headers.origin || env.FRONTEND_URL,
+      mode,
+      ...(maxItems ? { maxItems } : {})
     });
 
-    res.status(200).json({ 
+    res.status(200).json({
       success: true,
       userMessageId: userMessageRef.id,
-      assistantMessageId: assistantMessageRef.id
+      assistantMessageId: assistantMessageRef.id,
+      mode,
+      ...(maxItems ? { maxItems } : {})
     });
 
   } catch (error) {
