@@ -13,15 +13,20 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { DragDropModule, CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 import { marked } from 'marked';
 import { firstValueFrom } from 'rxjs';
 import { ConversationService } from '../../core/services/conversation.service';
 import { AuthService } from '@core/services/auth.service';
 import { CatalogService } from '@core/services/catalog.service';
 import { PlaylistService } from '@core/services/playlist.service';
-import { ConversationUI, MessageUI } from '../../core/models/conversation.model';
+import {
+  ConversationUI,
+  MessageUI,
+  PlaylistDraft,
+  PlaylistDraftItem,
+} from '../../core/models/conversation.model';
 import { CatalogBook } from '@shared/models';
-import { Header } from '@shared/components/header/header';
 
 /**
  * Grupo de conversaciones para mostrar en el sidebar agrupadas por fecha
@@ -41,7 +46,7 @@ interface ConversationGroup {
 @Component({
   selector: 'app-ai-chat',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, TranslateModule, Header],
+  imports: [CommonModule, FormsModule, RouterLink, TranslateModule, DragDropModule],
   templateUrl: './ai-chat.component.html',
   styleUrl: './ai-chat.component.scss'
 })
@@ -70,8 +75,61 @@ export class AiChatComponent implements OnInit, AfterViewChecked {
   isLoading = signal(false);
   /** Sidebar de conversaciones visible en móvil. */
   showSidebarMobile = signal(false);
+  /** Sidebar colapsado en desktop (persistido en localStorage). */
+  sidebarCollapsedDesktop = signal<boolean>(this.readSidebarPreference());
   /** True si es conversación nueva aún no creada en backend. */
   isNewEmptyConversation = signal(true);
+
+  // ============================================================
+  // H1.x · Modo "Construir playlist" conversacional (Bloque C)
+  // ------------------------------------------------------------
+  // El usuario activa el toggle y la IA pasa a co-curar una
+  // playlist de ~8 libros (configurable) a través de la
+  // conversación. El último mensaje del asistente con
+  // `metadata.playlistDraft` define el borrador visible.
+  // Si el usuario reordena/elimina manualmente, guardamos una
+  // "override" local que prevalece sobre el draft del último
+  // mensaje hasta que llegue uno nuevo.
+  // ============================================================
+  /** Modo actual del chat. */
+  playlistMode = signal<boolean>(false);
+  /** Panel del borrador visible/oculto (desktop y móvil). */
+  playlistPanelOpen = signal<boolean>(false);
+  /**
+   * Override local del borrador tras reorder/delete manual. Se limpia
+   * cuando llega un nuevo `playlistDraft` desde el asistente.
+   */
+  private manualDraftOverride = signal<PlaylistDraft | null>(null);
+  /** ID del último mensaje con playlistDraft que vimos (para limpiar override). */
+  private lastDraftMessageId: string | null = null;
+  /** Guardando la playlist definitiva a backend. */
+  savingFinalPlaylist = signal<boolean>(false);
+
+  /**
+   * Último borrador de playlist vigente: override manual si existe, o el
+   * draft del último mensaje del asistente. Null si no hay ninguno.
+   */
+  readonly currentPlaylistDraft = computed<PlaylistDraft | null>(() => {
+    const override = this.manualDraftOverride();
+    if (override) return override;
+    const msgs = this.messages();
+    for (let i = msgs.length - 1; i >= 0; i--) {
+      const m = msgs[i];
+      if (m.role === 'assistant' && m.metadata?.playlistDraft) {
+        return m.metadata.playlistDraft;
+      }
+    }
+    return null;
+  });
+
+  /** Dictado por voz: flag de grabación activa. */
+  isRecording = signal(false);
+  /** Dictado por voz: true si el navegador soporta Web Speech API. */
+  readonly voiceInputSupported: boolean =
+    typeof window !== 'undefined' &&
+    (('SpeechRecognition' in window) || ('webkitSpeechRecognition' in window));
+  /** Instancia interna de SpeechRecognition (tipada laxamente, depende del navegador). */
+  private recognition: any = null;
 
   private shouldScrollToBottom = false;
 
@@ -100,6 +158,13 @@ export class AiChatComponent implements OnInit, AfterViewChecked {
   private booksFailed = new Set<number>();
   /** Flag de "libro en carga" para evitar peticiones duplicadas. */
   private loadingBooks = new Set<number>();
+
+  /** Conversación activa actualmente (o null si es nueva/vacía). */
+  readonly activeConversation = computed<ConversationUI | null>(() => {
+    const id = this.activeConversationId();
+    if (!id) return null;
+    return this.conversations().find((c) => c.id === id) ?? null;
+  });
 
   /**
    * Agrupa las conversaciones por franjas de fecha para el sidebar.
@@ -145,9 +210,113 @@ export class AiChatComponent implements OnInit, AfterViewChecked {
       for (const m of this.messages()) {
         if (m.role !== 'assistant' || m.status === 'processing') continue;
         for (const id of this.recommendationIds(m)) ids.add(id);
+        // También pre-cargamos los libros del borrador de playlist en curso
+        // para que el panel los muestre sin parpadeo.
+        const draft = m.metadata?.playlistDraft;
+        if (draft?.items) {
+          for (const it of draft.items) {
+            if (Number.isFinite(it.catalogBookId) && it.catalogBookId > 0) {
+              ids.add(it.catalogBookId);
+            }
+          }
+        }
       }
       ids.forEach((id) => this.ensureBookLoaded(id));
     });
+
+    // Cuando llega un nuevo `playlistDraft` desde el asistente (mensaje con
+    // ID distinto al último que procesamos), descartamos el override manual
+    // y abrimos el panel automáticamente si está en modo playlist.
+    effect(() => {
+      const msgs = this.messages();
+      let latestDraftMsgId: string | null = null;
+      for (let i = msgs.length - 1; i >= 0; i--) {
+        if (msgs[i].role === 'assistant' && msgs[i].metadata?.playlistDraft) {
+          latestDraftMsgId = msgs[i].id;
+          break;
+        }
+      }
+      if (latestDraftMsgId && latestDraftMsgId !== this.lastDraftMessageId) {
+        this.lastDraftMessageId = latestDraftMsgId;
+        this.manualDraftOverride.set(null);
+        if (this.playlistMode()) {
+          this.playlistPanelOpen.set(true);
+        }
+      }
+    });
+  }
+
+  // ============================================================
+  // Modo "Construir playlist" conversacional
+  // ============================================================
+
+  /** Alterna el modo playlist. Al desactivarlo cerramos el panel. */
+  togglePlaylistMode(): void {
+    const next = !this.playlistMode();
+    this.playlistMode.set(next);
+    if (!next) this.playlistPanelOpen.set(false);
+  }
+
+  /** Abre/cierra el panel de borrador manualmente. */
+  togglePlaylistPanel(): void {
+    this.playlistPanelOpen.update((v) => !v);
+  }
+
+  /** Reordenar un item del borrador (drag-and-drop). */
+  onDraftReorder(event: CdkDragDrop<PlaylistDraftItem[]>): void {
+    const draft = this.currentPlaylistDraft();
+    if (!draft) return;
+    const items = [...draft.items];
+    moveItemInArray(items, event.previousIndex, event.currentIndex);
+    const renumbered = items.map((it, idx) => ({ ...it, position: idx + 1 }));
+    this.manualDraftOverride.set({ ...draft, items: renumbered });
+  }
+
+  /** Elimina un libro del borrador (solo localmente; no toca la IA). */
+  removeDraftItem(catalogBookId: number): void {
+    const draft = this.currentPlaylistDraft();
+    if (!draft) return;
+    const filtered = draft.items
+      .filter((it) => it.catalogBookId !== catalogBookId)
+      .map((it, idx) => ({ ...it, position: idx + 1 }));
+    this.manualDraftOverride.set({ ...draft, items: filtered });
+  }
+
+  /**
+   * Guarda el borrador actual como playlist real en el backend.
+   * Reutiliza `playlistService.create` (source='AI') con los items ordenados.
+   */
+  async saveDraftAsPlaylist(): Promise<void> {
+    const draft = this.currentPlaylistDraft();
+    if (!draft || draft.items.length === 0 || this.savingFinalPlaylist()) return;
+
+    this.savingFinalPlaylist.set(true);
+    const itemIds = draft.items.map((it) => it.catalogBookId);
+    const lastUserMessage = [...this.messages()].filter((m) => m.role === 'user').pop();
+    const aiPrompt = lastUserMessage?.content ?? null;
+
+    try {
+      const playlist = await firstValueFrom(
+        this.playlistService.create({
+          title: draft.title || 'Playlist creada en el chat',
+          description: draft.description || (aiPrompt ? `Generada en el chat: "${aiPrompt.slice(0, 140)}"` : null),
+          visibility: 'PRIVATE',
+          source: 'AI',
+          aiPrompt,
+          itemIds,
+        }),
+      );
+      this.showSavedPlaylistToast(playlist.id, playlist.title);
+      // Una vez guardada, cerramos el panel y salimos del modo playlist:
+      // el usuario normalmente querrá seguir con otra cosa.
+      this.playlistPanelOpen.set(false);
+      this.manualDraftOverride.set(null);
+    } catch (err) {
+      console.error('[ai-chat] error guardando playlist del borrador', err);
+      window.alert('No se ha podido guardar la playlist.');
+    } finally {
+      this.savingFinalPlaylist.set(false);
+    }
   }
 
   /** Comprueba auth, carga conversaciones y deja mensajes vacíos. */
@@ -239,7 +408,11 @@ export class AiChatComponent implements OnInit, AfterViewChecked {
     this.resetTextareaHeight();
     this.shouldScrollToBottom = true;
 
-    this.conversationService.sendMessage(userId, conversationId, content).subscribe({
+    const options = this.playlistMode()
+      ? { mode: 'playlist_builder' as const, maxItems: this.preferredMaxItems() }
+      : { mode: 'chat' as const };
+
+    this.conversationService.sendMessage(userId, conversationId, content, options).subscribe({
       next: () => {
         this.isLoading.set(false);
       },
@@ -250,9 +423,132 @@ export class AiChatComponent implements OnInit, AfterViewChecked {
     });
   }
 
+  /**
+   * Si el usuario ha eliminado libros del borrador manualmente, pedimos a la
+   * IA que se ajuste a ese tamaño (mínimo 3, máximo 20). Si no, 8 por defecto.
+   */
+  private preferredMaxItems(): number {
+    const override = this.manualDraftOverride();
+    if (override && override.items.length > 0) {
+      return Math.max(3, Math.min(20, override.items.length));
+    }
+    return 8;
+  }
+
   /** Alterna la visibilidad del sidebar en móvil. */
   toggleSidebarMobile() {
     this.showSidebarMobile.update(value => !value);
+  }
+
+  /**
+   * Alterna el sidebar según breakpoint:
+   * - móvil (<768px): abre/cierra el drawer overlay
+   * - desktop: colapsa/expande la columna (y lo persiste)
+   */
+  toggleSidebar() {
+    if (typeof window !== 'undefined' && window.innerWidth < 768) {
+      this.toggleSidebarMobile();
+    } else {
+      this.sidebarCollapsedDesktop.update((v) => {
+        const next = !v;
+        try {
+          localStorage.setItem('bm_chat_sidebar_collapsed', next ? '1' : '0');
+        } catch {}
+        return next;
+      });
+    }
+  }
+
+  private readSidebarPreference(): boolean {
+    if (typeof window === 'undefined') return false;
+    try {
+      return localStorage.getItem('bm_chat_sidebar_collapsed') === '1';
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Alterna la grabación de voz (Web Speech API).
+   * El texto dictado se va añadiendo al `currentMessage` conforme llega.
+   */
+  toggleVoiceInput() {
+    if (!this.voiceInputSupported) return;
+    if (this.isRecording()) {
+      this.stopVoiceInput();
+    } else {
+      this.startVoiceInput();
+    }
+  }
+
+  private startVoiceInput() {
+    const SR: any =
+      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SR) return;
+
+    try {
+      const recognition = new SR();
+      recognition.lang = this.resolveSpeechLang();
+      recognition.continuous = false;
+      recognition.interimResults = true;
+      recognition.maxAlternatives = 1;
+
+      const baseText = this.currentMessage();
+      let finalChunk = '';
+
+      recognition.onresult = (event: any) => {
+        let interim = '';
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const res = event.results[i];
+          if (res.isFinal) finalChunk += res[0].transcript;
+          else interim += res[0].transcript;
+        }
+        const composed = (baseText ? baseText + ' ' : '') + finalChunk + interim;
+        this.currentMessage.set(composed.trimStart());
+        queueMicrotask(() => this.autoResizeTextarea());
+      };
+      recognition.onerror = () => this.stopVoiceInput();
+      recognition.onend = () => {
+        this.isRecording.set(false);
+        this.recognition = null;
+      };
+
+      this.recognition = recognition;
+      this.isRecording.set(true);
+      recognition.start();
+    } catch {
+      this.isRecording.set(false);
+      this.recognition = null;
+    }
+  }
+
+  private stopVoiceInput() {
+    try {
+      this.recognition?.stop();
+    } catch {}
+    this.isRecording.set(false);
+    this.recognition = null;
+  }
+
+  /** Resuelve el idioma del dictado a partir de la traducción actual. */
+  private resolveSpeechLang(): string {
+    const lang = (this.translate.currentLang || this.translate.getDefaultLang() || 'es').toLowerCase();
+    if (lang.startsWith('es')) return 'es-ES';
+    if (lang.startsWith('en')) return 'en-US';
+    return lang;
+  }
+
+  /**
+   * Vuelve a la pantalla anterior (history.back) o, como fallback,
+   * navega al home. Reemplaza al header global cuando estamos en
+   * la pantalla de chat.
+   */
+  goBack() {
+    if (typeof window !== 'undefined' && window.history.length > 1) {
+      window.history.back();
+    } else {
+      this.router.navigate(['/home']);
+    }
   }
 
   /** Rellena el input con la sugerencia y enfoca el textarea. */
