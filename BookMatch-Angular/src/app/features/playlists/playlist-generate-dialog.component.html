@@ -1,0 +1,241 @@
+<div
+  class="pl-modal-backdrop"
+  role="presentation"
+  (click)="onBackdropClick($event)"
+>
+  <div
+    class="pl-modal"
+    role="dialog"
+    aria-modal="true"
+    [attr.aria-labelledby]="'playlist-generate-title'"
+    (click)="$event.stopPropagation()"
+  >
+    <!-- Header -->
+    <div class="pl-modal-head">
+      <div>
+        <h2 id="playlist-generate-title" class="pl-modal-title">
+          {{ 'PLAYLIST_GENERATE.TITLE' | translate }}
+        </h2>
+        <p class="pl-modal-sub">
+          {{ 'PLAYLIST_GENERATE.SUBTITLE' | translate }}
+        </p>
+      </div>
+      <button
+        type="button"
+        (click)="requestClose()"
+        class="pl-modal-close press-target"
+        [attr.aria-label]="'PLAYLIST_GENERATE.CLOSE' | translate"
+      >
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </div>
+
+    <!-- Body -->
+    <form
+      [formGroup]="form"
+      (ngSubmit)="submit()"
+      class="pl-modal-body"
+      novalidate
+    >
+      <!-- Prompt -->
+      <div class="pl-field">
+        <label for="ai-prompt" class="pl-field-label is-required">
+          {{ 'PLAYLIST_GENERATE.FIELD_PROMPT' | translate }}
+        </label>
+        <textarea
+          id="ai-prompt"
+          formControlName="prompt"
+          rows="4"
+          [attr.placeholder]="'PLAYLIST_GENERATE.PROMPT_PLACEHOLDER' | translate"
+          class="pl-field-textarea"
+          [class.is-invalid]="
+            form.controls.prompt.touched && form.controls.prompt.invalid
+          "
+        ></textarea>
+        <div class="pl-field-hint-row">
+          <span>
+            @if (hasError(form.controls.prompt, 'required')) {
+              <span class="pl-field-error">
+                {{ 'PLAYLIST_GENERATE.ERROR_PROMPT_REQUIRED' | translate }}
+              </span>
+            } @else if (hasError(form.controls.prompt, 'minlength')) {
+              <span class="pl-field-error">
+                {{ 'PLAYLIST_GENERATE.ERROR_PROMPT_MIN' | translate }}
+              </span>
+            }
+          </span>
+          <span class="pl-field-counter">{{ promptCount() }} / 2000</span>
+        </div>
+      </div>
+
+      <!-- Tamaño + idioma -->
+      <div class="generate-row-2">
+        <div class="pl-field">
+          <label for="ai-size" class="pl-field-label">
+            {{ 'PLAYLIST_GENERATE.FIELD_SIZE' | translate }}
+          </label>
+          <input
+            id="ai-size"
+            type="number"
+            formControlName="size"
+            min="3"
+            max="25"
+            class="pl-field-input"
+          />
+          <span class="pl-field-hint">
+            {{ 'PLAYLIST_GENERATE.FIELD_SIZE_HINT' | translate }}
+          </span>
+        </div>
+
+        <div class="pl-field">
+          <label for="ai-language" class="pl-field-label">
+            {{ 'PLAYLIST_GENERATE.FIELD_LANGUAGE' | translate }}
+          </label>
+          <select
+            id="ai-language"
+            formControlName="language"
+            class="pl-field-select"
+          >
+            <option value="es">{{ 'PLAYLIST_GENERATE.LANG_ES' | translate }}</option>
+            <option value="en">{{ 'PLAYLIST_GENERATE.LANG_EN' | translate }}</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Mood -->
+      <div class="pl-field">
+        <label for="ai-mood" class="pl-field-label">
+          {{ 'PLAYLIST_GENERATE.FIELD_MOOD' | translate }}
+        </label>
+        <input
+          id="ai-mood"
+          type="text"
+          formControlName="mood"
+          maxlength="80"
+          [attr.placeholder]="'PLAYLIST_GENERATE.MOOD_PLACEHOLDER' | translate"
+          class="pl-field-input"
+        />
+      </div>
+
+      <!-- Genres -->
+      <div class="pl-field">
+        <label for="ai-genre-input" class="pl-field-label">
+          {{ 'PLAYLIST_GENERATE.FIELD_GENRES' | translate }}
+        </label>
+        <div class="generate-genre-input">
+          <input
+            id="ai-genre-input"
+            type="text"
+            formControlName="genreInput"
+            maxlength="80"
+            [attr.placeholder]="'PLAYLIST_GENERATE.GENRE_PLACEHOLDER' | translate"
+            class="pl-field-input"
+            (keydown.enter)="$event.preventDefault(); addGenre()"
+          />
+          <button
+            type="button"
+            (click)="addGenre()"
+            [disabled]="genres().length >= 10"
+            class="btn-outline press-target"
+          >
+            {{ 'PLAYLIST_GENERATE.GENRE_ADD' | translate }}
+          </button>
+        </div>
+        @if (genres().length > 0) {
+          <div class="generate-genre-list">
+            @for (g of genres(); track g) {
+              <span class="pl-chip-tag">
+                {{ g }}
+                <button
+                  type="button"
+                  (click)="removeGenre(g)"
+                  class="pl-chip-tag-close press-target"
+                  [attr.aria-label]="'PLAYLIST_GENERATE.GENRE_REMOVE' | translate"
+                >
+                  <span class="material-symbols-outlined">close</span>
+                </button>
+              </span>
+            }
+          </div>
+        }
+        <span class="pl-field-hint">
+          {{ 'PLAYLIST_GENERATE.FIELD_GENRES_HINT' | translate: { max: 10 } }}
+        </span>
+      </div>
+
+      <!-- Visibility -->
+      <fieldset class="generate-fieldset">
+        <legend class="pl-field-label">
+          {{ 'PLAYLIST_GENERATE.FIELD_VISIBILITY' | translate }}
+        </legend>
+        <div class="generate-radio-group">
+          <label class="pl-radio-card">
+            <input type="radio" formControlName="visibility" value="PRIVATE" />
+            <span>
+              <span class="pl-radio-card-title">
+                {{ 'PLAYLIST_GENERATE.VISIBILITY_PRIVATE' | translate }}
+              </span>
+              <span class="pl-radio-card-hint">
+                {{ 'PLAYLIST_GENERATE.VISIBILITY_PRIVATE_HINT' | translate }}
+              </span>
+            </span>
+          </label>
+          <label class="pl-radio-card">
+            <input type="radio" formControlName="visibility" value="PUBLIC" />
+            <span>
+              <span class="pl-radio-card-title">
+                {{ 'PLAYLIST_GENERATE.VISIBILITY_PUBLIC' | translate }}
+              </span>
+              <span class="pl-radio-card-hint">
+                {{ 'PLAYLIST_GENERATE.VISIBILITY_PUBLIC_HINT' | translate }}
+              </span>
+            </span>
+          </label>
+        </div>
+      </fieldset>
+
+      <!-- Error banner -->
+      @if (errorKey(); as key) {
+        <div class="generate-banner is-error" role="alert">
+          <span class="material-symbols-outlined" aria-hidden="true">error</span>
+          <span>{{ key | translate: errorParams() || {} }}</span>
+        </div>
+      }
+
+      <!-- Loading banner -->
+      @if (generating()) {
+        <div class="generate-banner is-info" aria-live="polite">
+          <span
+            class="material-symbols-outlined animate-spin"
+            aria-hidden="true"
+          >progress_activity</span>
+          <span>{{ 'PLAYLIST_GENERATE.GENERATING' | translate }}</span>
+        </div>
+      }
+    </form>
+
+    <!-- Footer -->
+    <div class="pl-modal-foot">
+      <button
+        type="button"
+        (click)="requestClose()"
+        class="btn-outline press-target"
+      >
+        {{ 'PLAYLIST_GENERATE.CANCEL' | translate }}
+      </button>
+      <button
+        type="button"
+        (click)="submit()"
+        [disabled]="form.invalid || generating()"
+        class="btn-solid press-target"
+      >
+        @if (generating()) {
+          <span class="material-symbols-outlined animate-spin">progress_activity</span>
+        } @else {
+          <span class="material-symbols-outlined">auto_awesome</span>
+        }
+        {{ submitLabelKey() | translate }}
+      </button>
+    </div>
+  </div>
+</div>

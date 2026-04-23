@@ -1,0 +1,142 @@
+<app-header></app-header>
+
+<main class="new-shell">
+  <nav class="new-breadcrumb pl-fade-in" aria-label="Breadcrumb">
+    <a routerLink="/playlists" class="new-breadcrumb-link">
+      {{ 'PLAYLISTS.TITLE' | translate }}
+    </a>
+    <span class="new-breadcrumb-sep" aria-hidden="true">/</span>
+    <span class="new-breadcrumb-current">
+      {{ 'PLAYLIST_NEW.BREADCRUMB' | translate }}
+    </span>
+  </nav>
+
+  <header class="new-header pl-fade-in">
+    <h1 class="new-title">
+      {{ 'PLAYLIST_NEW.TITLE' | translate }}
+    </h1>
+    <p class="new-subtitle">
+      {{ 'PLAYLIST_NEW.SUBTITLE' | translate }}
+    </p>
+  </header>
+
+  @if (errorKey()) {
+    <div class="new-error pl-fade-in" role="alert">
+      <span class="material-symbols-outlined" aria-hidden="true">error</span>
+      <span class="flex-1">{{ errorKey()! | translate }}</span>
+    </div>
+  }
+
+  <form
+    [formGroup]="form"
+    (ngSubmit)="submit()"
+    class="new-form pl-fade-in"
+    style="animation-delay: 60ms"
+    novalidate
+  >
+    <!-- Título -->
+    <div class="pl-field">
+      <label for="playlist-title" class="pl-field-label is-required">
+        {{ 'PLAYLIST_NEW.FIELD_TITLE' | translate }}
+      </label>
+      <input
+        id="playlist-title"
+        type="text"
+        formControlName="title"
+        maxlength="80"
+        autocomplete="off"
+        class="pl-field-input"
+        [class.is-invalid]="
+          form.controls.title.invalid && form.controls.title.touched
+        "
+      />
+      <div class="pl-field-hint-row">
+        <span>
+          @if (form.controls.title.touched && form.controls.title.hasError('required')) {
+            <span class="pl-field-error">
+              {{ 'PLAYLIST_NEW.ERROR_TITLE_REQUIRED' | translate }}
+            </span>
+          } @else if (
+            form.controls.title.touched && form.controls.title.hasError('minlength')
+          ) {
+            <span class="pl-field-error">
+              {{ 'PLAYLIST_NEW.ERROR_TITLE_MIN' | translate }}
+            </span>
+          }
+        </span>
+        <span class="pl-field-counter">{{ titleCount() }} / 80</span>
+      </div>
+    </div>
+
+    <!-- Descripción -->
+    <div class="pl-field">
+      <label for="playlist-description" class="pl-field-label">
+        {{ 'PLAYLIST_NEW.FIELD_DESCRIPTION' | translate }}
+      </label>
+      <textarea
+        id="playlist-description"
+        formControlName="description"
+        maxlength="1000"
+        rows="4"
+        class="pl-field-textarea"
+      ></textarea>
+      <div class="pl-field-hint-row">
+        <span></span>
+        <span class="pl-field-counter">{{ descriptionCount() }} / 1000</span>
+      </div>
+    </div>
+
+    <!-- Visibilidad -->
+    <fieldset class="new-fieldset">
+      <legend class="pl-field-label">
+        {{ 'PLAYLIST_NEW.FIELD_VISIBILITY' | translate }}
+      </legend>
+      <div class="new-radio-group">
+        <label class="pl-radio-card">
+          <input type="radio" formControlName="visibility" value="PRIVATE" />
+          <span>
+            <span class="pl-radio-card-title">
+              {{ 'PLAYLIST_NEW.VISIBILITY_PRIVATE' | translate }}
+            </span>
+            <span class="pl-radio-card-hint">
+              {{ 'PLAYLIST_NEW.VISIBILITY_PRIVATE_HINT' | translate }}
+            </span>
+          </span>
+        </label>
+
+        <label class="pl-radio-card">
+          <input type="radio" formControlName="visibility" value="PUBLIC" />
+          <span>
+            <span class="pl-radio-card-title">
+              {{ 'PLAYLIST_NEW.VISIBILITY_PUBLIC' | translate }}
+            </span>
+            <span class="pl-radio-card-hint">
+              {{ 'PLAYLIST_NEW.VISIBILITY_PUBLIC_HINT' | translate }}
+            </span>
+          </span>
+        </label>
+      </div>
+    </fieldset>
+
+    <!-- Acciones -->
+    <div class="new-actions">
+      <a routerLink="/playlists" class="btn-outline press-target">
+        {{ 'PLAYLIST_NEW.CANCEL' | translate }}
+      </a>
+      <button
+        type="submit"
+        [disabled]="form.invalid || submitting()"
+        class="btn-solid press-target"
+        [attr.aria-busy]="submitting()"
+      >
+        @if (submitting()) {
+          <span class="material-symbols-outlined animate-spin">progress_activity</span>
+          {{ 'PLAYLIST_NEW.SUBMITTING' | translate }}
+        } @else {
+          <span class="material-symbols-outlined">check</span>
+          {{ 'PLAYLIST_NEW.SUBMIT' | translate }}
+        }
+      </button>
+    </div>
+  </form>
+</main>

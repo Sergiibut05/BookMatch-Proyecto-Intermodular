@@ -32,6 +32,11 @@ export const routes: Routes = [
         loadComponent: () => import('./features/home/home.component').then(m => m.HomeComponent)
       },
       {
+        path: 'trueque',
+        canActivate: [authGuard],
+        loadComponent: () => import('./features/trueque/trueque.component').then(m => m.TruequeComponent)
+      },
+      {
         path: 'admin/books/create',
         canActivate: [authGuard],
         loadComponent: () => import('./features/book-form/book-form').then(m => m.BookFormComponent)
@@ -123,6 +128,26 @@ export const routes: Routes = [
         path: 'ai-chat',
         canActivate: [authGuard],
         loadComponent: () => import('./features/ai-chat/ai-chat.component').then(m => m.AiChatComponent)
+      },
+      {
+        path: 'playlists',
+        canActivate: [authGuard],
+        loadComponent: () => import('./features/playlists/playlists-list.component').then(m => m.PlaylistsListComponent)
+      },
+      {
+        path: 'playlists/new',
+        canActivate: [authGuard],
+        loadComponent: () => import('./features/playlists/playlist-new.component').then(m => m.PlaylistNewComponent)
+      },
+      {
+        path: 'playlists/:id',
+        canActivate: [authGuard],
+        loadComponent: () => import('./features/playlists/playlist-detail.component').then(m => m.PlaylistDetailComponent)
+      },
+      {
+        // Vista pública de una playlist compartida. SIN authGuard.
+        path: 'public/playlists/:token',
+        loadComponent: () => import('./features/playlists/playlist-public.component').then(m => m.PlaylistPublicComponent)
       },
       {
         path: '**',

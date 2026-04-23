@@ -14,12 +14,18 @@ import paymentsRoutes from './modules/payments/payments.routes.js';
 import ordersRoutes from './modules/orders/orders.routes.js';
 import forumsRoutes from './modules/forums/forums.routes.js';
 import commentsRoutes from './modules/comments/comments.routes.js';
+import playlistsRoutes from './modules/playlists/playlists.routes.js';
 import aiChatRoutes from './routes/ai-chat.routes.js';
 import { stripeWebhookCtrl } from './modules/payments/payments.controller.js';
 
 import hpp from 'hpp';
 
 const app = express();
+
+const isTest = env.NODE_ENV === 'test';
+const isDev = env.NODE_ENV === 'development';
+/** En local el límite global (100/15min) se agota con HMR y muchas llamadas; en prod/staging se mantiene. */
+const applyRateLimit = !isTest && !isDev;
 
 // CORS debe estar antes de todo, incluso antes del webhook
 const allowedOrigins = [
@@ -78,7 +84,7 @@ app.post('/api/payments/webhook', express.raw({ type: 'application/json' }), str
 app.use(express.json({ limit: '10mb' }));
 app.use(requestLogger);
 
-if (env.NODE_ENV !== 'test') {
+if (applyRateLimit) {
   app.use(generalLimiter);
 }
 
@@ -86,7 +92,7 @@ app.get('/health', (_req, res) => res.json({ ok: true }));
 
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
-if (env.NODE_ENV !== 'test') {
+if (applyRateLimit) {
   app.use('/api/auth', authLimiter, authRoutes);
 } else {
   app.use('/api/auth', authRoutes);
@@ -98,6 +104,7 @@ app.use('/api/payments', paymentsRoutes);
 app.use('/api/orders', ordersRoutes);
 app.use('/api/forums', forumsRoutes);
 app.use('/api/comments', commentsRoutes);
+app.use('/api/playlists', playlistsRoutes);
 app.use('/api/ai-chat', aiChatRoutes);
 
 app.use(errorHandler);

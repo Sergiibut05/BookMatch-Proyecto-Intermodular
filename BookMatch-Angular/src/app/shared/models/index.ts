@@ -8,3 +8,4 @@ export * from './orders.model';
 export * from './forums.model';
 export * from './posts.model';
 export * from './comments.model';
+export * from './playlist.model';

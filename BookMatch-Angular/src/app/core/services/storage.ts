@@ -104,6 +104,35 @@ export class StorageService {
   }
 
   /**
+   * Sube una portada de playlist (ruta `playlists/` en Storage).
+   * @param photo Foto a subir (capturada por `takePhoto`).
+   * @param playlistId ID numérico de la playlist.
+   * @param oldCoverUrl URL previa (se elimina tras subir la nueva).
+   * @returns Promise con la URL pública de la imagen subida.
+   */
+  async uploadPlaylistCover(
+    photo: Photo,
+    playlistId: number,
+    oldCoverUrl?: string | null,
+  ): Promise<string> {
+    try {
+      const blob = await this.dataUrlToBlob(photo.dataUrl!);
+      const fileName = `playlists/${playlistId}_${Date.now()}.${photo.format || 'jpg'}`;
+      const storageRef = ref(this.storage, fileName);
+      await uploadBytes(storageRef, blob);
+      const downloadURL = await getDownloadURL(storageRef);
+
+      if (oldCoverUrl && this.isFirebaseStorageUrl(oldCoverUrl)) {
+        await this.deletePhoto(oldCoverUrl);
+      }
+
+      return downloadURL;
+    } catch (error) {
+      throw new Error('Error al subir la portada de la playlist');
+    }
+  }
+
+  /**
    * Sube una imagen para un post (ruta posts/ en Storage).
    * @param photo Foto a subir
    * @param userId ID del usuario
@@ -156,5 +185,18 @@ export class StorageService {
   private async dataUrlToBlob(dataUrl: string): Promise<Blob> {
     const response = await fetch(dataUrl);
     return await response.blob();
+  }
+
+  /**
+   * Comprueba si una URL apunta a nuestro bucket de Firebase Storage.
+   * Evita intentar borrar URLs externas (p.ej. las que genera la IA).
+   */
+  private isFirebaseStorageUrl(url: string): boolean {
+    try {
+      const parsed = new URL(url);
+      return parsed.hostname.endsWith('firebasestorage.googleapis.com');
+    } catch {
+      return false;
+    }
   }
 }

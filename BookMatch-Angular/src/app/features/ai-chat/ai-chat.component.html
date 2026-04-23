@@ -1,118 +1,748 @@
-<app-header></app-header>
-
-<div class="chat-page-container">
-  <!-- Sidebar con lista de conversaciones -->
-  <div class="conversations-sidebar" [class.mobile-show]="showSidebarMobile()">
-    <div class="sidebar-header">
-      <button (click)="createNewConversation()" class="new-conversation-btn">
-        + Nueva conversación
+<div
+  class="chat-shell"
+  [class.sidebar-collapsed]="sidebarCollapsedDesktop()">
+  <!-- ============================================================
+       Sidebar de conversaciones
+       ============================================================ -->
+  <aside
+    class="chat-sidebar"
+    [class.is-open]="showSidebarMobile()">
+    <!-- Branding del sidebar -->
+    <div class="flex items-center gap-2 px-4 pt-4 pb-3">
+      <div class="flex min-w-0 flex-1 items-center gap-2">
+        <span class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#E0A15E]/15 text-[#c0803f]">
+          <span class="material-symbols-outlined text-[20px]">forum</span>
+        </span>
+        <h2 class="truncate text-sm font-semibold uppercase tracking-[0.08em] text-[#8a6a52]">
+          {{ 'AI_CHAT.CONVERSATIONS' | translate }}
+        </h2>
+      </div>
+      <button
+        type="button"
+        class="press-target inline-flex h-8 w-8 items-center justify-center rounded-lg text-neutral-500 hover:bg-amber-50 md:hidden"
+        (click)="toggleSidebarMobile()"
+        [attr.aria-label]="'AI_CHAT.CLOSE_SIDEBAR' | translate">
+        <span class="material-symbols-outlined text-[20px]">close</span>
       </button>
-      <button class="mobile-close-btn" (click)="toggleSidebarMobile()">✕</button>
     </div>
-    
-    <div class="conversations-list">
-      @if (conversations().length === 0) {
-        <div class="no-conversations">
-          <p>📝 No hay conversaciones</p>
-          <p class="hint">Escribe un mensaje para comenzar</p>
-        </div>
-      }
-      @for (conv of conversations(); track conv.id) {
-        <div class="conversation-item" 
-             [class.active]="conv.id === activeConversationId()"
-             (click)="selectConversation(conv.id)">
-          <div class="conv-title">{{ conv.title }}</div>
-          <div class="conv-date">{{ conv.updatedAt | date:'short' }}</div>
-        </div>
-      }
-    </div>
-  </div>
 
-  <!-- Botón flotante para abrir sidebar en móvil -->
-  <button class="mobile-fab-sidebar" 
-          (click)="toggleSidebarMobile()" 
-          [class.hidden]="showSidebarMobile()">
-    ☰
-  </button>
-  
-  <!-- Área de chat principal -->
-  <div class="chat-area">
-    <div class="messages-container" #messagesContainer>
-      @if (messages().length === 0 && isNewEmptyConversation()) {
-        <div class="welcome-message">
-          <div class="welcome-icon">📚</div>
-          <h2>¡Hola! Soy tu asistente de libros</h2>
-          <p>¿En qué puedo ayudarte hoy?</p>
-          <div class="suggestions">
-            <button (click)="useSuggestion('Busco libros de fantasía épica')" class="suggestion-chip">
-              📖 Libros de fantasía
-            </button>
-            <button (click)="useSuggestion('Recomiéndame algo de ciencia ficción')" class="suggestion-chip">
-              🚀 Ciencia ficción
-            </button>
-            <button (click)="useSuggestion('Libros de misterio y suspense')" class="suggestion-chip">
-              🔍 Misterio
-            </button>
-          </div>
+    <!-- Botón primario: nueva conversación (único en toda la UI) -->
+    <div class="px-3 pb-2">
+      <button
+        type="button"
+        (click)="createNewConversation()"
+        class="press-target flex w-full items-center justify-center gap-2 rounded-xl bg-[#E0A15E] px-3 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-[#c88f4e]">
+        <span class="material-symbols-outlined text-[18px]">add_comment</span>
+        {{ 'AI_CHAT.NEW_CONVERSATION' | translate }}
+      </button>
+    </div>
+
+    <div class="mx-4 mb-2 h-px bg-gradient-to-r from-transparent via-[#E0A15E]/25 to-transparent" aria-hidden="true"></div>
+
+    <div class="flex-1 min-h-0 overflow-y-auto px-2 py-3">
+      @if (conversations().length === 0) {
+        <div class="chat-enter-up mt-10 flex flex-col items-center gap-1.5 px-6 text-center">
+          <span class="material-symbols-outlined text-5xl text-amber-300">forum</span>
+          <p class="mt-1 text-base font-medium text-[#6b4d39]">
+            {{ 'AI_CHAT.NO_CONVERSATIONS' | translate }}
+          </p>
+          <p class="text-sm text-[#a88464]">
+            {{ 'AI_CHAT.NO_CONVERSATIONS_HINT' | translate }}
+          </p>
         </div>
+      } @else {
+        @for (group of groupedConversations(); track group.labelKey; let gi = $index) {
+          <div class="mb-3 chat-enter-up" [style.--i]="gi">
+            <h3 class="mb-1.5 px-3 text-xs font-semibold uppercase tracking-[0.08em] text-[#a88464]">
+              {{ group.labelKey | translate }}
+            </h3>
+            <ul class="chat-stagger flex flex-col gap-0.5">
+              @for (conv of group.items; track conv.id; let ci = $index) {
+                <li [style.--i]="ci">
+                  <div
+                    class="conv-item press-target group relative flex items-center gap-2 rounded-lg px-3 py-2 cursor-pointer"
+                    [class.conv-item-active]="conv.id === activeConversationId()"
+                    (click)="selectConversation(conv.id)">
+                    @if (editingConversationId() === conv.id) {
+                      <input
+                        type="text"
+                        class="flex-1 min-w-0 rounded-md border border-[#E0A15E] bg-white px-2 py-1 text-sm font-semibold text-neutral-900 focus:outline-none focus:ring-2 focus:ring-[#E0A15E]/30"
+                        [ngModel]="titleDraft()"
+                        (ngModelChange)="titleDraft.set($event)"
+                        (click)="$event.stopPropagation()"
+                        (keydown)="onEditTitleKeydown($event, conv)"
+                        (blur)="saveEditedTitle(conv)"
+                        maxlength="80"
+                        autofocus
+                        [attr.aria-label]="'AI_CHAT.RENAME' | translate" />
+                    } @else {
+                      <div class="flex-1 min-w-0">
+                        <div class="truncate text-sm font-medium text-[#3d2b20]" [title]="conv.title">
+                          {{ conv.title }}
+                        </div>
+                      </div>
+                      <div
+                        class="conv-actions flex items-center gap-0.5"
+                        (click)="$event.stopPropagation()">
+                        <button
+                          type="button"
+                          class="press-target inline-flex h-7 w-7 items-center justify-center rounded-md text-[#a88464] hover:bg-[#E0A15E]/15 hover:text-[#45332d]"
+                          [attr.aria-label]="'AI_CHAT.RENAME' | translate"
+                          [title]="'AI_CHAT.RENAME' | translate"
+                          (click)="startEditingTitle(conv, $event)">
+                          <span class="material-symbols-outlined text-[16px]">edit</span>
+                        </button>
+                        <button
+                          type="button"
+                          class="press-target conv-delete-btn inline-flex h-7 w-7 items-center justify-center rounded-md text-[#a88464] disabled:opacity-40"
+                          [attr.aria-label]="'AI_CHAT.DELETE' | translate"
+                          [title]="'AI_CHAT.DELETE' | translate"
+                          [disabled]="archivingConversationId() === conv.id"
+                          (click)="archiveConversation(conv, $event)">
+                          @if (archivingConversationId() === conv.id) {
+                            <span class="material-symbols-outlined animate-spin text-[16px]">progress_activity</span>
+                          } @else {
+                            <span class="material-symbols-outlined text-[16px]">delete</span>
+                          }
+                        </button>
+                      </div>
+                    }
+                  </div>
+                </li>
+              }
+            </ul>
+          </div>
+        }
       }
-      
-      @for (msg of messages(); track msg.id) {
-        <div class="message" 
-             [class.user]="msg.role === 'user'" 
-             [class.assistant]="msg.role === 'assistant'">
-          
-          @if (msg.role === 'assistant') {
-            <!-- Thoughts section - abierto por defecto si está processing -->
-            @if (msg.metadata?.thoughts && msg.metadata!.thoughts!.length > 0) {
-              <details class="thoughts-section" [open]="msg.status === 'processing'">
-                <summary>💭 Razonamiento ({{ msg.metadata!.thoughts!.length }} paso{{ msg.metadata!.thoughts!.length > 1 ? 's' : '' }})</summary>
-                <ul>
-                  @for (thought of msg.metadata!.thoughts!; track $index) {
-                    <li>{{ thought }}</li>
-                  }
-                </ul>
-              </details>
+    </div>
+  </aside>
+
+  <!-- Overlay móvil cuando el sidebar está abierto -->
+  @if (showSidebarMobile()) {
+    <div
+      class="fixed inset-0 z-30 bg-black/40 md:hidden"
+      (click)="toggleSidebarMobile()"
+      aria-hidden="true"></div>
+  }
+
+  <!-- ============================================================
+       Área principal de chat
+       ============================================================ -->
+  <section class="chat-main">
+    <!-- Header propio del chat · sustituye al global · visible en todos los breakpoints.
+         Estructura en 3 columnas (grid) para que el título quede SIEMPRE
+         perfectamente centrado, sin importar cuántos botones haya a los lados. -->
+    <div class="chat-topbar">
+      <!-- COLUMNA IZQUIERDA: volver + toggle sidebar -->
+      <div class="flex items-center gap-1 justify-self-start">
+        <button
+          type="button"
+          (click)="goBack()"
+          class="press-target inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-[#6b4d39] hover:bg-[#E0A15E]/10"
+          [attr.aria-label]="'AI_CHAT.BACK' | translate"
+          [title]="'AI_CHAT.BACK' | translate">
+          <span class="material-symbols-outlined">arrow_back</span>
+        </button>
+
+        <span class="topbar-divider" aria-hidden="true"></span>
+
+        <button
+          type="button"
+          (click)="toggleSidebar()"
+          class="press-target inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-[#6b4d39] hover:bg-[#E0A15E]/10"
+          [attr.aria-label]="'AI_CHAT.TOGGLE_SIDEBAR' | translate"
+          [title]="'AI_CHAT.TOGGLE_SIDEBAR' | translate">
+          @if (showSidebarMobile() || !sidebarCollapsedDesktop()) {
+            <span class="material-symbols-outlined">left_panel_close</span>
+          } @else {
+            <span class="material-symbols-outlined">left_panel_open</span>
+          }
+        </button>
+      </div>
+
+      <!-- COLUMNA CENTRAL: título (centrado por grid, no por flex) -->
+      <h1 class="min-w-0 truncate text-center text-[15px] font-semibold text-[#45332d]">
+        @if (activeConversation(); as conv) {
+          {{ conv.title }}
+        } @else {
+          {{ 'AI_CHAT.HEADER_TITLE' | translate }}
+        }
+      </h1>
+
+      <!-- COLUMNA DERECHA: abrir panel + toggle modo playlist (solo iconos) -->
+      <div class="flex items-center gap-1 justify-self-end">
+        @if (playlistMode() && currentPlaylistDraft()) {
+          <button
+            type="button"
+            (click)="togglePlaylistPanel()"
+            class="press-target playlist-count-btn"
+            [attr.aria-label]="'AI_CHAT.OPEN_PLAYLIST_PANEL' | translate"
+            [title]="'AI_CHAT.OPEN_PLAYLIST_PANEL' | translate">
+            <span class="material-symbols-outlined">collections_bookmark</span>
+            <span class="playlist-count-badge">{{ currentPlaylistDraft()!.items.length }}</span>
+          </button>
+        }
+
+        <!-- Toggle modo playlist:
+             · Icono siempre visible (móvil y desktop).
+             · Etiqueta "Playlist" desde md:+ para hacer la función descubrible
+               sin ensuciar la UI en móvil.
+             · Punto pulsante (is-new) la primera vez que el usuario ve el chat,
+               hasta que pulsa el botón o descarta el hint → `playlistHintVisible`. -->
+        <button
+          type="button"
+          (click)="togglePlaylistMode()"
+          class="press-target playlist-mode-btn"
+          [class.is-active]="playlistMode()"
+          [class.is-new]="playlistHintVisible() && !playlistMode()"
+          [attr.aria-pressed]="playlistMode()"
+          [attr.aria-label]="'AI_CHAT.PLAYLIST_MODE_TOGGLE' | translate"
+          [title]="(playlistMode() ? 'AI_CHAT.PLAYLIST_MODE_ON' : 'AI_CHAT.PLAYLIST_MODE_OFF') | translate">
+          <span class="material-symbols-outlined">collections_bookmark</span>
+          <span class="hidden md:inline text-[13px] font-medium">
+            {{ (playlistMode() ? 'AI_CHAT.PLAYLIST_MODE_LABEL_ON' : 'AI_CHAT.PLAYLIST_MODE_LABEL_OFF') | translate }}
+          </span>
+        </button>
+      </div>
+    </div>
+    <div
+      #messagesContainer
+      class="flex-1 min-h-0 overflow-y-auto px-4 py-6 sm:px-6 lg:px-10">
+      <div class="mx-auto flex w-full max-w-3xl flex-col gap-6">
+
+        <!-- Empty state -->
+        @if (messages().length === 0 && isNewEmptyConversation()) {
+          <div class="chat-enter-up mt-6 flex flex-col items-center px-2 text-center sm:mt-10">
+            <div class="mb-5 flex h-20 w-20 items-center justify-center rounded-2xl bg-[#E0A15E] shadow-md ring-1 ring-amber-200">
+              <span class="material-symbols-outlined text-[44px] text-white">auto_stories</span>
+            </div>
+            <h2 class="text-3xl font-bold leading-tight text-[#45332d] sm:text-4xl">
+              {{ 'AI_CHAT.WELCOME_TITLE' | translate }}
+            </h2>
+            <p class="mt-3 max-w-xl text-base leading-relaxed text-[#6b4d39] sm:text-lg">
+              {{ 'AI_CHAT.WELCOME_SUBTITLE' | translate }}
+            </p>
+
+            @if (playlistHintVisible() && !playlistMode()) {
+              <!-- On-boarding hint sobre el modo playlist. Se muestra una vez
+                   por usuario (persistido en localStorage) para que pueda
+                   descubrir qué hace el botón del toolbar. -->
+              <div class="playlist-hint" role="note">
+                <span class="playlist-hint-icon" aria-hidden="true">
+                  <span class="material-symbols-outlined">collections_bookmark</span>
+                </span>
+                <p class="playlist-hint-text">
+                  {{ 'AI_CHAT.PLAYLIST_MODE_HINT' | translate }}
+                </p>
+                <button
+                  type="button"
+                  class="playlist-hint-close press-target"
+                  (click)="dismissPlaylistHint()"
+                  [attr.aria-label]="'AI_CHAT.PLAYLIST_MODE_HINT_CLOSE' | translate"
+                  [title]="'AI_CHAT.PLAYLIST_MODE_HINT_CLOSE' | translate">
+                  <span class="material-symbols-outlined">close</span>
+                </button>
+              </div>
             }
-            
-            <!-- Contenido del mensaje -->
-            @if (msg.status === 'processing') {
-              <div class="processing-container">
-                <div class="processing-spinner">
-                  <div class="spinner"></div>
-                </div>
-                <div class="processing-text">
-                  <span class="main-text">Procesando tu solicitud</span>
-                  <span class="sub-text">Analizando y buscando la mejor información...</span>
+
+            <div class="chat-stagger mt-8 grid w-full grid-cols-1 gap-3 sm:grid-cols-3">
+              <!-- Cada chip usa flex-col + justify-between para que el bloque
+                   superior (icono + label) y el inferior (descripción) queden
+                   anclados a top/bottom. Así, si la descripción ocupa 2 líneas
+                   en una tarjeta y 1 en otra, los iconos y títulos siguen
+                   alineados horizontalmente entre tarjetas. -->
+              <button
+                type="button"
+                [style.--i]="0"
+                (click)="useSuggestionKey('AI_CHAT.SUGGESTION_FANTASY')"
+                class="suggestion-chip press-target flex flex-col">
+                <span class="suggestion-chip-head">
+                  <span class="suggestion-icon" aria-hidden="true">
+                    <span class="material-symbols-outlined">castle</span>
+                  </span>
+                  <span class="block text-base font-semibold leading-snug text-[#45332d]">
+                    {{ 'AI_CHAT.SUGGESTION_FANTASY_LABEL' | translate }}
+                  </span>
+                </span>
+                <span class="mt-2 block text-sm leading-snug text-[#8a6a52]">
+                  {{ 'AI_CHAT.SUGGESTION_FANTASY' | translate }}
+                </span>
+              </button>
+              <button
+                type="button"
+                [style.--i]="1"
+                (click)="useSuggestionKey('AI_CHAT.SUGGESTION_SCIFI')"
+                class="suggestion-chip press-target flex flex-col">
+                <span class="suggestion-chip-head">
+                  <span class="suggestion-icon" aria-hidden="true">
+                    <span class="material-symbols-outlined">rocket_launch</span>
+                  </span>
+                  <span class="block text-base font-semibold leading-snug text-[#45332d]">
+                    {{ 'AI_CHAT.SUGGESTION_SCIFI_LABEL' | translate }}
+                  </span>
+                </span>
+                <span class="mt-2 block text-sm leading-snug text-[#8a6a52]">
+                  {{ 'AI_CHAT.SUGGESTION_SCIFI' | translate }}
+                </span>
+              </button>
+              <button
+                type="button"
+                [style.--i]="2"
+                (click)="useSuggestionKey('AI_CHAT.SUGGESTION_MYSTERY')"
+                class="suggestion-chip press-target flex flex-col">
+                <span class="suggestion-chip-head">
+                  <span class="suggestion-icon" aria-hidden="true">
+                    <span class="material-symbols-outlined">search_insights</span>
+                  </span>
+                  <span class="block text-base font-semibold leading-snug text-[#45332d]">
+                    {{ 'AI_CHAT.SUGGESTION_MYSTERY_LABEL' | translate }}
+                  </span>
+                </span>
+                <span class="mt-2 block text-sm leading-snug text-[#8a6a52]">
+                  {{ 'AI_CHAT.SUGGESTION_MYSTERY' | translate }}
+                </span>
+              </button>
             </div>
           </div>
-            } @else {
-              <div class="message-content" [innerHTML]="renderMarkdown(msg.content)"></div>
-            }
+        }
+
+        <!-- Mensajes -->
+        @for (msg of messages(); track msg.id) {
+          @if (msg.role === 'user') {
+            <!-- Usuario -->
+            <div class="chat-enter-up flex items-end gap-2 self-end max-w-[85%] sm:max-w-[75%]">
+              <div class="rounded-3xl rounded-br-md bg-[#E0A15E] px-4 py-2.5 text-white shadow-sm">
+                <p class="whitespace-pre-wrap text-sm leading-relaxed">{{ msg.content }}</p>
+              </div>
+              <div class="hidden shrink-0 sm:block">
+                @if (currentUser?.avatarUrl) {
+                  <img
+                    [src]="currentUser!.avatarUrl!"
+                    alt=""
+                    class="h-8 w-8 rounded-full object-cover ring-2 ring-white" />
+                } @else {
+                  <div class="flex h-8 w-8 items-center justify-center rounded-full bg-[#45332d] text-xs font-semibold text-white ring-2 ring-white">
+                    {{ (currentUser?.fullName || 'U').charAt(0).toUpperCase() }}
+                  </div>
+                }
+              </div>
+            </div>
           } @else {
-            <!-- Mensaje del usuario -->
-            <div class="message-content">{{ msg.content }}</div>
+            <!-- Asistente -->
+            <div class="chat-enter-up flex items-start gap-3 max-w-[92%] sm:max-w-[85%]">
+              <div class="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#E0A15E] text-white shadow-sm ring-1 ring-amber-200">
+                <span class="material-symbols-outlined text-[18px]">auto_stories</span>
+              </div>
+              <div class="flex min-w-0 flex-1 flex-col gap-2">
+
+                <!-- Thoughts -->
+                @if (msg.metadata?.thoughts && msg.metadata!.thoughts!.length > 0) {
+                  <details class="group rounded-xl bg-amber-50/80 px-3 py-2 text-xs text-neutral-600" [open]="msg.status === 'processing'">
+                    <summary class="flex cursor-pointer select-none items-center gap-1.5 font-medium text-neutral-500 list-none">
+                      <span class="material-symbols-outlined text-[16px] transition-transform duration-150 group-open:rotate-90">chevron_right</span>
+                      <span>💭 {{ 'AI_CHAT.THOUGHTS' | translate: { count: msg.metadata!.thoughts!.length } }}</span>
+                    </summary>
+                    <ul class="mt-2 space-y-1 pl-6 list-disc marker:text-amber-400">
+                      @for (thought of msg.metadata!.thoughts!; track $index) {
+                        <li>{{ thought }}</li>
+                      }
+                    </ul>
+                  </details>
+                }
+
+                <!-- Burbuja -->
+                @if (msg.status === 'processing') {
+                  <div class="inline-flex items-center gap-3 rounded-3xl rounded-bl-md bg-white px-4 py-3 shadow-sm ring-1 ring-amber-100">
+                    <span class="typing-dots" aria-hidden="true">
+                      <span></span><span></span><span></span>
+                    </span>
+                    <span class="text-sm text-neutral-500">{{ 'AI_CHAT.THINKING' | translate }}</span>
+                  </div>
+                } @else {
+                  <div class="rounded-3xl rounded-bl-md bg-white px-5 py-4 shadow-sm ring-1 ring-amber-100">
+                    <div class="message-markdown" [innerHTML]="renderMarkdown(msg.content)"></div>
+                  </div>
+
+                  <!-- Cards de libros recomendados.
+                       Por defecto solo se ven las del último mensaje con
+                       recomendaciones (lastRecommendationMessageId). En los
+                       anteriores, el usuario puede expandirlas con un botón
+                       compacto para evitar que el chat se llene de cards. -->
+                  @if (hasRecommendations(msg)) {
+                    @if (isRecommendationsVisible(msg)) {
+                      <div class="mt-1 space-y-3">
+                        <div class="flex flex-wrap items-center justify-between gap-2 px-1">
+                          <h4 class="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-neutral-500">
+                            <span class="material-symbols-outlined text-[16px] text-[#E0A15E]">recommend</span>
+                            {{ 'AI_CHAT.RECOMMENDATIONS' | translate: { count: recommendationIds(msg).length } }}
+                          </h4>
+                          <div class="flex items-center gap-2">
+                            @if (msg.id !== lastRecommendationMessageId()) {
+                              <button
+                                type="button"
+                                class="press-target inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[11px] font-medium text-[#6b4d39] hover:bg-[#E0A15E]/10"
+                                (click)="toggleRecommendations(msg)">
+                                <span class="material-symbols-outlined text-[14px]">visibility_off</span>
+                                {{ 'AI_CHAT.HIDE_RECOMMENDATIONS' | translate }}
+                              </button>
+                            }
+                            <button
+                              type="button"
+                              class="press-target inline-flex items-center gap-1.5 rounded-lg bg-[#45332d] px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-[#2f221a] disabled:opacity-60"
+                              (click)="saveAsPlaylist(msg)"
+                              [disabled]="savingPlaylistForMessageId() === msg.id">
+                              @if (savingPlaylistForMessageId() === msg.id) {
+                                <span class="material-symbols-outlined animate-spin text-[16px]">progress_activity</span>
+                                {{ 'AI_CHAT.SAVING_PLAYLIST' | translate }}
+                              } @else {
+                                <span class="material-symbols-outlined text-[16px]">playlist_add</span>
+                                {{ 'AI_CHAT.SAVE_PLAYLIST' | translate }}
+                              }
+                            </button>
+                          </div>
+                        </div>
+
+                        <div class="chat-stagger grid grid-cols-2 gap-3 sm:grid-cols-3">
+                        @for (bookId of recommendationIds(msg); track bookId; let bi = $index) {
+                          @let book = getRecommendedBook(bookId);
+                          <a
+                            [routerLink]="['/book-details', bookId]"
+                            [style.--i]="bi"
+                            class="press-target group/book flex flex-col overflow-hidden rounded-xl bg-white ring-1 ring-amber-100 shadow-sm hover:shadow-md hover:ring-amber-200">
+                            <div class="relative aspect-[2/3] w-full overflow-hidden bg-neutral-100">
+                              @if (book?.coverUrl) {
+                                <img
+                                  [src]="book!.coverUrl!"
+                                  [alt]="book!.title"
+                                  loading="lazy"
+                                  class="h-full w-full object-cover transition-transform duration-300 group-hover/book:scale-105" />
+                              } @else {
+                                <div class="flex h-full w-full animate-pulse items-center justify-center bg-neutral-100">
+                                  <span class="material-symbols-outlined text-3xl text-neutral-300">menu_book</span>
+                                </div>
+                              }
+                            </div>
+                            <div class="flex flex-col gap-0.5 p-2.5">
+                              <h5 class="line-clamp-2 text-xs font-semibold text-[#45332d]" [title]="book?.title">
+                                {{ book?.title ?? ('AI_CHAT.LOADING' | translate) }}
+                              </h5>
+                              <p class="truncate text-[11px] text-neutral-500" [title]="book?.author">
+                                {{ book?.author ?? '' }}
+                              </p>
+                            </div>
+                          </a>
+                        }
+                        </div>
+                      </div>
+                    } @else {
+                      <!-- Colapsado: botón compacto para expandir las cards
+                           de un mensaje pasado cuando se quieran ver otra vez. -->
+                      <button
+                        type="button"
+                        class="press-target mt-1 inline-flex items-center gap-1.5 self-start rounded-full bg-[#E0A15E]/10 px-3 py-1.5 text-xs font-medium text-[#6b4d39] hover:bg-[#E0A15E]/20"
+                        (click)="toggleRecommendations(msg)">
+                        <span class="material-symbols-outlined text-[16px]">unfold_more</span>
+                        {{ 'AI_CHAT.SHOW_RECOMMENDATIONS' | translate: { count: recommendationIds(msg).length } }}
+                      </button>
+                    }
+                  }
+                }
+              </div>
+            </div>
           }
-        </div>
-      }
+        }
+      </div>
     </div>
 
-    <!-- Input area - siempre pegado abajo -->
-    <div class="input-area">
-      <textarea [(ngModel)]="currentMessage" 
-          (keydown)="onEnterKey($event)"
-          placeholder="Escribe tu mensaje..."
-                [disabled]="isLoading()"
-                rows="1"></textarea>
-      <button (click)="sendMessage()" 
-              [disabled]="!currentMessage() || isLoading()"
-              class="send-btn">
-        @if (isLoading()) {
-          <span class="btn-spinner"></span>
-        } @else {
-          <span>Enviar</span>
-        }
+    <!-- Toast playlist guardada -->
+    @if (savedPlaylistToast(); as toast) {
+      <div
+        class="chat-enter-up pointer-events-auto fixed bottom-24 left-1/2 z-30 flex w-[min(92vw,420px)] -translate-x-1/2 items-center gap-3 rounded-2xl bg-white/95 px-4 py-3 shadow-xl ring-1 ring-amber-100 backdrop-blur sm:bottom-32"
+        role="status"
+        aria-live="polite">
+        <span class="material-symbols-outlined text-[#E0A15E]">playlist_add_check</span>
+        <div class="min-w-0 flex-1">
+          <p class="truncate text-sm font-semibold text-[#45332d]">
+            {{ 'AI_CHAT.PLAYLIST_SAVED' | translate }}
+          </p>
+          <p class="truncate text-xs text-neutral-500">&quot;{{ toast.title }}&quot;</p>
+        </div>
+        <a
+          [routerLink]="['/playlists', toast.id]"
+          class="press-target shrink-0 rounded-lg bg-[#E0A15E] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#c88f4e]">
+          {{ 'AI_CHAT.VIEW_PLAYLIST' | translate }}
+        </a>
+        <button
+          type="button"
+          class="press-target shrink-0 rounded-md p-1 text-neutral-400 hover:bg-neutral-100"
+          (click)="dismissSavedPlaylistToast()"
+          [attr.aria-label]="'AI_CHAT.CLOSE' | translate">
+          <span class="material-symbols-outlined text-[18px]">close</span>
         </button>
+      </div>
+    }
+
+    <!-- Input sticky -->
+    <div class="shrink-0 border-t border-amber-100/70 bg-white/90 px-3 py-2.5 backdrop-blur sm:px-6 sm:py-3">
+      <div class="mx-auto w-full max-w-3xl">
+        <!-- Caja unificada: textarea + mic + send, sin "cajas" separadas -->
+        <div
+          class="chat-input-box"
+          [class.is-focused]="null"
+          [class.is-recording]="isRecording()">
+          <textarea
+            #messageInput
+            [(ngModel)]="currentMessage"
+            (keydown)="onEnterKey($event)"
+            (input)="autoResizeTextarea()"
+            [placeholder]="'AI_CHAT.INPUT_PLACEHOLDER' | translate"
+            [disabled]="isLoading()"
+            rows="1"
+            class="chat-input-textarea"></textarea>
+
+          <div class="chat-input-actions">
+            <!-- Botón micrófono (solo si el navegador lo soporta) -->
+            @if (voiceInputSupported) {
+              <button
+                type="button"
+                (click)="toggleVoiceInput()"
+                [disabled]="isLoading()"
+                class="press-target mic-btn"
+                [class.is-recording]="isRecording()"
+                [attr.aria-label]="(isRecording() ? 'AI_CHAT.VOICE_INPUT_STOP' : 'AI_CHAT.VOICE_INPUT_START') | translate"
+                [title]="(isRecording() ? 'AI_CHAT.VOICE_INPUT_STOP' : 'AI_CHAT.VOICE_INPUT_START') | translate">
+                @if (isRecording()) {
+                  <span class="material-symbols-outlined">stop</span>
+                  <span class="mic-pulse" aria-hidden="true"></span>
+                } @else {
+                  <span class="material-symbols-outlined">mic</span>
+                }
+              </button>
+            }
+
+            <!-- Enviar -->
+            <button
+              type="button"
+              (click)="sendMessage()"
+              [disabled]="!currentMessage() || isLoading()"
+              class="press-target send-btn"
+              [attr.aria-label]="'AI_CHAT.SEND' | translate">
+              @if (isLoading()) {
+                <span class="material-symbols-outlined animate-spin">progress_activity</span>
+              } @else {
+                <span class="material-symbols-outlined">send</span>
+              }
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="mx-auto mt-1.5 flex max-w-3xl items-center justify-center gap-2 text-[10px] text-neutral-400">
+        <span class="hidden sm:inline">{{ 'AI_CHAT.INPUT_HINT_KEYS' | translate }}</span>
+        <span class="hidden sm:inline" aria-hidden="true">·</span>
+        <span>{{ 'AI_CHAT.INPUT_HINT' | translate }}</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       Panel lateral del borrador de playlist (modo playlist_builder)
+       - Desktop: drawer derecho sticky de ~400px.
+       - Móvil: bottom-sheet full width desde abajo.
+       - Solo se renderiza cuando está abierto y hay un borrador.
+       ============================================================ -->
+  @if (playlistPanelOpen() && currentPlaylistDraft(); as hasOpen) {
+    <!-- Backdrop (solo móvil) -->
+    <button
+      type="button"
+      class="playlist-panel-backdrop md:hidden"
+      (click)="togglePlaylistPanel()"
+      [attr.aria-label]="'AI_CHAT.CLOSE_PLAYLIST_PANEL' | translate"></button>
+  }
+
+  <aside
+    class="playlist-panel"
+    [class.is-open]="playlistPanelOpen() && !!currentPlaylistDraft()"
+    [attr.aria-hidden]="!playlistPanelOpen() || !currentPlaylistDraft()">
+    @if (currentPlaylistDraft(); as draft) {
+      <!-- Sheet handle (solo móvil): botón accesible que además acepta gesto
+           drag-to-dismiss. Ver onPanelSheet* en el componente. -->
+      <button
+        type="button"
+        class="playlist-panel-sheet-handle md:hidden"
+        (touchstart)="onPanelSheetTouchStart($event)"
+        (touchmove)="onPanelSheetTouchMove($event)"
+        (touchend)="onPanelSheetTouchEnd($event)"
+        (touchcancel)="onPanelSheetTouchEnd($event)"
+        (click)="togglePlaylistPanel()"
+        [attr.aria-label]="'AI_CHAT.CLOSE_PLAYLIST_PANEL' | translate">
+        <span class="playlist-panel-sheet-handle-bar" aria-hidden="true"></span>
+      </button>
+
+      <!-- Header del panel -->
+      <div class="playlist-panel-head">
+        <div class="flex min-w-0 flex-1 items-center gap-2">
+          <span class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#E0A15E]/15 text-[#c0803f]">
+            <span class="material-symbols-outlined text-[20px]">collections_bookmark</span>
+          </span>
+          <div class="min-w-0 flex-1">
+            <p class="truncate text-[11px] font-semibold uppercase tracking-[0.08em] text-[#a88464]">
+              {{ 'AI_CHAT.PLAYLIST_DRAFT' | translate }}
+            </p>
+            <h2 class="truncate text-base font-semibold text-[#45332d]">
+              {{ draft.title }}
+            </h2>
+          </div>
+        </div>
+        <button
+          type="button"
+          class="press-target inline-flex h-8 w-8 items-center justify-center rounded-lg text-[#6b4d39] hover:bg-[#E0A15E]/10"
+          (click)="togglePlaylistPanel()"
+          [attr.aria-label]="'AI_CHAT.CLOSE_PLAYLIST_PANEL' | translate">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+
+      @if (draft.description) {
+        <p class="px-5 pb-3 text-sm text-[#7a5d48]">{{ draft.description }}</p>
+      }
+
+      <!-- Lista drag-drop del borrador -->
+      <ol
+        cdkDropList
+        (cdkDropListDropped)="onDraftReorder($event)"
+        class="playlist-panel-list">
+        @for (item of draft.items; track item.catalogBookId; let idx = $index) {
+          <li
+            cdkDrag
+            [cdkDragData]="item"
+            class="playlist-draft-item">
+            <!-- Handle de drag -->
+            <span class="playlist-drag-handle" cdkDragHandle aria-hidden="true">
+              <span class="material-symbols-outlined">drag_indicator</span>
+            </span>
+
+            <!-- Posición -->
+            <span class="playlist-item-position">{{ idx + 1 }}</span>
+
+            <!-- Portada + info del libro -->
+            @if (getRecommendedBook(item.catalogBookId); as book) {
+              <img
+                [src]="book.coverUrl || 'assets/images/placeholder-book.svg'"
+                [alt]="book.title"
+                loading="lazy"
+                class="playlist-item-cover" />
+              <div class="min-w-0 flex-1">
+                <p class="truncate text-sm font-semibold text-[#2f241b]">{{ book.title }}</p>
+                <p class="truncate text-xs text-[#8a6a52]">{{ book.author }}</p>
+                @if (item.note) {
+                  <p class="mt-1 line-clamp-2 text-[11px] italic text-[#a88464]">
+                    {{ item.note }}
+                  </p>
+                }
+              </div>
+            } @else {
+              <div class="h-14 w-10 shrink-0 rounded bg-[#f6eede]" aria-hidden="true"></div>
+              <div class="min-w-0 flex-1">
+                <p class="h-3 w-24 rounded bg-[#f6eede]" aria-hidden="true"></p>
+                <p class="mt-1.5 h-2 w-16 rounded bg-[#f6eede]" aria-hidden="true"></p>
+              </div>
+            }
+
+            <!-- Eliminar -->
+            <button
+              type="button"
+              class="press-target conv-delete-btn inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-[#a88464]"
+              (click)="removeDraftItem(item.catalogBookId)"
+              [attr.aria-label]="'AI_CHAT.REMOVE_FROM_DRAFT' | translate"
+              [title]="'AI_CHAT.REMOVE_FROM_DRAFT' | translate">
+              <span class="material-symbols-outlined text-[18px]">close</span>
+            </button>
+          </li>
+        } @empty {
+          <li class="px-5 py-6 text-center text-sm text-[#8a6a52]">
+            {{ 'AI_CHAT.PLAYLIST_EMPTY' | translate }}
+          </li>
+        }
+      </ol>
+
+      <!-- Footer sticky: count + guardar -->
+      <div class="playlist-panel-foot">
+        <div class="flex items-center gap-1.5 text-xs text-[#8a6a52]">
+          <span class="material-symbols-outlined text-[16px]">menu_book</span>
+          {{ draft.items.length }}
+          @if (draft.items.length === 1) {
+            {{ 'AI_CHAT.PLAYLIST_COUNT_SINGULAR' | translate }}
+          } @else {
+            {{ 'AI_CHAT.PLAYLIST_COUNT_PLURAL' | translate }}
+          }
+        </div>
+        <button
+          type="button"
+          class="press-target playlist-save-btn"
+          [disabled]="draft.items.length === 0 || savingFinalPlaylist()"
+          (click)="saveDraftAsPlaylist()">
+          @if (savingFinalPlaylist()) {
+            <span class="material-symbols-outlined animate-spin text-[18px]">progress_activity</span>
+            {{ 'AI_CHAT.PLAYLIST_SAVING' | translate }}
+          } @else {
+            <span class="material-symbols-outlined text-[18px]">save</span>
+            {{ 'AI_CHAT.PLAYLIST_SAVE' | translate }}
+          }
+        </button>
+      </div>
+    }
+  </aside>
+</div>
+
+<!-- Modal de confirmación para eliminar conversación.
+     Reemplaza al antiguo `window.confirm()` por un diálogo custom que
+     respeta el theme de la app, cierra con ESC / click fuera y está
+     preparado para ser accesible (role=dialog + aria-modal). -->
+@if (conversationToDelete(); as convToDelete) {
+  <div
+    class="confirm-modal-overlay"
+    role="presentation"
+    (click)="cancelDeleteConversation()"
+    (keydown.escape)="cancelDeleteConversation()"
+    tabindex="-1">
+    <div
+      class="confirm-modal"
+      role="alertdialog"
+      aria-modal="true"
+      aria-labelledby="delete-conv-title"
+      aria-describedby="delete-conv-body"
+      (click)="$event.stopPropagation()">
+      <div class="confirm-modal-icon" aria-hidden="true">
+        <span class="material-symbols-outlined">delete_outline</span>
+      </div>
+      <h2 id="delete-conv-title" class="confirm-modal-title">
+        {{ 'AI_CHAT.DELETE_TITLE' | translate }}
+      </h2>
+      <p id="delete-conv-body" class="confirm-modal-body">
+        {{ 'AI_CHAT.DELETE_BODY' | translate: { title: convToDelete.title } }}
+      </p>
+      <div class="confirm-modal-actions">
+        <button
+          type="button"
+          class="confirm-modal-btn is-cancel press-target"
+          [disabled]="!!archivingConversationId()"
+          (click)="cancelDeleteConversation()">
+          {{ 'AI_CHAT.DELETE_CANCEL' | translate }}
+        </button>
+        <button
+          type="button"
+          class="confirm-modal-btn is-danger press-target"
+          [disabled]="!!archivingConversationId()"
+          (click)="confirmDeleteConversation()">
+          @if (archivingConversationId()) {
+            <span class="material-symbols-outlined animate-spin text-[18px]">progress_activity</span>
+          } @else {
+            <span class="material-symbols-outlined text-[18px]">delete</span>
+          }
+          {{ 'AI_CHAT.DELETE_CONFIRM_BTN' | translate }}
+        </button>
+      </div>
     </div>
   </div>
-</div>
+}

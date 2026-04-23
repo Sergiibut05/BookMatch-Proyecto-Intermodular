@@ -1,0 +1,993 @@
+{
+  "name": "Update Firestore Message",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "prueba",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -256,
+        128
+      ],
+      "id": "b3c2eb5b-e580-43dd-a57b-2095997779a0",
+      "name": "Webhook",
+      "webhookId": "56a4585e-31a0-4e1f-ac4c-9811700a97eb",
+      "retryOnFail": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"success\": true,\n  \"message\": \"Procesando tu mensaje...\"\n}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        0,
+        0
+      ],
+      "id": "39ef7327-4cf7-4d29-a6b4-aa43cfaa847a",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// ============================================================\n// Detectar Intención\n// ------------------------------------------------------------\n// Valida payload, sanea firebase_uid, calcula intent y guarda\n// `startTime` para medir el tiempo total end-to-end.\n//\n// Si el payload trae `mode === 'playlist_builder'`, forzamos el\n// intent a book_recommendation (la IA co-cura la playlist con más\n// libros y campos extra). También normalizamos `maxItems`.\n// ============================================================\n\nconst payload = $json.body;\nif (!payload) {\n  throw new Error('Request body is missing');\n}\n\nconst { userId, conversationId, messageId, userMessage, baseUrl, mode: rawMode, maxItems: rawMaxItems, currentDraft: rawCurrentDraft, draftBooks: rawDraftBooks } = payload;\n\nif (!userId || typeof userId !== 'string') {\n  throw new Error('userId is missing or not a string');\n}\nif (!conversationId || typeof conversationId !== 'string') {\n  throw new Error('conversationId is missing or not a string');\n}\nif (!messageId || typeof messageId !== 'string') {\n  throw new Error('messageId is missing or not a string');\n}\nif (!userMessage || typeof userMessage !== 'string') {\n  throw new Error('userMessage is missing or not a string');\n}\n\n// Firebase UIDs son alfanuméricos (~28 chars). Rechazamos cualquier cosa\n// fuera de patrón para evitar SQL injection al interpolarlos en el prompt.\nif (!/^[A-Za-z0-9]{20,64}$/.test(userId)) {\n  throw new Error(`userId does not match expected firebase_uid pattern: ${userId}`);\n}\n\n// Normaliza texto (minúsculas + sin diacríticos) para matching robusto.\nconst normalized = userMessage\n  .toLowerCase()\n  .normalize('NFD')\n  .replace(/\\p{Diacritic}/gu, '');\n\nconst bookKeywords = [\n  // ES\n  'libro', 'libros', 'recomienda', 'recomendacion', 'recomendaciones',\n  'recomendar', 'leer', 'lectura', 'lecturas', 'autor', 'autora',\n  'novela', 'novelas', 'cuento', 'cuentos', 'ficcion', 'no ficcion',\n  'fantasia', 'romance', 'misterio', 'thriller', 'suspense', 'terror',\n  'ciencia ficcion', 'manga', 'comic', 'clasico', 'clasicos',\n  'biografia', 'ensayo', 'poesia', 'saga', 'bestseller', 'bestsellers',\n  'genero', 'generos', 'sugiere', 'sugerencia', 'biblioteca', 'libreria',\n  // EN\n  'book', 'books', 'recommend', 'recommendation', 'recommendations',\n  'suggest', 'reading', 'read', 'author', 'novel', 'fantasy', 'mystery',\n  'sci-fi', 'sci fi', 'science fiction', 'romance novel', 'biography'\n];\n\nconst casualKeywords = [\n  // ES\n  'hola', 'hey', 'buenos dias', 'buenas tardes', 'buenas noches',\n  'que tal', 'como estas', 'como va', 'gracias', 'adios', 'hasta luego',\n  'saludos', 'genial', 'perfecto',\n  // EN\n  'hi', 'hello', 'good morning', 'good afternoon', 'good evening',\n  'how are you', 'thanks', 'thank you', 'bye', 'goodbye'\n];\n\nconst bookMatches = bookKeywords.filter((k) => normalized.includes(k)).length;\nconst casualMatches = casualKeywords.filter((k) => normalized.includes(k)).length;\n\nlet intentType = 'out_of_scope';\nlet intentConfidence = 0;\n\nif (bookMatches > 0 && bookMatches >= casualMatches) {\n  intentType = 'book_recommendation';\n  intentConfidence = Math.min(1, bookMatches / 4);\n} else if (casualMatches > 0) {\n  intentType = 'casual_chat';\n  intentConfidence = 0.8;\n} else if (normalized.length <= 12 && /[?¿!¡]/.test(userMessage)) {\n  // Mensajes muy cortos con signo de pregunta/exclamación → probablemente casual.\n  intentType = 'casual_chat';\n  intentConfidence = 0.5;\n}\n\n// Modo: 'chat' (default) | 'playlist_builder' (co-curación de playlist).\n// En modo playlist_builder forzamos el intent a book_recommendation y\n// ajustamos maxItems (3-20, default 8).\nconst mode = rawMode === 'playlist_builder' ? 'playlist_builder' : 'chat';\nlet maxItems = null;\nif (mode === 'playlist_builder') {\n  const n = Number(rawMaxItems);\n  maxItems = Number.isFinite(n) ? Math.max(3, Math.min(20, Math.trunc(n))) : 8;\n  intentType = 'book_recommendation';\n  intentConfidence = 1;\n}\n\n// Borrador actual (viene del frontend cuando el usuario ya ha empezado a\n// iterar sobre una playlist). Lo saneamos levemente para protegernos de\n// inputs rotos: items con catalogBookId numérico, nota acotada a 200 chars.\nlet currentDraft = null;\nif (mode === 'playlist_builder' && rawCurrentDraft && typeof rawCurrentDraft === 'object' && Array.isArray(rawCurrentDraft.items)) {\n  const cleanItems = [];\n  const seenDraft = new Set();\n  for (const it of rawCurrentDraft.items) {\n    if (cleanItems.length >= 20) break;\n    const id = Number(it?.catalogBookId);\n    if (!Number.isFinite(id) || id <= 0 || seenDraft.has(id)) continue;\n    seenDraft.add(id);\n    const note = typeof it?.note === 'string' ? it.note.slice(0, 200) : null;\n    cleanItems.push({ catalogBookId: id, position: cleanItems.length + 1, note });\n  }\n  if (cleanItems.length > 0) {\n    currentDraft = {\n      title: typeof rawCurrentDraft.title === 'string' ? rawCurrentDraft.title.slice(0, 120) : null,\n      description: typeof rawCurrentDraft.description === 'string' ? rawCurrentDraft.description.slice(0, 500) : null,\n      items: cleanItems\n    };\n  }\n}\n\n// Libros del borrador pre-hidratados desde el backend (id, title, author,\n// description, coverUrl). Se fusionan luego con listaLibros para que el\n// LLM pueda elegirlos sin tenerlos en el SQL.\nlet draftBooks = [];\nif (mode === 'playlist_builder' && Array.isArray(rawDraftBooks)) {\n  const seenDb = new Set();\n  for (const b of rawDraftBooks) {\n    const id = Number(b?.id);\n    if (!Number.isFinite(id) || id <= 0 || seenDb.has(id)) continue;\n    seenDb.add(id);\n    draftBooks.push({\n      id,\n      title: typeof b?.title === 'string' ? b.title : '',\n      author: typeof b?.author === 'string' ? b.author : '',\n      description: typeof b?.description === 'string' ? b.description : null,\n      coverUrl: typeof b?.coverUrl === 'string' ? b.coverUrl : null\n    });\n  }\n}\n\nreturn {\n  userId,\n  conversationId,\n  messageId,\n  userMessage,\n  baseUrl: baseUrl || 'http://localhost:4200',\n  intentType,\n  intentConfidence: Number(intentConfidence.toFixed(2)),\n  mode,\n  maxItems,\n  currentDraft,\n  draftBooks,\n  startTime: Date.now()\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        224,
+        128
+      ],
+      "id": "a7158b62-abe1-4a90-a4ce-0896bc1cca82",
+      "name": "Detectar Intención"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.intentType }}",
+                    "rightValue": "book_recommendation",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "f21ff217-d911-487e-ac69-3ab7793e511f"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Book Recommendation"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "e935d1eb-56b5-4ee4-9ff9-36cab7c1c59d",
+                    "leftValue": "={{ $json.intentType }}",
+                    "rightValue": "casual_chat",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Casual Chat"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra",
+          "ignoreCase": false,
+          "allMatchingOutputs": false
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        448,
+        208
+      ],
+      "id": "36078a90-d484-4c2e-8b59-8f7f631ae3c9",
+      "name": "Switch Intención"
+    },
+    {
+      "parameters": {
+        "url": "=https://firestore.googleapis.com/v1/projects/bookmatch-522d5/databases/(default)/documents/users/{{ $json.userId }}/conversations/{{ $json.conversationId }}/messages",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "pageSize",
+              "value": "10"
+            },
+            {
+              "name": "orderBy",
+              "value": "timestamp desc"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        640,
+        48
+      ],
+      "id": "1f4a3508-aeea-41d3-9789-5cc0d7f05368",
+      "name": "Cargar Contexto",
+      "credentials": {
+        "googleApi": {
+          "id": "6A1fVpwq2hUGNQh4",
+          "name": "Google Service Account account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// ============================================================\n// Normalizar Contexto\n// ------------------------------------------------------------\n// Convierte la respuesta de Firestore en un array plano\n// {role, content} y lo fusiona con los datos de Detectar Intención.\n// ============================================================\n\nconst firestoreData = $input.item.json;\nconst intent = $('Detectar Intención').item.json;\n\nif (!intent?.userId) {\n  throw new Error(`Missing intent data. Keys: ${Object.keys(intent || {}).join(', ')}`);\n}\n\nconst rawDocs = firestoreData.documents || [];\nconst conversationContext = rawDocs\n  .reverse()\n  .map((doc) => ({\n    role: doc?.fields?.role?.stringValue ?? null,\n    content: doc?.fields?.content?.stringValue ?? ''\n  }))\n  .filter((msg) => msg.role === 'user' || msg.role === 'assistant');\n\nreturn {\n  ...intent,\n  conversationContext\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        848,
+        48
+      ],
+      "id": "cffa1008-cd64-432a-af81-26798e97a2b1",
+      "name": "Normalizar Contexto"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// ============================================================\n// Construir Prompt SQL\n// ------------------------------------------------------------\n// Genera el prompt del LLM que producirá el SELECT para buscar\n// libros candidatos. No interpolamos el userId en texto libre:\n// usamos un placeholder marcador que después validamos.\n// ============================================================\n\nconst data = $input.item.json;\n\nconst prompt = `INSTRUCCIÓN CRÍTICA: Responde ÚNICAMENTE con JSON puro. Sin markdown.\nEres un generador de consultas SQL para PostgreSQL.\n\nFORMATO DE RESPUESTA OBLIGATORIO:\n{\n  \"thoughts\": [\"paso 1\", \"paso 2\", \"paso 3\"],\n  \"sqlQuery\": \"SELECT ... FROM ... WHERE ...\"\n}\n\nREGLAS SQL OBLIGATORIAS:\n1. SOLO queries SELECT (nunca INSERT, UPDATE, DELETE, DDL ni multiples sentencias).\n2. Usa JOINs explícitos.\n3. GESTIÓN DE ID DE USUARIO:\n   - Input: 'firebase_uid' (TEXTO). Tablas: 'user_id' (INTEGER).\n   - OBLIGATORIO: Haz JOIN con tabla 'users' (users.firebase_uid = '${data.userId}') y usa 'users.id' para los filtros.\n4. SIEMPRE excluir libros ya interactuados por el usuario.\n5. SELECT OBLIGATORIO: Debes incluir siempre 'id', 'title', 'author', 'description' Y 'cover_url'.\n6. Limita resultados a máximo 10 libros (LIMIT 10). El guardrail lo añadirá si falta, pero es mejor que ya venga.\n7. EXCLUSIÓN DE PEDIDOS (CRÍTICO):\n   - La tabla 'order_items' NO TIENE 'user_id'.\n   - Ruta: order_items -> orders -> users.\n   - EJEMPLO: ... WHERE id NOT IN (SELECT catalog_book_id FROM order_items JOIN orders ON order_items.order_id = orders.id JOIN users ON orders.user_id = users.id WHERE users.firebase_uid = '${data.userId}')\n\nCATEGORÍAS PERMITIDAS (categories.name):\n- Fantasía, Fantasía épica, Fantasía urbana, Mitología y folklore, Fantasía oscura\n- Ciencia Ficción, Distopía, Espacio y exploración, Ciberpunk, Inteligencia artificial / robots\n- Romance, Romance contemporáneo, Romance histórico, Romance juvenil, Romance fantástico\n- Misterio / Thriller, Policíaco, Thriller psicológico, Suspense y terror suave, True crime / Investigación real\n- No Ficción, Biografías y memorias, Historia y sociedad, Ciencia y divulgación, Política y actualidad\n- Autoayuda / Crecimiento personal, Motivación y bienestar, Psicología práctica, Espiritualidad y mindfulness, Finanzas personales / Éxito\n- Juvenil, Aventura juvenil, Coming of age, Fantasía juvenil\n- Clásicos, Literatura universal, Literatura española, Literatura europea, Literatura americana\n- Cómic / Manga, Superhéroes, Manga shōnen, Seinen / Josei, Cómic europeo\n- Novedades\n\nESQUEMA DE BASE DE DATOS:\nusers (id, firebase_uid)\ncatalog_books (id, title, author, description, cover_url)\ncategories (id, name)\ncatalog_book_categories (catalog_book_id, category_id)\nreviews (user_id, catalog_book_id)\norders (id, user_id)\norder_items (catalog_book_id, order_id)\n\nMENSAJE DEL USUARIO:\n\"${data.userMessage}\"\n\n⚡ Responde SOLO con el JSON.`;\n\nconst safePrompt = JSON.stringify(prompt).slice(1, -1);\n\nreturn {\n  ...data,\n  promptContent: safePrompt\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1056,
+        48
+      ],
+      "id": "928462de-a655-42da-b307-109a270a37e8",
+      "name": "Construir Prompt SQL"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ \n{\n  \"model\": \"llama-3.3-70b-versatile\",\n  \"temperature\": 0.1,\n  \"max_tokens\": 800,\n  \"response_format\": { \"type\": \"json_object\" },\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"You are an SQL generator. Respond ONLY with JSON: {\\\"thoughts\\\": [], \\\"sqlQuery\\\": \\\"\\\"}\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": $json.promptContent\n    }\n  ]\n}\n}}",
+        "options": {}
+      },
+      "id": "145247ae-061b-4ebf-add7-7133bf4157b2",
+      "name": "Groq: Generar SQL",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1248,
+        48
+      ],
+      "retryOnFail": true,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "pgFnL6hTT3nNvglm",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// ============================================================\n// Parsear SQL (Groq)\n// ------------------------------------------------------------\n// Extrae {sqlQuery, thoughts} de la respuesta JSON del LLM y\n// propaga el contexto completo (incluyendo startTime).\n// ============================================================\n\nconst promptCtx = $('Construir Prompt SQL').item.json;\nconst groqResponse = $input.item.json;\n\nconst contentString = groqResponse?.choices?.[0]?.message?.content;\nif (!contentString) {\n  throw new Error('Groq response did not contain choices[0].message.content');\n}\n\nlet parsedContent;\ntry {\n  parsedContent = JSON.parse(contentString);\n} catch (error) {\n  throw new Error(`Error parsing Groq response JSON: ${error.message}. Content: ${contentString}`);\n}\n\nconst sqlQuery = (parsedContent.sqlQuery || '').trim();\nconst thoughts = Array.isArray(parsedContent.thoughts) ? parsedContent.thoughts : [];\n\nif (!sqlQuery) {\n  throw new Error(`No SQL query found. Parsed: ${JSON.stringify(parsedContent)}`);\n}\n\nreturn {\n  ...promptCtx,\n  sqlQuery,\n  thoughts\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1472,
+        48
+      ],
+      "id": "e7d4ce04-b56f-482c-9175-8b75463162b1",
+      "name": "Parsear SQL (Groq)"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// ============================================================\n// Validar SQL (guardrails)\n// ------------------------------------------------------------\n// Guardrails de seguridad y corrección sobre el SQL generado\n// por el LLM antes de ejecutarlo contra Postgres:\n//   - Debe empezar por SELECT.\n//   - Prohíbe DDL/DML, multisentencia y comentarios peligrosos.\n//   - Fuerza LIMIT máximo 10.\n//\n// Nota: `executeQuery` de n8n devuelve las filas del último\n// statement, por lo que mantenemos UNA única sentencia SELECT.\n// El statement_timeout debe configurarse a nivel de credencial\n// de Postgres (DB role con timeout por defecto).\n// ============================================================\n\nconst data = $input.item.json;\nlet query = (data.sqlQuery || '').trim();\n\nif (!query) {\n  throw new Error('sqlQuery vacío tras parseo');\n}\n\n// 1. Normalizar: quitar punto y coma final + comentarios de línea.\nquery = query.replace(/;\\s*$/g, '').replace(/--.*$/gm, '').trim();\n\n// 2. Solo debe haber una sentencia.\nif (query.includes(';')) {\n  throw new Error(`SQL rechazado: múltiples sentencias detectadas.`);\n}\n\n// 3. Debe empezar por SELECT.\nif (!/^\\s*select\\b/i.test(query)) {\n  throw new Error(`SQL rechazado: no empieza por SELECT. Query: ${query.slice(0, 120)}`);\n}\n\n// 4. Lista de bloqueo de keywords destructivas.\nconst forbidden = [\n  'insert', 'update', 'delete', 'drop', 'alter', 'truncate',\n  'create', 'grant', 'revoke', 'merge', 'replace', 'copy',\n  'call', 'execute', 'vacuum', 'analyze', 'pg_read_file',\n  'pg_write_file', 'pg_sleep'\n];\nconst lowered = query.toLowerCase();\nfor (const bad of forbidden) {\n  // \\b garantiza palabra completa (evita falsos positivos tipo \"updated_at\").\n  const re = new RegExp(`\\\\b${bad}\\\\b`);\n  if (re.test(lowered)) {\n    throw new Error(`SQL rechazado: contiene keyword prohibido \"${bad}\".`);\n  }\n}\n\n// 5. Forzar LIMIT máximo 10.\nif (!/\\blimit\\s+\\d+/i.test(query)) {\n  query = `${query}\\nLIMIT 10`;\n} else {\n  query = query.replace(/\\blimit\\s+(\\d+)/i, (_, n) => `LIMIT ${Math.min(Number(n) || 10, 10)}`);\n}\n\nreturn {\n  ...data,\n  sqlQuery: query,\n  sqlQueryRaw: query\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1600,
+        48
+      ],
+      "id": "f1c9b3e2-1a2b-4c3d-9e4f-a1b2c3d4e5f6",
+      "name": "Validar SQL (guardrails)"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "={{ $json.sqlQuery }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1792,
+        48
+      ],
+      "id": "481d1e4d-8b77-4d1f-8264-5a635ef13871",
+      "name": "Ejecutar SQL (Postgres)",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 1500,
+      "alwaysOutputData": true,
+      "continueOnFail": true,
+      "credentials": {
+        "postgres": {
+          "id": "zeU51y9XScYtwY9X",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// ============================================================\n// Normalizar Libros\n// ------------------------------------------------------------\n// Recoge los items devueltos por Postgres, los mapea al shape\n// que consume el prompt de respuesta y conserva IDs numéricos\n// únicos (se usan luego para validar las recommendations del LLM).\n//\n// Robustez: Postgres viene con retryOnFail + alwaysOutputData +\n// continueOnFail, por lo que puede llegar:\n//   - Sin filas (error o simplemente 0 resultados) → items vacíos o\n//     con { error, ... }.\n//   - Con filas válidas.\n// Marcamos `needsFallback: true` si no hay libros válidos para que\n// el IF posterior dispare la query de respaldo en lugar de reventar.\n// ============================================================\n\nconst sqlResults = $input.all();\nconst previousData = $('Validar SQL (guardrails)').first().json;\n\nconst books = [];\nconst seen = new Set();\n\nfor (const row of sqlResults) {\n  const j = row?.json;\n  // Si Postgres falla (continueOnFail) devuelve items con `error` o vacíos.\n  if (!j || j.error) continue;\n  const id = Number(j.id);\n  if (!Number.isFinite(id) || id <= 0 || seen.has(id)) continue;\n  seen.add(id);\n  books.push({\n    id,\n    title: j.title,\n    author: j.author,\n    description: j.description,\n    coverUrl: j.cover_url || j.cover_image || null\n  });\n}\n\n// En modo playlist con borrador vivo, fusionamos los libros del borrador\n// (pre-hidratados por el backend) con los del SQL para que el LLM pueda\n// mantenerlos. Sin esto, el LLM descarta los del borrador y devuelve\n// una playlist mini solo con lo nuevo que busca el SQL.\nconst draftBooks = Array.isArray(previousData.draftBooks) ? previousData.draftBooks : [];\nfor (const db of draftBooks) {\n  const id = Number(db?.id);\n  if (!Number.isFinite(id) || id <= 0 || seen.has(id)) continue;\n  seen.add(id);\n  books.push({\n    id,\n    title: db.title || '',\n    author: db.author || '',\n    description: db.description || null,\n    coverUrl: db.coverUrl || null\n  });\n}\n\nreturn [{\n  json: {\n    userId: previousData.userId,\n    conversationId: previousData.conversationId,\n    messageId: previousData.messageId,\n    userMessage: previousData.userMessage,\n    baseUrl: previousData.baseUrl,\n    intentType: previousData.intentType,\n    intentConfidence: previousData.intentConfidence,\n    mode: previousData.mode || 'chat',\n    maxItems: previousData.maxItems || null,\n    currentDraft: previousData.currentDraft || null,\n    draftBooks,\n    conversationContext: previousData.conversationContext || [],\n    sqlQuery: previousData.sqlQueryRaw,\n    sqlThoughts: previousData.thoughts,\n    listaLibros: books,\n    candidateIds: Array.from(seen),\n    needsFallback: books.length === 0,\n    startTime: previousData.startTime\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1984,
+        48
+      ],
+      "id": "28f55751-c23e-4aef-8c35-5cd9ae949850",
+      "name": "Normalizar Libros"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "a1b2c3d4-5678-90ab-cdef-1234567890ab",
+              "leftValue": "={{ ($json.listaLibros || []).length }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2128,
+        48
+      ],
+      "id": "c9f1e2d3-b4a5-46c7-8910-1112131415aa",
+      "name": "¿Hay libros?"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "=SELECT cb.id, cb.title, cb.author, cb.description, cb.cover_url\nFROM catalog_books cb\nWHERE cb.id NOT IN (\n  SELECT oi.catalog_book_id\n  FROM order_items oi\n  JOIN orders o ON oi.order_id = o.id\n  JOIN users u ON o.user_id = u.id\n  WHERE u.firebase_uid = '{{ $json.userId }}'\n)\nORDER BY RANDOM()\nLIMIT 10",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        2128,
+        240
+      ],
+      "id": "b7a3c2d1-e5f6-4788-91a0-b2c3d4e5f6a7",
+      "name": "SQL Fallback",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 1500,
+      "alwaysOutputData": true,
+      "continueOnFail": true,
+      "credentials": {
+        "postgres": {
+          "id": "zeU51y9XScYtwY9X",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// ============================================================\n// Normalizar Libros Fallback\n// ------------------------------------------------------------\n// Se dispara cuando el SQL inicial (del LLM) no devolvió nada o\n// falló tras sus 3 reintentos automáticos. Ejecutamos antes una\n// query genérica `SQL Fallback` (aleatoria sobre catalog_books no\n// comprados por el usuario) con su propio retry automático.\n//\n// Aquí reusamos el contexto ya preparado en `Normalizar Libros`\n// (userId, conversationId, conversationContext, mode, etc.) y solo\n// reemplazamos `listaLibros` / `candidateIds` con las filas del\n// fallback. Si el fallback también devolvió vacío, `listaLibros`\n// queda [] pero el flujo continúa: el LLM responderá una disculpa\n// cordial en vez de romper la ejecución.\n// ============================================================\n\nconst sqlResults = $input.all();\nconst previousData = $('Normalizar Libros').first().json;\n\nconst books = [];\nconst seen = new Set();\n\nfor (const row of sqlResults) {\n  const j = row?.json;\n  if (!j || j.error) continue;\n  const id = Number(j.id);\n  if (!Number.isFinite(id) || id <= 0 || seen.has(id)) continue;\n  seen.add(id);\n  books.push({\n    id,\n    title: j.title,\n    author: j.author,\n    description: j.description,\n    coverUrl: j.cover_url || j.cover_image || null\n  });\n}\n\n// Fusiona también los libros del borrador (si los hay). Ver comentario\n// largo en \"Normalizar Libros\": necesarios para que el LLM los mantenga.\nconst draftBooks = Array.isArray(previousData.draftBooks) ? previousData.draftBooks : [];\nfor (const db of draftBooks) {\n  const id = Number(db?.id);\n  if (!Number.isFinite(id) || id <= 0 || seen.has(id)) continue;\n  seen.add(id);\n  books.push({\n    id,\n    title: db.title || '',\n    author: db.author || '',\n    description: db.description || null,\n    coverUrl: db.coverUrl || null\n  });\n}\n\nreturn [{\n  json: {\n    ...previousData,\n    listaLibros: books,\n    candidateIds: Array.from(seen),\n    needsFallback: false,\n    usedFallback: true,\n    sqlThoughts: [\n      ...(previousData.sqlThoughts || []),\n      `Fallback aplicado: el SQL original no devolvió resultados. Usada query genérica (${books.length} libros).`\n    ]\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2336,
+        240
+      ],
+      "id": "d8e9f0a1-b2c3-4d45-9678-9a0b1c2d3e4f",
+      "name": "Normalizar Libros Fallback"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// ============================================================\n// Construir Prompt Respuesta\n// ------------------------------------------------------------\n// Compone el prompt que genera la respuesta Markdown al usuario y\n// pide al LLM que marque explícitamente los `bookIds` (se validan\n// contra `candidateIds` en el post-proceso).\n//\n// DISEÑO (H2.3): el frontend ya renderiza tarjetas con portada,\n// título y autor de cada libro recomendado a partir de\n// `metadata.recommendations`. El LLM NO debe incluir imágenes ni\n// enlaces \"Ver ficha\". Solo texto limpio.\n//\n// RETENCIÓN DEL BORRADOR (modo playlist_builder):\n// Si el frontend envió `currentDraft` (el usuario ya ha estado\n// iterando sobre una playlist), la IA DEBE partir de ese borrador\n// y aplicar los cambios pedidos por el usuario (añadir, quitar,\n// sustituir, reordenar). Los libros del borrador llegan a\n// `listaLibros` gracias a `draftBooks`.\n//\n// Primera interacción: además pedimos `suggestedTitle` para no\n// dejar la conversación como \"Nueva conversación\".\n// ============================================================\n\nconst data = $input.item.json;\n\n// ¿Primera interacción? (solo hay 1 mensaje del usuario en el contexto).\nconst previousUserMessages = (data.conversationContext || []).filter((m) => m.role === 'user').length;\nconst isFirstInteraction = previousUserMessages <= 1;\n\nconst isPlaylistBuilder = data.mode === 'playlist_builder';\nconst defaultSize = isPlaylistBuilder ? (Number(data.maxItems) || 8) : 5;\n\n// ¿Tenemos un borrador vivo desde el frontend? → iteramos sobre él.\nconst hasCurrentDraft = !!(\n  isPlaylistBuilder\n  && data.currentDraft\n  && Array.isArray(data.currentDraft.items)\n  && data.currentDraft.items.length > 0\n);\nconst currentDraftSize = hasCurrentDraft ? data.currentDraft.items.length : 0;\n\n// ============================================================\n// Prompt de sistema\n// ============================================================\nconst systemPromptChat = `Eres un asistente experto en recomendación de libros, amigable y cálido.\n\nRESPONDE EN FORMATO JSON EXACTO (sin texto extra, sin \\`\\`\\`):\n{\n  \"thoughts\": [\"análisis del mensaje\", \"criterios de selección\", \"razonamiento breve\"],\n  \"response\": \"Tu respuesta final en Markdown limpio\",\n  \"bookIds\": [12, 45, 78]${isFirstInteraction ? ',\\n  \"suggestedTitle\": \"Título muy corto (3-6 palabras) que resuma de qué va esta conversación\"' : ''}\n}\n\nREGLAS DE \"bookIds\":\n- Solo enteros tomados de la lista \"LIBROS DISPONIBLES\".\n- Máximo ${defaultSize} recomendaciones. Puedes devolver menos si no hay suficientes coincidencias.\n- No inventes IDs ni libros.\n\nREGLAS DE \"response\" (¡MUY IMPORTANTES!):\n- Texto en español, tono natural y cercano.\n- Markdown estricto. NADA de HTML.\n- NO incluyas imágenes. NO enlaces \"Ver ficha\". NO tablas, NO bloques de código.\n- Longitud objetivo: 80-160 palabras.\n\nFORMATO RECOMENDADO DEL CAMPO \"response\":\n1. Una o dos frases de saludo y puente, empatizando con lo que pide el usuario.\n2. Una lista numerada con los libros recomendados. Formato por línea:\n   \"1. **{Título}** — *{Autor}*: una frase breve (máx. 20 palabras) explicando por qué encaja.\"\n3. (Opcional) Frase de cierre invitando a refinar.\n${isFirstInteraction ? '\\nREGLAS DE \"suggestedTitle\":\\n- 3-6 palabras, SIN comillas, SIN puntuación final.\\n- Debe reflejar la temática concreta que pide el usuario.\\n- Evita títulos genéricos como \"Recomendaciones\", \"Libros\", \"Nueva conversación\".\\n' : ''}\nIDIOMA: Responde SIEMPRE en el idioma del último mensaje del usuario (español por defecto).`;\n\n// Variante para MODO PLAYLIST: la IA actúa de co-curadora. Devuelve un\n// `playlistDraft` estructurado que el frontend renderiza en panel.\nconst systemPromptPlaylist = `Eres una co-curadora experta de playlists de libros en BookMatch.\n\nMODO: PLAYLIST_BUILDER. Tú y el usuario estáis montando UNA playlist a través de conversación.\nCada turno devuelves el borrador COMPLETO y actualizado (no solo los cambios).\n\n${hasCurrentDraft ? `⚠️ EL USUARIO YA TIENE UN BORRADOR EN MARCHA (${currentDraftSize} libros).\nLo ves abajo en \"BORRADOR ACTUAL\". Tu trabajo es INTERPRETAR el último mensaje del usuario\ny aplicar los cambios que pida, devolviendo el borrador actualizado completo.\n\nGUÍA DE INTERPRETACIÓN (obligatoria):\n\n1. AÑADIR libros (\"añade 3 más\", \"agrega 2 de X\", \"dame 4 nuevos\"):\n   - MANTÉN los ${currentDraftSize} libros actuales tal cual (mismos IDs, mismo orden, mismas notas).\n   - AÑADE exactamente N libros nuevos AL FINAL, elegidos de LIBROS DISPONIBLES (descartando los que ya están).\n   - Tamaño final = ${currentDraftSize} + N.\n   - Si LIBROS DISPONIBLES no tiene suficientes nuevos, añade todos los que puedas y avisa en \"response\".\n\n2. QUITAR libros (\"quita el 3º\", \"elimina X\", \"fuera el último\", \"no me gusta Y\"):\n   - DEVUELVE los mismos items EXCEPTO el/los indicado/s.\n   - Tamaño final = ${currentDraftSize} - N.\n\n3. SUSTITUIR (\"cambia el 2º por otro más oscuro\", \"reemplaza X por algo similar\"):\n   - MANTÉN todos los demás items intactos.\n   - Sustituye solo el indicado por uno nuevo de LIBROS DISPONIBLES.\n   - Tamaño final = ${currentDraftSize} (igual).\n\n4. REORDENAR (\"pon primero X\", \"ordena por fecha\", \"mueve Y al final\"):\n   - MANTÉN los mismos libros.\n   - Solo cambia el orden.\n   - Tamaño final = ${currentDraftSize}.\n\n5. TONO/REVISIÓN (\"qué te parece?\", \"opinión\", sin pedir cambios):\n   - DEVUELVE el borrador TAL CUAL (sin tocar nada).\n   - Da tu opinión en \"response\".\n   - Tamaño final = ${currentDraftSize}.\n\n6. EMPEZAR DE CERO (\"cambia toda la playlist\", \"empieza de nuevo\", \"otro tema\"):\n   - Crea una playlist nueva de ~${defaultSize} libros desde LIBROS DISPONIBLES.\n\nREGLAS INVIOLABLES:\n- NO hagas playlists mini de 2-3 libros cuando la actual tenía ${currentDraftSize}, salvo que el usuario pida quitar tantos.\n- NO inventes IDs: solo usa IDs de LIBROS DISPONIBLES (que INCLUYE los del borrador actual y los nuevos del SQL).\n- Si el usuario pide añadir pero LIBROS DISPONIBLES no trae candidatos nuevos relevantes, devuelve el borrador igual y explícalo en \"response\".\n\n` : ''}RESPONDE EN FORMATO JSON EXACTO (sin \\`\\`\\`, sin texto extra):\n{\n  \"thoughts\": [\"interpretación del mensaje\", \"acción a aplicar\", \"cambios respecto al borrador\"],\n  \"response\": \"Respuesta conversacional en Markdown breve (60-120 palabras). Explica qué cambios has hecho y pregunta si quiere ajustar algo más.\",\n  \"bookIds\": [12, 45, 78, ...],\n  \"playlistDraft\": {\n    \"title\": \"Título de la playlist (3-6 palabras)\",\n    \"description\": \"Descripción de 1-2 frases sobre la vibra\",\n    \"items\": [\n      { \"catalogBookId\": 12, \"note\": \"Frase corta (máx 20 palabras) sobre por qué encaja\" }\n    ]\n  }${isFirstInteraction ? ',\\n  \"suggestedTitle\": \"Título corto (3-6 palabras) para esta conversación\"' : ''}\n}\n\nREGLAS GENERALES DE \"bookIds\" y \"playlistDraft.items\":\n- Solo IDs de LIBROS DISPONIBLES.\n- El ORDEN del array es el orden final (primero = posición 1).\n- No repitas libros.\n- \"note\" = 1 frase breve (≤ 20 palabras) sobre el papel del libro en la playlist.\n\nREGLAS DE \"response\":\n- Markdown limpio, sin listar los libros (el panel los muestra).\n- Si has añadido/quitado/sustituido: MENCIONA QUÉ has hecho (\"he añadido 3 policiales...\", \"fuera el 3º como pediste...\").\n- Termina invitando a iterar (\"¿cambiamos algo más?\").\n- NO imágenes, NO enlaces, NO tablas.\n\nREGLAS DE \"playlistDraft.title\":\n- 3-6 palabras, evocador, sin comillas ni puntuación final.${hasCurrentDraft ? `\\n- Si el BORRADOR ACTUAL ya tiene título, MANTENLO salvo que el usuario pida renombrarlo o el tono cambie drásticamente.` : ''}\n\n${isFirstInteraction ? 'REGLAS DE \"suggestedTitle\":\\n- Mismo estilo que playlistDraft.title pero para la CONVERSACIÓN.\\n\\n' : ''}IDIOMA: Responde SIEMPRE en el idioma del último mensaje del usuario (español por defecto).`;\n\nconst systemPrompt = isPlaylistBuilder ? systemPromptPlaylist : systemPromptChat;\n\n// Sección BORRADOR ACTUAL: solo aparece si el usuario ya tenía uno.\nconst draftSection = hasCurrentDraft\n  ? `\n\nBORRADOR ACTUAL (aplica los cambios que pida el usuario sobre esto):\n${JSON.stringify({\n  title: data.currentDraft.title || null,\n  description: data.currentDraft.description || null,\n  items: data.currentDraft.items.map((it) => {\n    const book = (data.listaLibros || []).find((b) => Number(b.id) === Number(it.catalogBookId));\n    return {\n      position: it.position,\n      catalogBookId: it.catalogBookId,\n      title: book?.title || null,\n      author: book?.author || null,\n      note: it.note || null\n    };\n  })\n}, null, 2)}`\n  : '';\n\n// Marcamos en la lista cuáles son nuevos y cuáles vienen del borrador,\n// para que al LLM le sea fácil \"añadir nuevos\" sin duplicar los del borrador.\nconst currentIds = hasCurrentDraft ? new Set(data.currentDraft.items.map((it) => Number(it.catalogBookId))) : new Set();\nconst availableBooks = (data.listaLibros || []).map((b) => ({\n  id: b.id,\n  title: b.title,\n  author: b.author,\n  description: b.description,\n  _source: currentIds.has(Number(b.id)) ? 'current_draft' : 'new_from_sql'\n}));\n\nconst userPrompt = `CONTEXTO DE LA CONVERSACIÓN (últimos mensajes):\n${JSON.stringify(data.conversationContext || [])}\n\nMENSAJE DEL USUARIO:\n${data.userMessage}${draftSection}\n\nLIBROS DISPONIBLES (elige solo de aquí; _source indica si ya estaba en el borrador o es nuevo del SQL):\n${JSON.stringify(availableBooks)}\n\nANÁLISIS PREVIO (del paso SQL):\n${JSON.stringify(data.sqlThoughts || [])}\n\n${isPlaylistBuilder\n  ? (hasCurrentDraft\n      ? `OBJETIVO: Interpreta el mensaje del usuario según la GUÍA DE INTERPRETACIÓN del system prompt y aplica los cambios al BORRADOR ACTUAL. Si pide AÑADIR, no tires los actuales; si pide QUITAR, solo saca los indicados; etc.`\n      : `OBJETIVO: Construye una playlist de ~${defaultSize} libros y devuelve el borrador en \"playlistDraft\".`)\n  : 'GENERA AHORA EL JSON.'}`;\n\nreturn {\n  ...data,\n  isFirstInteraction,\n  isPlaylistBuilder,\n  maxItems: defaultSize,\n  hasCurrentDraft,\n  responsePrompt: JSON.stringify({\n    model: 'llama-3.3-70b-versatile',\n    // Un poco más alta para que añadir/cambiar no quede castrado por la instrucción\n    // \"mantén el borrador\" cuando el usuario pide cambios reales.\n    temperature: hasCurrentDraft ? 0.55 : 0.7,\n    max_tokens: isPlaylistBuilder ? 2000 : 1200,\n    response_format: { type: 'json_object' },\n    messages: [\n      { role: 'system', content: systemPrompt },\n      { role: 'user', content: userPrompt }\n    ]\n  })\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2192,
+        48
+      ],
+      "id": "03ac0db7-9187-4ac2-b609-68d2ac544dbf",
+      "name": "Construir Prompt Respuesta"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.parse($json.responsePrompt) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        2400,
+        48
+      ],
+      "id": "61fd8cfc-97c3-4aa1-8254-d8bcaaf3bb55",
+      "name": "Groq: Respuesta con Libros",
+      "retryOnFail": true,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "pgFnL6hTT3nNvglm",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// ============================================================\n// Procesar Respuesta IA\n// ------------------------------------------------------------\n// - Parsea el JSON del LLM (thoughts, response, bookIds).\n// - Normaliza recommendations a enteros positivos únicos.\n// - Filtra contra `candidateIds` (los IDs REALES devueltos por\n//   el SQL + los del borrador actual) para descartar alucinaciones.\n// - POST-PROCESO DETERMINISTA (modo playlist + currentDraft):\n//     · Detecta intención \"añadir N libros\" en el mensaje.\n//     · Si el LLM no añadió o rompió el borrador, lo reconstruye\n//       desde el currentDraft y añade los primeros N libros del\n//       SQL que no estén ya dentro.\n//     · Hace el mismo backstop si el LLM devolvió un borrador\n//       más pequeño sin que el usuario lo pidiera.\n// - Fallback general: si nada funciona, 5 primeros del SQL.\n// - Mide processingTime end-to-end (desde el webhook).\n// ============================================================\n\nconst previous = $('Construir Prompt Respuesta').item.json;\nconst groqResponse = $input.item.json;\nconst raw = groqResponse?.choices?.[0]?.message?.content?.trim() ?? '';\n\nlet parsed;\ntry {\n  parsed = JSON.parse(raw);\n} catch (error) {\n  console.error('Error parsing response JSON:', error);\n  parsed = { thoughts: ['Error al generar thoughts estructurados'], response: raw, bookIds: [] };\n}\n\nconst candidateIds = new Set((previous.candidateIds || []).map((id) => Number(id)));\nconst isPlaylistBuilder = previous.isPlaylistBuilder === true;\nconst hasCurrentDraft = previous.hasCurrentDraft === true;\nconst maxItems = Number(previous.maxItems) || (isPlaylistBuilder ? 8 : 5);\n\n// Normaliza bookIds del LLM a enteros positivos únicos y los intersecta con candidateIds.\nconst seen = new Set();\nconst validated = [];\nfor (const value of parsed.bookIds || []) {\n  const id = typeof value === 'number' ? value : Number(value);\n  if (!Number.isFinite(id) || id <= 0) continue;\n  if (!candidateIds.has(id)) continue;\n  if (seen.has(id)) continue;\n  seen.add(id);\n  validated.push(id);\n}\n\n// Fallback: si el LLM no devolvió nada usable, tomamos los primeros del SQL.\nlet recommendations = validated;\nif (recommendations.length === 0 && previous.listaLibros?.length) {\n  recommendations = previous.listaLibros.slice(0, maxItems).map((b) => Number(b.id));\n}\n\n// En modo playlist, recortamos a maxItems para que la playlist no se desborde.\nif (isPlaylistBuilder && recommendations.length > maxItems) {\n  recommendations = recommendations.slice(0, maxItems);\n}\n\n// ============================================================\n// Detección determinista de INTENCIÓN sobre el borrador.\n// ------------------------------------------------------------\n// Queremos garantizar que cuando el usuario dice \"añade 3 libros\",\n// el borrador devuelto SIEMPRE crezca en al menos 3, aunque el LLM\n// se haya mostrado conservador o haya devuelto una playlist mini.\n// ============================================================\nfunction detectAddIntent(msg) {\n  if (typeof msg !== 'string' || !msg.trim()) return { isAdd: false, count: 0 };\n  const lower = msg.toLowerCase();\n  // Palabras clave de añadir (sin pronombres personales para no falsear \"me faltan\").\n  const addRe = /(a[ñn]ad|agreg|suma[r]?|mete[r]?|met[ae]|incluye|inserta|pon.*?(m[aá]s|otro|nuevo)|dame.*?(m[aá]s|otro|nuevo)|faltan|quiero.*?(m[aá]s|otro|nuevo)|completa|amplia|ampl[íi]a)/i;\n  if (!addRe.test(lower)) return { isAdd: false, count: 0 };\n\n  // Extrae la primera cifra del mensaje como N pedido.\n  const numMatch = lower.match(/\\b(\\d{1,2})\\b/);\n  let n = numMatch ? parseInt(numMatch[1], 10) : 2;\n  // Palabras comunes sin número explícito.\n  if (!numMatch) {\n    if (/\\b(un|uno|una)\\b/.test(lower)) n = 1;\n    else if (/\\b(par|dos)\\b/.test(lower)) n = 2;\n    else if (/\\btres\\b/.test(lower)) n = 3;\n    else if (/\\b(cuatro|unos cuantos)\\b/.test(lower)) n = 4;\n    else if (/\\b(cinco|varios|algunos|bastantes)\\b/.test(lower)) n = 5;\n    else n = 2;\n  }\n  // Clamp razonable.\n  if (n < 1) n = 1;\n  if (n > 8) n = 8;\n  return { isAdd: true, count: n };\n}\n\n// --- Borrador de playlist (solo si el LLM lo pidió en modo playlist_builder) ---\nlet playlistDraft = null;\nif (isPlaylistBuilder) {\n  const rawDraft = parsed.playlistDraft || {};\n  const items = [];\n  const seenDraft = new Set();\n  const rawItems = Array.isArray(rawDraft.items) ? rawDraft.items : [];\n  for (const rawItem of rawItems) {\n    const id = typeof rawItem.catalogBookId === 'number'\n      ? rawItem.catalogBookId\n      : Number(rawItem.catalogBookId);\n    if (!Number.isFinite(id) || id <= 0) continue;\n    if (!candidateIds.has(id)) continue;\n    if (seenDraft.has(id)) continue;\n    seenDraft.add(id);\n    const note = typeof rawItem.note === 'string' ? rawItem.note.trim().slice(0, 200) : null;\n    items.push({\n      catalogBookId: id,\n      position: items.length + 1,\n      note: note || null\n    });\n  }\n\n  // Si el LLM no devolvió items válidos pero sí recommendations,\n  // sintetizamos un borrador mínimo para no romper el panel del frontend.\n  if (items.length === 0 && recommendations.length > 0) {\n    recommendations.forEach((id, idx) => {\n      items.push({ catalogBookId: id, position: idx + 1, note: null });\n    });\n  }\n\n  const draftTitle = typeof rawDraft.title === 'string' ? rawDraft.title.trim() : '';\n  const draftDesc = typeof rawDraft.description === 'string' ? rawDraft.description.trim() : '';\n  playlistDraft = {\n    title: draftTitle.slice(0, 100) || 'Playlist en construcción',\n    description: draftDesc.slice(0, 500) || '',\n    items\n  };\n\n  // =======================================================================\n  // BACKSTOP DETERMINISTA (solo cuando hay currentDraft):\n  // =======================================================================\n  if (hasCurrentDraft && previous.currentDraft) {\n    const current = previous.currentDraft;\n    const currentItems = Array.isArray(current.items) ? current.items : [];\n    const currentIdList = currentItems.map((it) => Number(it.catalogBookId)).filter(Number.isFinite);\n    const currentSet = new Set(currentIdList);\n    const keptFromCurrent = playlistDraft.items.filter((it) => currentSet.has(it.catalogBookId)).length;\n    const keepRatio = currentIdList.length === 0 ? 1 : keptFromCurrent / currentIdList.length;\n\n    const intent = detectAddIntent(previous.userMessage || '');\n\n    // 1) El usuario pidió añadir: garantizamos que el borrador final\n    //    tenga currentDraft completo + N libros nuevos del SQL al final.\n    if (intent.isAdd) {\n      // Reconstruimos desde el currentDraft original (respetando sus notas y orden).\n      const rebuilt = currentItems.map((it, idx) => ({\n        catalogBookId: Number(it.catalogBookId),\n        position: idx + 1,\n        note: typeof it.note === 'string' ? it.note.slice(0, 200) : null\n      }));\n      const inRebuilt = new Set(rebuilt.map((it) => it.catalogBookId));\n\n      // Si el LLM añadió libros nuevos válidos (no existentes ya), los añadimos también\n      // al final para preservar su criterio editorial.\n      const llmNewAdded = playlistDraft.items\n        .map((it) => it.catalogBookId)\n        .filter((id) => !inRebuilt.has(id) && candidateIds.has(id));\n      for (const id of llmNewAdded) {\n        if (inRebuilt.has(id)) continue;\n        const fromLlm = playlistDraft.items.find((it) => it.catalogBookId === id);\n        rebuilt.push({\n          catalogBookId: id,\n          position: rebuilt.length + 1,\n          note: fromLlm?.note || null\n        });\n        inRebuilt.add(id);\n      }\n\n      // Completamos hasta llegar al tamaño objetivo con libros del SQL\n      // que no estén ya ni en currentDraft ni en lo que añadió el LLM.\n      const target = currentItems.length + intent.count;\n      const newFromSql = (previous.listaLibros || [])\n        .map((b) => Number(b.id))\n        .filter((id) => Number.isFinite(id) && id > 0 && !inRebuilt.has(id));\n\n      for (const id of newFromSql) {\n        if (rebuilt.length >= target) break;\n        rebuilt.push({\n          catalogBookId: id,\n          position: rebuilt.length + 1,\n          note: null\n        });\n        inRebuilt.add(id);\n      }\n\n      playlistDraft.items = rebuilt.slice(0, Math.max(target, currentItems.length));\n      playlistDraft.items.forEach((it, idx) => { it.position = idx + 1; });\n\n      // Si el título del LLM se fue de madre (playlist mini nueva),\n      // conservamos el del currentDraft si existía.\n      if (current.title && playlistDraft.title === 'Playlist en construcción') {\n        playlistDraft.title = String(current.title).slice(0, 100);\n      }\n    }\n\n    // 2) Sin intención de añadir, el LLM rompió el borrador\n    //    (keepRatio muy bajo y además encogió mucho) → lo restauramos.\n    //    Esto protege de \"respondí con una playlist nueva mini de 2-3\".\n    else if (\n      keepRatio < 0.4 &&\n      playlistDraft.items.length < Math.max(3, Math.ceil(currentItems.length * 0.6))\n    ) {\n      playlistDraft.items = currentItems.map((it, idx) => ({\n        catalogBookId: Number(it.catalogBookId),\n        position: idx + 1,\n        note: typeof it.note === 'string' ? it.note.slice(0, 200) : null\n      }));\n      if (current.title) playlistDraft.title = String(current.title).slice(0, 100);\n      if (current.description) playlistDraft.description = String(current.description).slice(0, 500);\n    }\n  }\n\n  // Recompute recommendations desde los items finales (para que el chat muestre\n  // las mismas cards que el panel del borrador).\n  recommendations = playlistDraft.items.map((it) => it.catalogBookId);\n}\n\nconst allThoughts = [\n  ...(previous.sqlThoughts || []).map((t) => `[SQL] ${t}`),\n  ...(parsed.thoughts || []).map((t) => `[Response] ${t}`)\n];\n\nconst startedAt = previous.startTime || Date.now();\n\n// Sanear suggestedTitle solo si se pidió (primera interacción).\n// Limitamos a 60 caracteres y eliminamos comillas y signos finales ruidosos.\nfunction sanitizeTitle(raw) {\n  if (!raw || typeof raw !== 'string') return null;\n  let t = raw.trim().replace(/^[\"'«»]+|[\"'«»]+$/g, '').replace(/[.…]+$/, '').trim();\n  if (!t) return null;\n  if (t.length > 60) t = t.slice(0, 60).trim() + '…';\n  return t;\n}\nconst conversationTitle = previous.isFirstInteraction ? sanitizeTitle(parsed.suggestedTitle) : null;\n\nreturn {\n  userId: previous.userId,\n  conversationId: previous.conversationId,\n  messageId: previous.messageId,\n  content: parsed.response || raw,\n  conversationTitle,\n  metadata: {\n    thoughts: allThoughts,\n    recommendations,\n    used_querys: [previous.sqlQuery],\n    intentType: 'book_recommendation',\n    intentConfidence: previous.intentConfidence ?? null,\n    processingTime: Date.now() - startedAt,\n    mode: previous.mode || 'chat',\n    ...(playlistDraft ? { playlistDraft } : {})\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2608,
+        48
+      ],
+      "id": "5ad09a94-714c-4b08-b194-50e135f15e72",
+      "name": "Procesar Respuesta IA"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// ============================================================\n// Construir Prompt Casual\n// ------------------------------------------------------------\n// Prompt más ligero para chat casual (saludos, agradecimientos).\n// Ahora también recibe contexto previo (memoria) y, si es el\n// primer mensaje del usuario, pide al LLM un `suggestedTitle`.\n// ============================================================\n\nconst data = $input.item.json;\n\n// Si el contexto normalizado está vacío (o solo contiene el mensaje actual\n// del usuario) significa que es la primera interacción → pedimos título.\nconst previousUserMessages = (data.conversationContext || []).filter((m) => m.role === 'user').length;\nconst isFirstInteraction = previousUserMessages <= 1;\n\nconst systemPrompt = `Eres un asistente amigable de una librería online llamada BookMatch.\n\nRESPONDE SIEMPRE EN FORMATO JSON EXACTO (sin \\`\\`\\`, sin texto extra):\n{\n  \"thoughts\": [\"observación breve 1\", \"observación breve 2\"],\n  \"response\": \"Tu respuesta final en Markdown breve y cálido\"${isFirstInteraction ? ',\\n  \"suggestedTitle\": \"Título muy corto (3-6 palabras) para esta conversación\"' : ''}\n}\n\nREGLAS:\n- Tono natural y cercano, en español.\n- Máximo 60 palabras en \"response\".\n- Menciona de pasada que también puedes recomendar libros.\n- NO uses imágenes ni enlaces.${isFirstInteraction ? '\\n- \"suggestedTitle\": 3-6 palabras, sin comillas, sin puntuación final. Resume el tono o tema del saludo (p.ej. \"Saludo inicial\", \"Primer contacto\").' : ''}`;\n\nconst userPrompt = `CONTEXTO DE LA CONVERSACIÓN (últimos mensajes):\n${JSON.stringify(data.conversationContext || [])}\n\nMENSAJE DEL USUARIO:\n${data.userMessage}\n\nGenera ahora el JSON.`;\n\nreturn {\n  ...data,\n  isFirstInteraction,\n  casualPrompt: JSON.stringify({\n    model: 'llama-3.3-70b-versatile',\n    temperature: 0.7,\n    max_tokens: 350,\n    response_format: { type: 'json_object' },\n    messages: [\n      { role: 'system', content: systemPrompt },\n      { role: 'user', content: userPrompt }\n    ]\n  })\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        848,
+        288
+      ],
+      "id": "b5902619-ec1b-4b58-8626-0e10e4958de4",
+      "name": "Construir Prompt Casual"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.parse($json.casualPrompt) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1056,
+        288
+      ],
+      "id": "e4b6759a-4935-41e4-85d8-33d70726e616",
+      "name": "Groq: Respuesta Casual",
+      "retryOnFail": true,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "pgFnL6hTT3nNvglm",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// ============================================================\n// Procesar Casual Chat\n// ------------------------------------------------------------\n// Extrae thoughts y response del JSON del LLM y mide el\n// processingTime end-to-end.\n// ============================================================\n\nconst previous = $('Construir Prompt Casual').item.json;\nconst groqResponse = $input.item.json;\nconst raw = groqResponse?.choices?.[0]?.message?.content?.trim() ?? '';\n\nlet parsed;\ntry {\n  parsed = JSON.parse(raw);\n} catch (error) {\n  parsed = { thoughts: ['Respuesta casual generada'], response: raw };\n}\n\nconst startedAt = previous.startTime || Date.now();\n\nfunction sanitizeTitle(raw) {\n  if (!raw || typeof raw !== 'string') return null;\n  let t = raw.trim().replace(/^[\"'«»]+|[\"'«»]+$/g, '').replace(/[.…]+$/, '').trim();\n  if (!t) return null;\n  if (t.length > 60) t = t.slice(0, 60).trim() + '…';\n  return t;\n}\nconst conversationTitle = previous.isFirstInteraction ? sanitizeTitle(parsed.suggestedTitle) : null;\n\nreturn {\n  userId: previous.userId,\n  conversationId: previous.conversationId,\n  messageId: previous.messageId,\n  content: parsed.response || raw,\n  conversationTitle,\n  metadata: {\n    thoughts: parsed.thoughts || [],\n    recommendations: [],\n    used_querys: [],\n    intentType: 'casual_chat',\n    intentConfidence: previous.intentConfidence ?? null,\n    processingTime: Date.now() - startedAt\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1264,
+        288
+      ],
+      "id": "e3bc2a55-5e19-4a97-bdb7-6fa0d0e6077f",
+      "name": "Procesar Casual Chat"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// ============================================================\n// Respuesta Out of Scope\n// ------------------------------------------------------------\n// Devuelve una respuesta estática pero preserva metadata\n// coherente (incluido processingTime e intentConfidence).\n// ============================================================\n\nconst data = $input.item.json;\nconst startedAt = data.startTime || Date.now();\n\nreturn {\n  userId: data.userId,\n  conversationId: data.conversationId,\n  messageId: data.messageId,\n  content: 'Lo siento, solo puedo ayudarte con recomendaciones de libros y preguntas relacionadas con nuestra biblioteca. ¿Puedo ayudarte a encontrar algún libro?',\n  metadata: {\n    thoughts: ['Mensaje fuera del alcance del asistente'],\n    recommendations: [],\n    used_querys: [],\n    intentType: 'out_of_scope',\n    intentConfidence: data.intentConfidence ?? null,\n    processingTime: Date.now() - startedAt\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        848,
+        528
+      ],
+      "id": "ce49673d-c7c1-4e23-b1b0-4e1dd4618e14",
+      "name": "Respuesta Out of Scope"
+    },
+    {
+      "parameters": {
+        "numberInputs": 3
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        2896,
+        352
+      ],
+      "id": "f09bc98a-c755-4e09-81c5-ac6124b9d0b2",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://firestore.googleapis.com/v1/projects/bookmatch-522d5/databases/(default)/documents/users/{{ $json.userId }}/conversations/{{ $json.conversationId }}/messages/{{ $json.messageId }}?updateMask.fieldPaths=content&updateMask.fieldPaths=status&updateMask.fieldPaths=metadata",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ (() => {\n\n// Helper: arrayValue para strings.\nconst toFirestoreStringArray = (arr) => ({\n  values: (arr || []).map((v) => ({ stringValue: String(v) }))\n});\n\n// Helper: arrayValue para enteros (Firestore REST acepta integerValue como string).\nconst toFirestoreIntArray = (arr) => ({\n  values: (arr || [])\n    .map((v) => (typeof v === 'number' ? v : Number(v)))\n    .filter((n) => Number.isFinite(n))\n    .map((n) => ({ integerValue: String(Math.trunc(n)) }))\n});\n\n// Helper: serializa un playlistDraft.items[] como arrayValue de mapValue.\nconst toFirestoreDraftItems = (items) => ({\n  values: (items || []).map((it) => {\n    const id = Number(it?.catalogBookId);\n    const pos = Number(it?.position);\n    const itemFields = {\n      catalogBookId: { integerValue: String(Math.trunc(Number.isFinite(id) ? id : 0)) },\n      position: { integerValue: String(Math.trunc(Number.isFinite(pos) ? pos : 0)) }\n    };\n    if (typeof it?.note === 'string' && it.note.length > 0) {\n      itemFields.note = { stringValue: it.note };\n    }\n    return { mapValue: { fields: itemFields } };\n  })\n});\n\nconst recommendations = $json.metadata?.recommendations || [];\nconst processingTime = Number($json.metadata?.processingTime) || 0;\nconst intentConfidence = Number($json.metadata?.intentConfidence);\nconst playlistDraft = $json.metadata?.playlistDraft;\n\nconst metadataFields = {\n  thoughts: { arrayValue: toFirestoreStringArray($json.metadata?.thoughts) },\n  recommendations: { arrayValue: toFirestoreIntArray(recommendations) },\n  recommendationsCount: { integerValue: String(recommendations.length) },\n  used_querys: { arrayValue: toFirestoreStringArray($json.metadata?.used_querys) },\n  intentType: { stringValue: $json.metadata?.intentType || 'unknown' },\n  processingTime: { integerValue: String(Math.trunc(processingTime)) },\n  mode: { stringValue: $json.metadata?.mode || 'chat' }\n};\n\nif (Number.isFinite(intentConfidence)) {\n  metadataFields.intentConfidence = { doubleValue: intentConfidence };\n}\n\nif (playlistDraft && typeof playlistDraft === 'object') {\n  metadataFields.playlistDraft = {\n    mapValue: {\n      fields: {\n        title: { stringValue: String(playlistDraft.title || '') },\n        description: { stringValue: String(playlistDraft.description || '') },\n        items: { arrayValue: toFirestoreDraftItems(playlistDraft.items) }\n      }\n    }\n  };\n}\n\nreturn {\n  fields: {\n    content: { stringValue: $json.content || '' },\n    status: { stringValue: 'completed' },\n    metadata: { mapValue: { fields: metadataFields } }\n  }\n};\n\n})() }}",
+        "options": {}
+      },
+      "id": "bb61ac8d-d2b2-4953-a9c5-4bad123f024f",
+      "name": "Update Firestore (Final)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        3104,
+        352
+      ],
+      "retryOnFail": true,
+      "credentials": {
+        "googleApi": {
+          "id": "6A1fVpwq2hUGNQh4",
+          "name": "Google Service Account account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "f51c2c3a-9e34-4bca-9c3a-1dd5f6b8c201",
+              "leftValue": "={{ $json.conversationTitle }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        3104,
+        528
+      ],
+      "id": "9f4e1ae1-7a16-41bb-b212-2b3b0ee4ab01",
+      "name": "¿Hay título nuevo?"
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://firestore.googleapis.com/v1/projects/bookmatch-522d5/databases/(default)/documents/users/{{ $json.userId }}/conversations/{{ $json.conversationId }}?updateMask.fieldPaths=title&updateMask.fieldPaths=titleAutoGenerated",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"fields\": {\n    \"title\": {\n      \"stringValue\": {{ JSON.stringify($json.conversationTitle) }}\n    },\n    \"titleAutoGenerated\": {\n      \"booleanValue\": true\n    }\n  }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        3328,
+        528
+      ],
+      "id": "2d60a1b7-40a2-4d42-b8f2-7d71e1b0a812",
+      "name": "Update Conversation Title",
+      "credentials": {
+        "googleApi": {
+          "id": "6A1fVpwq2hUGNQh4",
+          "name": "Google Service Account account"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        -256,
+        464
+      ],
+      "id": "d14a86b6-f576-4273-b77e-bac77da16747",
+      "name": "Error Trigger"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// ============================================================\n// Preparar Error\n// ------------------------------------------------------------\n// Extrae userId/conversationId/messageId del nodo de origen\n// (Webhook o Detectar Intención) para poder escribir el error\n// en el mensaje correcto de Firestore.\n// ============================================================\n\nconst errorData = $input.item.json;\nconst errorMessage = errorData?.error?.message || errorData?.message || 'Error desconocido';\n\nlet userId = null;\nlet conversationId = null;\nlet messageId = null;\n\ntry {\n  const webhookData = $('Webhook').item.json;\n  if (webhookData?.body) {\n    userId = webhookData.body.userId;\n    conversationId = webhookData.body.conversationId;\n    messageId = webhookData.body.messageId;\n  }\n} catch (_) {}\n\ntry {\n  const detectData = $('Detectar Intención').item.json;\n  if (detectData) {\n    userId = userId || detectData.userId;\n    conversationId = conversationId || detectData.conversationId;\n    messageId = messageId || detectData.messageId;\n  }\n} catch (_) {}\n\nif (!userId || !conversationId || !messageId) {\n  console.log('[n8n] Error handler: faltan identificadores para escribir en Firestore', {\n    userId, conversationId, messageId, errorMessage\n  });\n}\n\nreturn {\n  userId: userId || '',\n  conversationId: conversationId || '',\n  messageId: messageId || '',\n  errorContent: `Lo siento, ocurrió un error: ${errorMessage}. Por favor, intenta de nuevo.`\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -16,
+        464
+      ],
+      "id": "023d0fed-0856-435c-b7a4-2123d702a632",
+      "name": "Preparar Error"
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://firestore.googleapis.com/v1/projects/bookmatch-522d5/databases/(default)/documents/users/{{ $json.userId }}/conversations/{{ $json.conversationId }}/messages/{{ $json.messageId }}?updateMask.fieldPaths=content&updateMask.fieldPaths=status&updateMask.fieldPaths=metadata",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"fields\": {\n    \"content\": {\n      \"stringValue\": \"{{ $json.errorContent }}\"\n    },\n    \"status\": {\n      \"stringValue\": \"error\"\n    },\n    \"metadata\": {\n      \"mapValue\": {\n        \"fields\": {\n          \"thoughts\": {\n            \"arrayValue\": {\n              \"values\": [\n                { \"stringValue\": \"Error durante el procesamiento\" }\n              ]\n            }\n          },\n          \"recommendations\": {\n            \"arrayValue\": {\n              \"values\": []\n            }\n          },\n          \"recommendationsCount\": {\n            \"integerValue\": \"0\"\n          },\n          \"used_querys\": {\n            \"arrayValue\": {\n              \"values\": []\n            }\n          },\n          \"intentType\": {\n            \"stringValue\": \"error\"\n          }\n        }\n      }\n    }\n  }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        224,
+        464
+      ],
+      "id": "6704b1b8-f5e2-4734-93f1-b36da18dbe0e",
+      "name": "Update Firestore (Error)",
+      "credentials": {
+        "googleApi": {
+          "id": "6A1fVpwq2hUGNQh4",
+          "name": "Google Service Account account"
+        }
+      }
+    }
+  ],
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "accept": "application/json, text/plain, */*",
+            "content-type": "application/json",
+            "user-agent": "axios/1.13.2",
+            "content-length": "232",
+            "accept-encoding": "gzip, compress, deflate, br",
+            "x-vercel-id": "cdg1::78csr-1776277220125-bc30b213f976",
+            "x-invocation-id": "cdg1::78csr-1776277220125-bc30b213f976",
+            "host": "13.48.29.235:5678",
+            "connection": "keep-alive"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "userId": "c71iY1ab0FOTH1kYzd0QHG0IYqv1",
+            "conversationId": "J22LrYrShqCmlz5iOUPi",
+            "messageId": "KIw6c1d29ksorAZSftD2",
+            "userMessage": "Busco libros de fantasía épica",
+            "baseUrl": "https://book-match-proyecto-intermodular-b8.vercel.app"
+          },
+          "webhookUrl": "http://IP_PUBLICA_DE_TU_EC2:5678/webhook/prueba",
+          "executionMode": "production"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Detectar Intención",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Detectar Intención": {
+      "main": [
+        [
+          {
+            "node": "Switch Intención",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch Intención": {
+      "main": [
+        [
+          {
+            "node": "Cargar Contexto",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Construir Prompt Casual",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respuesta Out of Scope",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cargar Contexto": {
+      "main": [
+        [
+          {
+            "node": "Normalizar Contexto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalizar Contexto": {
+      "main": [
+        [
+          {
+            "node": "Construir Prompt SQL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Construir Prompt SQL": {
+      "main": [
+        [
+          {
+            "node": "Groq: Generar SQL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq: Generar SQL": {
+      "main": [
+        [
+          {
+            "node": "Parsear SQL (Groq)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parsear SQL (Groq)": {
+      "main": [
+        [
+          {
+            "node": "Validar SQL (guardrails)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validar SQL (guardrails)": {
+      "main": [
+        [
+          {
+            "node": "Ejecutar SQL (Postgres)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ejecutar SQL (Postgres)": {
+      "main": [
+        [
+          {
+            "node": "Normalizar Libros",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalizar Libros": {
+      "main": [
+        [
+          {
+            "node": "¿Hay libros?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Hay libros?": {
+      "main": [
+        [
+          {
+            "node": "Construir Prompt Respuesta",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "SQL Fallback",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SQL Fallback": {
+      "main": [
+        [
+          {
+            "node": "Normalizar Libros Fallback",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalizar Libros Fallback": {
+      "main": [
+        [
+          {
+            "node": "Construir Prompt Respuesta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Construir Prompt Respuesta": {
+      "main": [
+        [
+          {
+            "node": "Groq: Respuesta con Libros",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq: Respuesta con Libros": {
+      "main": [
+        [
+          {
+            "node": "Procesar Respuesta IA",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Procesar Respuesta IA": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Construir Prompt Casual": {
+      "main": [
+        [
+          {
+            "node": "Groq: Respuesta Casual",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq: Respuesta Casual": {
+      "main": [
+        [
+          {
+            "node": "Procesar Casual Chat",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Procesar Casual Chat": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Respuesta Out of Scope": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Update Firestore (Final)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "¿Hay título nuevo?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Hay título nuevo?": {
+      "main": [
+        [
+          {
+            "node": "Update Conversation Title",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Error Trigger": {
+      "main": [
+        [
+          {
+            "node": "Preparar Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preparar Error": {
+      "main": [
+        [
+          {
+            "node": "Update Firestore (Error)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "saveExecutionProgress": true,
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "9906af64-be2d-40f3-885f-ccddc4de65dc",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "6862a7ac3ffe44fba293032c52994a5d13c8ece19529a32a5136ecc5490c8ee3"
+  },
+  "id": "yUgd7OpQ2rWoE7JT",
+  "tags": []
+}

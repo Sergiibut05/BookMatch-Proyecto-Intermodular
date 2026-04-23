@@ -8,7 +8,7 @@ import { Observable, from } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
-import { Conversation, Message, ConversationUI, MessageUI } from '../models/conversation.model';
+import { Conversation, Message, ConversationUI, MessageUI, PlaylistDraft } from '../models/conversation.model';
 
 /**
  * Servicio de conversaciones con IA: crea y lista conversaciones en Firestore,
@@ -61,10 +61,18 @@ export class ConversationService {
     );
 
     return collectionData(q, { idField: 'id' }).pipe(
+      // IMPORTANTE: cuando la conversación se acaba de crear con
+      // `serverTimestamp()`, el snapshot LOCAL inicial (optimista) que emite
+      // Firestore tiene `createdAt`/`updatedAt` a null hasta que el servidor
+      // confirma. Si hacemos `.toDate()` sobre null, RxJS propaga un
+      // TypeError, corta el stream y el sidebar deja de recibir nuevas
+      // conversaciones hasta un refresh manual. Por eso hacemos fallback a
+      // la fecha de cliente para ese evento intermedio (se reemplaza
+      // automáticamente cuando llega el snapshot del servidor).
       map(conversations => conversations.map(conv => ({
         ...conv,
-        createdAt: (conv['createdAt'] as Timestamp).toDate(),
-        updatedAt: (conv['updatedAt'] as Timestamp).toDate()
+        createdAt: (conv['createdAt'] as Timestamp | null)?.toDate() ?? new Date(),
+        updatedAt: (conv['updatedAt'] as Timestamp | null)?.toDate() ?? new Date(),
       })) as ConversationUI[])
     );
   }
@@ -83,9 +91,12 @@ export class ConversationService {
     const q = query(messagesRef, orderBy('timestamp', 'asc'));
 
     return collectionData(q, { idField: 'id' }).pipe(
+      // Mismo fallback que en getConversations: el snapshot local de un
+      // mensaje recién añadido puede emitir timestamp null hasta que el
+      // servidor confirma.
       map(messages => messages.map(msg => ({
         ...msg,
-        timestamp: (msg['timestamp'] as Timestamp).toDate()
+        timestamp: (msg['timestamp'] as Timestamp | null)?.toDate() ?? new Date(),
       })) as MessageUI[])
     );
   }
@@ -97,10 +108,40 @@ export class ConversationService {
    * @param content Texto del mensaje
    * @returns Observable que completa cuando el mensaje se envió
    */
-  sendMessage(userId: string, conversationId: string, content: string): Observable<void> {
+  sendMessage(
+    userId: string,
+    conversationId: string,
+    content: string,
+    options?: {
+      mode?: 'chat' | 'playlist_builder';
+      maxItems?: number;
+      /**
+       * Borrador actual del panel (con ediciones manuales del usuario).
+       * Se envía al backend para que el LLM ITERE sobre él en vez de
+       * crear una playlist nueva desde cero.
+       */
+      currentDraft?: PlaylistDraft;
+    }
+  ): Observable<void> {
+    const mode = options?.mode ?? 'chat';
+    const body: Record<string, unknown> = { userId, conversationId, content, mode };
+    if (mode === 'playlist_builder') {
+      if (options?.maxItems) body['maxItems'] = options.maxItems;
+      if (options?.currentDraft && Array.isArray(options.currentDraft.items) && options.currentDraft.items.length > 0) {
+        body['currentDraft'] = {
+          title: options.currentDraft.title ?? null,
+          description: options.currentDraft.description ?? null,
+          items: options.currentDraft.items.map((it, idx) => ({
+            catalogBookId: it.catalogBookId,
+            position: idx + 1,
+            note: it.note ?? null,
+          })),
+        };
+      }
+    }
     return this.http.post<void>(
       `${environment.apiUrl}/ai-chat/send-message`,
-      { userId, conversationId, content }
+      body
     );
   }
 
@@ -119,6 +160,38 @@ export class ConversationService {
       status: 'archived',
       updatedAt: serverTimestamp()
     }));
+  }
+
+  /**
+   * Renombra una conversación (H2.1).
+   * Normaliza el título (trim), rechaza vacío o >80 caracteres y actualiza
+   * también `updatedAt` para que suba en la lista.
+   *
+   * @param userId Firebase UID del usuario
+   * @param conversationId ID de la conversación
+   * @param title Nuevo título (1..80 caracteres tras trim)
+   * @returns Observable que completa cuando se actualizó
+   */
+  updateTitle(
+    userId: string,
+    conversationId: string,
+    title: string,
+  ): Observable<void> {
+    const normalized = (title ?? '').trim().replace(/\s+/g, ' ');
+    if (!normalized || normalized.length > 80) {
+      const err = new Error('INVALID_TITLE');
+      return from(Promise.reject(err));
+    }
+    const conversationRef = doc(
+      this.firestore,
+      `users/${userId}/conversations/${conversationId}`,
+    );
+    return from(
+      updateDoc(conversationRef, {
+        title: normalized,
+        updatedAt: serverTimestamp(),
+      }),
+    );
   }
 }
 

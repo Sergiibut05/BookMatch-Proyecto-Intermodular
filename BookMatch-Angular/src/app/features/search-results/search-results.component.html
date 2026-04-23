@@ -10,9 +10,12 @@
         @if (searchType() === 'book') {
           {{ 'SEARCH_RESULTS.RESULTS_FOUND' | translate: { count: totalResults() } }} 
           {{ 'SEARCH_RESULTS.FOR_BOOKS' | translate: { query: searchQuery() } }}
-        } @else {
+        } @else if (searchType() === 'forum') {
           {{ 'SEARCH_RESULTS.RESULTS_FOUND' | translate: { count: totalResults() } }} 
           {{ 'SEARCH_RESULTS.FOR_FORUMS' | translate: { query: searchQuery() } }}
+        } @else {
+          {{ 'SEARCH_RESULTS.RESULTS_FOUND' | translate: { count: totalResults() } }} 
+          {{ 'SEARCH_RESULTS.FOR_TRADES' | translate: { query: searchQuery() } }}
         }
       </p>
     }

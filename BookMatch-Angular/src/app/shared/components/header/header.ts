@@ -38,7 +38,7 @@ export class Header implements OnInit, OnDestroy {
   isMenuOpen = signal(false);
   searchQuery = signal<string>('');
   currentUrl = signal<string>('');
-  searchTypeFromParams = signal<'book' | 'forum' | null>(null);
+  searchTypeFromParams = signal<'book' | 'forum' | 'trade' | null>(null);
 
   isForumRoute = computed(() => {
     const url = this.currentUrl();
@@ -51,10 +51,21 @@ export class Header implements OnInit, OnDestroy {
     return url.startsWith('/foro');
   });
 
+  isTradeRoute = computed(() => {
+    const url = this.currentUrl();
+    const searchType = this.searchTypeFromParams();
+
+    if (url.startsWith('/search-results')) {
+      return searchType === 'trade';
+    }
+
+    return url.startsWith('/trueque');
+  });
+
   searchPlaceholder = computed(() => {
-    return this.isForumRoute() 
-      ? 'HEADER.SEARCH_FORUMS_PLACEHOLDER' 
-      : 'HEADER.SEARCH_BOOKS_PLACEHOLDER';
+    if (this.isForumRoute()) return 'HEADER.SEARCH_FORUMS_PLACEHOLDER';
+    if (this.isTradeRoute()) return 'HEADER.SEARCH_TRADES_PLACEHOLDER';
+    return 'HEADER.SEARCH_BOOKS_PLACEHOLDER';
   });
 
   ngOnInit(): void {
@@ -94,7 +105,15 @@ export class Header implements OnInit, OnDestroy {
     if (url.startsWith('/search-results')) {
       const urlTree = this.router.parseUrl(url);
       const type = urlTree.queryParams['type'];
-      this.searchTypeFromParams.set(type === 'forum' ? 'forum' : 'book');
+      if (type === 'forum') {
+        this.searchTypeFromParams.set('forum');
+        return;
+      }
+      if (type === 'trade') {
+        this.searchTypeFromParams.set('trade');
+        return;
+      }
+      this.searchTypeFromParams.set('book');
     } else {
       this.searchTypeFromParams.set(null);
     }
@@ -161,7 +180,7 @@ export class Header implements OnInit, OnDestroy {
     const query = this.searchQuery().trim();
     if (!query) return;
 
-    const searchType = this.isForumRoute() ? 'forum' : 'book';
+    const searchType = this.isForumRoute() ? 'forum' : this.isTradeRoute() ? 'trade' : 'book';
     this.router.navigate(['/search-results'], {
       queryParams: { q: query, type: searchType }
     });

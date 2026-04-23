@@ -2,6 +2,9 @@
   "plugins": {
     "atlassian": {
       "enabled": true
+    },
+    "prisma": {
+      "enabled": true
     }
   }
 }

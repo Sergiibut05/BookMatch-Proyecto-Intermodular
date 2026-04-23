@@ -38,6 +38,11 @@ Este monorepo usa **Cursor** y **Antigravity**: reglas/workflows (`.cursor/rules
 
 - **`beforeShellExecution`**: bloquea `git add` si la orden incluye ficheros **`.env`** (evita subir secretos). Ver `.cursor/hooks/guard-env-in-git.mjs`. (Nota: en Antigravity u otros editores se recomienda usar un pre-commit hook estándar de git para esto).
 
+## Convenciones de commits (agente)
+
+- **No** añadir el trailer `Made-with: Cursor` (ni `Generated-by:`, `Co-Authored-By: Cursor`, etc.) a los mensajes de commit. Si el cliente lo añade automáticamente, limpiar el commit con `git commit --amend -F <file> --cleanup=verbatim` usando un mensaje sin esa línea, o escribir el mensaje directamente a fichero y commitear con `git commit -F <file> --cleanup=verbatim`.
+- Mensajes en **Conventional Commits** (`feat:`, `fix:`, `chore:`, `refactor:`…) y cuando aplique referenciar la issue Jira entre corchetes (`[SCRUM-XXX]`).
+
 ## Modos y Workflows (Cursor / Antigravity)
 
 En ajustes de Cursor podéis crear modos de chat con instrucciones de sistema basados en las skills; en Antigravity, disponéis de la carpeta `.agents/workflows/` (ej: llamando con comando `/bookmatch-angular`).

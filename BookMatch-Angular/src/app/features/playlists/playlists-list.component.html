@@ -1,0 +1,352 @@
+<app-header></app-header>
+
+<main class="playlists-shell">
+  <!-- ========================================================
+       HERO HEADER · estilo editorial
+       --------------------------------------------------------
+       Plano, tipo portadilla de libro: fondo crema sólido,
+       título grande con tipografía seria, rule inferior fina.
+       Sin gradients ni orbes desenfocados: queríamos quitar la
+       "cara de dashboard AI" y acercarlo a una biblioteca.
+       ======================================================== -->
+  <header class="playlists-hero pl-fade-in">
+    <div class="playlists-hero-inner">
+      <div class="playlists-hero-copy">
+        <h1 class="playlists-hero-title">
+          {{ 'PLAYLISTS.TITLE' | translate }}
+        </h1>
+        <p class="playlists-hero-subtitle">
+          {{ 'PLAYLISTS.SUBTITLE' | translate }}
+        </p>
+
+        <!-- Stats inline, tipo ficha bibliográfica ("24 playlists ·
+             156 libros · 8 con IA"). Usamos keys *_LABEL que solo
+             contienen el sustantivo plural para poder poner el número
+             en <strong> sin duplicarlo. -->
+        @if (!loading() && !isEmpty()) {
+          <p class="playlists-hero-stats" aria-label="Resumen">
+            <span class="stat-item">
+              <strong>{{ totalCount() }}</strong>
+              {{ 'PLAYLISTS.STAT_TOTAL_LABEL' | translate }}
+            </span>
+            <span class="stat-sep" aria-hidden="true">·</span>
+            <span class="stat-item">
+              <strong>{{ booksCount() }}</strong>
+              {{ 'PLAYLISTS.STAT_BOOKS_LABEL' | translate }}
+            </span>
+            @if (aiCount() > 0) {
+              <span class="stat-sep" aria-hidden="true">·</span>
+              <span class="stat-item">
+                <strong>{{ aiCount() }}</strong>
+                {{ 'PLAYLISTS.STAT_AI_LABEL' | translate }}
+              </span>
+            }
+          </p>
+        }
+      </div>
+
+      <div class="playlists-hero-actions">
+        <button
+          type="button"
+          class="btn-solid press-target"
+          (click)="goToNew()"
+        >
+          <span class="material-symbols-outlined">add</span>
+          <span>{{ 'PLAYLISTS.CTA_NEW' | translate }}</span>
+        </button>
+
+        <button
+          type="button"
+          class="btn-outline press-target"
+          (click)="goToGenerate()"
+        >
+          <span class="material-symbols-outlined">auto_awesome</span>
+          <span>{{ 'PLAYLISTS.CTA_GENERATE' | translate }}</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <div class="playlists-body">
+    <!-- ========================================================
+         SEGMENTED CONTROL (filtros)
+         ------------------------------------------------------
+         Control segmentado con pill deslizante estilo iOS.
+         Cada botón tiene su estado activo, pero lo que se
+         anima es el `--index` del wrapper (translateX).
+         ======================================================== -->
+    <div
+      class="segmented pl-fade-in"
+      role="tablist"
+      aria-label="Filtros de playlist"
+      [style.--seg-index]="activeFilter() === 'all' ? 0 : (activeFilter() === 'manual' ? 1 : 2)"
+      style="animation-delay: 60ms"
+    >
+      <span class="segmented-indicator" aria-hidden="true"></span>
+
+      <button
+        type="button"
+        role="tab"
+        [attr.aria-selected]="activeFilter() === 'all'"
+        (click)="setFilter('all')"
+        class="segmented-item"
+        [class.is-active]="activeFilter() === 'all'"
+      >
+        {{ 'PLAYLISTS.FILTER_ALL' | translate }}
+      </button>
+      <button
+        type="button"
+        role="tab"
+        [attr.aria-selected]="activeFilter() === 'manual'"
+        (click)="setFilter('manual')"
+        class="segmented-item"
+        [class.is-active]="activeFilter() === 'manual'"
+      >
+        {{ 'PLAYLISTS.FILTER_MANUAL' | translate }}
+      </button>
+      <button
+        type="button"
+        role="tab"
+        [attr.aria-selected]="activeFilter() === 'ai'"
+        (click)="setFilter('ai')"
+        class="segmented-item"
+        [class.is-active]="activeFilter() === 'ai'"
+      >
+        {{ 'PLAYLISTS.FILTER_AI' | translate }}
+      </button>
+    </div>
+
+    <!-- Error banner -->
+    @if (errorKey()) {
+      <div
+        class="playlists-error pl-fade-in"
+        role="alert"
+      >
+        <span class="material-symbols-outlined" aria-hidden="true">error</span>
+        <span class="flex-1">{{ errorKey()! | translate }}</span>
+        <button
+          type="button"
+          class="playlists-error-btn press-target"
+          (click)="loadPlaylists()"
+        >
+          <span class="material-symbols-outlined text-[16px]">refresh</span>
+          {{ 'PLAYLISTS.RETRY' | translate }}
+        </button>
+      </div>
+    }
+
+    <!-- ========================================================
+         LOADING · EMPTY · GRID
+         ======================================================== -->
+    @if (loading()) {
+      <div
+        class="playlists-grid"
+        aria-busy="true"
+        aria-live="polite"
+      >
+        @for (_ of skeletonItems; track $index) {
+          <div class="playlist-skel">
+            <div class="playlist-skel-cover"></div>
+            <div class="playlist-skel-meta">
+              <div class="playlist-skel-line w-3/4"></div>
+              <div class="playlist-skel-line w-1/2"></div>
+            </div>
+          </div>
+        }
+      </div>
+    } @else if (isEmpty()) {
+      <!-- Empty state editorial: cenefa con icono neutro, sin
+           animaciones llamativas. -->
+      <div class="playlists-empty pl-fade-in">
+        <span class="playlists-empty-icon" aria-hidden="true">
+          <span class="material-symbols-outlined">bookmarks</span>
+        </span>
+
+        <h2 class="playlists-empty-title">
+          {{ 'PLAYLISTS.EMPTY_TITLE' | translate }}
+        </h2>
+        <p class="playlists-empty-subtitle">
+          {{ 'PLAYLISTS.EMPTY_SUBTITLE' | translate }}
+        </p>
+
+        <div class="playlists-empty-actions">
+          <button
+            type="button"
+            class="btn-solid press-target"
+            (click)="goToNew()"
+          >
+            <span class="material-symbols-outlined">add</span>
+            <span>{{ 'PLAYLISTS.CTA_NEW' | translate }}</span>
+          </button>
+          <button
+            type="button"
+            class="btn-outline press-target"
+            (click)="goToGenerate()"
+          >
+            <span class="material-symbols-outlined">auto_awesome</span>
+            <span>{{ 'PLAYLISTS.CTA_GENERATE' | translate }}</span>
+          </button>
+        </div>
+      </div>
+    } @else {
+      <!-- Grid de playlists. Cada card:
+           · aspect 3:4 para darle más presencia a la portada.
+           · overlay gradient para legibilidad consistente.
+           · badges "glass" (backdrop-blur).
+           · hover: zoom + elevación + shine. -->
+      <div class="playlists-grid pl-stagger-auto">
+        @for (playlist of filteredPlaylists(); track trackById($index, playlist)) {
+          <article
+            class="playlist-card press-target"
+            (click)="openPlaylist(playlist)"
+            (keydown.enter)="openPlaylist(playlist)"
+            tabindex="0"
+            role="link"
+            [attr.aria-label]="'PLAYLISTS.OPEN_PLAYLIST' | translate"
+          >
+            <div class="playlist-card-cover-wrap">
+              @if (playlist.coverUrl) {
+                <img
+                  [src]="playlist.coverUrl"
+                  [alt]="playlist.title"
+                  class="playlist-card-cover"
+                  loading="lazy"
+                  decoding="async"
+                />
+              } @else {
+                <div class="playlist-card-cover-fallback" aria-hidden="true">
+                  <span class="material-symbols-outlined">menu_book</span>
+                </div>
+              }
+
+              <!-- Sombra inferior muy sutil para legibilidad del contador y
+                   los badges sobre portadas claras. Sin overlay pesado. -->
+              <div class="playlist-card-gradient" aria-hidden="true"></div>
+
+              <!-- Badges (top) · planos, tipo etiqueta. -->
+              <div class="playlist-card-badges">
+                <span
+                  class="badge-pill"
+                  [class.is-ai]="playlist.source === 'AI' || playlist.source === 'HYBRID'"
+                  [class.is-manual]="playlist.source === 'MANUAL'"
+                >
+                  {{ sourceBadgeKey(playlist.source) | translate }}
+                </span>
+
+                @if (playlist.visibility === 'PUBLIC') {
+                  <span class="badge-pill is-public">
+                    {{ 'PLAYLISTS.BADGE_PUBLIC' | translate }}
+                  </span>
+                }
+              </div>
+
+              <!-- Delete button (bottom-right, revelado al hover) -->
+              <button
+                type="button"
+                (click)="deletePlaylist($event, playlist)"
+                class="playlist-card-delete press-target"
+                [attr.aria-label]="'PLAYLISTS.DELETE' | translate"
+                [title]="'PLAYLISTS.DELETE' | translate"
+              >
+                <span class="material-symbols-outlined">delete</span>
+              </button>
+
+              <!-- Book count flotante (abajo izquierda, sobre el gradient).
+                   Reemplaza al icono poco expresivo del footer. -->
+              <span class="playlist-card-count" aria-hidden="true">
+                <span class="material-symbols-outlined">menu_book</span>
+                {{ playlist.itemsCount }}
+              </span>
+            </div>
+
+            <div class="playlist-card-body">
+              <h3 class="playlist-card-title">{{ playlist.title }}</h3>
+              @if (playlist.description) {
+                <p class="playlist-card-desc">{{ playlist.description }}</p>
+              }
+              <div class="playlist-card-foot">
+                <time [attr.datetime]="playlist.updatedAt" class="playlist-card-time">
+                  <span class="material-symbols-outlined text-[14px]" aria-hidden="true">schedule</span>
+                  {{ playlist.updatedAt | date: 'shortDate' }}
+                </time>
+                <span class="playlist-card-arrow" aria-hidden="true">
+                  <span class="material-symbols-outlined">arrow_forward</span>
+                </span>
+              </div>
+            </div>
+          </article>
+        }
+      </div>
+
+      @if (filteredPlaylists().length === 0 && playlists().length > 0) {
+        <p class="playlists-filter-empty pl-fade-in">
+          {{ 'PLAYLISTS.FILTER_EMPTY' | translate }}
+        </p>
+      }
+    }
+  </div>
+</main>
+
+<!-- ==========================================================
+     MODAL DE CONFIRMACIÓN (eliminar playlist)
+     Sustituye al `window.confirm()` nativo. Bottom-sheet en
+     móvil, dialog centrado en desktop. Hereda estilos de
+     `.confirm-modal*` globalmente reutilizables.
+     ========================================================== -->
+@if (playlistToDelete(); as plToDelete) {
+  <div
+    class="confirm-modal-overlay"
+    role="presentation"
+    (click)="cancelDeletePlaylist()"
+    (keydown.escape)="cancelDeletePlaylist()"
+    tabindex="-1"
+  >
+    <div
+      class="confirm-modal"
+      role="alertdialog"
+      aria-modal="true"
+      aria-labelledby="delete-playlist-title"
+      aria-describedby="delete-playlist-body"
+      (click)="$event.stopPropagation()"
+    >
+      <div class="confirm-modal-icon" aria-hidden="true">
+        <span class="material-symbols-outlined">delete_outline</span>
+      </div>
+      <h2 id="delete-playlist-title" class="confirm-modal-title">
+        {{ 'PLAYLISTS.DELETE_TITLE' | translate }}
+      </h2>
+      <p id="delete-playlist-body" class="confirm-modal-body">
+        {{ 'PLAYLISTS.DELETE_BODY' | translate: { title: plToDelete.title } }}
+      </p>
+      <div class="confirm-modal-actions">
+        <button
+          type="button"
+          class="confirm-modal-btn is-cancel press-target"
+          [disabled]="deleting()"
+          (click)="cancelDeletePlaylist()"
+        >
+          {{ 'PLAYLISTS.DELETE_CANCEL' | translate }}
+        </button>
+        <button
+          type="button"
+          class="confirm-modal-btn is-danger press-target"
+          [disabled]="deleting()"
+          (click)="confirmDeletePlaylist()"
+        >
+          @if (deleting()) {
+            <span class="material-symbols-outlined animate-spin text-[18px]">progress_activity</span>
+          } @else {
+            <span class="material-symbols-outlined text-[18px]">delete</span>
+          }
+          {{ 'PLAYLISTS.DELETE_CONFIRM_BTN' | translate }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (showGenerateDialog()) {
+  <app-playlist-generate-dialog
+    (closeDialog)="onGenerateDialogClose()"
+  ></app-playlist-generate-dialog>
+}

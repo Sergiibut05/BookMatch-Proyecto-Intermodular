@@ -1,610 +1,1161 @@
-.chat-page-container {
+// ============================================================
+// Chat IA · H2.3 rediseño refinado (Emil Kowalski's design eng)
+// ------------------------------------------------------------
+// - Variables de easing fuertes (no las built-in flojas del CSS).
+// - Fondo plano con acento sutil (se quitó el gradient pesado).
+// - Micro-animaciones: press scale en botones, stagger en el
+//   sidebar, enter-state en mensajes.
+// - prefers-reduced-motion respetado: mantiene fades, quita movimientos.
+// ============================================================
+
+:host {
+  // Easings (más "punchy" que las built-in). Ver animations.dev / easing.dev.
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+
+  display: block;
+  background: #f8f1e0; // Fondo plano crema, sin degradados ruidosos.
+  position: relative; // referencia para el drawer del panel playlist
+}
+
+.chat-shell {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  // Altura completa: sin header global encima, el chat ocupa toda la pantalla.
+  // `svh` en navegadores modernos evita el "salto" al abrir el teclado móvil.
+  height: 100vh;
+  height: 100svh;
+  min-height: 480px;
+  transition: grid-template-columns 260ms var(--ease-out);
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+    transition: none;
+  }
+
+  // Desktop: sidebar colapsado → la columna del aside se reduce a 0.
+  // Usamos 0px (no 0fr) para que el grid anime suavemente.
+  &.sidebar-collapsed {
+    @media (min-width: 769px) {
+      grid-template-columns: 0px 1fr;
+    }
+  }
+}
+
+.chat-sidebar {
   display: flex;
-  height: calc(100vh - 80px); // Altura fija sin footer
-  max-width: 1400px;
-  margin: 0 auto;
-  background-color: #FCF5E2;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+  background: #fdf7e8; // Crema muy suave (no blanco pelado: más cálido)
+  border-right: 1px solid rgba(224, 161, 94, 0.2);
+
+  @media (min-width: 769px) {
+    // Desktop: el sidebar se pliega suavemente dentro del grid.
+    // `overflow: hidden` evita que el contenido desborde mientras colapsa.
+    overflow: hidden;
+    transition:
+      border-right-color 200ms var(--ease-out),
+      opacity 180ms var(--ease-out);
+  }
+
+  @media (max-width: 768px) {
+    position: fixed;
+    inset: 0; // Cubre toda la pantalla (sin header global que dejar visible)
+    z-index: 40;
+    width: min(320px, 85vw);
+    transform: translateX(-100%);
+    transition: transform 320ms var(--ease-drawer);
+    box-shadow: 2px 0 28px -8px rgba(69, 51, 45, 0.18);
+
+    &.is-open {
+      transform: translateX(0);
+    }
+  }
+}
+
+// Colapsado en desktop: sin borde derecho y contenido no interactivo.
+.chat-shell.sidebar-collapsed .chat-sidebar {
+  @media (min-width: 769px) {
+    border-right-color: transparent;
+    opacity: 0;
+    pointer-events: none;
+  }
+}
+
+// ============================================================
+// Item de conversación (barra lateral activa en lugar de ring)
+// ============================================================
+.conv-item {
+  // La barra vertical que indica "activo" se dibuja con un pseudo.
+  // Arranca invisible y entra con transición suave.
+  &::before {
+    content: '';
+    position: absolute;
+    left: 4px;
+    top: 50%;
+    height: 0;
+    width: 3px;
+    border-radius: 999px;
+    background: #e0a15e;
+    transform: translateY(-50%);
+    opacity: 0;
+    transition:
+      height 220ms var(--ease-out),
+      opacity 160ms var(--ease-out);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    &:hover:not(.conv-item-active) {
+      background: rgba(224, 161, 94, 0.08);
+    }
+  }
+}
+
+.conv-item-active {
+  background: rgba(224, 161, 94, 0.1);
+
+  &::before {
+    height: 60%;
+    opacity: 1;
+  }
+}
+
+// Botón eliminar: paleta terracota cálida en lugar de rojo chillón
+// para que encaje con los tonos cremas/ámbar del resto del sidebar.
+.conv-delete-btn {
+  transition:
+    background-color 160ms var(--ease-out),
+    color 160ms var(--ease-out);
+
+  @media (hover: hover) and (pointer: fine) {
+    &:hover:not(:disabled) {
+      background-color: rgba(194, 90, 55, 0.08);
+      color: #a34b2a;
+    }
+  }
+}
+
+.conv-actions {
+  opacity: 0;
+  transition: opacity 150ms var(--ease-out);
+
+  // En desktop: aparecen al hover. En touch: siempre visibles (no hay hover).
+  @media (hover: hover) and (pointer: fine) {
+    .conv-item:hover &,
+    .conv-item:focus-within & {
+      opacity: 1;
+    }
+  }
+
+  @media (hover: none) {
+    opacity: 0.7;
+  }
+}
+
+// ============================================================
+// Topbar del chat (sustituye al header global en esta pantalla)
+// Visible siempre, sticky arriba, con flecha volver + título.
+// ============================================================
+.chat-topbar {
+  // Grid de 3 columnas: [izquierda auto-expansible] [título fijo al centro] [derecha auto-expansible].
+  // Con `1fr auto 1fr` las columnas laterales comparten el mismo ancho flexible,
+  // así el <h1> del centro queda SIEMPRE perfectamente centrado en el viewport
+  // independientemente de cuántos botones haya a cada lado.
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.5rem;
+  background: rgba(253, 247, 232, 0.92);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid rgba(224, 161, 94, 0.2);
+  position: sticky;
+  top: 0;
+  z-index: 5;
+
+  @media (min-width: 769px) {
+    padding: 0.6rem 1rem;
+  }
+
+  // El título central debe tener min-width: 0 para permitir el truncado
+  // cuando las conversaciones tienen nombres largos.
+  > h1 {
+    min-width: 0;
+    max-width: 100%;
+  }
+}
+
+// Divisor vertical: separa "volver" de las acciones del chat para que no
+// se confunda una con otra.
+.topbar-divider {
+  display: inline-block;
+  width: 1px;
+  height: 20px;
+  background: rgba(224, 161, 94, 0.35);
+  margin: 0 0.25rem;
+  flex-shrink: 0;
+}
+
+// ============================================================
+// Suggestion chips (sin emojis, con iconos Material cálidos)
+// ============================================================
+.suggestion-chip {
+  // `flex flex-col` viene desde la plantilla. Fijamos altura mínima e
+  // `justify-content: space-between` para que la cabecera (icono + título)
+  // quede siempre pegada al top y la descripción al bottom, aun si el
+  // título o la descripción ocupan una línea más en una tarjeta. Así los
+  // tres chips mantienen los iconos visualmente alineados entre sí.
+  padding: 1rem 1rem 1.1rem;
+  background: #ffffff;
+  border: 1px solid rgba(224, 161, 94, 0.25);
+  border-radius: 1rem;
+  text-align: left;
+  min-height: 128px;
+  justify-content: space-between;
+  box-shadow: 0 1px 3px rgba(69, 51, 45, 0.04);
+  transition:
+    border-color 160ms var(--ease-out),
+    box-shadow 200ms var(--ease-out),
+    background-color 160ms var(--ease-out);
+
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      border-color: rgba(224, 161, 94, 0.5);
+      box-shadow: 0 6px 20px -8px rgba(224, 161, 94, 0.35);
+      background: #fffdf8;
+    }
+  }
+}
+
+// Cabecera del chip: icono + título. Bloque superior que puede crecer
+// (si el título ocupa 2 líneas) sin empujar la descripción, porque la
+// descripción ancla al fondo con `justify-content: space-between`.
+.suggestion-chip-head {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.55rem;
+}
+
+.suggestion-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  // El espacio entre icono y label ahora lo gestiona el `gap` del
+  // contenedor `.suggestion-chip-head`, así que no necesitamos margin.
+  margin-bottom: 0;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #fce8c9 0%, #f6d39a 100%);
+  color: #8c5a25;
+
+  .material-symbols-outlined {
+    font-size: 20px;
+    // Peso un poco más marcado para que el icono sienta presencia.
+    font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 20;
+  }
+}
+
+// ============================================================
+// Input compuesto (textarea + mic + send en una sola caja)
+// ============================================================
+.chat-input-box {
+  display: flex;
+  // `align-items: center` para que en 1 línea el placeholder/cursor quede
+  // perfectamente centrado verticalmente con los botones (mic, enviar).
+  // En multi-línea el textarea crece hacia abajo y los botones se centran
+  // con el conjunto; visualmente queda coherente sin "pegar" los botones al
+  // borde inferior (lo que antes obligaba al textarea a un padding asimétrico).
+  align-items: center;
+  gap: 0.25rem;
+  background: #ffffff;
+  border: 1px solid rgba(224, 161, 94, 0.3);
+  border-radius: 1.25rem;
+  padding: 0.2rem 0.4rem 0.2rem 0.85rem;
+  box-shadow: 0 1px 3px rgba(69, 51, 45, 0.05);
+  transition:
+    border-color 160ms var(--ease-out),
+    box-shadow 200ms var(--ease-out);
+
+  &:focus-within {
+    border-color: #e0a15e;
+    box-shadow: 0 0 0 3px rgba(224, 161, 94, 0.18);
+  }
+
+  &.is-recording {
+    border-color: #ef4444;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15);
+  }
+}
+
+.chat-input-textarea {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: 0;
+  outline: none;
+  resize: none;
+  // Padding vertical simétrico y pequeño: el centrado vertical del texto en 1
+  // línea lo hace el padre (`align-items: center`). Dejamos un mínimo para
+  // que el "tap target" llegue a los 40px recomendados en móvil.
+  min-height: 40px;
+  max-height: 200px;
+  padding: 0.5rem 0;
+  font-size: 0.925rem;
+  line-height: 1.5;
+  color: #2f241b;
+
+  &::placeholder {
+    color: #b19478;
+  }
+  &:disabled {
+    background: transparent;
+    opacity: 0.6;
+  }
+
+  // Scrollbar invisible pero scroll funcional (Chrome/Safari/Edge/Firefox).
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+    display: none;
+  }
+}
+
+.chat-input-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.2rem 0;
+  flex-shrink: 0;
+}
+
+.mic-btn {
   position: relative;
-  
-  .conversations-sidebar {
-    width: 280px;
-    border-right: 1px solid #e0e0e0;
-    background-color: #fff;
-    display: flex;
-    flex-direction: column;
-    max-height: 100%; // Altura máxima fija
-    
-    .sidebar-header {
-      padding: 16px;
-      border-bottom: 1px solid #e0e0e0;
-      flex-shrink: 0;
-      
-      .mobile-close-btn {
-        display: none; // Solo visible en móvil
-      }
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  color: #8a6a52;
+  background: transparent;
+  transition:
+    background-color 160ms var(--ease-out),
+    color 160ms var(--ease-out);
+
+  @media (hover: hover) and (pointer: fine) {
+    &:hover:not(:disabled) {
+      background: rgba(224, 161, 94, 0.12);
+      color: #45332d;
+    }
   }
-  
-    .new-conversation-btn {
-    width: 100%;
-      padding: 12px;
-      background: #E0A15E;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  &.is-recording {
+    background: #ef4444;
+    color: #ffffff;
+
+    @media (hover: hover) and (pointer: fine) {
+      &:hover {
+        background: #dc2626;
+        color: #ffffff;
+      }
+    }
+  }
+
+  .mic-pulse {
+    position: absolute;
+    inset: 0;
+    border-radius: 999px;
+    border: 2px solid rgba(239, 68, 68, 0.55);
+    animation: mic-pulse 1.4s var(--ease-in-out) infinite;
+    pointer-events: none;
+  }
+}
+
+@keyframes mic-pulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+  80%,
+  100% {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+}
+
+.send-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  background: #e0a15e;
+  color: #ffffff;
+  box-shadow: 0 2px 8px -2px rgba(224, 161, 94, 0.55);
+  transition:
+    background-color 160ms var(--ease-out),
+    box-shadow 200ms var(--ease-out),
+    transform 160ms var(--ease-out);
+
+  @media (hover: hover) and (pointer: fine) {
+    &:hover:not(:disabled) {
+      background: #c88f4e;
+    }
+  }
+
+  &:disabled {
+    background: #e6dccb;
+    color: #ffffff;
+    box-shadow: none;
+    cursor: not-allowed;
+  }
+
+  .material-symbols-outlined {
+    font-size: 20px;
+  }
+}
+
+.chat-main {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  // Acento muy sutil en la esquina superior, sin invadir.
+  background-color: #faf4e6;
+  background-image: radial-gradient(
+    600px 300px at 100% 0%,
+    rgba(224, 161, 94, 0.06),
+    transparent 70%
+  );
+}
+
+// ============================================================
+// Press targets: scale 0.97 on :active con curva custom
+// ============================================================
+.press-target {
+  transition: transform 160ms var(--ease-out);
+  will-change: transform;
+
+  &:active {
+    transform: scale(0.97);
+  }
+}
+
+// ============================================================
+// Entrance animations (sidebar items, messages, toast, empty state)
+// Usamos transitions con @starting-style + data-attr como fallback.
+// ============================================================
+@keyframes chat-fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes chat-fade-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.chat-enter-up {
+  animation: chat-fade-in-up 240ms var(--ease-out) both;
+}
+
+.chat-enter-right {
+  animation: chat-fade-in-right 260ms var(--ease-out) both;
+}
+
+// Stagger: cada hijo usa su índice vía --i (set inline en el template).
+// Mantener delays cortos (30-80ms) como recomienda Emil.
+.chat-stagger > * {
+  animation: chat-fade-in-up 260ms var(--ease-out) both;
+  animation-delay: calc(var(--i, 0) * 40ms);
+}
+
+// ============================================================
+// Typing dots (indicador "la IA está pensando")
+// Perceived-performance: pulsación rápida hace que la espera parezca corta.
+// ============================================================
+.typing-dots {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+
+  span {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #e0a15e;
+    opacity: 0.4;
+    animation: typing-bounce 1.1s infinite var(--ease-in-out);
+
+    &:nth-child(2) {
+      animation-delay: 0.12s;
+    }
+    &:nth-child(3) {
+      animation-delay: 0.24s;
+    }
+  }
+}
+
+@keyframes typing-bounce {
+  0%,
+  60%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.35;
+  }
+  30% {
+    transform: translateY(-4px);
+    opacity: 1;
+  }
+}
+
+// ============================================================
+// Tipografía del Markdown renderizado por `marked`
+// ============================================================
+:host ::ng-deep .message-markdown {
+  color: #2f241b;
+  font-size: 0.925rem;
+  line-height: 1.65;
+
+  > :first-child {
+    margin-top: 0;
+  }
+  > :last-child {
+    margin-bottom: 0;
+  }
+
+  p {
+    margin: 0 0 0.6em;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    color: #45332d;
+    font-weight: 700;
+    line-height: 1.25;
+    margin: 1em 0 0.4em;
+  }
+  h1 {
+    font-size: 1.25rem;
+  }
+  h2 {
+    font-size: 1.15rem;
+  }
+  h3 {
+    font-size: 1.05rem;
+  }
+  h4 {
+    font-size: 0.975rem;
+  }
+
+  strong {
+    color: #45332d;
+    font-weight: 700;
+  }
+  em {
+    color: #6b4d39;
+  }
+
+  ul,
+  ol {
+    margin: 0.4em 0 0.8em;
+    padding-left: 1.4em;
+  }
+  ul li {
+    list-style: disc;
+    &::marker {
+      color: #e0a15e;
+    }
+  }
+  ol li {
+    list-style: decimal;
+    &::marker {
+      color: #e0a15e;
       font-weight: 600;
-      transition: background 0.2s;
-      
-      &:hover {
-        background: #D08F4E;
-      }
     }
-    
-    .conversations-list {
-      flex: 1;
-      overflow-y: auto; // Solo esta parte es scrolleable
-      padding: 16px;
-    display: flex;
-    flex-direction: column;
-      gap: 8px;
-      
-      // Estilos del scrollbar
-      &::-webkit-scrollbar {
-        width: 6px;
   }
-  
-      &::-webkit-scrollbar-track {
-        background: #f1f1f1;
-      }
-      
-      &::-webkit-scrollbar-thumb {
-        background: #E0A15E;
-        border-radius: 3px;
-        
-        &:hover {
-          background: #D08F4E;
-        }
-      }
-    }
-    
-    .no-conversations {
-      text-align: center;
-      padding: 24px 12px;
-      color: #999;
-      
-      p {
-        margin: 8px 0;
-        
-        &.hint {
-          font-size: 0.85rem;
-          color: #bbb;
-        }
-      }
-    }
-    
-    .conversation-item {
-      padding: 12px;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: all 0.2s;
-      
-      &:hover {
-        background: #f5f5f5;
-        transform: translateX(2px);
-      }
-      
-      &.active {
-        background: #E0A15E20;
-        border-left: 3px solid #E0A15E;
+  li + li {
+    margin-top: 0.2em;
   }
-  
-      .conv-title {
+  li > p {
+    margin: 0.2em 0;
+  }
+
+  a {
+    color: #c0803f;
     font-weight: 600;
-        color: #45332D;
-        margin-bottom: 4px;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-  }
-  
-      .conv-date {
-        font-size: 0.85rem;
-        color: #999;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    text-decoration-thickness: 1px;
+    transition: color 160ms var(--ease-out);
+
+    @media (hover: hover) and (pointer: fine) {
+      &:hover {
+        color: #8c5a25;
       }
     }
   }
-  
-  .mobile-fab-sidebar {
-    display: none; // Solo visible en móvil
+
+  code {
+    background: #faecd3;
+    color: #8c5a25;
+    padding: 0.1em 0.35em;
+    border-radius: 4px;
+    font-size: 0.85em;
+    font-family:
+      ui-monospace,
+      SFMono-Regular,
+      Menlo,
+      Consolas,
+      monospace;
   }
-  
-  .chat-area {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    background-color: #FCF5E2;
-    min-width: 0; // Para que el flex funcione correctamente
-    
-    .messages-container {
-      flex: 1;
-      padding: 24px;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-      
-      // Estilos del scrollbar
+  pre {
+    background: #2f241b;
+    color: #fdf6e3;
+    padding: 0.85em 1em;
+    border-radius: 10px;
+    overflow-x: auto;
+    margin: 0.8em 0;
+    font-size: 0.85em;
+
+    code {
+      background: transparent;
+      color: inherit;
+      padding: 0;
+      border-radius: 0;
+    }
+  }
+
+  blockquote {
+    border-left: 3px solid #e0a15e;
+    background: #fff8e8;
+    padding: 0.4em 0.9em;
+    margin: 0.6em 0;
+    color: #6b4d39;
+    font-style: italic;
+    border-radius: 0 8px 8px 0;
+  }
+
+  hr {
+    border: 0;
+    border-top: 1px dashed rgba(224, 161, 94, 0.4);
+    margin: 1em 0;
+  }
+
+  img {
+    display: block;
+    max-width: 120px;
+    margin: 0.5em 0;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0.6em 0;
+    font-size: 0.875em;
+
+    th,
+    td {
+      border: 1px solid rgba(224, 161, 94, 0.3);
+      padding: 0.4em 0.6em;
+      text-align: left;
+    }
+    th {
+      background: #fff3da;
+      color: #45332d;
+      font-weight: 600;
+    }
+  }
+}
+
+// ============================================================
+// Scrollbar (cosmético). Solo en desktop con pointer fino.
+// ============================================================
+@media (hover: hover) and (pointer: fine) {
+  .chat-main .overflow-y-auto,
+  .chat-sidebar .overflow-y-auto {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(224, 161, 94, 0.4) transparent;
+
     &::-webkit-scrollbar {
       width: 8px;
     }
-    
-    &::-webkit-scrollbar-track {
-      background: transparent;
-    }
-    
     &::-webkit-scrollbar-thumb {
-        background: #E0A15E60;
+      background: rgba(224, 161, 94, 0.3);
       border-radius: 4px;
-      
-      &:hover {
-          background: #E0A15E;
-      }
     }
-  }
-  
-    .welcome-message {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      padding: 60px 20px;
-      
-      .welcome-icon {
-        font-size: 4rem;
-        margin-bottom: 20px;
-        animation: bounce 2s ease-in-out infinite;
-      }
-      
-      h2 {
-        color: #45332D;
-        margin-bottom: 12px;
-        font-size: 1.8rem;
-      }
-      
-      p {
-        color: #666;
-        margin-bottom: 32px;
-        font-size: 1.1rem;
-      }
-      
-      .suggestions {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 12px;
-        justify-content: center;
-        
-        .suggestion-chip {
-          padding: 10px 20px;
-          background: white;
-          border: 2px solid #E0A15E;
-          border-radius: 24px;
-          cursor: pointer;
-          transition: all 0.2s;
-          color: #45332D;
-          font-weight: 500;
-          
-          &:hover {
-            background: #E0A15E;
-            color: white;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(224, 161, 94, 0.3);
-          }
-        }
-      }
-    }
-    
-    .message {
-    display: flex;
-    flex-direction: column;
-    max-width: 70%;
-      animation: slideIn 0.3s ease-out;
-    
-      &.user {
-      align-self: flex-end;
-      
-        .message-content {
-          background: #E0A15E;
-        color: white;
-          padding: 12px 16px;
-        border-radius: 16px 16px 4px 16px;
-          box-shadow: 0 2px 8px rgba(224, 161, 94, 0.2);
-        }
-      }
-      
-      &.assistant {
-        align-self: flex-start;
-        
-        .message-content {
-          background: #fff;
-          color: #45332D;
-          padding: 12px 16px;
-          border-radius: 16px 16px 16px 4px;
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-          line-height: 1.6;
-          
-          // Estilos para el contenido markdown
-          p {
-            margin: 8px 0;
-          }
-          
-          ul, ol {
-            margin: 8px 0;
-            padding-left: 20px;
-      }
-          
-          code {
-            background: #f5f5f5;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-size: 0.9em;
-          }
-        }
-      }
-    }
-    
-    .thoughts-section {
-      background: linear-gradient(135deg, #f9f9f9 0%, #fff 100%);
-      padding: 12px;
-      margin-bottom: 8px;
-      border-radius: 8px;
-      border-left: 4px solid #E0A15E;
-      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
-      
-      summary {
-        cursor: pointer;
-        font-weight: 600;
-        color: #666;
-        user-select: none;
-        transition: color 0.2s;
-        
-        &:hover {
-          color: #E0A15E;
-        }
-      }
-      
-      ul {
-        margin-top: 10px;
-        padding-left: 20px;
-        color: #555;
-        font-size: 0.9em;
-        line-height: 1.6;
-        
-        li {
-          margin: 6px 0;
-          padding-left: 4px;
-        }
-      }
-    }
-    
-    .processing-container {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      padding: 16px;
-      background: linear-gradient(135deg, #fff 0%, #f9f9f9 100%);
-      border-radius: 16px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-      
-      .processing-spinner {
-        .spinner {
-          width: 40px;
-          height: 40px;
-          border: 3px solid #f3f3f3;
-          border-top: 3px solid #E0A15E;
-          border-radius: 50%;
-          animation: spin 1s linear infinite;
-        }
-      }
-      
-      .processing-text {
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-        
-        .main-text {
-          font-weight: 600;
-          color: #45332D;
-          font-size: 1rem;
-        }
-        
-        .sub-text {
-          font-size: 0.85rem;
-          color: #999;
-          animation: pulse 2s ease-in-out infinite;
-        }
-      }
-    }
-    
-    // Input area - STICKY ABAJO
-    .input-area {
-      padding: 16px 24px;
-      border-top: 1px solid #e0e0e0;
-      display: flex;
-      gap: 12px;
-      background-color: #fff;
-      box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
-      flex-shrink: 0; // No se encoge
-      
-      textarea {
-        flex: 1;
-        padding: 12px;
-        border: 2px solid #e0e0e0;
-        border-radius: 12px;
-        resize: none;
-        max-height: 120px;
-        min-height: 50px;
-        font-family: inherit;
-        font-size: 1rem;
-        transition: border-color 0.2s;
-        
-        &:focus {
-          outline: none;
-          border-color: #E0A15E;
-        }
-        
-        &:disabled {
-          background-color: #f5f5f5;
-          cursor: not-allowed;
-          opacity: 0.6;
-      }
-    }
-  
-      .send-btn {
-        padding: 12px 28px;
-        background: #E0A15E;
-        color: white;
-        border: none;
-        border-radius: 12px;
-        cursor: pointer;
-        font-weight: 600;
-        transition: all 0.2s;
-        min-width: 100px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        
-        &:hover:not(:disabled) {
-          background: #D08F4E;
-          transform: translateY(-1px);
-          box-shadow: 0 4px 12px rgba(224, 161, 94, 0.3);
-        }
-        
-        &:active:not(:disabled) {
-          transform: translateY(0);
-        }
-        
-        &:disabled {
-          opacity: 0.6;
-          cursor: not-allowed;
-        }
-        
-        .btn-spinner {
-          width: 16px;
-          height: 16px;
-          border: 2px solid #ffffff60;
-          border-top: 2px solid #ffffff;
-          border-radius: 50%;
-          animation: spin 0.8s linear infinite;
-    }
-  }
+    &::-webkit-scrollbar-thumb:hover {
+      background: rgba(224, 161, 94, 0.5);
     }
   }
 }
 
-// Animaciones
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+// ============================================================
+// Accesibilidad · prefers-reduced-motion
+// Reduced motion = fewer and gentler, NOT zero. Mantenemos fades.
+// Eliminamos movimientos (translate, scale-on-press).
+// ============================================================
+@media (prefers-reduced-motion: reduce) {
+  :host ::ng-deep * {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
+  }
+
+  .press-target:active {
+    transform: none;
+  }
+
+  .typing-dots span {
+    // Mantén la señal visual, elimina el salto.
+    animation: none;
+    opacity: 0.6;
+  }
+
+  .chat-sidebar {
+    transition: none;
+  }
+
+  .playlist-panel {
+    transition: none;
+  }
 }
 
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
+// ============================================================
+// Toggle "Modo playlist" en la topbar
+// ============================================================
+.playlist-mode-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  height: 36px;
+  padding: 0 0.65rem;
+  border-radius: 999px;
+  border: 1px solid rgba(224, 161, 94, 0.35);
+  background: transparent;
+  color: #6b4d39;
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+  transition:
+    background-color 180ms var(--ease-out),
+    border-color 180ms var(--ease-out),
+    color 180ms var(--ease-out),
+    box-shadow 200ms var(--ease-out);
 
-@keyframes slideIn {
-    from {
-      opacity: 0;
-      transform: translateY(10px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
+  .material-symbols-outlined {
+    font-size: 18px;
   }
-  
-@keyframes bounce {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
-}
 
-// Responsive para móvil
-@media (max-width: 768px) {
-  .chat-page-container {
-    height: calc(100vh - 60px); // Ajustar para header móvil
-    
-    .conversations-sidebar {
-      position: fixed;
-      top: 0;
-      left: -100%; // Escondido por defecto
-      width: 80%;
-      max-width: 320px;
-      height: 100vh;
-      z-index: 1000;
-      transition: left 0.3s ease-in-out;
-      box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
-      
-      &.mobile-show {
-        left: 0; // Mostrar cuando se activa
-      }
-      
-      .sidebar-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        
-        .mobile-close-btn {
-          display: block;
-          background: none;
-          border: none;
-          font-size: 1.5rem;
-          color: #666;
-          cursor: pointer;
-          padding: 8px;
-        
-        &:hover {
-            color: #E0A15E;
-        }
-      }
-      }
-    }
-    
-    .mobile-fab-sidebar {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      position: fixed;
-      bottom: 90px;
-      left: 16px;
-      width: 56px;
-      height: 56px;
-      background: #E0A15E;
-      color: white;
-      border: none;
-      border-radius: 50%;
-      font-size: 1.5rem;
-      cursor: pointer;
-      box-shadow: 0 4px 12px rgba(224, 161, 94, 0.4);
-      z-index: 999;
-      transition: all 0.3s;
-      
-      &:hover {
-        background: #D08F4E;
-        transform: scale(1.1);
-      }
-      
-      &.hidden {
-        display: none;
-      }
-    }
-    
-    .chat-area {
-      width: 100%;
-      
-      .messages-container {
-        padding: 16px;
-      }
-      
-      .message {
-        max-width: 85%;
-        
-        &.user .message-content {
-          font-size: 0.95rem;
-      }
-        
-        &.assistant .message-content {
-          font-size: 0.95rem;
-        }
-      }
-      
-      .welcome-message {
-        padding: 40px 16px;
-        
-        h2 {
-          font-size: 1.4rem;
-        }
-        
-        p {
-          font-size: 1rem;
-        }
-        
-        .suggestions {
-          flex-direction: column;
-          width: 100%;
-          
-          .suggestion-chip {
-            width: 100%;
-          }
-        }
-      }
-      
-      .processing-container {
-        padding: 12px;
-        
-        .processing-spinner .spinner {
-          width: 32px;
-          height: 32px;
-        }
-        
-        .processing-text {
-          .main-text {
-            font-size: 0.9rem;
-      }
-      
-          .sub-text {
-            font-size: 0.8rem;
-      }
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      background: rgba(224, 161, 94, 0.1);
+      border-color: rgba(224, 161, 94, 0.55);
     }
   }
-  
-      .input-area {
-        padding: 12px;
-        
-        textarea {
-          font-size: 0.95rem;
-          padding: 10px;
-    }
-        
-        .send-btn {
-          padding: 10px 20px;
-          min-width: 80px;
-          font-size: 0.9rem;
-        }
-      }
-    }
+
+  &.is-active {
+    background: linear-gradient(135deg, #fce8c9, #f2c07a);
+    border-color: #c88f4e;
+    color: #5a3a20;
+    box-shadow: 0 2px 10px -2px rgba(224, 161, 94, 0.5);
   }
-  
-  // Overlay oscuro cuando el sidebar está abierto
-  .chat-page-container:has(.conversations-sidebar.mobile-show)::before {
+
+  // Primer encuentro: marcador "nuevo" para que el usuario descubra el
+  // botón. Un punto pulsante en la esquina, muy leve (no invasivo) que
+  // desaparece al activar el modo o al cerrar el hint banner.
+  &.is-new::after {
     content: '';
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
-    z-index: 999;
-    animation: fadeIn 0.3s;
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    background: #E0A15E;
+    box-shadow: 0 0 0 2px #fff8ec;
+    animation: pl-dot-pulse 1.8s ease-in-out infinite;
+  }
+
+  // Necesario para posicionar el punto ::after.
+  position: relative;
+}
+
+@keyframes pl-dot-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.25); opacity: 0.75; }
+}
+
+// =========================================================
+// Hint on-boarding del modo playlist (debajo del welcome).
+// =========================================================
+.playlist-hint {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+  padding: 0.85rem 0.9rem 0.85rem 0.9rem;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #fff8ec 0%, #fce8c9 100%);
+  border: 1px solid rgba(224, 161, 94, 0.35);
+  max-width: 40rem;
+  opacity: 0;
+  transform: translateY(6px);
+  animation: pl-fade-up 420ms var(--ease-out-strong) 120ms forwards;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.playlist-hint-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  background: #E0A15E;
+  color: #fff8ec;
+  flex-shrink: 0;
+  .material-symbols-outlined { font-size: 18px; }
+}
+
+.playlist-hint-text {
+  flex: 1 1 auto;
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.35;
+  color: #5a3a20;
+}
+
+.playlist-hint-close {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  color: #8a6a52;
+  background: transparent;
+  transition: background-color 160ms var(--ease-out-strong), color 160ms var(--ease-out-strong);
+
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      background: rgba(69, 51, 45, 0.08);
+      color: #45332d;
     }
   }
-  
-@keyframes fadeIn {
+
+  .material-symbols-outlined { font-size: 18px; }
+}
+
+// Los estilos de .confirm-modal* viven ahora en src/styles.scss
+// para poder reutilizarlos desde cualquier componente (chat,
+// lista de playlists, etc.).
+
+// Botón con contador (icono + badge) para abrir el panel desde la topbar.
+.playlist-count-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  color: #6b4d39;
+  background: transparent;
+  transition: background-color 160ms var(--ease-out);
+
+  @media (hover: hover) and (pointer: fine) {
+    &:hover { background: rgba(224, 161, 94, 0.12); }
+  }
+}
+
+.playlist-count-badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: #c88f4e;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 16px;
+  text-align: center;
+  box-shadow: 0 0 0 2px rgba(253, 247, 232, 0.92);
+}
+
+// ============================================================
+// Panel lateral del borrador de playlist
+// - Desktop: drawer a la derecha 400px.
+// - Móvil: bottom-sheet, anchura completa, 85vh.
+// ============================================================
+.playlist-panel-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background: rgba(69, 51, 45, 0.35);
+  backdrop-filter: blur(2px);
+  border: 0;
+  animation: chat-backdrop-fade-in 180ms var(--ease-out);
+}
+
+@keyframes chat-backdrop-fade-in {
   from { opacity: 0; }
   to { opacity: 1; }
 }
 
-// Tablet
-@media (min-width: 769px) and (max-width: 1024px) {
-  .chat-page-container {
-    .conversations-sidebar {
-      width: 240px;
+.playlist-panel {
+  position: fixed;
+  z-index: 45;
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+  border-left: 1px solid rgba(224, 161, 94, 0.25);
+  box-shadow: -8px 0 32px -12px rgba(69, 51, 45, 0.25);
+  transition:
+    transform 320ms var(--ease-drawer),
+    opacity 200ms var(--ease-out);
+  pointer-events: none;
+  opacity: 0;
+
+  // Desktop: drawer derecho sticky
+  @media (min-width: 769px) {
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: min(420px, 100%);
+    transform: translateX(12px);
+
+    &.is-open {
+      opacity: 1;
+      transform: translateX(0);
+      pointer-events: auto;
     }
-    
-    .chat-area {
-      .message {
-        max-width: 75%;
-      }
+  }
+
+  // Móvil: bottom-sheet
+  @media (max-width: 768px) {
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 85svh;
+    max-height: 85svh;
+    border-left: 0;
+    border-top: 1px solid rgba(224, 161, 94, 0.3);
+    border-radius: 20px 20px 0 0;
+    transform: translateY(16px);
+
+    &.is-open {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
     }
+
+    // Transición en vivo durante el drag-to-close (sheet handle).
+    &.is-dragging {
+      transition: none !important;
+    }
+  }
+}
+
+// Handle del bottom sheet (móvil). Funciona a la vez como:
+//   - affordance visual (barra crema arriba del panel),
+//   - botón accesible (click/tap cierra el panel),
+//   - zona de gesto (arrastra hacia abajo para cerrar).
+// Ver onPanelSheet* en el componente.
+.playlist-panel-sheet-handle {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  width: 100%;
+  padding: 12px 0 8px;
+  background: transparent;
+  border: 0;
+  cursor: grab;
+  touch-action: none; // deja al JS gestionar el gesto
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+
+  // El handle es una affordance exclusiva del bottom sheet en móvil; en PC el
+  // panel se cierra con el aspa de la esquina, así que lo ocultamos para que
+  // no "flote" la línea crema arriba del panel lateral.
+  @media (min-width: 768px) {
+    display: none;
+  }
+
+  &:active {
+    cursor: grabbing;
+  }
+
+  .playlist-panel-sheet-handle-bar {
+    display: block;
+    width: 40px;
+    height: 4px;
+    border-radius: 999px;
+    background: rgba(224, 161, 94, 0.45);
+    transition: background-color 160ms var(--ease-out, ease-out),
+                width 160ms var(--ease-out, ease-out);
+  }
+
+  &:hover .playlist-panel-sheet-handle-bar,
+  &:focus-visible .playlist-panel-sheet-handle-bar {
+    background: rgba(224, 161, 94, 0.7);
+    width: 52px;
+  }
+}
+
+.playlist-panel-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem 1.25rem 0.5rem;
+  border-bottom: 1px solid rgba(224, 161, 94, 0.15);
+}
+
+.playlist-panel-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 0.75rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+
+  scrollbar-width: thin;
+  scrollbar-color: rgba(224, 161, 94, 0.35) transparent;
+
+  &::-webkit-scrollbar { width: 6px; }
+  &::-webkit-scrollbar-track { background: transparent; }
+  &::-webkit-scrollbar-thumb {
+    background: rgba(224, 161, 94, 0.35);
+    border-radius: 999px;
+  }
+}
+
+.playlist-draft-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.55rem 0.6rem;
+  border-radius: 12px;
+  background: #fdf7e8;
+  border: 1px solid rgba(224, 161, 94, 0.15);
+  transition:
+    background-color 160ms var(--ease-out),
+    box-shadow 200ms var(--ease-out);
+
+  &.cdk-drag-preview {
+    box-shadow: 0 16px 40px -12px rgba(69, 51, 45, 0.35);
+    background: #fffdf8;
+    border-color: rgba(224, 161, 94, 0.5);
+  }
+  &.cdk-drag-placeholder {
+    opacity: 0.35;
+  }
+}
+
+.playlist-drag-handle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #a88464;
+  cursor: grab;
+  flex-shrink: 0;
+  .material-symbols-outlined { font-size: 20px; }
+
+  &:active { cursor: grabbing; }
+}
+
+.playlist-item-position {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  background: rgba(224, 161, 94, 0.18);
+  color: #8c5a25;
+  font-size: 11px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.playlist-item-cover {
+  width: 40px;
+  height: 56px;
+  object-fit: cover;
+  border-radius: 4px;
+  flex-shrink: 0;
+  background: #f6eede;
+}
+
+.playlist-panel-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.75rem 1.25rem 1rem;
+  border-top: 1px solid rgba(224, 161, 94, 0.2);
+  background: rgba(253, 247, 232, 0.5);
+}
+
+.playlist-save-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.55rem 0.9rem;
+  border-radius: 12px;
+  background: #e0a15e;
+  color: #ffffff;
+  font-size: 0.85rem;
+  font-weight: 600;
+  box-shadow: 0 3px 12px -3px rgba(224, 161, 94, 0.55);
+  transition:
+    background-color 160ms var(--ease-out),
+    box-shadow 200ms var(--ease-out);
+
+  @media (hover: hover) and (pointer: fine) {
+    &:hover:not(:disabled) { background: #c88f4e; }
+  }
+
+  &:disabled {
+    background: #e6dccb;
+    color: #ffffff;
+    box-shadow: none;
+    cursor: not-allowed;
   }
 }
