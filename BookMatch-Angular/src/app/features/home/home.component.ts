@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal, ElementRef, viewChild, afterNextRender, OnDestroy } from '@angular/core';
 
 import { Router } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
@@ -9,6 +9,7 @@ import { Footer } from '@shared/components/footer/footer';
 import { BookCarousel3dComponent, BookData } from '@shared/components/book-carousel-3d/book-carousel-3d.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { Category } from '@shared/models';
+import lottie, { type AnimationItem } from 'lottie-web';
 
 /**
  * Pantalla principal autenticada.
@@ -22,10 +23,15 @@ import { Category } from '@shared/models';
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss',
 })
-export class HomeComponent implements OnInit {
+export class HomeComponent implements OnInit, OnDestroy {
   authService = inject(AuthService);
   catalogService = inject(CatalogService); 
   private router = inject(Router);
+
+  private lottieContainer = viewChild<ElementRef<HTMLDivElement>>('lottieChat');
+  private lottieAnim: AnimationItem | null = null;
+  private isHovering = false;
+  private isMorphing = false;
 
   // Señal para guardar las categorías que vienen del backend
   categories = signal<Category[]>([]);
@@ -64,8 +70,42 @@ export class HomeComponent implements OnInit {
     }
   ];
 
+  constructor() {
+    afterNextRender(() => this.initLottie());
+  }
+
   ngOnInit() {
     this.loadCategories();
+  }
+
+  ngOnDestroy() {
+    this.lottieAnim?.destroy();
+  }
+
+  private initLottie() {
+    const container = this.lottieContainer()?.nativeElement;
+    if (!container) return;
+
+    this.lottieAnim = lottie.loadAnimation({
+      container,
+      renderer: 'svg',
+      loop: false,
+      autoplay: false,
+      path: 'assets/animations/chat-book.json',
+    });
+  }
+
+  onChatHover(hovering: boolean) {
+    this.isHovering = hovering;
+    if (!this.lottieAnim) return;
+
+    if (hovering) {
+      this.lottieAnim.setDirection(1);
+      this.lottieAnim.play();
+    } else {
+      this.lottieAnim.setDirection(-1);
+      this.lottieAnim.play();
+    }
   }
 
   /**

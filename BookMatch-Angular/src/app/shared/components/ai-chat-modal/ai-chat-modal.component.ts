@@ -1,8 +1,10 @@
 import { Component, inject, signal, OnInit, OnDestroy, ElementRef, ViewChild, AfterViewChecked } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { AiChatService } from '@core/services/ai-chat.service';
 import { AuthService } from '@core/services/auth.service';
+import lottie, { AnimationItem } from 'lottie-web';
 
 /**
  * Mensaje intercambiado en el chat asistido por IA.
@@ -42,6 +44,16 @@ export class AiChatModalComponent implements OnInit, OnDestroy, AfterViewChecked
 
   @ViewChild('messagesContainer') messagesContainer!: ElementRef<HTMLDivElement>;
   
+  @ViewChild('lottieContainer') set lottieContainer(element: ElementRef<HTMLDivElement> | undefined) {
+    if (element) {
+      this.initLottie(element.nativeElement);
+    } else {
+      this.destroyLottie();
+    }
+  }
+
+  private animationItem?: AnimationItem;
+  
   isOpen = signal(false);
   messages = signal<ChatMessage[]>([]);
   currentMessage = signal('');
@@ -60,7 +72,25 @@ export class AiChatModalComponent implements OnInit, OnDestroy, AfterViewChecked
   }
 
   ngOnDestroy(): void {
-    // Cleanup si es necesario
+    this.destroyLottie();
+  }
+
+  private initLottie(container: HTMLDivElement): void {
+    this.destroyLottie();
+    this.animationItem = lottie.loadAnimation({
+      container,
+      renderer: 'svg',
+      loop: true,
+      autoplay: true,
+      path: 'assets/animations/chat-book.json'
+    });
+  }
+
+  private destroyLottie(): void {
+    if (this.animationItem) {
+      this.animationItem.destroy();
+      this.animationItem = undefined;
+    }
   }
 
   ngAfterViewChecked(): void {
@@ -70,14 +100,13 @@ export class AiChatModalComponent implements OnInit, OnDestroy, AfterViewChecked
     }
   }
 
+  private router = inject(Router);
+
   /**
-   * Abre o cierra el modal de chat.
+   * Navega a la página de chat en lugar de abrir el modal.
    */
   toggle(): void {
-    this.isOpen.set(!this.isOpen());
-    if (this.isOpen()) {
-      setTimeout(() => this.scrollToBottom(), 100);
-    }
+    this.router.navigate(['/ai-chat']);
   }
 
   /**
