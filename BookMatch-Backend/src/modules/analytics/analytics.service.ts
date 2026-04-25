@@ -4,9 +4,10 @@ import path from 'path';
 export const getInventoryAnalytics = (): Promise<any> => {
   return new Promise((resolve, reject) => {
     const scriptPath = path.resolve(process.cwd(), 'scripts', 'inventory_analytics.py');
+    const pythonPath = path.resolve(process.cwd(), 'venv', 'bin', 'python');
     
-    // Execute the Python script
-    exec(`python "${scriptPath}"`, (error, stdout, stderr) => {
+    // Ejecutamos con el python del entorno virtual
+    exec(`"${pythonPath}" "${scriptPath}"`, (error, stdout, stderr) => {
       if (error) {
         console.error(`Error executing Python script: ${error.message}`);
         return reject(error);

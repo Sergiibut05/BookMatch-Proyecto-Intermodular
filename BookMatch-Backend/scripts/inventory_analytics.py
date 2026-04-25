@@ -33,6 +33,12 @@ def main():
         if db_url and "?" in db_url:
             db_url = db_url.split("?")[0]
             
+        # Reemplazar el esquema genérico por el del driver pg8000
+        if db_url.startswith("postgresql://"):
+            db_url = db_url.replace("postgresql://", "postgresql+pg8000://", 1)
+        elif db_url.startswith("postgres://"):
+            db_url = db_url.replace("postgres://", "postgresql+pg8000://", 1)
+            
         engine = create_engine(db_url)
         
         # Consulta 1: Precio promedio por categoría

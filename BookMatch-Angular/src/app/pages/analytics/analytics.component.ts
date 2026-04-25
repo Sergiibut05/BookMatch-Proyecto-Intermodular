@@ -59,7 +59,7 @@ export class AnalyticsComponent implements OnInit {
         },
         error: (err) => {
           this.loading = false;
-          this.error = 'No se pudo cargar la información analítica. Verifica los permisos de administrador o la conexión.';
+          this.error = 'Error en el servidor al cargar la analítica. (Comprueba los logs del backend).';
           console.error('Analytics error:', err);
         }
       });
