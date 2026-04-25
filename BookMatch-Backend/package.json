@@ -5,7 +5,7 @@
   "description": "Este proyecto implementa una API REST con Node.js, Express y PostgreSQL siguiendo un desarrollo incremental versionado con Git tags.",
   "main": "index.js",
   "scripts": {
-    "setup:python": "if [ ! -d 'venv' ]; then python3 -m venv venv; fi && ./venv/bin/pip install -r requirements.txt",
+    "setup:python": "node scripts/setup-python.mjs",
     "dev": "npm run setup:python && nodemon src/index.ts",
     "build": "npx prisma generate && tsc -p .",
     "postinstall": "prisma generate && npm run setup:python",
