@@ -25,22 +25,22 @@
     
     <!-- 4 KPIs Globales -->
     @if (globalKpis) {
-    <div class="kpi-grid">
-      <div class="kpi-card">
+    <div class="kpi-grid pl-stagger-auto">
+      <div class="kpi-card press-target" tabindex="0">
         <span class="kpi-label">Ingresos Totales</span>
-        <h2 class="kpi-value">{{ globalKpis.total_revenue }} €</h2>
+        <h2 class="kpi-value" [appCountUp]="globalKpis.total_revenue" [decimals]="2" suffix=" €">0 €</h2>
       </div>
-      <div class="kpi-card">
+      <div class="kpi-card press-target" tabindex="0" style="animation-delay: 40ms">
         <span class="kpi-label">Pedidos</span>
-        <h2 class="kpi-value">{{ globalKpis.total_orders }}</h2>
+        <h2 class="kpi-value" [appCountUp]="globalKpis.total_orders">0</h2>
       </div>
-      <div class="kpi-card">
+      <div class="kpi-card press-target" tabindex="0" style="animation-delay: 80ms">
         <span class="kpi-label">Ticket Medio</span>
-        <h2 class="kpi-value">{{ globalKpis.average_ticket }} €</h2>
+        <h2 class="kpi-value" [appCountUp]="globalKpis.average_ticket" [decimals]="2" suffix=" €">0 €</h2>
       </div>
-      <div class="kpi-card">
+      <div class="kpi-card press-target" tabindex="0" style="animation-delay: 120ms">
         <span class="kpi-label">Valoración Media</span>
-        <h2 class="kpi-value">{{ globalKpis.average_rating }} ★</h2>
+        <h2 class="kpi-value" [appCountUp]="globalKpis.average_rating" [decimals]="1" suffix=" ★">0 ★</h2>
       </div>
     </div>
     }

@@ -11,9 +11,12 @@
 - Fallback automático a `python3` en `setup-python.mjs` para entornos Unix.
 
 ### Modificado (Frontend)
-- `analytics.component.ts` (SCRUM-187) - Integración de gráficas Chart.js nativas: gráfico de anillo (RFM), línea (Serie temporal), barra horizontal (Correlación de categorías).
-- `analytics.component.scss` (SCRUM-187) - Nueva paleta oficial BookMatch y variables de UI estandarizadas.
-- `analytics.component.html` (SCRUM-187) - Layout tipo PowerBI estructurado (KPIs -> Barras -> RFM -> Serie -> Correlación).
+- `analytics.component.ts` (SCRUM-187 / SCRUM-188) - Integración de gráficas Chart.js nativas (RFM Doughnut, Serie temporal Line, Correlación Horizontal Bar) y nueva directiva `CountUpDirective` para animar los KPIs.
+- `analytics.component.scss` (SCRUM-187 / SCRUM-188) - Nueva paleta oficial BookMatch, variables de UI estandarizadas y estados hover con elevación `translateY(-2px)` al estilo Emil Kowalski.
+- `analytics.component.html` (SCRUM-187 / SCRUM-188) - Layout tipo PowerBI estructurado (KPIs -> Barras -> RFM -> Serie -> Correlación) con stagger de entrada y clases `press-target`.
+
+### Añadido (Frontend)
+- `shared/directives/count-up.directive.ts` (SCRUM-188) - Directiva standalone de animación count-up con `requestAnimationFrame` y curva `easeOut`. Respeta `prefers-reduced-motion`.
 
 ## v1.0.0 - Producción y documentación
 

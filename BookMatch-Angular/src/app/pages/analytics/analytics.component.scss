@@ -87,6 +87,22 @@
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  transition: transform 260ms var(--ease-out-strong, cubic-bezier(0.16, 1, 0.3, 1)),
+              box-shadow 260ms var(--ease-out-strong, cubic-bezier(0.16, 1, 0.3, 1)),
+              border-color 200ms ease-out;
+
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 24px -16px rgba(69, 51, 45, 0.25);
+      border-color: rgba(107, 77, 57, 0.3);
+    }
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--text-walnut);
+    outline-offset: 2px;
+  }
 }
 
 .kpi-label {

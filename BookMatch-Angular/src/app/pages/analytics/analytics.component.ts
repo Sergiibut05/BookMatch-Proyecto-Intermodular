@@ -61,10 +61,12 @@ interface AnalyticsResponse {
   reviewsByCategory: ReviewData[];
 }
 
+import { CountUpDirective } from '../../shared/directives/count-up.directive';
+
 @Component({
   selector: 'app-analytics',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, CountUpDirective],
   templateUrl: './analytics.component.html',
   styleUrls: ['./analytics.component.scss']
 })
