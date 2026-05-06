@@ -9,6 +9,12 @@ import { take } from 'rxjs';
 
 Chart.register(...registerables);
 
+// ─── SCRUM-189 · Defaults globales BookMatch ───────────────────────────────
+Chart.defaults.plugins.tooltip.backgroundColor = 'rgba(69,51,45,0.92)';
+(Chart.defaults.plugins.tooltip as any).cornerRadius = 8;
+Chart.defaults.font.family = "'Inter', sans-serif";
+Chart.defaults.color = '#6b4d39';
+
 interface PriceData {
   category: string;
   average_price: number;
@@ -80,22 +86,26 @@ export class AnalyticsComponent implements OnInit {
   
   globalKpis: GlobalKPIs | null = null;
   topBooks: TopBook[] = [];
+  correlationData: Correlation[] = [];
 
   pricesChart: Chart | null = null;
   reviewsChart: Chart | null = null;
   rfmChart: Chart | null = null;
   timeSeriesChart: Chart | null = null;
+  monthlySalesChart: Chart | null = null;
   correlationChart: Chart | null = null;
 
-  // BookMatch Palette
+  // ─── SCRUM-189 · BookMatch Palette ─────────────────────────────────────────
   private colors = {
-    walnut: '#45332D',
-    walnutLight: '#6b4d39',
-    gold: '#E0A15E',
-    cream: '#FCF5E2',
-    teal: '#3E7D7A', // Añadido para dar variedad a gráficos
-    coral: '#D96C5C', // Añadido para dar variedad a gráficos
-    chartGrid: 'rgba(107, 77, 57, 0.08)'
+    walnut:       '#45332D',
+    walnutLight:  '#6b4d39',
+    walnutMid:    '#c88f4e',
+    gold:         '#E0A15E',
+    goldLight:    'rgba(224, 161, 94, 0.12)',
+    cream:        '#FCF5E2',
+    warmWhite:    '#fffaf0',
+    doughnut:     ['#45332D', '#E0A15E', '#c88f4e', '#6b4d39', '#d4b896'],
+    chartGrid:    'rgba(107, 77, 57, 0.08)'
   };
 
   ngOnInit() {
@@ -111,6 +121,7 @@ export class AnalyticsComponent implements OnInit {
           this.loading = false;
           this.globalKpis = data.global_kpis;
           this.topBooks = data.top_books;
+          this.correlationData = data.category_correlation ?? [];
 
           // Se usa un timeout para asegurar que el DOM @else ha renderizado los canvas
           setTimeout(() => {
@@ -118,6 +129,7 @@ export class AnalyticsComponent implements OnInit {
             this.renderReviewsChart(data.reviewsByCategory);
             this.renderRfmChart(data.rfm_segments);
             this.renderTimeSeriesChart(data.time_series);
+            this.renderMonthlySalesChart(data.monthly_sales);
             this.renderCorrelationChart(data.category_correlation);
           }, 0);
         },
@@ -137,16 +149,39 @@ export class AnalyticsComponent implements OnInit {
       plugins: {
         legend: {
           labels: {
-            font: { family: "'Inter', sans-serif" },
-            color: this.colors.walnut
+            font: { family: "'Inter', sans-serif", size: 13 },
+            color: this.colors.walnut,
+            padding: 16,
+            usePointStyle: true,
+            pointStyleWidth: 10
           }
         },
         tooltip: {
-          backgroundColor: 'rgba(69, 51, 45, 0.95)', // dark walnut
+          backgroundColor: 'rgba(69,51,45,0.92)',
+          cornerRadius: 8,
           padding: 12,
-          titleFont: { size: 14, family: "'Inter', sans-serif" },
-          bodyFont: { size: 13, family: "'Inter', sans-serif" }
+          titleFont: { size: 14, family: "'Inter', sans-serif", weight: 'bold' as const },
+          bodyFont: { size: 13, family: "'Inter', sans-serif" },
+          titleColor: this.colors.cream,
+          bodyColor: '#d4b896'
         }
+      }
+    };
+  }
+
+  /** Helper: ejes estándar BookMatch */
+  private getDefaultScales() {
+    return {
+      y: {
+        beginAtZero: true,
+        grid: { color: this.colors.chartGrid },
+        border: { display: false },
+        ticks: { color: this.colors.walnutLight, font: { size: 12 } }
+      },
+      x: {
+        grid: { display: false },
+        border: { display: false },
+        ticks: { color: this.colors.walnutLight, font: { size: 12 } }
       }
     };
   }
@@ -163,30 +198,15 @@ export class AnalyticsComponent implements OnInit {
         datasets: [{
           label: 'Precio Medio (€)',
           data: data.map(d => d.average_price),
-          backgroundColor: this.colors.teal,
+          backgroundColor: this.colors.gold,   // #E0A15E — spec Jira
           borderRadius: 6,
-          barPercentage: 0.6
+          barPercentage: 0.65
         }]
       },
       options: {
         ...this.getDefaultChartOptions(),
-        plugins: {
-          ...this.getDefaultChartOptions().plugins,
-          legend: { display: false }
-        },
-        scales: {
-          y: {
-            beginAtZero: true,
-            grid: { color: this.colors.chartGrid },
-            border: { display: false },
-            ticks: { color: this.colors.walnutLight }
-          },
-          x: {
-            grid: { display: false },
-            border: { display: false },
-            ticks: { color: this.colors.walnutLight }
-          }
-        }
+        plugins: { ...this.getDefaultChartOptions().plugins, legend: { display: false } },
+        scales: this.getDefaultScales()
       }
     };
     this.pricesChart = new Chart(ctx, config);
@@ -204,29 +224,26 @@ export class AnalyticsComponent implements OnInit {
         datasets: [{
           label: 'Valoración Media (★)',
           data: data.map(d => d.average_rating),
-          backgroundColor: this.colors.gold,
+          backgroundColor: this.colors.walnutMid,  // #c88f4e — spec Jira (barra horizontal)
           borderRadius: 6,
-          barPercentage: 0.6
+          barPercentage: 0.65
         }]
       },
       options: {
         ...this.getDefaultChartOptions(),
-        plugins: {
-          ...this.getDefaultChartOptions().plugins,
-          legend: { display: false }
-        },
+        indexAxis: 'y' as const,
+        plugins: { ...this.getDefaultChartOptions().plugins, legend: { display: false } },
         scales: {
-          y: {
-            beginAtZero: true,
-            max: 5,
+          x: {
+            beginAtZero: true, max: 5,
             grid: { color: this.colors.chartGrid },
             border: { display: false },
-            ticks: { stepSize: 1, color: this.colors.walnutLight }
+            ticks: { stepSize: 1, color: this.colors.walnutLight, font: { size: 12 } }
           },
-          x: {
+          y: {
             grid: { display: false },
             border: { display: false },
-            ticks: { color: this.colors.walnutLight }
+            ticks: { color: this.colors.walnutLight, font: { size: 12 } }
           }
         }
       }
@@ -239,23 +256,16 @@ export class AnalyticsComponent implements OnInit {
     if (!ctx || !data || data.length === 0) return;
     if (this.rfmChart) this.rfmChart.destroy();
 
-    const bgColors = [
-      this.colors.gold,
-      this.colors.teal,
-      this.colors.coral,
-      this.colors.walnutLight,
-      this.colors.walnut
-    ];
-
     const config: ChartConfiguration = {
       type: 'doughnut',
       data: {
         labels: data.map(d => d.segment),
         datasets: [{
           data: data.map(d => d.count),
-          backgroundColor: bgColors,
-          borderWidth: 2,
-          borderColor: this.colors.cream
+          backgroundColor: this.colors.doughnut,  // ['#45332D','#E0A15E','#c88f4e','#6b4d39','#d4b896'] — spec Jira
+          borderWidth: 3,
+          borderColor: this.colors.warmWhite,
+          hoverOffset: 6
         }]
       },
       options: {
@@ -265,7 +275,12 @@ export class AnalyticsComponent implements OnInit {
           ...this.getDefaultChartOptions().plugins,
           legend: {
             position: 'right' as const,
-            labels: { font: { family: "'Inter', sans-serif" }, color: this.colors.walnut }
+            labels: {
+              font: { family: "'Inter', sans-serif", size: 13 },
+              color: this.colors.walnut,
+              padding: 16,
+              usePointStyle: true
+            }
           }
         }
       }
@@ -286,18 +301,20 @@ export class AnalyticsComponent implements OnInit {
           {
             label: 'Ingresos Semanales (€)',
             data: data.map(d => d.revenue),
-            borderColor: this.colors.teal,
-            backgroundColor: 'rgba(62, 125, 122, 0.1)',
+            borderColor: this.colors.walnut,        // #45332D — spec Jira
+            backgroundColor: this.colors.goldLight, // rgba(224,161,94,0.12) — spec Jira
             fill: true,
             tension: 0.4,
-            borderWidth: 2,
-            pointRadius: 3
+            borderWidth: 2.5,
+            pointRadius: 3,
+            pointHoverRadius: 6,
+            pointBackgroundColor: this.colors.walnut
           },
           {
             label: 'Media Móvil 4s (€)',
             data: data.map(d => d.moving_avg_4w),
-            borderColor: this.colors.coral,
-            borderDash: [5, 5],
+            borderColor: this.colors.gold,
+            borderDash: [6, 4],
             fill: false,
             tension: 0.4,
             borderWidth: 2,
@@ -307,72 +324,68 @@ export class AnalyticsComponent implements OnInit {
       },
       options: {
         ...this.getDefaultChartOptions(),
-        interaction: {
-          mode: 'index',
-          intersect: false,
-        },
-        scales: {
-          y: {
-            beginAtZero: true,
-            grid: { color: this.colors.chartGrid },
-            border: { display: false },
-            ticks: { color: this.colors.walnutLight }
-          },
-          x: {
-            grid: { display: false },
-            border: { display: false },
-            ticks: { color: this.colors.walnutLight }
-          }
-        }
+        interaction: { mode: 'index', intersect: false },
+        scales: this.getDefaultScales()
       }
     };
     this.timeSeriesChart = new Chart(ctx, config);
   }
 
-  renderCorrelationChart(data: Correlation[]) {
-    const ctx = document.getElementById('correlationChart') as HTMLCanvasElement;
+  renderMonthlySalesChart(data: any[]) {
+    const ctx = document.getElementById('monthlySalesChart') as HTMLCanvasElement;
     if (!ctx || !data || data.length === 0) return;
-    if (this.correlationChart) this.correlationChart.destroy();
-
-    // Prepare labels combining cat_a and cat_b
-    const labels = data.map(d => `${d.cat_a} + ${d.cat_b}`);
-    const values = data.map(d => d.correlation);
+    if (this.monthlySalesChart) this.monthlySalesChart.destroy();
 
     const config: ChartConfiguration = {
       type: 'bar',
       data: {
-        labels,
+        labels: data.map(d => d.month ?? d.period ?? d.label),
         datasets: [{
-          label: 'Fuerza de Correlación (Pearson)',
-          data: values,
-          backgroundColor: this.colors.gold,
-          borderRadius: 4,
-          barPercentage: 0.8
+          label: 'Ventas Mensuales (€)',
+          data: data.map(d => d.revenue ?? d.total ?? d.value),
+          backgroundColor: this.colors.walnut,  // #45332D — spec Jira
+          borderRadius: 6,
+          barPercentage: 0.7
         }]
       },
       options: {
         ...this.getDefaultChartOptions(),
-        indexAxis: 'y' as const, // Horizontal Bar Chart
-        plugins: {
-          ...this.getDefaultChartOptions().plugins,
-          legend: { display: false }
-        },
-        scales: {
-          x: {
-            beginAtZero: true,
-            max: 1.0,
-            grid: { color: this.colors.chartGrid },
-            border: { display: false },
-            ticks: { color: this.colors.walnutLight }
-          },
-          y: {
-            grid: { display: false },
-            border: { display: false },
-            ticks: { color: this.colors.walnutLight, font: { size: 11 } }
-          }
-        }
+        plugins: { ...this.getDefaultChartOptions().plugins, legend: { display: false } },
+        scales: this.getDefaultScales()
       }
     };
-    this.correlationChart = new Chart(ctx, config);
+    this.monthlySalesChart = new Chart(ctx, config);
+  }
+
+  /** Convierte un valor de correlación (0-1) en un color de gradiente Cream → Gold → Walnut */
+  correlationColor(value: number): string {
+    // 0   → #fffaf0 (warmWhite)
+    // 0.5 → #E0A15E (gold)
+    // 1.0 → #45332D (walnut)
+    const v = Math.max(0, Math.min(1, value));
+    if (v <= 0.5) {
+      // Interpolate warmWhite → gold
+      const t = v * 2;
+      const r = Math.round(255 + (224 - 255) * t);
+      const g = Math.round(250 + (161 - 250) * t);
+      const b = Math.round(240 + (94  - 240) * t);
+      return `rgb(${r},${g},${b})`;
+    } else {
+      // Interpolate gold → walnut
+      const t = (v - 0.5) * 2;
+      const r = Math.round(224 + (69  - 224) * t);
+      const g = Math.round(161 + (51  - 161) * t);
+      const b = Math.round(94  + (45  - 94)  * t);
+      return `rgb(${r},${g},${b})`;
+    }
+  }
+
+  correlationTextColor(value: number): string {
+    return value >= 0.55 ? '#FCF5E2' : '#45332D';
+  }
+
+  renderCorrelationChart(_data: Correlation[]) {
+    // SCRUM-189: La correlación se renderiza como tabla HTML con gradiente de color.
+    // No se usa Canvas — ver analytics.component.html #correlationTable
   }
 }

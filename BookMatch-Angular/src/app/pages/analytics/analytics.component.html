@@ -62,12 +62,32 @@
       </div>
     </div>
 
-    <!-- RFM y Top Libros (2 columnas) -->
+    <!-- RFM (full row) -->
     <div class="dashboard-grid">
-      <div class="chart-card">
+      <div class="chart-card full-width">
         <h2 class="chart-title">Segmentación de Usuarios (RFM)</h2>
         <div class="chart-container">
           <canvas id="rfmChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Serie Temporal (Full width) -->
+    <div class="dashboard-grid">
+      <div class="chart-card full-width">
+        <h2 class="chart-title">Serie Temporal: Ingresos Semanales y Media Móvil</h2>
+        <div class="chart-container-large">
+          <canvas id="timeSeriesChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Ventas Mensuales y Top Libros (2 columnas) -->
+    <div class="dashboard-grid">
+      <div class="chart-card">
+        <h2 class="chart-title">Ventas por Mes</h2>
+        <div class="chart-container">
+          <canvas id="monthlySalesChart"></canvas>
         </div>
       </div>
 
@@ -96,25 +116,59 @@
       </div>
     </div>
 
-    <!-- Serie Temporal (Full width) -->
+    <!-- Correlación de Categorías — Tabla HTML con gradiente de color (SCRUM-189) -->
+    @if (correlationData.length > 0) {
     <div class="dashboard-grid">
       <div class="chart-card full-width">
-        <h2 class="chart-title">Serie Temporal: Ingresos Semanales y Media Móvil</h2>
-        <div class="chart-container-large">
-          <canvas id="timeSeriesChart"></canvas>
+        <h2 class="chart-title">
+          Correlación de Categorías
+          <span class="chart-title-legend">
+            <span class="legend-chip" style="background:#fffaf0; border:1px solid rgba(107,77,57,0.18);">Baja</span>
+            <span class="legend-arrow">→</span>
+            <span class="legend-chip" style="background:#E0A15E; color:#fff;">Media</span>
+            <span class="legend-arrow">→</span>
+            <span class="legend-chip" style="background:#45332D; color:#FCF5E2;">Alta</span>
+          </span>
+        </h2>
+        <div class="table-container">
+          <table class="data-table correlation-table" id="correlationTable">
+            <thead>
+              <tr>
+                <th>Categoría A</th>
+                <th>Categoría B</th>
+                <th>Correlación (Pearson)</th>
+                <th>Intensidad</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (pair of correlationData; track $index) {
+                <tr>
+                  <td><strong>{{ pair.cat_a }}</strong></td>
+                  <td>{{ pair.cat_b }}</td>
+                  <td>
+                    <div class="corr-bar-wrap">
+                      <div class="corr-bar"
+                        [style.width.%]="pair.correlation * 100"
+                        [style.background]="correlationColor(pair.correlation)">
+                      </div>
+                      <span class="corr-label">{{ pair.correlation | number:'1.2-2' }}</span>
+                    </div>
+                  </td>
+                  <td>
+                    <span class="corr-badge"
+                      [style.background]="correlationColor(pair.correlation)"
+                      [style.color]="correlationTextColor(pair.correlation)">
+                      {{ pair.correlation >= 0.7 ? 'Alta' : pair.correlation >= 0.4 ? 'Media' : 'Baja' }}
+                    </span>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
-
-    <!-- Correlación de Categorías (Full width) -->
-    <div class="dashboard-grid">
-      <div class="chart-card full-width">
-        <h2 class="chart-title">Correlación de Categorías (Ventas Cruzadas Top 15)</h2>
-        <div class="chart-container-large">
-          <canvas id="correlationChart"></canvas>
-        </div>
-      </div>
-    </div>
+    }
 
   }
 </div>

@@ -193,3 +193,67 @@
 .data-table tr:last-child td {
   border-bottom: none;
 }
+
+/* ============================================================
+ * SCRUM-189 · CORRELATION TABLE (gradiente de color)
+ * ============================================================ */
+.chart-title {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.chart-title-legend {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  margin-left: auto;
+}
+
+.legend-chip {
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.legend-arrow {
+  color: var(--text-walnut-light);
+}
+
+/* Barra de correlación inline */
+.corr-bar-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  height: 22px;
+}
+
+.corr-bar {
+  height: 12px;
+  border-radius: 999px;
+  min-width: 4px;
+  transition: width 600ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.corr-label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-walnut);
+  min-width: 3rem;
+}
+
+/* Badge de intensidad */
+.corr-badge {
+  display: inline-block;
+  padding: 0.2rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  transition: background 300ms ease;
+}
+
