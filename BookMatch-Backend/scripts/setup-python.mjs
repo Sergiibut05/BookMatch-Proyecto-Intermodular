@@ -11,7 +11,16 @@ const pipPath = isWindows
 
 if (!existsSync(venvDir)) {
   console.log('Creating Python virtual environment...');
-  execSync('python -m venv venv', { stdio: 'inherit' });
+  try {
+    execSync('python -m venv venv', { stdio: 'inherit' });
+  } catch (error) {
+    if (!isWindows) {
+      console.log('python not found, trying python3...');
+      execSync('python3 -m venv venv', { stdio: 'inherit' });
+    } else {
+      throw error;
+    }
+  }
 }
 
 console.log('Installing Python dependencies...');

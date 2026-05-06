@@ -56,3 +56,5 @@ ui-debug.log
 # Build files
 *.tsbuildinfo
 
+# Cursor MCP
+.cursor/mcp.json
