@@ -11,15 +11,41 @@
   </div>
 
   @if (loading) {
-    <div class="flex justify-center items-center h-64">
-      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-600"></div>
+    <!-- SCRUM-190 · Skeleton Loading -->
+    <div class="skel-kpi-grid" aria-busy="true" aria-label="Cargando datos...">
+      @for (_ of [1,2,3,4]; track $index) {
+        <div class="skel-kpi-card">
+          <div class="skel-line skel-label"></div>
+          <div class="skel-line skel-value"></div>
+        </div>
+      }
     </div>
+    <div class="skel-charts-grid">
+      @for (_ of [1,2,3,4]; track $index) {
+        <div class="skel-chart-card">
+          <div class="skel-line skel-chart-title"></div>
+          <div class="skel-chart-body"></div>
+        </div>
+      }
+    </div>
+
   } @else if (error) {
-    <div class="bg-red-50 border-l-4 border-red-500 p-4 rounded-md shadow-sm">
-      <h3 class="text-sm font-medium text-red-800">Error al cargar analíticas</h3>
-      <div class="mt-2 text-sm text-red-700">
-        <p>{{ error }}</p>
+    <!-- SCRUM-190 · Estado de error editorial -->
+    <div class="analytics-error" role="alert">
+      <div class="analytics-error-icon" aria-hidden="true">
+        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="12" y1="8" x2="12" y2="12"/>
+          <line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
       </div>
+      <div class="analytics-error-body">
+        <h3 class="analytics-error-title">No se han podido cargar los datos</h3>
+        <p class="analytics-error-desc">{{ error }}</p>
+      </div>
+      <button class="btn-outline press-target" (click)="fetchData()" style="margin-left: auto; flex-shrink: 0;">
+        Reintentar
+      </button>
     </div>
   } @else {
     
