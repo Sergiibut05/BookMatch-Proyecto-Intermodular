@@ -1,62 +1,120 @@
-<div class="min-h-screen bg-gray-50 p-6 md:p-10">
-  <div class="max-w-7xl mx-auto space-y-8">
-    <div class="flex items-center justify-between">
-      <div>
-        <h1 class="text-3xl font-bold text-gray-900 tracking-tight">Analytics Dashboard</h1>
-        <p class="mt-2 text-gray-600">Visualización de datos de inventario y comunidad.</p>
+<div class="analytics-shell">
+  
+  <div class="analytics-header">
+    <div>
+      <h1 class="analytics-title">Analytics Dashboard</h1>
+      <p class="analytics-subtitle">Visualización de datos de negocio y comunidad.</p>
+    </div>
+    <button routerLink="/" class="px-4 py-2 bg-white border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none transition-colors">
+      Volver
+    </button>
+  </div>
+
+  @if (loading) {
+    <div class="flex justify-center items-center h-64">
+      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-600"></div>
+    </div>
+  } @else if (error) {
+    <div class="bg-red-50 border-l-4 border-red-500 p-4 rounded-md shadow-sm">
+      <h3 class="text-sm font-medium text-red-800">Error al cargar analíticas</h3>
+      <div class="mt-2 text-sm text-red-700">
+        <p>{{ error }}</p>
       </div>
-      <button routerLink="/" class="px-4 py-2 bg-white border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
-        Volver
-      </button>
+    </div>
+  } @else {
+    
+    <!-- 4 KPIs Globales -->
+    @if (globalKpis) {
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <span class="kpi-label">Ingresos Totales</span>
+        <h2 class="kpi-value">{{ globalKpis.total_revenue }} €</h2>
+      </div>
+      <div class="kpi-card">
+        <span class="kpi-label">Pedidos</span>
+        <h2 class="kpi-value">{{ globalKpis.total_orders }}</h2>
+      </div>
+      <div class="kpi-card">
+        <span class="kpi-label">Ticket Medio</span>
+        <h2 class="kpi-value">{{ globalKpis.average_ticket }} €</h2>
+      </div>
+      <div class="kpi-card">
+        <span class="kpi-label">Valoración Media</span>
+        <h2 class="kpi-value">{{ globalKpis.average_rating }} ★</h2>
+      </div>
+    </div>
+    }
+
+    <!-- Gráficos por Categoría (2 columnas) -->
+    <div class="dashboard-grid">
+      <div class="chart-card">
+        <h2 class="chart-title">Precio Promedio por Categoría</h2>
+        <div class="chart-container">
+          <canvas id="pricesChart"></canvas>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <h2 class="chart-title">Valoraciones Medias por Categoría</h2>
+        <div class="chart-container">
+          <canvas id="reviewsChart"></canvas>
+        </div>
+      </div>
     </div>
 
-    @if (loading) {
-      <div class="flex justify-center items-center h-64">
-        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
-      </div>
-    } @else if (error) {
-      <div class="bg-red-50 border-l-4 border-red-500 p-4 rounded-md shadow-sm">
-        <div class="flex">
-          <div class="ml-3">
-            <h3 class="text-sm font-medium text-red-800">Error al cargar analíticas</h3>
-            <div class="mt-2 text-sm text-red-700">
-              <p>{{ error }}</p>
-            </div>
-          </div>
+    <!-- RFM y Top Libros (2 columnas) -->
+    <div class="dashboard-grid">
+      <div class="chart-card">
+        <h2 class="chart-title">Segmentación de Usuarios (RFM)</h2>
+        <div class="chart-container">
+          <canvas id="rfmChart"></canvas>
         </div>
       </div>
-    } @else {
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <!-- Gráfico de Precios -->
-        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-          <h2 class="text-lg font-semibold text-gray-800 mb-6 flex items-center">
-            <span class="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center mr-3">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" />
-              </svg>
-            </span>
-            Precio Promedio por Categoría
-          </h2>
-          <div class="relative h-[300px] w-full">
-            <canvas id="pricesChart"></canvas>
-          </div>
-        </div>
 
-        <!-- Gráfico de Valoraciones -->
-        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-          <h2 class="text-lg font-semibold text-gray-800 mb-6 flex items-center">
-            <span class="w-8 h-8 rounded-lg bg-yellow-100 text-yellow-600 flex items-center justify-center mr-3">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-              </svg>
-            </span>
-            Valoraciones Medias por Categoría
-          </h2>
-          <div class="relative h-[300px] w-full">
-            <canvas id="reviewsChart"></canvas>
-          </div>
+      <div class="chart-card">
+        <h2 class="chart-title">Top 10 Libros más Vendidos</h2>
+        <div class="table-container" style="max-height: 320px; overflow-y: auto;">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Pos.</th>
+                <th>Título</th>
+                <th>Uds. Vendidas</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (book of topBooks; track $index) {
+                <tr>
+                  <td style="font-weight: 600;">#{{ $index + 1 }}</td>
+                  <td>{{ book.title }}</td>
+                  <td>{{ book.quantity }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
         </div>
       </div>
-    }
-  </div>
+    </div>
+
+    <!-- Serie Temporal (Full width) -->
+    <div class="dashboard-grid">
+      <div class="chart-card full-width">
+        <h2 class="chart-title">Serie Temporal: Ingresos Semanales y Media Móvil</h2>
+        <div class="chart-container-large">
+          <canvas id="timeSeriesChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Correlación de Categorías (Full width) -->
+    <div class="dashboard-grid">
+      <div class="chart-card full-width">
+        <h2 class="chart-title">Correlación de Categorías (Ventas Cruzadas Top 15)</h2>
+        <div class="chart-container-large">
+          <canvas id="correlationChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+  }
 </div>

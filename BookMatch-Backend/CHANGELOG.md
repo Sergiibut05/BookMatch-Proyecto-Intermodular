@@ -10,6 +10,11 @@
 - Nuevos scripts en `package.json`: `npm run seed:analytics` y `npm run seed:analytics:clean`.
 - Fallback automático a `python3` en `setup-python.mjs` para entornos Unix.
 
+### Modificado (Frontend)
+- `analytics.component.ts` (SCRUM-187) - Integración de gráficas Chart.js nativas: gráfico de anillo (RFM), línea (Serie temporal), barra horizontal (Correlación de categorías).
+- `analytics.component.scss` (SCRUM-187) - Nueva paleta oficial BookMatch y variables de UI estandarizadas.
+- `analytics.component.html` (SCRUM-187) - Layout tipo PowerBI estructurado (KPIs -> Barras -> RFM -> Serie -> Correlación).
+
 ## v1.0.0 - Producción y documentación
 
 ### Añadido
