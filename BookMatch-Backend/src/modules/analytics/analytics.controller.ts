@@ -1,12 +1,12 @@
 import type { Request, Response } from 'express';
-import { getInventoryAnalytics } from './analytics.service.js';
+import { getDashboardAnalytics } from './analytics.service.js';
 
-export const getInventory = async (req: Request, res: Response) => {
+export const getDashboard = async (req: Request, res: Response) => {
   try {
-    const data = await getInventoryAnalytics();
+    const data = await getDashboardAnalytics();
     res.json(data);
   } catch (error: any) {
-    console.error('Error fetching inventory analytics:', error);
+    console.error('Error fetching dashboard analytics:', error);
     res.status(500).json({ message: 'Error retrieving analytics data', error: error.message });
   }
 };

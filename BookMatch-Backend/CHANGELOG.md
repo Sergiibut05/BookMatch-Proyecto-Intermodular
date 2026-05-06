@@ -1,10 +1,11 @@
 # Changelog
 
-## [Reciente] - Analíticas y Datos Sintéticos (SCRUM-184)
+## [Reciente] - Analíticas y Datos Sintéticos (SCRUM-184 & SCRUM-185)
 
 ### Añadido
-- Script `scripts/seed_analytics.py` para inyección de datos sintéticos masivos (usuarios, órdenes, items, reseñas) usando Pandas y NumPy.
-- Funcionalidad de estacionalidad (alta en Diciembre, Abril, Noviembre) para las órdenes de compra.
+- Script `scripts/advanced_analytics.py` (SCRUM-185) para generar análisis detallados de e-commerce (KPIs globales, series temporales, RFM por quintiles, análisis cruzado de cesta, top ventas mensuales) usando Pandas y NumPy. Reemplaza por completo al antiguo `inventory_analytics.py`.
+- Script `scripts/seed_analytics.py` (SCRUM-184) para inyección de datos sintéticos masivos (usuarios, órdenes, items, reseñas) simulando estacionalidad.
+- Funcionalidad de estacionalidad (alta en Diciembre, Abril, Noviembre) para las órdenes de compra en el seed.
 - Reseteo dinámico de secuencias autoincrementales (`orders_id_seq`, etc.) en PostgreSQL para asegurar integridad tras inyección manual de IDs.
 - Nuevos scripts en `package.json`: `npm run seed:analytics` y `npm run seed:analytics:clean`.
 - Fallback automático a `python3` en `setup-python.mjs` para entornos Unix.

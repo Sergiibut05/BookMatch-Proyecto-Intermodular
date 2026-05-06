@@ -1,10 +1,12 @@
 import { exec } from 'child_process';
 import path from 'path';
 
-export const getInventoryAnalytics = (): Promise<any> => {
+export const getDashboardAnalytics = (): Promise<any> => {
   return new Promise((resolve, reject) => {
-    const scriptPath = path.resolve(process.cwd(), 'scripts', 'inventory_analytics.py');
-    const pythonPath = path.resolve(process.cwd(), 'venv', 'bin', 'python');
+    const scriptPath = path.resolve(process.cwd(), 'scripts', 'advanced_analytics.py');
+    const pythonPath = process.platform === 'win32'
+      ? path.resolve(process.cwd(), 'venv', 'Scripts', 'python.exe')
+      : path.resolve(process.cwd(), 'venv', 'bin', 'python');
     
     // Ejecutamos con el python del entorno virtual
     exec(`"${pythonPath}" "${scriptPath}"`, (error, stdout, stderr) => {
