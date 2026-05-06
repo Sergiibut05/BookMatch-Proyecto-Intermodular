@@ -256,23 +256,23 @@ export class AnalyticsComponent implements OnInit {
     if (!ctx || !data || data.length === 0) return;
     if (this.rfmChart) this.rfmChart.destroy();
 
-    const config: ChartConfiguration = {
+    const config: ChartConfiguration<'doughnut'> = {
       type: 'doughnut',
       data: {
         labels: data.map(d => d.segment),
         datasets: [{
           data: data.map(d => d.count),
-          backgroundColor: this.colors.doughnut,  // ['#45332D','#E0A15E','#c88f4e','#6b4d39','#d4b896'] — spec Jira
+          backgroundColor: this.colors.doughnut as string[],
           borderWidth: 3,
           borderColor: this.colors.warmWhite,
           hoverOffset: 6
         }]
       },
       options: {
-        ...this.getDefaultChartOptions(),
+        responsive: true,
+        maintainAspectRatio: false,
         cutout: '65%',
         plugins: {
-          ...this.getDefaultChartOptions().plugins,
           legend: {
             position: 'right' as const,
             labels: {
@@ -281,12 +281,22 @@ export class AnalyticsComponent implements OnInit {
               padding: 16,
               usePointStyle: true
             }
+          },
+          tooltip: {
+            backgroundColor: 'rgba(69,51,45,0.92)',
+            cornerRadius: 8,
+            padding: 12,
+            titleFont: { size: 14, family: "'Inter', sans-serif", weight: 'bold' as const },
+            bodyFont: { size: 13, family: "'Inter', sans-serif" },
+            titleColor: this.colors.cream,
+            bodyColor: '#d4b896'
           }
         }
       }
     };
     this.rfmChart = new Chart(ctx, config);
   }
+
 
   renderTimeSeriesChart(data: TimeSeries[]) {
     const ctx = document.getElementById('timeSeriesChart') as HTMLCanvasElement;
