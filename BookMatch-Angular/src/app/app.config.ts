@@ -8,7 +8,6 @@ import { provideAnalytics, getAnalytics, ScreenTrackingService } from '@angular/
 import { provideDatabase, getDatabase } from '@angular/fire/database';
 import { provideStorage, getStorage } from '@angular/fire/storage';
 import { provideFirestore, getFirestore } from '@angular/fire/firestore';
-import { provideAnalytics, getAnalytics, ScreenTrackingService } from '@angular/fire/analytics';
 import { routes } from './app.routes';
 import { environment } from '../environments/environment';
 import { Observable } from 'rxjs';
@@ -54,8 +53,6 @@ export const appConfig: ApplicationConfig = {
     provideFirestore(() => getFirestore()),
     provideDatabase(() => getDatabase()),
     provideStorage(() => getStorage()),
-    provideAnalytics(() => getAnalytics()),
-    ScreenTrackingService,
     importProvidersFrom(
       TranslateModule.forRoot({
         loader: {

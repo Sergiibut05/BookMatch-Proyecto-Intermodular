@@ -386,3 +386,39 @@
   transition: background 300ms ease;
 }
 
+// ─── SCRUM-195 · Traffic Banner ───────────────────────────────────────────
+.traffic-banner {
+  display: flex;
+  align-items: center;
+  background-color: rgba(224, 161, 94, 0.12); // goldLight
+  border-left: 4px solid var(--bm-gold);
+  padding: 1.25rem 1.5rem;
+  border-radius: 8px;
+  margin-bottom: 2rem;
+
+  .traffic-banner-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background-color: var(--bm-gold);
+    color: white;
+    border-radius: 50%;
+    font-weight: bold;
+    font-size: 1.1rem;
+    margin-right: 1.25rem;
+    flex-shrink: 0;
+  }
+
+  .traffic-banner-content {
+    h3 {
+      font-family: 'Lora', serif;
+      font-size: 1.1rem;
+    }
+    p {
+      font-family: 'Inter', sans-serif;
+      font-size: 0.95rem;
+    }
+  }
+}

@@ -67,6 +67,37 @@ interface AnalyticsResponse {
   reviewsByCategory: ReviewData[];
 }
 
+// ─── SCRUM-195 · Traffic Interfaces ────────────────────────────────────────
+interface PageviewData {
+  date: string;
+  pageviews: number;
+  activeUsers: number;
+}
+interface TopPageData {
+  title: string;
+  path: string;
+  views: number;
+}
+interface VisitorData {
+  country?: string;
+  browser?: string;
+  device?: string;
+  users: number;
+}
+interface TrafficSummary {
+  sessions: number;
+  bounceRate: number;
+  averageSessionDuration: number;
+}
+interface TrafficResponse {
+  pageviewsByDay: PageviewData[];
+  topPages: TopPageData[];
+  visitorsByCountry: VisitorData[];
+  browsers: VisitorData[];
+  devices: VisitorData[];
+  summary: TrafficSummary;
+}
+
 import { CountUpDirective } from '../../shared/directives/count-up.directive';
 
 @Component({
@@ -94,6 +125,16 @@ export class AnalyticsComponent implements OnInit {
   timeSeriesChart: Chart | null = null;
   monthlySalesChart: Chart | null = null;
   correlationChart: Chart | null = null;
+
+  // ─── SCRUM-195 · Traffic State ─────────────────────────────────────────────
+  loadingTraffic = true;
+  trafficError: string | null = null;
+  trafficData: TrafficResponse | null = null;
+
+  pageviewsChart: Chart | null = null;
+  topPagesChart: Chart | null = null;
+  countriesChart: Chart | null = null;
+  browsersChart: Chart | null = null;
 
   // ─── SCRUM-189 · BookMatch Palette ─────────────────────────────────────────
   private colors = {
@@ -137,6 +178,28 @@ export class AnalyticsComponent implements OnInit {
           this.loading = false;
           this.error = 'Error en el servidor al cargar la analítica. (Comprueba los logs del backend).';
           console.error('Analytics error:', err);
+        }
+      });
+
+      // ─── SCRUM-195 · Fetch Traffic Data ──────────────────────────────────────
+      this.http.get<TrafficResponse>(`${this.API_URL}/analytics/traffic`, { headers }).subscribe({
+        next: (data) => {
+          this.loadingTraffic = false;
+          this.trafficData = data;
+
+          if (!this.isTrafficEmpty()) {
+            setTimeout(() => {
+              this.renderPageviewsChart(data.pageviewsByDay);
+              this.renderTopPagesChart(data.topPages);
+              this.renderCountriesChart(data.visitorsByCountry);
+              this.renderBrowsersChart(data.browsers);
+            }, 0);
+          }
+        },
+        error: (err) => {
+          this.loadingTraffic = false;
+          this.trafficError = 'Error al cargar los datos de tráfico.';
+          console.error('Traffic analytics error:', err);
         }
       });
     });
@@ -397,5 +460,131 @@ export class AnalyticsComponent implements OnInit {
   renderCorrelationChart(_data: Correlation[]) {
     // SCRUM-189: La correlación se renderiza como tabla HTML con gradiente de color.
     // No se usa Canvas — ver analytics.component.html #correlationTable
+  }
+
+  isTrafficEmpty(): boolean {
+    if (!this.trafficData) return true;
+    return this.trafficData.pageviewsByDay.length === 0 && 
+           this.trafficData.topPages.length === 0;
+  }
+
+  // ─── SCRUM-195 · Traffic Charts ──────────────────────────────────────────
+
+  renderPageviewsChart(data: PageviewData[]) {
+    const ctx = document.getElementById('pageviewsChart') as HTMLCanvasElement;
+    if (!ctx || !data || data.length === 0) return;
+    if (this.pageviewsChart) this.pageviewsChart.destroy();
+
+    const config: ChartConfiguration<'line'> = {
+      type: 'line',
+      data: {
+        labels: data.map(d => {
+          // Format YYYYMMDD to DD/MM
+          if (d.date.length === 8) {
+            return `${d.date.substring(6,8)}/${d.date.substring(4,6)}`;
+          }
+          return d.date;
+        }),
+        datasets: [{
+          label: 'Pageviews',
+          data: data.map(d => d.pageviews),
+          borderColor: this.colors.walnut,
+          backgroundColor: this.colors.goldLight,
+          borderWidth: 2,
+          pointBackgroundColor: this.colors.gold,
+          pointRadius: 3,
+          pointHoverRadius: 5,
+          fill: true,
+          tension: 0.3
+        }]
+      },
+      options: {
+        ...this.getDefaultChartOptions(),
+        scales: this.getDefaultScales()
+      }
+    };
+    this.pageviewsChart = new Chart(ctx, config);
+  }
+
+  renderTopPagesChart(data: TopPageData[]) {
+    const ctx = document.getElementById('topPagesChart') as HTMLCanvasElement;
+    if (!ctx || !data || data.length === 0) return;
+    if (this.topPagesChart) this.topPagesChart.destroy();
+
+    const config: ChartConfiguration<'bar'> = {
+      type: 'bar',
+      data: {
+        labels: data.map(d => d.title || d.path),
+        datasets: [{
+          label: 'Pageviews',
+          data: data.map(d => d.views),
+          backgroundColor: this.colors.gold,
+          borderRadius: 4
+        }]
+      },
+      options: {
+        ...this.getDefaultChartOptions(),
+        indexAxis: 'y',
+        scales: this.getDefaultScales()
+      }
+    };
+    this.topPagesChart = new Chart(ctx, config);
+  }
+
+  renderCountriesChart(data: VisitorData[]) {
+    const ctx = document.getElementById('countriesChart') as HTMLCanvasElement;
+    if (!ctx || !data || data.length === 0) return;
+    if (this.countriesChart) this.countriesChart.destroy();
+
+    const config: ChartConfiguration<'doughnut'> = {
+      type: 'doughnut',
+      data: {
+        labels: data.map(d => d.country || 'Desconocido'),
+        datasets: [{
+          data: data.map(d => d.users),
+          backgroundColor: this.colors.doughnut as string[],
+          borderWidth: 2,
+          borderColor: this.colors.warmWhite
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'bottom' as const },
+          tooltip: this.getDefaultChartOptions().plugins.tooltip
+        }
+      }
+    };
+    this.countriesChart = new Chart(ctx, config);
+  }
+
+  renderBrowsersChart(data: VisitorData[]) {
+    const ctx = document.getElementById('browsersChart') as HTMLCanvasElement;
+    if (!ctx || !data || data.length === 0) return;
+    if (this.browsersChart) this.browsersChart.destroy();
+
+    const config: ChartConfiguration<'doughnut'> = {
+      type: 'doughnut',
+      data: {
+        labels: data.map(d => d.browser || 'Desconocido'),
+        datasets: [{
+          data: data.map(d => d.users),
+          backgroundColor: ['#E0A15E', '#c88f4e', '#d4b896', '#eed0aa', '#f4ead0'],
+          borderWidth: 2,
+          borderColor: this.colors.warmWhite
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: '70%',
+        plugins: {
+          legend: { position: 'right' as const },
+          tooltip: this.getDefaultChartOptions().plugins.tooltip
+        }
+      }
+    };
+    this.browsersChart = new Chart(ctx, config);
   }
 }
