@@ -1,5 +1,5 @@
 import { ApplicationConfig, provideBrowserGlobalErrorListeners, provideZoneChangeDetection, importProvidersFrom } from '@angular/core';
-import { provideRouter, withViewTransitions } from '@angular/router';
+import { provideRouter, withViewTransitions, withInMemoryScrolling } from '@angular/router';
 import { provideHttpClient, withFetch, HttpClient } from '@angular/common/http';
 import { TranslateModule, TranslateLoader } from '@ngx-translate/core';
 import { provideFirebaseApp, initializeApp } from '@angular/fire/app';
@@ -10,6 +10,7 @@ import { provideFirestore, getFirestore } from '@angular/fire/firestore';
 import { routes } from './app.routes';
 import { environment } from '../environments/environment';
 import { Observable } from 'rxjs';
+import { provideQueryClientOptions } from '@ngneat/query';
 
 /**
  * Loader de traducciones basado en archivos JSON bajo `assets/i18n`.
@@ -43,7 +44,23 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
     provideZoneChangeDetection({ eventCoalescing: true }),
-    provideRouter(routes, withViewTransitions({ skipInitialTransition: true })),
+    provideRouter(
+      routes,
+      withViewTransitions({ skipInitialTransition: true }),
+      withInMemoryScrolling({ scrollPositionRestoration: 'top', anchorScrolling: 'enabled' })
+    ),
+    provideQueryClientOptions({
+      defaultOptions: {
+        queries: {
+          // Datos de catálogo: frescos 5 min, en caché 10 min.
+          // Los carruseles del home reutilizarán la caché en lugar de volver a pedir.
+          staleTime: 1000 * 60 * 5,
+          gcTime: 1000 * 60 * 10,
+          retry: 1,
+          refetchOnWindowFocus: false,
+        },
+      },
+    }),
     provideHttpClient(withFetch()),
     provideFirebaseApp(() => initializeApp(environment.firebase)),
     provideAuth(() => getAuth()),

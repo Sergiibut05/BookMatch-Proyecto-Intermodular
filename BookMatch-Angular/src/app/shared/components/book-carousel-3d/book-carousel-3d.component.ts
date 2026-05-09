@@ -65,6 +65,10 @@ export class BookCarousel3dComponent implements OnInit, AfterViewInit, OnDestroy
   private carouselMaxOffset = Infinity;
   private isDragging = false;
   private lastDragX = 0;
+  private mouseDownX = 0;
+  private mouseDownY = 0;
+  private wasDragged = false;           // true when pointer moved > threshold
+  private readonly DRAG_THRESHOLD = 5; // px
   private isMouseOverCanvas = false;
   private touchStartX = 0;
   private touchStartY = 0;
@@ -339,6 +343,13 @@ export class BookCarousel3dComponent implements OnInit, AfterViewInit, OnDestroy
     this.cursor.y = -(event.clientY / sizes.height) * 2 + 1;
 
     if (this.isDragging) {
+      // Track total distance to distinguish real drag from micro-movement
+      const totalDx = Math.abs(event.clientX - this.mouseDownX);
+      const totalDy = Math.abs(event.clientY - this.mouseDownY);
+      if (totalDx > this.DRAG_THRESHOLD || totalDy > this.DRAG_THRESHOLD) {
+        this.wasDragged = true;
+      }
+
       const deltaX = event.clientX - this.lastDragX;
       const newOffset = this.targetCarouselOffset + deltaX * this.carouselConfig.dragSensitivity;
       this.targetCarouselOffset = Math.max(this.carouselMinOffset, Math.min(this.carouselMaxOffset, newOffset));
@@ -348,6 +359,9 @@ export class BookCarousel3dComponent implements OnInit, AfterViewInit, OnDestroy
 
   private onMouseDown(event: MouseEvent) {
     this.isDragging = true;
+    this.wasDragged = false;
+    this.mouseDownX = event.clientX;
+    this.mouseDownY = event.clientY;
     this.lastDragX = event.clientX;
     const canvas = this.canvasRef.nativeElement;
     canvas.style.cursor = 'grabbing';
@@ -417,26 +431,30 @@ export class BookCarousel3dComponent implements OnInit, AfterViewInit, OnDestroy
   }
 
   private onClick(event: MouseEvent) {
-    if (!this.isDragging) {
-      const sizes = {
-        width: window.innerWidth,
-        height: window.innerHeight
-      };
+    // Ignore click if user actually dragged (moved pointer beyond threshold)
+    if (this.wasDragged) {
+      this.wasDragged = false;
+      return;
+    }
 
-      this.mouse.x = (event.clientX / sizes.width) * 2 - 1;
-      this.mouse.y = -(event.clientY / sizes.height) * 2 + 1;
+    const sizes = {
+      width: window.innerWidth,
+      height: window.innerHeight
+    };
 
-      this.raycaster.setFromCamera(this.mouse, this.camera);
-      const intersects = this.raycaster.intersectObjects(this.booksGroup.children);
+    this.mouse.x = (event.clientX / sizes.width) * 2 - 1;
+    this.mouse.y = -(event.clientY / sizes.height) * 2 + 1;
 
-      if (intersects.length > 0) {
-        const clickedBook = intersects[0].object as THREE.Mesh;
-        const bookData = clickedBook.userData['bookData'] as BookData;
-        if (bookData && bookData.url) {
-          this.router.navigateByUrl(bookData.url);
-        } else if (bookData && bookData.id) {
-          this.router.navigate(['/book', bookData.id]);
-        }
+    this.raycaster.setFromCamera(this.mouse, this.camera);
+    const intersects = this.raycaster.intersectObjects(this.booksGroup.children);
+
+    if (intersects.length > 0) {
+      const clickedBook = intersects[0].object as THREE.Mesh;
+      const bookData = clickedBook.userData['bookData'] as BookData;
+      if (bookData && bookData.url) {
+        this.router.navigateByUrl(bookData.url);
+      } else if (bookData && bookData.id) {
+        this.router.navigate(['/book', bookData.id]);
       }
     }
   }

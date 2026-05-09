@@ -1,8 +1,21 @@
-import { Component, inject, OnInit, signal, ElementRef, viewChild, afterNextRender, OnDestroy } from '@angular/core';
+import {
+  Component,
+  inject,
+  OnInit,
+  OnDestroy,
+  signal,
+  ElementRef,
+  viewChild,
+  afterNextRender,
+  EffectRef,
+  effect,
+  Injector,
+  runInInjectionContext,
+} from '@angular/core';
 
 import { Router } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
-import { CatalogService } from '@core/services/catalog.service'; 
+import { CatalogQueryService } from '@core/services/catalog-query.service';
 import { Header } from '@shared/components/header/header';
 import { Carousel } from '@shared/components/carousel/carousel';
 import { Footer } from '@shared/components/footer/footer';
@@ -16,6 +29,10 @@ import lottie, { type AnimationItem } from 'lottie-web';
  *
  * Muestra categorias, accesos rapidos al catalogo/foro/chat y un carrusel
  * destacado de libros para navegacion inicial.
+ *
+ * Las categorías se cargan con @ngneat/query (CatalogQueryService):
+ *  - La query de categorías se activa al llegar al #home-content (IntersectionObserver).
+ *  - Si el usuario ya visitó el home, las categorías se sirven desde caché (sin request de red).
  */
 @Component({
   selector: 'app-home',
@@ -25,18 +42,26 @@ import lottie, { type AnimationItem } from 'lottie-web';
 })
 export class HomeComponent implements OnInit, OnDestroy {
   authService = inject(AuthService);
-  catalogService = inject(CatalogService); 
+  private catalogQueryService = inject(CatalogQueryService);
   private router = inject(Router);
+  private injector = inject(Injector);
 
   private lottieContainer = viewChild<ElementRef<HTMLDivElement>>('lottieChat');
   private lottieAnim: AnimationItem | null = null;
   private isHovering = false;
-  private isMorphing = false;
 
-  // Señal para guardar las categorías que vienen del backend
+  private categoriesObserver: IntersectionObserver | null = null;
+  private categoriesEffectRef: EffectRef | null = null;
+
+  private categoriesQuery: ReturnType<CatalogQueryService['getCategories']> | null = null;
+
+  /**
+   * Categorías principales — se actualizan vía effect() cuando la query resuelve.
+   * Excluye los slugs que no deben aparecer como secciones principales en el home.
+   */
   categories = signal<Category[]>([]);
 
-  // Datos para el carrusel 3D
+  // Datos para el carrusel 3D (estáticos, no necesitan query)
   featuredBooks: BookData[] = [
     {
       title: "A Winter's Embrace",
@@ -71,15 +96,20 @@ export class HomeComponent implements OnInit, OnDestroy {
   ];
 
   constructor() {
-    afterNextRender(() => this.initLottie());
+    afterNextRender(() => {
+      this.initLottie();
+      this.initCategoriesObserver();
+    });
   }
 
-  ngOnInit() {
-    this.loadCategories();
-  }
+  ngOnInit() {}
 
   ngOnDestroy() {
     this.lottieAnim?.destroy();
+    this.categoriesObserver?.disconnect();
+    this.categoriesObserver = null;
+    this.categoriesEffectRef?.destroy();
+    this.categoriesEffectRef = null;
   }
 
   private initLottie() {
@@ -95,6 +125,46 @@ export class HomeComponent implements OnInit, OnDestroy {
     });
   }
 
+  /**
+   * Activa la query de categorías cuando el #home-content entra en el viewport.
+   * Si el usuario ya visitó el home, @ngneat/query sirve la respuesta desde caché.
+   */
+  private initCategoriesObserver() {
+    const target = document.getElementById('home-content');
+    const activate = () => {
+      this.categoriesQuery = this.catalogQueryService.getCategories();
+      // Sincronizar el resultado de la query con la señal local via effect()
+      // runInInjectionContext es necesario porque el callback del IntersectionObserver
+      // se ejecuta fuera del injection context de Angular.
+      this.categoriesEffectRef = runInInjectionContext(this.injector, () =>
+        effect(() => {
+          const result = this.categoriesQuery!.result();
+          if (result.data) {
+            const all = result.data as Category[];
+            this.categories.set(all.filter(c => c.type === 'MAIN'));
+          }
+        })
+      );
+    };
+
+    if (!target) {
+      activate();
+      return;
+    }
+
+    this.categoriesObserver = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          activate();
+          this.categoriesObserver?.disconnect();
+          this.categoriesObserver = null;
+        }
+      },
+      { rootMargin: '300px', threshold: 0.01 }
+    );
+    this.categoriesObserver.observe(target);
+  }
+
   onChatHover(hovering: boolean) {
     this.isHovering = hovering;
     if (!this.lottieAnim) return;
@@ -106,20 +176,6 @@ export class HomeComponent implements OnInit, OnDestroy {
       this.lottieAnim.setDirection(-1);
       this.lottieAnim.play();
     }
-  }
-
-  /**
-   * Carga categorias principales desde backend para renderizado en home.
-   */
-  loadCategories() {
-    this.catalogService.getCategories().subscribe({
-      next: (cats) => {
-        const mainCategories = cats.filter(c => c.type === 'MAIN');
-        this.categories.set(mainCategories);
-        console.log('Categorías principales cargadas:', mainCategories); 
-      },
-      error: (err) => console.error('Error cargando categorías', err)
-    });
   }
 
   /**
@@ -137,30 +193,22 @@ export class HomeComponent implements OnInit, OnDestroy {
     return this.categories().filter(c => c.slug !== 'novedades' && c.slug !== 'romance');
   }
 
-  /**
-   * Navega al indice del foro.
-   */
+  /** Navega al indice del foro. */
   navigateToForum() {
     this.router.navigate(['/foro']);
   }
 
-  /**
-   * Navega a la vista global de catalogo por categorias.
-   */
+  /** Navega a la vista global de catalogo por categorias. */
   navigateToCatalog() {
     this.router.navigate(['/categories']);
   }
 
-  /**
-   * Navega a la funcionalidad de chat con IA.
-   */
+  /** Navega a la funcionalidad de chat con IA. */
   goToChat() {
     this.router.navigate(['/ai-chat']);
   }
 
-  /**
-   * Hace scroll suave hasta el contenido principal.
-   */
+  /** Hace scroll suave hasta el contenido principal. */
   scrollToContent() {
     const el = document.getElementById('home-content');
     if (el) {
