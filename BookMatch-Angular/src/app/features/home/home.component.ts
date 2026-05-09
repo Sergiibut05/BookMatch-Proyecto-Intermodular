@@ -132,19 +132,20 @@ export class HomeComponent implements OnInit, OnDestroy {
   private initCategoriesObserver() {
     const target = document.getElementById('home-content');
     const activate = () => {
-      this.categoriesQuery = this.catalogQueryService.getCategories();
-      // Sincronizar el resultado de la query con la señal local via effect()
-      // runInInjectionContext es necesario porque el callback del IntersectionObserver
-      // se ejecuta fuera del injection context de Angular.
-      this.categoriesEffectRef = runInInjectionContext(this.injector, () =>
-        effect(() => {
-          const result = this.categoriesQuery!.result();
+      // El IntersectionObserver corre fuera del injection context.
+      // query.result() llama toSignal() internamente y debe invocarse fuera de un
+      // contexto reactivo pero dentro de un injection context. El effect solo lee el signal.
+      runInInjectionContext(this.injector, () => {
+        this.categoriesQuery = this.catalogQueryService.getCategories();
+        const resultSignal = this.categoriesQuery.result; // Signal, no llamarlo aquí
+        this.categoriesEffectRef = effect(() => {
+          const result = resultSignal();
           if (result.data) {
             const all = result.data as Category[];
             this.categories.set(all.filter(c => c.type === 'MAIN'));
           }
-        })
-      );
+        });
+      });
     };
 
     if (!target) {

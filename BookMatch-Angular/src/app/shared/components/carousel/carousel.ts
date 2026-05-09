@@ -87,23 +87,26 @@ export class Carousel implements OnInit, OnDestroy {
    * Se llama una sola vez cuando el carrusel entra en el viewport.
    */
   private activateQuery() {
-    let query: ReturnType<CatalogQueryService['getNewArrivals']>;
+    // El IntersectionObserver corre fuera del injection context.
+    // query.result() llama toSignal() internamente y debe invocarse fuera de un
+    // contexto reactivo pero dentro de un injection context. El effect solo lee el signal.
+    runInInjectionContext(this.injector, () => {
+      let query: ReturnType<CatalogQueryService['getNewArrivals']>;
 
-    if (this.isNewArrivals) {
-      query = this.catalogQueryService.getNewArrivals(10);
-    } else if (this.categoryId) {
-      query = this.catalogQueryService.getBooksByCategoryId(this.categoryId, 1, 10);
-    } else if (this.categoryName) {
-      query = this.catalogQueryService.getBooksByCategoryName(this.categoryName, 1, 10);
-    } else {
-      this.isLoading.set(false);
-      return;
-    }
+      if (this.isNewArrivals) {
+        query = this.catalogQueryService.getNewArrivals(10);
+      } else if (this.categoryId) {
+        query = this.catalogQueryService.getBooksByCategoryId(this.categoryId, 1, 10);
+      } else if (this.categoryName) {
+        query = this.catalogQueryService.getBooksByCategoryName(this.categoryName, 1, 10);
+      } else {
+        this.isLoading.set(false);
+        return;
+      }
 
-    // Usar effect() dentro del injection context del componente
-    this.queryEffectRef = runInInjectionContext(this.injector, () =>
-      effect(() => {
-        const result = query.result();
+      const resultSignal = query.result; // Signal, no llamarlo aquí
+      this.queryEffectRef = effect(() => {
+        const result = resultSignal();
         this.isLoading.set(result.isPending);
         if (result.data) {
           // Soporte para respuestas paginadas { items: [] } y arrays directos
@@ -111,8 +114,8 @@ export class Carousel implements OnInit, OnDestroy {
           const items: CatalogBook[] = Array.isArray(raw) ? raw : (raw?.items ?? []);
           this.books.set(items);
         }
-      })
-    );
+      });
+    });
   }
 
   private getStep(): number {
