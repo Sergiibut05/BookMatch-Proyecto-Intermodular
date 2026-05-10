@@ -770,5 +770,24 @@
         "INPUT_HINT": "La IA puede cometer errores. Revisa lo importante.",
         "INPUT_HINT_KEYS": "Enter para enviar · Shift+Enter para nueva línea",
         "SEND": "Enviar"
+    },
+    "LANDING": {
+        "NAV_LOGIN": "Iniciar sesión",
+        "NAV_REGISTER": "Registrarse",
+        "HERO_TITLE": "Toda gran biblioteca empieza con un encuentro",
+        "HERO_SUBTITLE": "BookMatch conecta lectores con su próxima historia. Sin algoritmos fríos. Con personas reales y tu propio gusto.",
+        "HERO_CTA": "Descubrir cómo",
+        "S2_TITLE": "Recomendaciones que sí te entienden",
+        "S2_BODY": "Una IA entrenada con tu biblioteca, tus playlists y tu mood. Tan precisa que da un poco de respeto.",
+        "S3_TITLE": "Comparte. Debate. Descubre.",
+        "S3_BODY": "Crea playlists temáticas, intercambia con otros lectores y discute en foros sin spam ni humos.",
+        "S4_TITLE": "Tu próxima lectura te está buscando",
+        "S4_BODY": "Pasa de la duda al ritual: descubre, guarda, valora, recomienda. Todo en un solo gesto.",
+        "S5_TITLE": "Empieza tu biblioteca",
+        "S5_CTA_REGISTER": "Crear cuenta",
+        "S5_CTA_LOGIN": "Iniciar sesión",
+        "S5_DISCLAIMER": "Gratis. Sin tarjeta. Sin spam.",
+        "LOADING": "Cargando experiencia…",
+        "SCROLL_HINT": "Desliza hacia abajo"
     }
 }

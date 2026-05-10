@@ -769,5 +769,24 @@
         "INPUT_HINT": "AI can make mistakes. Check what matters.",
         "INPUT_HINT_KEYS": "Enter to send · Shift+Enter for new line",
         "SEND": "Send"
+    },
+    "LANDING": {
+        "NAV_LOGIN": "Sign in",
+        "NAV_REGISTER": "Sign up",
+        "HERO_TITLE": "Every great library starts with a single encounter",
+        "HERO_SUBTITLE": "BookMatch connects readers with their next story. No cold algorithms. Real people and your own taste.",
+        "HERO_CTA": "Discover how",
+        "S2_TITLE": "Recommendations that truly get you",
+        "S2_BODY": "An AI trained on your library, your playlists and your mood. So precise it feels uncanny.",
+        "S3_TITLE": "Share. Discuss. Discover.",
+        "S3_BODY": "Create themed playlists, swap books with other readers and debate in forums — no spam, no fuss.",
+        "S4_TITLE": "Your next read is already looking for you",
+        "S4_BODY": "From doubt to ritual: discover, save, rate, recommend. All in a single gesture.",
+        "S5_TITLE": "Start your library",
+        "S5_CTA_REGISTER": "Create account",
+        "S5_CTA_LOGIN": "Sign in",
+        "S5_DISCLAIMER": "Free. No card. No spam.",
+        "LOADING": "Loading experience…",
+        "SCROLL_HINT": "Scroll down"
     }
 }

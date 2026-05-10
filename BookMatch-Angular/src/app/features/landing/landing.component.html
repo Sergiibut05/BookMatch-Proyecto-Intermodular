@@ -1,0 +1,88 @@
+<!-- ═══ Three.js Canvas (fixed behind everything) ═══ -->
+<canvas #threeCanvas class="landing-canvas"></canvas>
+
+<!-- ═══ Vignette overlay ═══ -->
+<div class="landing-vignette"></div>
+
+<!-- ═══ Loading overlay ═══ -->
+@if (loading()) {
+  <div class="landing-loader">
+    <span class="loader-text">{{ 'LANDING.LOADING' | translate }}</span>
+    <div class="loader-bar-track">
+      <div class="loader-bar-fill" [style.width.%]="loadProgress()"></div>
+    </div>
+    <span class="loader-pct">{{ loadProgress() }}%</span>
+  </div>
+}
+
+<!-- ═══ Fixed minimal header ═══ -->
+<header class="landing-header">
+  <a routerLink="/" class="landing-logo">BookMatch</a>
+  <nav class="landing-nav">
+    <a routerLink="/auth/login" class="nav-link">{{ 'LANDING.NAV_LOGIN' | translate }}</a>
+    <a routerLink="/auth/register" class="nav-btn">{{ 'LANDING.NAV_REGISTER' | translate }}</a>
+  </nav>
+</header>
+
+<!-- ═══ Scroll container (generates scroll height) ═══ -->
+<main #scrollContainer class="landing-scroll">
+
+  <!-- ── Section 1: Hero ── -->
+  <section class="landing-section" data-section="hero">
+    <div class="section-content section-content--hero">
+      <h1 class="landing-text hero-title">{{ 'LANDING.HERO_TITLE' | translate }}</h1>
+      <p class="landing-text hero-subtitle">{{ 'LANDING.HERO_SUBTITLE' | translate }}</p>
+      <a routerLink="/auth/register" class="landing-text hero-cta">{{ 'LANDING.HERO_CTA' | translate }}</a>
+    </div>
+    <div class="scroll-hint">
+      <span class="scroll-hint-text">{{ 'LANDING.SCROLL_HINT' | translate }}</span>
+      <span class="scroll-hint-chevron material-symbols-outlined">expand_more</span>
+    </div>
+  </section>
+
+  <!-- ── Section 2: AI Recommendations ── -->
+  <section class="landing-section" data-section="ai">
+    <div class="section-content section-content--right">
+      <h2 class="landing-text section-title">{{ 'LANDING.S2_TITLE' | translate }}</h2>
+      <p class="landing-text section-body">{{ 'LANDING.S2_BODY' | translate }}</p>
+    </div>
+  </section>
+
+  <!-- ── Section 3: Community / Playlists / Forum ── -->
+  <section class="landing-section" data-section="community">
+    <div class="section-content section-content--left">
+      <h2 class="landing-text section-title">{{ 'LANDING.S3_TITLE' | translate }}</h2>
+      <p class="landing-text section-body">{{ 'LANDING.S3_BODY' | translate }}</p>
+    </div>
+  </section>
+
+  <!-- ── Section 4: Emotional match ── -->
+  <section class="landing-section" data-section="match">
+    <div class="section-content section-content--center">
+      <h2 class="landing-text section-title section-title--large">{{ 'LANDING.S4_TITLE' | translate }}</h2>
+      <p class="landing-text section-body">{{ 'LANDING.S4_BODY' | translate }}</p>
+    </div>
+  </section>
+
+  <!-- ── Section 5: CTA / Altar ── -->
+  <section class="landing-section landing-section--cta" data-section="cta">
+    <div class="section-content section-content--center cta-content">
+      <h2 class="cta-element cta-title">{{ 'LANDING.S5_TITLE' | translate }}</h2>
+      <div class="cta-element cta-buttons">
+        <a routerLink="/auth/register" class="cta-btn cta-btn--primary">{{ 'LANDING.S5_CTA_REGISTER' | translate }}</a>
+        <a routerLink="/auth/login" class="cta-btn cta-btn--secondary">{{ 'LANDING.S5_CTA_LOGIN' | translate }}</a>
+      </div>
+      <p class="cta-element cta-disclaimer">{{ 'LANDING.S5_DISCLAIMER' | translate }}</p>
+    </div>
+  </section>
+
+  <!-- ── Mini footer ── -->
+  <footer class="landing-footer">
+    <div class="footer-links">
+      <a routerLink="/privacy-policy">Privacy</a>
+      <span class="footer-sep">&middot;</span>
+      <a routerLink="/terms-and-conditions">Terms</a>
+    </div>
+    <span class="footer-copy">&copy; {{ currentYear }} BookMatch</span>
+  </footer>
+</main>

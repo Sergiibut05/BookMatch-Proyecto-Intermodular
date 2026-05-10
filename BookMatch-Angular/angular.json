@@ -37,6 +37,11 @@
                 "glob": "**/*.json",
                 "input": "src/assets/i18n",
                 "output": "/assets/i18n"
+              },
+              {
+                "glob": "**/*",
+                "input": "node_modules/three/examples/jsm/libs/basis",
+                "output": "/assets/basis"
               }
             ],
             "styles": [
