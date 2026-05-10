@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
+import { adminGuard } from './core/guards/admin.guard';
 
 /**
  * Declaracion central de rutas de la aplicacion.
@@ -143,6 +144,11 @@ export const routes: Routes = [
         // Vista pública de una playlist compartida. SIN authGuard.
         path: 'public/playlists/:token',
         loadComponent: () => import('./features/playlists/playlist-public.component').then(m => m.PlaylistPublicComponent)
+      },
+      {
+        path: 'analytics',
+        canActivate: [adminGuard],
+        loadComponent: () => import('./pages/analytics/analytics.component').then(m => m.AnalyticsComponent)
       },
       {
         path: '**',

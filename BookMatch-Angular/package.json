@@ -41,6 +41,7 @@
     "@ngx-translate/http-loader": "^17.0.0",
     "@stripe/stripe-js": "^8.5.3",
     "@tanstack/query-core": "^5.100.9",
+    "chart.js": "^4.5.1",
     "firebase": "^11.10.0",
     "lottie-web": "^5.13.0",
     "marked": "^17.0.1",

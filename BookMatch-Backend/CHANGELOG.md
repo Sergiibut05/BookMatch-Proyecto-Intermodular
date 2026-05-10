@@ -1,5 +1,23 @@
 # Changelog
 
+## [Reciente] - Analíticas y Datos Sintéticos (SCRUM-184 & SCRUM-185)
+
+### Añadido
+- Script `scripts/advanced_analytics.py` (SCRUM-185) para generar análisis detallados de e-commerce (KPIs globales, series temporales, RFM por quintiles, análisis cruzado de cesta, top ventas mensuales) usando Pandas y NumPy. Reemplaza por completo al antiguo `inventory_analytics.py`.
+- Script `scripts/seed_analytics.py` (SCRUM-184) para inyección de datos sintéticos masivos (usuarios, órdenes, items, reseñas) simulando estacionalidad.
+- Funcionalidad de estacionalidad (alta en Diciembre, Abril, Noviembre) para las órdenes de compra en el seed.
+- Reseteo dinámico de secuencias autoincrementales (`orders_id_seq`, etc.) en PostgreSQL para asegurar integridad tras inyección manual de IDs.
+- Nuevos scripts en `package.json`: `npm run seed:analytics` y `npm run seed:analytics:clean`.
+- Fallback automático a `python3` en `setup-python.mjs` para entornos Unix.
+
+### Modificado (Frontend)
+- `analytics.component.ts` (SCRUM-187 / SCRUM-188 / SCRUM-189) - Defaults globales de Chart.js con la paleta BookMatch, paleta de colores oficiales por gráfico según especificación, nuevo helper `getDefaultScales()` y gráfico de ventas mensuales.
+- `analytics.component.scss` (SCRUM-187 / SCRUM-188 / SCRUM-189) - Estilos de tabla de correlación con gradiente de color (`.corr-bar`, `.corr-badge`, `.legend-chip`) y leyenda inline.
+- `analytics.component.html` (SCRUM-187 / SCRUM-188 / SCRUM-189) - Tabla de correlación con gradiente calculado Cream → Gold → Walnut y nuevo gráfico de ventas mensuales.
+
+### Añadido (Frontend)
+- `shared/directives/count-up.directive.ts` (SCRUM-188) - Directiva standalone de animación count-up con `requestAnimationFrame` y curva `easeOut`. Respeta `prefers-reduced-motion`.
+
 ## v1.0.0 - Producción y documentación
 
 ### Añadido

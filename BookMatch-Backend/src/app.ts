@@ -16,6 +16,7 @@ import forumsRoutes from './modules/forums/forums.routes.js';
 import commentsRoutes from './modules/comments/comments.routes.js';
 import playlistsRoutes from './modules/playlists/playlists.routes.js';
 import aiChatRoutes from './routes/ai-chat.routes.js';
+import analyticsRoutes from './modules/analytics/analytics.routes.js';
 import { stripeWebhookCtrl } from './modules/payments/payments.controller.js';
 
 import hpp from 'hpp';
@@ -106,6 +107,7 @@ app.use('/api/forums', forumsRoutes);
 app.use('/api/comments', commentsRoutes);
 app.use('/api/playlists', playlistsRoutes);
 app.use('/api/ai-chat', aiChatRoutes);
+app.use('/api/analytics', analyticsRoutes);
 
 app.use(errorHandler);
 
