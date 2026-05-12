@@ -33,6 +33,11 @@ export const routes: Routes = [
         loadComponent: () => import('./features/home/home.component').then(m => m.HomeComponent)
       },
       {
+        path: 'trueque',
+        canActivate: [authGuard],
+        loadComponent: () => import('./features/trueque/trueque.component').then(m => m.TruequeComponent)
+      },
+      {
         path: 'admin/books/create',
         canActivate: [authGuard],
         loadComponent: () => import('./features/book-form/book-form').then(m => m.BookFormComponent)

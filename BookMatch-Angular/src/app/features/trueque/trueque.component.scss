@@ -1,0 +1,115 @@
+:host {
+  display: block;
+}
+
+/* ============================================================
+ * Trueque — estilo editorial (alineado con Playlists)
+ * ============================================================ */
+.tq-shell {
+  min-height: calc(100vh - 80px);
+  background: #fbf5e7;
+}
+
+.tq-shell-inner {
+  max-width: 76rem;
+  margin: 0 auto;
+  padding: 1.25rem 1rem 4rem;
+
+  @media (min-width: 640px) {
+    padding: 1.75rem 1.5rem 5rem;
+  }
+}
+
+.tq-hero {
+  position: relative;
+  padding: 0.75rem 0 1.5rem;
+  border-bottom: 1px solid rgba(107, 77, 57, 0.15);
+  margin-bottom: 1.25rem;
+
+  @media (min-width: 640px) {
+    padding: 1rem 0 2rem;
+    margin-bottom: 1.75rem;
+  }
+}
+
+.tq-hero-inner {
+  display: grid;
+  gap: 1rem;
+
+  @media (min-width: 768px) {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+    gap: 2rem;
+  }
+}
+
+.tq-hero-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-width: 42rem;
+}
+
+.tq-hero-eyebrow {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #8a6a52;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.tq-hero-title {
+  margin: 0;
+  font-size: clamp(1.75rem, 4vw, 2.6rem);
+  font-weight: 700;
+  color: #3a2820;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  font-family: 'Lora', 'Georgia', 'Times New Roman', serif;
+}
+
+.tq-hero-subtitle {
+  margin: 0.25rem 0 0;
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: #6b4d39;
+  max-width: 34rem;
+
+  @media (min-width: 640px) {
+    font-size: 1rem;
+  }
+}
+
+.tq-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  align-self: start;
+
+  @media (min-width: 768px) {
+    align-self: end;
+  }
+}
+
+/* CTA "Truequéalo" sólo al hover (no ensuciar la grilla). */
+.tq-card-cta {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .tq-card-cta {
+    opacity: 0;
+    transform: translateY(6px);
+    transition:
+      opacity 160ms var(--ease-out-strong),
+      transform 200ms var(--ease-out-strong);
+  }
+
+  .tq-card:hover .tq-card-cta {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
