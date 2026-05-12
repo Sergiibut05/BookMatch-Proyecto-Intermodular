@@ -1,0 +1,277 @@
+<div class="analytics-shell">
+  
+  <div class="analytics-header">
+    <div>
+      <h1 class="analytics-title">Analytics Dashboard</h1>
+      <p class="analytics-subtitle">Visualización de datos de negocio y comunidad.</p>
+    </div>
+    <button routerLink="/" class="px-4 py-2 bg-white border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none transition-colors">
+      Volver
+    </button>
+  </div>
+
+  @if (loading) {
+    <!-- SCRUM-190 · Skeleton Loading -->
+    <div class="skel-kpi-grid" aria-busy="true" aria-label="Cargando datos...">
+      @for (_ of [1,2,3,4]; track $index) {
+        <div class="skel-kpi-card">
+          <div class="skel-line skel-label"></div>
+          <div class="skel-line skel-value"></div>
+        </div>
+      }
+    </div>
+    <div class="skel-charts-grid">
+      @for (_ of [1,2,3,4]; track $index) {
+        <div class="skel-chart-card">
+          <div class="skel-line skel-chart-title"></div>
+          <div class="skel-chart-body"></div>
+        </div>
+      }
+    </div>
+
+  } @else if (error) {
+    <!-- SCRUM-190 · Estado de error editorial -->
+    <div class="analytics-error" role="alert">
+      <div class="analytics-error-icon" aria-hidden="true">
+        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="12" y1="8" x2="12" y2="12"/>
+          <line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+      </div>
+      <div class="analytics-error-body">
+        <h3 class="analytics-error-title">No se han podido cargar los datos</h3>
+        <p class="analytics-error-desc">{{ error }}</p>
+      </div>
+      <button class="btn-outline press-target" (click)="fetchData()" style="margin-left: auto; flex-shrink: 0;">
+        Reintentar
+      </button>
+    </div>
+  } @else {
+    
+    <!-- 4 KPIs Globales -->
+    @if (globalKpis) {
+    <div class="kpi-grid pl-stagger-auto">
+      <div class="kpi-card press-target" tabindex="0">
+        <span class="kpi-label">Ingresos Totales</span>
+        <h2 class="kpi-value" [appCountUp]="globalKpis.total_revenue" [decimals]="2" suffix=" €">0 €</h2>
+      </div>
+      <div class="kpi-card press-target" tabindex="0" style="animation-delay: 40ms">
+        <span class="kpi-label">Pedidos</span>
+        <h2 class="kpi-value" [appCountUp]="globalKpis.total_orders">0</h2>
+      </div>
+      <div class="kpi-card press-target" tabindex="0" style="animation-delay: 80ms">
+        <span class="kpi-label">Ticket Medio</span>
+        <h2 class="kpi-value" [appCountUp]="globalKpis.average_ticket" [decimals]="2" suffix=" €">0 €</h2>
+      </div>
+      <div class="kpi-card press-target" tabindex="0" style="animation-delay: 120ms">
+        <span class="kpi-label">Valoración Media</span>
+        <h2 class="kpi-value" [appCountUp]="globalKpis.average_rating" [decimals]="1" suffix=" ★">0 ★</h2>
+      </div>
+    </div>
+    }
+
+    <!-- Gráficos por Categoría (2 columnas) -->
+    <div class="dashboard-grid">
+      <div class="chart-card">
+        <h2 class="chart-title">Precio Promedio por Categoría</h2>
+        <div class="chart-container">
+          <canvas id="pricesChart"></canvas>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <h2 class="chart-title">Valoraciones Medias por Categoría</h2>
+        <div class="chart-container">
+          <canvas id="reviewsChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- RFM (full row) -->
+    <div class="dashboard-grid">
+      <div class="chart-card full-width">
+        <h2 class="chart-title">Segmentación de Usuarios (RFM)</h2>
+        <div class="chart-container">
+          <canvas id="rfmChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Serie Temporal (Full width) -->
+    <div class="dashboard-grid">
+      <div class="chart-card full-width">
+        <h2 class="chart-title">Serie Temporal: Ingresos Semanales y Media Móvil</h2>
+        <div class="chart-container-large">
+          <canvas id="timeSeriesChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Ventas Mensuales y Top Libros (2 columnas) -->
+    <div class="dashboard-grid">
+      <div class="chart-card">
+        <h2 class="chart-title">Ventas por Mes</h2>
+        <div class="chart-container">
+          <canvas id="monthlySalesChart"></canvas>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <h2 class="chart-title">Top 10 Libros más Vendidos</h2>
+        <div class="table-container" style="max-height: 320px; overflow-y: auto;">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Pos.</th>
+                <th>Título</th>
+                <th>Uds. Vendidas</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (book of topBooks; track $index) {
+                <tr>
+                  <td style="font-weight: 600;">#{{ $index + 1 }}</td>
+                  <td>{{ book.title }}</td>
+                  <td>{{ book.quantity }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Correlación de Categorías — Tabla HTML con gradiente de color (SCRUM-189) -->
+    @if (correlationData.length > 0) {
+    <div class="dashboard-grid">
+      <div class="chart-card full-width">
+        <h2 class="chart-title">
+          Correlación de Categorías
+          <span class="chart-title-legend">
+            <span class="legend-chip" style="background:#fffaf0; border:1px solid rgba(107,77,57,0.18);">Baja</span>
+            <span class="legend-arrow">→</span>
+            <span class="legend-chip" style="background:#E0A15E; color:#fff;">Media</span>
+            <span class="legend-arrow">→</span>
+            <span class="legend-chip" style="background:#45332D; color:#FCF5E2;">Alta</span>
+          </span>
+        </h2>
+        <div class="table-container">
+          <table class="data-table correlation-table" id="correlationTable">
+            <thead>
+              <tr>
+                <th>Categoría A</th>
+                <th>Categoría B</th>
+                <th>Correlación (Pearson)</th>
+                <th>Intensidad</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (pair of correlationData; track $index) {
+                <tr>
+                  <td><strong>{{ pair.cat_a }}</strong></td>
+                  <td>{{ pair.cat_b }}</td>
+                  <td>
+                    <div class="corr-bar-wrap">
+                      <div class="corr-bar"
+                        [style.width.%]="pair.correlation * 100"
+                        [style.background]="correlationColor(pair.correlation)">
+                      </div>
+                      <span class="corr-label">{{ pair.correlation | number:'1.2-2' }}</span>
+                    </div>
+                  </td>
+                  <td>
+                    <span class="corr-badge"
+                      [style.background]="correlationColor(pair.correlation)"
+                      [style.color]="correlationTextColor(pair.correlation)">
+                      {{ pair.correlation >= 0.7 ? 'Alta' : pair.correlation >= 0.4 ? 'Media' : 'Baja' }}
+                    </span>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    }
+
+    <!-- ─── SCRUM-195 · Sección de Tráfico ────────────────────────────────── -->
+    <div class="section-header" style="margin-top: 3rem; margin-bottom: 1.5rem;">
+      <h1 class="page-title" style="font-size: 1.5rem;">Tráfico Web</h1>
+      <p class="page-subtitle">Rendimiento y origen de los visitantes (Google Analytics 4)</p>
+    </div>
+
+    @if (isTrafficEmpty()) {
+      <div class="traffic-banner">
+        <div class="traffic-banner-icon">ℹ</div>
+        <div class="traffic-banner-content">
+          <h3 style="margin: 0 0 4px 0; color: #45332D;">Datos en procesamiento</h3>
+          <p style="margin: 0; color: #6b4d39;">Los datos de tráfico estarán disponibles en 24-48 horas tras el despliegue.</p>
+        </div>
+      </div>
+    } @else {
+      <!-- KPIs Tráfico -->
+      <div class="kpi-grid" style="margin-bottom: 2rem;">
+        <div class="kpi-card">
+          <div class="kpi-header">
+            <h3 class="kpi-title">Sesiones Totales</h3>
+            <span class="kpi-icon">🌐</span>
+          </div>
+          <div class="kpi-value" [appCountUp]="trafficData?.summary?.sessions || 0">0</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-header">
+            <h3 class="kpi-title">Tasa de Rebote</h3>
+            <span class="kpi-icon">🚪</span>
+          </div>
+          <div class="kpi-value">
+            <span [appCountUp]="(trafficData?.summary?.bounceRate || 0) * 100" [decimals]="1">0</span>%
+          </div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-header">
+            <h3 class="kpi-title">Duración Media (s)</h3>
+            <span class="kpi-icon">⏱️</span>
+          </div>
+          <div class="kpi-value" [appCountUp]="trafficData?.summary?.averageSessionDuration || 0" [decimals]="1">0</div>
+        </div>
+      </div>
+
+      <!-- Gráficos de Tráfico -->
+      <div class="dashboard-grid">
+        <div class="chart-card full-width">
+          <h2 class="chart-title">Pageviews (últimos 30 días)</h2>
+          <div class="chart-container-large">
+            <canvas id="pageviewsChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="dashboard-grid">
+        <div class="chart-card">
+          <h2 class="chart-title">Top 10 Páginas</h2>
+          <div class="chart-container">
+            <canvas id="topPagesChart"></canvas>
+          </div>
+        </div>
+        <div class="chart-card">
+          <h2 class="chart-title">Visitantes por País</h2>
+          <div class="chart-container">
+            <canvas id="countriesChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="dashboard-grid">
+        <div class="chart-card">
+          <h2 class="chart-title">Navegadores</h2>
+          <div class="chart-container">
+            <canvas id="browsersChart"></canvas>
+          </div>
+        </div>
+      </div>
+    }
+
+  }
+</div>

@@ -63,6 +63,12 @@
           <span class="font-bold">Añadir Libro (Admin)</span>
         </a>
       </div>
+      <div *isAdmin class="menu-item w-full">
+        <a routerLink="/analytics" (click)="closeMenu()" class="menu-link flex items-center justify-start gap-3 w-full p-2 cursor-pointer" style="color: #E0A15E;">
+          <span class="material-symbols-outlined text-xl">bar_chart</span>
+          <span class="font-bold">Analytics (Admin)</span>
+        </a>
+      </div>
 
       <div class="menu-item w-full">
         <a href="profile" class="menu-link flex items-center justify-start gap-3 w-full p-2">

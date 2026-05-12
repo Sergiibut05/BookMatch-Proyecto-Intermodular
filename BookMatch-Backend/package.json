@@ -5,13 +5,16 @@
   "description": "Este proyecto implementa una API REST con Node.js, Express y PostgreSQL siguiendo un desarrollo incremental versionado con Git tags.",
   "main": "index.js",
   "scripts": {
-    "dev": "nodemon src/index.ts",
+    "setup:python": "node scripts/setup-python.mjs",
+    "dev": "npm run setup:python && nodemon src/index.ts",
     "build": "npx prisma generate && tsc -p .",
-    "postinstall": "prisma generate",
+    "postinstall": "prisma generate && npm run setup:python",
     "start": "node dist/index.js",
     "test": "NODE_ENV=test NODE_OPTIONS=--experimental-vm-modules jest",
     "test:watch": "NODE_ENV=test NODE_OPTIONS=--experimental-vm-modules jest --watch",
-    "test:coverage": "NODE_ENV=test NODE_OPTIONS=--experimental-vm-modules jest --coverage"
+    "test:coverage": "NODE_ENV=test NODE_OPTIONS=--experimental-vm-modules jest --coverage",
+    "seed:analytics": "npm run setup:python && node -e \"require('child_process').execSync((process.platform === 'win32' ? 'venv\\\\\\\\Scripts\\\\\\\\python' : 'venv/bin/python') + ' scripts/seed_analytics.py', {stdio:'inherit'})\"",
+    "seed:analytics:clean": "npm run setup:python && node -e \"require('child_process').execSync((process.platform === 'win32' ? 'venv\\\\\\\\Scripts\\\\\\\\python' : 'venv/bin/python') + ' scripts/seed_analytics.py --clean', {stdio:'inherit'})\""
   },
   "keywords": [],
   "author": "",

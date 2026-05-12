@@ -63,7 +63,6 @@ model User {
 
   sentTrades     Trade[] @relation("TradeSender")
   receivedTrades Trade[] @relation("TradeReceiver")
-
   @@map("users")
 }
 

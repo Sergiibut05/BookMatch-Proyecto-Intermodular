@@ -17,6 +17,7 @@ import commentsRoutes from './modules/comments/comments.routes.js';
 import playlistsRoutes from './modules/playlists/playlists.routes.js';
 import tradesRoutes from './modules/trades/trades.routes.js';
 import aiChatRoutes from './routes/ai-chat.routes.js';
+import analyticsRoutes from './modules/analytics/analytics.routes.js';
 import { stripeWebhookCtrl } from './modules/payments/payments.controller.js';
 
 import hpp from 'hpp';
@@ -64,7 +65,7 @@ const corsOptions = {
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Accept-Language', 'Content-Language'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Accept-Language', 'Content-Language', 'x-dev-user-id'],
   exposedHeaders: ['Content-Type', 'Authorization'],
   preflightContinue: false,
   optionsSuccessStatus: 204
@@ -105,9 +106,8 @@ app.use('/api/payments', paymentsRoutes);
 app.use('/api/orders', ordersRoutes);
 app.use('/api/forums', forumsRoutes);
 app.use('/api/comments', commentsRoutes);
-app.use('/api/playlists', playlistsRoutes);
-app.use('/api/trades', tradesRoutes);
 app.use('/api/ai-chat', aiChatRoutes);
+app.use('/api/analytics', analyticsRoutes);
 
 app.use(errorHandler);
 
