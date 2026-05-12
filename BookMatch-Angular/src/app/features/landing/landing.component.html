@@ -1,88 +1,267 @@
-<!-- ═══ Three.js Canvas (fixed behind everything) ═══ -->
-<canvas #threeCanvas class="landing-canvas"></canvas>
+<div class="landing">
 
-<!-- ═══ Vignette overlay ═══ -->
-<div class="landing-vignette"></div>
-
-<!-- ═══ Loading overlay ═══ -->
-@if (loading()) {
-  <div class="landing-loader">
-    <span class="loader-text">{{ 'LANDING.LOADING' | translate }}</span>
-    <div class="loader-bar-track">
-      <div class="loader-bar-fill" [style.width.%]="loadProgress()"></div>
-    </div>
-    <span class="loader-pct">{{ loadProgress() }}%</span>
-  </div>
-}
-
-<!-- ═══ Fixed minimal header ═══ -->
-<header class="landing-header">
-  <a routerLink="/" class="landing-logo">BookMatch</a>
-  <nav class="landing-nav">
-    <a routerLink="/auth/login" class="nav-link">{{ 'LANDING.NAV_LOGIN' | translate }}</a>
-    <a routerLink="/auth/register" class="nav-btn">{{ 'LANDING.NAV_REGISTER' | translate }}</a>
-  </nav>
-</header>
-
-<!-- ═══ Scroll container (generates scroll height) ═══ -->
-<main #scrollContainer class="landing-scroll">
-
-  <!-- ── Section 1: Hero ── -->
-  <section class="landing-section" data-section="hero">
-    <div class="section-content section-content--hero">
-      <h1 class="landing-text hero-title">{{ 'LANDING.HERO_TITLE' | translate }}</h1>
-      <p class="landing-text hero-subtitle">{{ 'LANDING.HERO_SUBTITLE' | translate }}</p>
-      <a routerLink="/auth/register" class="landing-text hero-cta">{{ 'LANDING.HERO_CTA' | translate }}</a>
-    </div>
-    <div class="scroll-hint">
-      <span class="scroll-hint-text">{{ 'LANDING.SCROLL_HINT' | translate }}</span>
-      <span class="scroll-hint-chevron material-symbols-outlined">expand_more</span>
-    </div>
-  </section>
-
-  <!-- ── Section 2: AI Recommendations ── -->
-  <section class="landing-section" data-section="ai">
-    <div class="section-content section-content--right">
-      <h2 class="landing-text section-title">{{ 'LANDING.S2_TITLE' | translate }}</h2>
-      <p class="landing-text section-body">{{ 'LANDING.S2_BODY' | translate }}</p>
-    </div>
-  </section>
-
-  <!-- ── Section 3: Community / Playlists / Forum ── -->
-  <section class="landing-section" data-section="community">
-    <div class="section-content section-content--left">
-      <h2 class="landing-text section-title">{{ 'LANDING.S3_TITLE' | translate }}</h2>
-      <p class="landing-text section-body">{{ 'LANDING.S3_BODY' | translate }}</p>
-    </div>
-  </section>
-
-  <!-- ── Section 4: Emotional match ── -->
-  <section class="landing-section" data-section="match">
-    <div class="section-content section-content--center">
-      <h2 class="landing-text section-title section-title--large">{{ 'LANDING.S4_TITLE' | translate }}</h2>
-      <p class="landing-text section-body">{{ 'LANDING.S4_BODY' | translate }}</p>
-    </div>
-  </section>
-
-  <!-- ── Section 5: CTA / Altar ── -->
-  <section class="landing-section landing-section--cta" data-section="cta">
-    <div class="section-content section-content--center cta-content">
-      <h2 class="cta-element cta-title">{{ 'LANDING.S5_TITLE' | translate }}</h2>
-      <div class="cta-element cta-buttons">
-        <a routerLink="/auth/register" class="cta-btn cta-btn--primary">{{ 'LANDING.S5_CTA_REGISTER' | translate }}</a>
-        <a routerLink="/auth/login" class="cta-btn cta-btn--secondary">{{ 'LANDING.S5_CTA_LOGIN' | translate }}</a>
+  <!-- ═══ NAVBAR ═══ -->
+  <header class="nav">
+    <div class="nav__inner">
+      <a routerLink="/" class="nav__logo">
+        <span class="nav__logo-icon">📖</span>
+        <span class="nav__logo-text">BookMatch</span>
+      </a>
+      <nav class="nav__links">
+        <a href="#features" class="nav__link">Features</a>
+        <a href="#app" class="nav__link">Cómo funciona</a>
+        <a href="#social-proof" class="nav__link">Comunidad</a>
+      </nav>
+      <div class="nav__actions">
+        <a routerLink="/auth/login" class="nav__login">Iniciar sesión</a>
+        <a routerLink="/auth/register" class="nav__cta">Crear cuenta</a>
       </div>
-      <p class="cta-element cta-disclaimer">{{ 'LANDING.S5_DISCLAIMER' | translate }}</p>
+      <!-- Mobile hamburger -->
+      <button class="nav__hamburger" aria-label="Menú" (click)="mobileMenuOpen = !mobileMenuOpen">
+        <span class="material-symbols-outlined">{{ mobileMenuOpen ? 'close' : 'menu' }}</span>
+      </button>
+    </div>
+    <!-- Mobile menu -->
+    @if (mobileMenuOpen) {
+      <div class="nav__mobile">
+        <a href="#features" class="nav__mobile-link" (click)="mobileMenuOpen = false">Features</a>
+        <a href="#app" class="nav__mobile-link" (click)="mobileMenuOpen = false">Cómo funciona</a>
+        <a href="#social-proof" class="nav__mobile-link" (click)="mobileMenuOpen = false">Comunidad</a>
+        <div class="nav__mobile-actions">
+          <a routerLink="/auth/login" class="nav__mobile-link">Iniciar sesión</a>
+          <a routerLink="/auth/register" class="nav__cta nav__cta--full">Crear cuenta</a>
+        </div>
+      </div>
+    }
+  </header>
+
+  <!-- ═══ HERO ═══ -->
+  <section class="hero" id="hero">
+    <div class="hero__inner">
+      <div class="hero__text anim-section">
+        <h1 class="hero__title">
+          Encuentra tu<br><em>próximo capítulo.</em>
+        </h1>
+        <p class="hero__sub">
+          BookMatch aprende de tus gustos para recomendarte libros,
+          organizar tu colección y abrirte puertas a nuevas historias.
+        </p>
+        <div class="hero__ctas">
+          <a routerLink="/auth/register" class="btn btn--primary">Empieza gratis</a>
+          <a href="#features" class="btn btn--outline">
+            <span class="material-symbols-outlined btn__icon">play_arrow</span>
+            Ver cómo funciona
+          </a>
+        </div>
+        <div class="hero__proof">
+          <div class="hero__stars">★★★★★</div>
+          <span class="hero__proof-text">+10.000 lectores ya encontraron su próximo libro</span>
+        </div>
+      </div>
+      <div class="hero__visual anim-section">
+        <img
+          class="hero__image"
+          src="/assets/Bookmatch-altar.webp"
+          alt="Libro BookMatch sobre altar"
+          loading="eager"
+          fetchpriority="high"
+        >
+        <!-- Floating decorative icons -->
+        <span class="hero__float hero__float--heart">❤️</span>
+        <span class="hero__float hero__float--bookmark">🔖</span>
+        <span class="hero__float hero__float--pen">✏️</span>
+      </div>
     </div>
   </section>
 
-  <!-- ── Mini footer ── -->
-  <footer class="landing-footer">
-    <div class="footer-links">
-      <a routerLink="/privacy-policy">Privacy</a>
-      <span class="footer-sep">&middot;</span>
-      <a routerLink="/terms-and-conditions">Terms</a>
+  <!-- ═══ FEATURES ═══ -->
+  <section class="features" id="features">
+    <div class="features__inner">
+      <h2 class="features__title anim-section">
+        Todo lo que necesitas<br>
+        para vivir tu pasión por la <em>lectura.</em>
+      </h2>
+      <div class="features__grid">
+        <article class="feature-card anim-section">
+          <div class="feature-card__icon">
+            <span class="material-symbols-outlined">auto_awesome</span>
+          </div>
+          <h3 class="feature-card__title">Recomendaciones inteligentes</h3>
+          <p class="feature-card__text">
+            Nuestro algoritmo aprende de ti para sugerirte libros que realmente te van a encantar.
+          </p>
+        </article>
+        <article class="feature-card anim-section">
+          <div class="feature-card__icon">
+            <span class="material-symbols-outlined">shelves</span>
+          </div>
+          <h3 class="feature-card__title">Organiza tu colección</h3>
+          <p class="feature-card__text">
+            Crea estanterías, marca lo que has leído y lleva el control de tu progreso.
+          </p>
+        </article>
+        <article class="feature-card anim-section">
+          <div class="feature-card__icon">
+            <span class="material-symbols-outlined">groups</span>
+          </div>
+          <h3 class="feature-card__title">Comunidad lectora</h3>
+          <p class="feature-card__text">
+            Conecta con otros lectores, comparte opiniones y descubre nuevas recomendaciones.
+          </p>
+        </article>
+      </div>
     </div>
-    <span class="footer-copy">&copy; {{ currentYear }} BookMatch</span>
+  </section>
+
+  <!-- ═══ APP SHOWCASE ═══ -->
+  <section class="app-showcase" id="app">
+    <div class="app-showcase__inner">
+      <div class="app-showcase__phone anim-section">
+        <!-- Phone frame mockup with leather card -->
+        <div class="phone-frame">
+          <div class="phone-frame__screen">
+            <div class="phone-screen__header">
+              <span class="phone-screen__greeting">Hola, Alex</span>
+              <span class="phone-screen__sub">¿Qué quieres leer hoy?</span>
+            </div>
+            <div class="phone-screen__section">
+              <span class="phone-screen__label">Recomendado para ti</span>
+            </div>
+            <div class="phone-screen__books">
+              <div class="phone-book"></div>
+              <div class="phone-book"></div>
+              <div class="phone-book"></div>
+            </div>
+            <div class="phone-screen__progress">
+              <span class="phone-screen__label">Tu progreso</span>
+              <div class="phone-progress-bar">
+                <div class="phone-progress-bar__fill"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="app-showcase__content anim-section">
+        <span class="app-showcase__eyebrow">Desde web o personalizado</span>
+        <h2 class="app-showcase__title">
+          Tu biblioteca,<br>en tu bolsillo.
+        </h2>
+        <p class="app-showcase__text">
+          Accede a tus libros, recomendaciones y estadísticas
+          desde cualquier lugar. Disponible en web, iOS y Android.
+        </p>
+        <ul class="app-showcase__features">
+          <li>
+            <span class="material-symbols-outlined">sync</span>
+            Sincroniza tus dispositivos
+          </li>
+          <li>
+            <span class="material-symbols-outlined">dark_mode</span>
+            Modo oscuro y claro
+          </li>
+          <li>
+            <span class="material-symbols-outlined">timer</span>
+            Estadísticas de lectura
+          </li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ SOCIAL PROOF ═══ -->
+  <section class="social-proof" id="social-proof">
+    <div class="social-proof__inner">
+      <div class="social-proof__quote anim-section">
+        <span class="social-proof__mark">"</span>
+        <blockquote class="social-proof__text">
+          BookMatch no solo me ayuda a encontrar libros increíbles,
+          sino que me conecta con una comunidad que comparte mi misma pasión.
+        </blockquote>
+        <div class="social-proof__author">
+          <div class="social-proof__avatar">LC</div>
+          <div>
+            <strong class="social-proof__name">Laura C.</strong>
+            <span class="social-proof__role">Lectora entusiasta</span>
+          </div>
+        </div>
+      </div>
+      <div class="social-proof__stats anim-section">
+        <div class="stat">
+          <span class="stat__icon material-symbols-outlined">person</span>
+          <div>
+            <span class="stat__number">+10.000</span>
+            <span class="stat__label">Lectores activos</span>
+          </div>
+        </div>
+        <div class="stat">
+          <span class="stat__icon material-symbols-outlined">menu_book</span>
+          <div>
+            <span class="stat__number">+50.000</span>
+            <span class="stat__label">Libros registrados</span>
+          </div>
+        </div>
+        <div class="stat">
+          <span class="stat__icon material-symbols-outlined">recommend</span>
+          <div>
+            <span class="stat__number">+120.000</span>
+            <span class="stat__label">Recomendaciones entregadas</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ FINAL CTA ═══ -->
+  <section class="final-cta">
+    <div class="final-cta__inner anim-section">
+      <div class="final-cta__icon">
+        <span class="material-symbols-outlined">mail</span>
+      </div>
+      <h2 class="final-cta__title">¿Listo para encontrar tu próximo capítulo?</h2>
+      <p class="final-cta__sub">Únete gratis y empieza a descubrir historias que te cambiarán.</p>
+      <div class="final-cta__actions">
+        <a routerLink="/auth/register" class="btn btn--primary btn--lg">Crear mi cuenta gratis</a>
+        <span class="final-cta__note">Gratis para siempre. Sin tarjeta de crédito.</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ FOOTER ═══ -->
+  <footer class="footer">
+    <div class="footer__inner">
+      <div class="footer__brand">
+        <span class="footer__logo">📖 BookMatch</span>
+        <p class="footer__tagline">Tu próxima historia te está esperando.</p>
+      </div>
+      <div class="footer__columns">
+        <div class="footer__col">
+          <h4 class="footer__col-title">Producto</h4>
+          <a href="#features" class="footer__link">Features</a>
+          <a routerLink="/auth/register" class="footer__link">Precios</a>
+          <a href="#app" class="footer__link">Novedades</a>
+        </div>
+        <div class="footer__col">
+          <h4 class="footer__col-title">Comunidad</h4>
+          <a href="#social-proof" class="footer__link">Blog</a>
+          <a href="#social-proof" class="footer__link">Foros</a>
+          <a href="#social-proof" class="footer__link">Eventos</a>
+        </div>
+        <div class="footer__col">
+          <h4 class="footer__col-title">Empresa</h4>
+          <a routerLink="/terms-and-conditions" class="footer__link">Sobre nosotros</a>
+          <a routerLink="/terms-and-conditions" class="footer__link">Trabaja con nosotros</a>
+          <a routerLink="/terms-and-conditions" class="footer__link">Contacto</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer__bottom">
+      <span>&copy; 2026 BookMatch. Todos los derechos reservados.</span>
+      <nav class="footer__legal">
+        <a routerLink="/privacy-policy">Privacidad</a>
+        <a routerLink="/terms-and-conditions">Términos</a>
+        <a routerLink="/terms-and-conditions">Cookies</a>
+      </nav>
+    </div>
   </footer>
-</main>
+
+</div>
