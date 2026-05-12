@@ -1,13 +1,31 @@
 <app-header />
 
-<main class="min-h-[calc(100vh-64px)] bg-[#FCF5E2]">
-  <section class="mx-auto w-full max-w-6xl px-4 sm:px-6 py-5 sm:py-7">
-    <div class="pl-fade-in">
-      <div class="flex items-center justify-between gap-3">
-        <h2 class="text-xl sm:text-2xl font-bold text-[#45332D] tracking-tight">
-          {{ 'TRUEQUE.TITLE' | translate }}
-        </h2>
+<main class="tq-shell">
+  <section class="tq-shell-inner">
+    <header class="tq-hero pl-fade-in">
+      <div class="tq-hero-inner">
+        <div class="tq-hero-copy">
+          <p class="tq-hero-eyebrow">BookMatch</p>
+          <h2 class="tq-hero-title">
+            {{ 'TRUEQUE.TITLE' | translate }}
+          </h2>
+          <p class="tq-hero-subtitle">
+            Intercambia libros con otros lectores de forma simple y rápida.
+          </p>
+        </div>
+
+        <div class="tq-hero-actions">
+          <button type="button" class="btn-outline press-target" (click)="setTab('mine')">
+            <span class="material-symbols-outlined">inbox</span>
+            <span>{{ 'TRUEQUE.TAB_MINE' | translate }}</span>
+          </button>
+          <button type="button" class="btn-solid press-target" (click)="openCreate()">
+            <span class="material-symbols-outlined">add</span>
+            <span>{{ 'TRUEQUE.CTA_CREATE' | translate }}</span>
+          </button>
+        </div>
       </div>
+    </header>
 
       <div class="mt-4 rounded-2xl bg-white/70 backdrop-blur border border-[#E9E1D1] shadow-sm overflow-hidden">
         <div class="grid grid-cols-3 text-center">
@@ -70,13 +88,6 @@
           <h3 class="text-base sm:text-lg font-bold text-[#45332D]">
             {{ 'TRUEQUE.AVAILABLE_TITLE' | translate }}
           </h3>
-
-          <button
-            type="button"
-            class="pl-btn-primary rounded-xl px-4 py-2 text-sm font-bold"
-            (click)="openCreate()">
-            {{ 'TRUEQUE.CTA_CREATE' | translate }}
-          </button>
         </div>
 
         @if (activeTab() === 'mine') {
@@ -149,7 +160,7 @@
         } @else {
           <div class="mt-4 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 pl-stagger-auto">
             @for (card of books(); track card.id) {
-              <article class="rounded-2xl border border-[#E9E1D1] bg-white/80 shadow-sm overflow-hidden pl-card-hover">
+              <article class="tq-card group rounded-2xl border border-[#E9E1D1] bg-white/80 shadow-sm overflow-hidden pl-card-hover">
                 <div class="p-3">
                   <div class="rounded-xl overflow-hidden border border-[#E9E1D1] bg-[#FFFDF7] aspect-[3/4]">
                     <img
@@ -169,8 +180,11 @@
                     </p>
                   </div>
 
-                  <div class="mt-3">
-                    <button type="button" class="w-full pl-btn-primary rounded-xl py-2 text-sm font-bold">
+                  <div class="mt-3 flex items-center justify-between gap-2">
+                    <p class="text-[11px] font-semibold text-[#8a6a52] tracking-wide uppercase">
+                      Disponible
+                    </p>
+                    <button type="button" class="tq-card-cta pl-btn-primary rounded-xl px-3 py-2 text-xs font-bold">
                       {{ 'TRUEQUE.CTA_SWAP' | translate }}
                     </button>
                   </div>
@@ -180,7 +194,6 @@
           </div>
         }
       </div>
-    </div>
   </section>
 </main>
 

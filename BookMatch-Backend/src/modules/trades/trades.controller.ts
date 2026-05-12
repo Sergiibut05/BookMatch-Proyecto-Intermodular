@@ -1,5 +1,4 @@
 import type { Request, Response } from 'express';
-import { z } from 'zod';
 import {
   acceptTrade,
   cancelTrade,
@@ -39,28 +38,28 @@ function handleHttpError(res: Response, error: unknown) {
   return res.status(status).json({ message });
 }
 
-export function listTradesCtrl(req: Request, res: Response) {
+export async function listTradesCtrl(req: Request, res: Response) {
   try {
     const userId = getUserIdOrThrow(req);
-    const items = listTradesForUser(userId);
+    const items = await listTradesForUser(userId);
     return res.json({ items });
   } catch (e) {
     return handleHttpError(res, e);
   }
 }
 
-export function getTradeByIdCtrl(req: Request, res: Response) {
+export async function getTradeByIdCtrl(req: Request, res: Response) {
   try {
     const userId = getUserIdOrThrow(req);
     const id = parseIdParam(req);
-    const trade = getTradeByIdForUser(id, userId);
+    const trade = await getTradeByIdForUser(id, userId);
     return res.json({ trade });
   } catch (e) {
     return handleHttpError(res, e);
   }
 }
 
-export function createTradeCtrl(req: Request, res: Response) {
+export async function createTradeCtrl(req: Request, res: Response) {
   try {
     const userId = getUserIdOrThrow(req);
     const parsed = createTradeSchema.safeParse(req.body);
@@ -68,11 +67,11 @@ export function createTradeCtrl(req: Request, res: Response) {
       return res.status(400).json({ message: 'Payload inválido', errors: parsed.error.flatten() });
     }
 
-    const trade = createTrade({
+    const trade = await createTrade({
       senderId: userId,
       receiverId: parsed.data.receiverUserId,
       offeredUserBookIds: parsed.data.offeredUserBookIds,
-      requestedUserBookIds: parsed.data.requestedUserBookIds,
+      requestedUserBookIds: parsed.data.requestedUserBookIds ?? [],
     });
 
     return res.status(201).json({ trade });
@@ -81,47 +80,46 @@ export function createTradeCtrl(req: Request, res: Response) {
   }
 }
 
-export function acceptTradeCtrl(req: Request, res: Response) {
+export async function acceptTradeCtrl(req: Request, res: Response) {
   try {
     const userId = getUserIdOrThrow(req);
     const id = parseIdParam(req);
-    const trade = acceptTrade(id, userId);
+    const trade = await acceptTrade(id, userId);
     return res.json({ trade });
   } catch (e) {
     return handleHttpError(res, e);
   }
 }
 
-export function rejectTradeCtrl(req: Request, res: Response) {
+export async function rejectTradeCtrl(req: Request, res: Response) {
   try {
     const userId = getUserIdOrThrow(req);
     const id = parseIdParam(req);
-    const trade = rejectTrade(id, userId);
+    const trade = await rejectTrade(id, userId);
     return res.json({ trade });
   } catch (e) {
     return handleHttpError(res, e);
   }
 }
 
-export function cancelTradeCtrl(req: Request, res: Response) {
+export async function cancelTradeCtrl(req: Request, res: Response) {
   try {
     const userId = getUserIdOrThrow(req);
     const id = parseIdParam(req);
-    const trade = cancelTrade(id, userId);
+    const trade = await cancelTrade(id, userId);
     return res.json({ trade });
   } catch (e) {
     return handleHttpError(res, e);
   }
 }
 
-export function completeTradeCtrl(req: Request, res: Response) {
+export async function completeTradeCtrl(req: Request, res: Response) {
   try {
     const userId = getUserIdOrThrow(req);
     const id = parseIdParam(req);
-    const trade = completeTrade(id, userId);
+    const trade = await completeTrade(id, userId);
     return res.json({ trade });
   } catch (e) {
     return handleHttpError(res, e);
   }
 }
-
