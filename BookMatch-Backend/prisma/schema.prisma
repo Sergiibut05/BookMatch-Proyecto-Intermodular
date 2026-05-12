@@ -37,6 +37,14 @@ enum TradeSide {
   RECEIVER
 }
 
+enum BookCondition {
+  NEW
+  LIKE_NEW
+  GOOD
+  ACCEPTABLE
+  WORN
+}
+
 model User {
   id          Int     @id @default(autoincrement())
   firebaseUid String  @unique @map("firebase_uid")
@@ -107,6 +115,7 @@ model CatalogBook {
   reviews       Review[]
   categories    CatalogBookCategory[]
   playlistItems PlaylistItem[]
+  userBooks     UserBook[]
 
   @@map("catalog_books")
 }
@@ -125,21 +134,25 @@ model CatalogBookCategory {
 }
 
 model UserBook {
-  id          Int      @id @default(autoincrement())
-  title       String
-  author      String
-  isbn        String?
-  description String?
-  coverUrl    String?  @map("cover_url")
-  imageUrls   String[] @default([])
-  ownerId     Int      @map("owner_id")
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  id             Int            @id @default(autoincrement())
+  title          String
+  author         String
+  isbn           String?
+  description    String?
+  coverUrl       String?        @map("cover_url")
+  imageUrls      String[]       @default([])
+  condition      BookCondition  @default(GOOD)
+  catalogBookId  Int?           @map("catalog_book_id")
+  ownerId        Int            @map("owner_id")
+  createdAt      DateTime       @default(now()) @map("created_at")
+  updatedAt      DateTime       @updatedAt @map("updated_at")
 
-  owner      User               @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  categories UserBookCategory[]
-  tradeItems TradeItem[]
+  owner       User               @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  catalogBook CatalogBook?       @relation(fields: [catalogBookId], references: [id], onDelete: SetNull)
+  categories  UserBookCategory[]
+  tradeItems  TradeItem[]
 
+  @@index([catalogBookId])
   @@map("user_books")
 }
 
@@ -148,6 +161,7 @@ model Trade {
   status     TradeStatus @default(PROPOSED)
   senderId   Int         @map("sender_id")
   receiverId Int         @map("receiver_id")
+  message    String?
   expiresAt  DateTime?   @map("expires_at")
   createdAt  DateTime    @default(now()) @map("created_at")
   updatedAt  DateTime    @updatedAt @map("updated_at")

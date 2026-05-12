@@ -106,6 +106,8 @@ app.use('/api/payments', paymentsRoutes);
 app.use('/api/orders', ordersRoutes);
 app.use('/api/forums', forumsRoutes);
 app.use('/api/comments', commentsRoutes);
+app.use('/api/playlists', playlistsRoutes);
+app.use('/api/trades', tradesRoutes);
 app.use('/api/ai-chat', aiChatRoutes);
 app.use('/api/analytics', analyticsRoutes);
 
