@@ -28,7 +28,9 @@ const router = Router();
  *     security:
  *       - bearerAuth: []
  *     responses:
- *       200: { description: Lista de trueques }
+ *       200:
+ *         description: >
+ *           Lista de trueques; cada ítem incluye previewCovers (hasta 4 URLs de portada).
  *       401: { description: No autenticado }
  */
 router.get('/', authOrDev, listTradesCtrl);
@@ -74,7 +76,18 @@ router.post('/', authOrDev, createTradeCtrl);
  *         required: true
  *         schema: { type: integer }
  *     responses:
- *       200: { description: Trade }
+ *       200:
+ *         description: Trade
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 trade:
+ *                   type: object
+ *                   description: >
+ *                     En estados ACCEPTED y COMPLETED incluye `sender` y `receiver`
+ *                     con id, fullName, avatarUrl, email y phone para contacto post-aceptación.
  *       401: { description: No autenticado }
  *       403: { description: Prohibido }
  *       404: { description: No existe }

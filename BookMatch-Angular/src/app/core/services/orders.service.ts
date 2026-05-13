@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable, from } from 'rxjs';
+import { Observable } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
 import { AuthService } from './auth.service';
 import { environment } from '../../../environments/environment';
@@ -24,6 +24,9 @@ export class OrdersService {
         let headers = new HttpHeaders();
         if (token) {
           headers = headers.set('Authorization', `Bearer ${token}`);
+        } else if (!environment.production) {
+          const id = this.authService.currentUser()?.id ?? 1;
+          headers = headers.set('x-dev-user-id', String(id));
         }
         return headers;
       })

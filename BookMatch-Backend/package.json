@@ -14,7 +14,9 @@
     "test:watch": "NODE_ENV=test NODE_OPTIONS=--experimental-vm-modules jest --watch",
     "test:coverage": "NODE_ENV=test NODE_OPTIONS=--experimental-vm-modules jest --coverage",
     "seed:analytics": "npm run setup:python && node -e \"require('child_process').execSync((process.platform === 'win32' ? 'venv\\\\\\\\Scripts\\\\\\\\python' : 'venv/bin/python') + ' scripts/seed_analytics.py', {stdio:'inherit'})\"",
-    "seed:analytics:clean": "npm run setup:python && node -e \"require('child_process').execSync((process.platform === 'win32' ? 'venv\\\\\\\\Scripts\\\\\\\\python' : 'venv/bin/python') + ' scripts/seed_analytics.py --clean', {stdio:'inherit'})\""
+    "seed:analytics:clean": "npm run setup:python && node -e \"require('child_process').execSync((process.platform === 'win32' ? 'venv\\\\\\\\Scripts\\\\\\\\python' : 'venv/bin/python') + ' scripts/seed_analytics.py --clean', {stdio:'inherit'})\"",
+    "seed:trades": "npm run setup:python && node -e \"require('child_process').execSync((process.platform === 'win32' ? 'venv\\\\\\\\Scripts\\\\\\\\python' : 'venv/bin/python') + ' scripts/seed_trades.py', {stdio:'inherit'})\"",
+    "seed:trades:clean": "npm run setup:python && node -e \"require('child_process').execSync((process.platform === 'win32' ? 'venv\\\\\\\\Scripts\\\\\\\\python' : 'venv/bin/python') + ' scripts/seed_trades.py --clean', {stdio:'inherit'})\""
   },
   "keywords": [],
   "author": "",

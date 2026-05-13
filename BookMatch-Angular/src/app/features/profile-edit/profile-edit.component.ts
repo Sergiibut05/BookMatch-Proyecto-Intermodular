@@ -1,12 +1,26 @@
 import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import {
+  FormBuilder,
+  FormGroup,
+  Validators,
+  ReactiveFormsModule,
+  AbstractControl,
+  ValidationErrors,
+} from '@angular/forms';
 import { UsersService, UserProfile, UpdateProfileData } from '@core/services/users.service';
 import { AuthService } from '@core/services/auth.service';
 import { TranslateModule } from '@ngx-translate/core';
 
+function optionalProfilePhone(control: AbstractControl): ValidationErrors | null {
+  const v = String(control.value ?? '').trim();
+  if (!v) return null;
+  const digits = v.replace(/\D/g, '');
+  return digits.length >= 6 ? null : { phoneTooShort: true };
+}
+
 /**
- * Formulario de edición de perfil: nombre completo.
+ * Formulario de edición de perfil: nombre completo y teléfono opcional.
  * Emite profileUpdated con el perfil actualizado; sincroniza displayName en Firebase Auth.
  */
 @Component({
@@ -32,37 +46,32 @@ export class ProfileEditComponent implements OnInit, OnChanges {
   error = signal<string | null>(null);
   /** Modo edición activo. */
   isEditing = signal<boolean>(false);
-  /** Formulario del nombre. */
+  /** Formulario. */
   editForm!: FormGroup;
 
-  /** Inicializa el formulario con el perfil. */
   ngOnInit(): void {
-    
     this.editForm = this.fb.group({
-      fullName: ['', [Validators.minLength(2)]]
+      fullName: ['', [Validators.minLength(2)]],
+      phone: ['', [optionalProfilePhone]],
     });
-
-
     if (this.profile) {
       this.initializeForm(this.profile);
     }
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    
     if (changes['profile'] && this.profile && this.editForm) {
       this.initializeForm(this.profile);
     }
   }
 
-  /** Rellena el formulario con los datos del perfil. */
   initializeForm(profile: UserProfile): void {
     this.editForm = this.fb.group({
-      fullName: [profile.fullName || '', [Validators.minLength(2)]]
+      fullName: [profile.fullName || '', [Validators.minLength(2)]],
+      phone: [profile.phone || '', [optionalProfilePhone]],
     });
   }
 
-  /** Activa el modo edición. */
   startEditing(): void {
     const currentProfile = this.profile;
     if (!currentProfile) return;
@@ -71,7 +80,8 @@ export class ProfileEditComponent implements OnInit, OnChanges {
       this.initializeForm(currentProfile);
     } else {
       this.editForm.patchValue({
-        fullName: currentProfile.fullName || ''
+        fullName: currentProfile.fullName || '',
+        phone: currentProfile.phone || '',
       });
     }
 
@@ -79,7 +89,6 @@ export class ProfileEditComponent implements OnInit, OnChanges {
     this.error.set(null);
   }
 
-  /** Cancela la edición y restaura valores. */
   cancelEditing(): void {
     this.isEditing.set(false);
     this.error.set(null);
@@ -88,16 +97,19 @@ export class ProfileEditComponent implements OnInit, OnChanges {
     }
   }
 
-  /** Guarda el nombre en backend y Firebase Auth y emite profileUpdated. */
-  saveName(): void {
+  saveProfile(): void {
     if (!this.editForm) return;
 
     const fullNameControl = this.editForm.get('fullName');
-    if (!fullNameControl) return;
+    const phoneControl = this.editForm.get('phone');
+    if (!fullNameControl || !phoneControl) return;
 
-    // Validar el campo
     if (fullNameControl.invalid) {
       fullNameControl.markAsTouched();
+      return;
+    }
+    if (phoneControl.invalid) {
+      phoneControl.markAsTouched();
       return;
     }
 
@@ -108,17 +120,18 @@ export class ProfileEditComponent implements OnInit, OnChanges {
     this.error.set(null);
 
     const newFullName = fullNameControl.value?.trim() || '';
-    const fullNameToSave = newFullName === '' 
-      ? (currentProfile.fullName || null)
-      : newFullName;
+    const fullNameToSave = newFullName === '' ? (currentProfile.fullName || null) : newFullName;
+
+    const phoneRaw = String(phoneControl.value ?? '').trim();
+    const phoneToSave = phoneRaw === '' ? null : phoneRaw;
 
     const updateData: UpdateProfileData = {
-      fullName: fullNameToSave
+      fullName: fullNameToSave,
+      phone: phoneToSave,
     };
 
-    // Actualizar displayName en Firebase Auth si cambió
     if (fullNameToSave && fullNameToSave !== currentProfile.fullName) {
-      this.authService.updateProfile({ displayName: fullNameToSave }).catch(err => {
+      this.authService.updateProfile({ displayName: fullNameToSave }).catch((err) => {
         console.error('Error actualizando displayName en Firebase:', err);
       });
     }
@@ -129,15 +142,15 @@ export class ProfileEditComponent implements OnInit, OnChanges {
         this.isEditing.set(false);
         this.isSaving.set(false);
       },
-      error: (err: any) => {
+      error: (err: unknown) => {
         console.error('Error actualizando perfil:', err);
-        this.error.set(err.error?.message || 'Error al actualizar el perfil');
+        const msg = err && typeof err === 'object' && 'error' in err ? (err as { error?: { message?: string } }).error?.message : undefined;
+        this.error.set(msg || 'Error al actualizar el perfil');
         this.isSaving.set(false);
-      }
+      },
     });
   }
 
-  /** Mensaje de error del campo fullName. */
   getFieldError(): string | null {
     const field = this.editForm?.get('fullName');
     if (!field || !field.touched || !field.errors) return null;
@@ -147,5 +160,13 @@ export class ProfileEditComponent implements OnInit, OnChanges {
     }
     return 'Campo inválido';
   }
-}
 
+  getPhoneError(): string | null {
+    const field = this.editForm?.get('phone');
+    if (!field || !field.touched || !field.errors) return null;
+    if (field.errors['phoneTooShort']) {
+      return 'PROFILE.ERROR_PHONE_MIN';
+    }
+    return null;
+  }
+}

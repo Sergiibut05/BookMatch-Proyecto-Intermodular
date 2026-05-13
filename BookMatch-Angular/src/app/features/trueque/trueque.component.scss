@@ -61,12 +61,17 @@
 
 .tq-hero-title {
   margin: 0;
-  font-size: clamp(1.75rem, 4vw, 2.6rem);
+  font-size: clamp(1.35rem, 4.2vw, 2.55rem);
   font-weight: 700;
   color: #3a2820;
-  line-height: 1.05;
+  line-height: 1.08;
   letter-spacing: -0.02em;
   font-family: 'Lora', 'Georgia', 'Times New Roman', serif;
+
+  @media (min-width: 640px) {
+    font-size: clamp(1.75rem, 4vw, 2.6rem);
+    line-height: 1.05;
+  }
 }
 
 .tq-hero-subtitle {
@@ -83,12 +88,27 @@
 
 .tq-hero-actions {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.6rem;
-  align-self: start;
+  flex-direction: column;
+  width: 100%;
+  gap: 0.55rem;
+  align-self: stretch;
 
   @media (min-width: 768px) {
+    flex-direction: row;
+    flex-wrap: wrap;
+    width: auto;
     align-self: end;
+  }
+
+  .btn-solid,
+  .btn-outline {
+    min-height: 44px;
+    justify-content: center;
+    width: 100%;
+
+    @media (min-width: 768px) {
+      width: auto;
+    }
   }
 }
 
@@ -113,3 +133,446 @@
   }
 }
 
+/* --- Segmented (3 tabs), ancho completo en móvil · mismo patrón que playlists --- */
+.tq-segmented.segmented {
+  --seg-index: 0;
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  padding: 3px;
+  border-radius: 10px;
+  background: #f4ead0;
+  border: 1px solid rgba(107, 77, 57, 0.18);
+  width: 100%;
+  max-width: 100%;
+  align-self: stretch;
+
+  .segmented-indicator {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: calc((100% - 6px) / 3);
+    height: calc(100% - 6px);
+    background: #fffaf0;
+    border-radius: 8px;
+    box-shadow: 0 1px 2px rgba(69, 51, 45, 0.12);
+    transform: translateX(calc(var(--seg-index) * 100%));
+    transition: transform 300ms var(--ease-out-strong);
+
+    @media (prefers-reduced-motion: reduce) {
+      transition: none;
+    }
+  }
+
+  .segmented-item {
+    position: relative;
+    z-index: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.3rem;
+    min-height: 44px;
+    padding: 0.35rem 0.5rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #8a6a52;
+    border-radius: 8px;
+    background: transparent;
+    white-space: nowrap;
+    transition: color 200ms var(--ease-out-strong);
+
+    &.is-active {
+      color: #3a2820;
+    }
+
+    &:not(.is-active) {
+      @media (hover: hover) and (pointer: fine) {
+        &:hover {
+          color: #45332d;
+        }
+      }
+    }
+
+    @media (min-width: 640px) {
+      font-size: 0.84rem;
+      padding: 0.4rem 1rem;
+    }
+  }
+}
+
+/* --- Grillas libros: 2 / 3 / 4 --- */
+.tq-book-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem;
+
+  @media (min-width: 640px) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+  }
+
+  @media (min-width: 1024px) {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1.1rem;
+  }
+}
+
+/* Tarjeta libro explorar / biblioteca */
+.tq-card-book {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background: #fffaf0;
+  border: 1px solid rgba(69, 51, 45, 0.22);
+  border-radius: 13px;
+  overflow: hidden;
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgba(69, 51, 45, 0.06);
+  transition:
+    transform 240ms var(--ease-out-strong),
+    box-shadow 240ms var(--ease-out-strong),
+    border-color 200ms var(--ease-out-strong);
+
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 14px 28px -16px rgba(69, 51, 45, 0.35);
+      border-color: rgba(107, 77, 57, 0.38);
+
+      .tq-card-book-cover {
+        transform: scale(1.03);
+      }
+    }
+  }
+
+  &:focus-visible {
+    outline: 2px solid #45332d;
+    outline-offset: 3px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: border-color 160ms ease;
+
+    &:hover {
+      transform: none;
+    }
+
+    .tq-card-book-cover {
+      transition: none;
+    }
+  }
+}
+
+.tq-card-book-cover-wrap {
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(107, 77, 57, 0.14);
+  background: #f0e1c6;
+  aspect-ratio: 3 / 4;
+}
+
+.tq-card-book-cover {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 520ms var(--ease-out-strong);
+  will-change: transform;
+}
+
+.tq-card-book-body {
+  padding: 0.65rem 0.75rem 0.75rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.tq-card-book-cta-row {
+  margin-top: auto;
+  padding-top: 0.5rem;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.tq-card-cta {
+  font-size: 0.72rem;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  padding: 0.45rem 0.75rem;
+  border-radius: 10px;
+}
+
+/* --- Tarjeta trueque (lista) --- */
+.tq-trade-card {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  text-align: left;
+  background: #fffaf0;
+  border: 1px solid rgba(69, 51, 45, 0.2);
+  border-radius: 14px;
+  box-shadow: 0 1px 2px rgba(69, 51, 45, 0.06);
+  cursor: pointer;
+  transition:
+    transform 220ms var(--ease-out-strong),
+    box-shadow 220ms var(--ease-out-strong),
+    border-color 200ms var(--ease-out-strong);
+
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 26px -18px rgba(69, 51, 45, 0.32);
+      border-color: rgba(107, 77, 57, 0.34);
+    }
+  }
+
+  &:focus-visible {
+    outline: 2px solid #45332d;
+    outline-offset: 3px;
+  }
+
+  @media (min-width: 640px) {
+    flex-direction: row;
+    align-items: stretch;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: border-color 160ms ease;
+
+    &:hover {
+      transform: none;
+    }
+  }
+}
+
+.tq-trade-card-visual {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 0.75rem 0;
+
+  @media (min-width: 640px) {
+    padding: 0.85rem;
+    border-right: 1px solid rgba(107, 77, 57, 0.12);
+  }
+}
+
+.tq-trade-covers {
+  display: flex;
+  align-items: center;
+  padding-left: 0.5rem;
+}
+
+.tq-trade-cover {
+  position: relative;
+  width: 2.5rem;
+  height: 3.35rem;
+  margin-left: -0.5rem;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid rgba(107, 77, 57, 0.25);
+  box-shadow: 0 2px 6px rgba(69, 51, 45, 0.12);
+  background: #f0e1c6;
+  flex-shrink: 0;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+}
+
+.tq-trade-cover-fallback {
+  width: 3.25rem;
+  height: 3.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  border: 1px dashed rgba(107, 77, 57, 0.35);
+  color: rgba(107, 77, 57, 0.45);
+  font-size: 1.75rem;
+}
+
+.tq-trade-card-main {
+  flex: 1;
+  padding: 0.65rem 0.85rem 0.85rem;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+  min-width: 0;
+
+  > .min-w-0 {
+    flex: 1;
+    min-width: 0;
+  }
+
+  @media (min-width: 640px) {
+    padding: 0.85rem 1rem;
+    align-items: center;
+  }
+}
+
+.tq-trade-card-meta {
+  font-size: 0.72rem;
+  color: #6b4d39;
+  line-height: 1.35;
+}
+
+.tq-chevron {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  color: #8a6a52;
+  flex-shrink: 0;
+}
+
+/* Badges estado */
+.tq-badge {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  border: 1px solid transparent;
+}
+
+.tq-badge--proposed {
+  background: #fff7e8;
+  border-color: rgba(224, 161, 94, 0.55);
+  color: #7a4f12;
+}
+
+.tq-badge--accepted {
+  background: #ecfdf3;
+  border-color: rgba(34, 197, 94, 0.45);
+  color: #166534;
+}
+
+.tq-badge--completed {
+  background: #eef2ff;
+  border-color: rgba(99, 102, 241, 0.35);
+  color: #3730a3;
+}
+
+.tq-badge--rejected,
+.tq-badge--cancelled,
+.tq-badge--expired {
+  background: #faf5f5;
+  border-color: rgba(180, 83, 9, 0.25);
+  color: #7c2d12;
+}
+
+/* --- Skeletons --- */
+@keyframes tq-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.tq-skeleton {
+  pointer-events: none;
+}
+
+.tq-skeleton.tq-card-book {
+  cursor: default;
+}
+
+.tq-skeleton-cover {
+  aspect-ratio: 3 / 4;
+  border-radius: 12px;
+  background: linear-gradient(
+    110deg,
+    #ede4cf 0%,
+    #f7f0df 45%,
+    #ede4cf 90%
+  );
+  background-size: 200% 100%;
+  animation: tq-shimmer 1.35s ease-in-out infinite;
+  border: 1px solid rgba(107, 77, 57, 0.1);
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+    background: #ede4cf;
+  }
+}
+
+.tq-skeleton-line {
+  display: block;
+  height: 0.55rem;
+  border-radius: 6px;
+  margin-top: 0.45rem;
+  width: 70%;
+  background: linear-gradient(
+    110deg,
+    #e8dcc4 0%,
+    #f3ead4 45%,
+    #e8dcc4 90%
+  );
+  background-size: 200% 100%;
+  animation: tq-shimmer 1.35s ease-in-out infinite;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+    background: #e8dcc4;
+  }
+
+  &--lg {
+    width: 88%;
+    height: 0.65rem;
+  }
+
+  &--sm {
+    width: 45%;
+    height: 0.45rem;
+  }
+}
+
+.tq-skeleton-trade {
+  display: flex;
+  gap: 0.75rem;
+  padding: 0.85rem;
+  border-radius: 14px;
+  border: 1px solid rgba(107, 77, 57, 0.14);
+  background: #fffaf0;
+}
+
+.tq-skeleton-trade-visual {
+  width: 5.5rem;
+  flex-shrink: 0;
+}
+
+.tq-skeleton-modal-cover {
+  max-height: min(40vh, 14rem);
+  width: 100%;
+  max-width: 11rem;
+  margin: 0 auto;
+}
+
+.tq-search-shell {
+  border-radius: 14px;
+  border: 1px solid rgba(107, 77, 57, 0.16);
+  background: rgba(255, 253, 247, 0.92);
+  box-shadow: 0 1px 2px rgba(69, 51, 45, 0.05);
+}
+
+.tq-touch-icon {
+  min-width: 44px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}

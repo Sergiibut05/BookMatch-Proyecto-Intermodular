@@ -679,6 +679,11 @@ body.loader-active ::view-transition-new(root) {
     }
 }
 
+/* Variante más ancha (detalle libro trueque, TQ-S4). Misma animación bottom-sheet / desktop. */
+.pl-modal.pl-modal-in-desktop {
+    max-width: 36rem;
+}
+
 .pl-modal-head {
     display: flex;
     align-items: flex-start;
