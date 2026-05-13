@@ -16,5 +16,5 @@ export const environment = {
         measurementId: "G-YD2T0NCDTC"
     },
     stripePublishableKey: 'pk_test_51SXKSE9RfkpN8LkuajmtkGe2fBJNNYiVhepYyANGrlr5xBW9nMJXEm76iUAoJb3iqutIywJviuf4QQJHFNFQQr0d007T7bx4gt',
-    apiUrl: 'http://16.171.111.235:3000/api'
+    apiUrl: 'https://api.bookmatch.club'
 };
