@@ -32,6 +32,8 @@ const applyRateLimit = !isTest && !isDev;
 // CORS debe estar antes de todo, incluso antes del webhook
 const allowedOrigins = [
   env.FRONTEND_URL || 'http://localhost:4200',
+  'https://bookmatch.club',
+  'https://www.bookmatch.club',
   'https://book-match-proyecto-intermodular-b8.vercel.app',
   /^https:\/\/book-match-proyecto-intermodular.*\.vercel\.app$/,
   // Orígenes de apps móviles/webview
