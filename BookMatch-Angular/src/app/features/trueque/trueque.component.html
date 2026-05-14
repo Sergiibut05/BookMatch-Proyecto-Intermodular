@@ -752,8 +752,20 @@
       (click)="$event.stopPropagation()">
       <div class="pl-modal-head">
         <div>
-          <h2 id="trueque-add-book-title" class="pl-modal-title">{{ 'TRUEQUE.ADD_TITLE' | translate }}</h2>
-          <p class="pl-modal-sub">{{ 'TRUEQUE.ADD_MODAL_SUB' | translate }}</p>
+          <h2 id="trueque-add-book-title" class="pl-modal-title">
+            @if (addBookOfferFlow()) {
+              {{ 'TRUEQUE.OFFER_TITLE' | translate }}
+            } @else {
+              {{ 'TRUEQUE.ADD_TITLE' | translate }}
+            }
+          </h2>
+          <p class="pl-modal-sub">
+            @if (addBookOfferFlow()) {
+              {{ 'TRUEQUE.OFFER_MODAL_SUB' | translate }}
+            } @else {
+              {{ 'TRUEQUE.ADD_MODAL_SUB' | translate }}
+            }
+          </p>
         </div>
         <button
           type="button"

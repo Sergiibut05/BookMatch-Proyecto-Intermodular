@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
-import { Observable, map, switchMap } from 'rxjs';
+import { Observable, map, switchMap, take } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { AuthService } from './auth.service';
 import { OrdersService } from './orders.service';
@@ -167,6 +167,7 @@ export class TruequeService {
 
   private authHeaders(): Observable<HttpHeaders> {
     return this.authService.getToken().pipe(
+      take(1),
       map((token) => {
         let headers = new HttpHeaders();
         if (token) {

@@ -149,7 +149,10 @@ async function loadTradeForParticipant(id: number, userId: number): Promise<Trad
 export async function listTradesForUser(userId: number): Promise<TradeListItem[]> {
   const rows = await prisma.trade.findMany({
     where: {
-      OR: [{ senderId: userId }, { receiverId: userId }],
+      AND: [
+        { OR: [{ senderId: userId }, { receiverId: userId }] },
+        { status: { not: 'CANCELLED' } },
+      ],
     },
     orderBy: { updatedAt: 'desc' },
     include: {

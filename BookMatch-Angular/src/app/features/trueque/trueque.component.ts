@@ -104,6 +104,8 @@ export class TruequeComponent implements OnDestroy {
   createContextLoading = signal(false);
 
   addBookOpen = signal(false);
+  /** true: abierto desde «Nuevo trueque» (hero); textos orientados a publicar para Explorar. */
+  addBookOfferFlow = signal(false);
   addBookMode = signal<AddBookMode>('manual');
   addBookLoading = signal(false);
   addBookTitle = signal('');
@@ -451,6 +453,7 @@ export class TruequeComponent implements OnDestroy {
         this.createMyBooks.set([]);
         this.createReceiverBooks.set([]);
         this.createContextLoading.set(false);
+        this.showToast('TRUEQUE.ERROR_CREATE_CONTEXT');
       },
     });
   }
@@ -461,8 +464,8 @@ export class TruequeComponent implements OnDestroy {
       this.setTab('explore');
       return;
     }
-    this.showToast('TRUEQUE.CREATE_CHOOSE_FROM_EXPLORE');
     this.setTab('explore');
+    this.openAddBook({ offerFlow: true });
   }
 
   onCreateBackdrop(event: MouseEvent): void {
@@ -578,7 +581,10 @@ export class TruequeComponent implements OnDestroy {
     const id = this.selectedTradeId();
     if (id == null) return;
     this.truequeService.cancel(id).subscribe({
-      next: (t) => this.tradeDetail.set(t),
+      next: () => {
+        this.closeTrade();
+        this.loadTrades();
+      },
       error: () => this.tradeDetailError.set('TRUEQUE.ERROR_CANCEL'),
     });
   }
@@ -592,11 +598,12 @@ export class TruequeComponent implements OnDestroy {
     });
   }
 
-  openAddBook() {
+  openAddBook(options?: { offerFlow?: boolean }) {
     if (this.myUserId() == null) {
       this.showToast('TRUEQUE.LOGIN_REQUIRED');
       return;
     }
+    this.addBookOfferFlow.set(!!options?.offerFlow);
     this.resetAddBookForm();
     this.addBookMode.set('manual');
     this.addBookOpen.set(true);
@@ -616,6 +623,7 @@ export class TruequeComponent implements OnDestroy {
   closeAddBook() {
     this.addBookOpen.set(false);
     this.addBookLoading.set(false);
+    this.addBookOfferFlow.set(false);
     this.resetAddBookForm();
   }
 
@@ -677,11 +685,12 @@ export class TruequeComponent implements OnDestroy {
     this.addBookLoading.set(true);
     this.truequeService.createUserBook(dto).subscribe({
       next: () => {
+        const fromOffer = this.addBookOfferFlow();
         this.addBookLoading.set(false);
         this.closeAddBook();
-        this.showToast('TRUEQUE.ADD_OK');
+        this.showToast(fromOffer ? 'TRUEQUE.OFFER_ADD_OK' : 'TRUEQUE.ADD_OK');
         this.loadLibrary();
-        if (this.activeTab() === 'explore') this.loadExplore();
+        this.loadExplore();
       },
       error: () => {
         this.addBookLoading.set(false);
@@ -699,11 +708,20 @@ export class TruequeComponent implements OnDestroy {
     this.addBookLoading.set(true);
     forkJoin(ids.map((cid) => this.truequeService.createUserBook({ catalogBookId: cid }))).subscribe({
       next: () => {
+        const fromOffer = this.addBookOfferFlow();
         this.addBookLoading.set(false);
         this.closeAddBook();
-        this.showToast(ids.length > 1 ? 'TRUEQUE.ADD_OK_BULK' : 'TRUEQUE.ADD_OK');
+        this.showToast(
+          fromOffer
+            ? ids.length > 1
+              ? 'TRUEQUE.OFFER_ADD_OK_BULK'
+              : 'TRUEQUE.OFFER_ADD_OK'
+            : ids.length > 1
+              ? 'TRUEQUE.ADD_OK_BULK'
+              : 'TRUEQUE.ADD_OK',
+        );
         this.loadLibrary();
-        if (this.activeTab() === 'explore') this.loadExplore();
+        this.loadExplore();
       },
       error: () => {
         this.addBookLoading.set(false);
@@ -719,7 +737,7 @@ export class TruequeComponent implements OnDestroy {
       next: () => {
         this.showToast('TRUEQUE.DELETE_OK');
         this.loadLibrary();
-        if (this.activeTab() === 'explore') this.loadExplore();
+        this.loadExplore();
       },
       error: () => this.showToast('TRUEQUE.DELETE_FAIL'),
     });
