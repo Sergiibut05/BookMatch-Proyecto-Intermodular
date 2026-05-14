@@ -9,6 +9,15 @@ Este monorepo usa **Cursor** y **Antigravity**: reglas/workflows (`.cursor/rules
 | `BookMatch-Angular/` | Frontend Angular 21, Tailwind, Capacitor, Firebase, ngx-translate |
 | `BookMatch-Backend/` | API Express 5, Prisma, PostgreSQL, Stripe, Firebase Admin |
 
+## Backend en producción (referencia rápida)
+
+- **Despliegue principal:** **AWS EC2** (Ubuntu) con **Docker** (`BookMatch-Backend/Dockerfile`, `docker-compose.yml`): Node + Prisma + **Python** (venv) para scripts de analytics.
+- **HTTPS:** **Caddy** en el host como reverse proxy (443/80) hacia el contenedor en **`127.0.0.1:3000`**; DNS **A** `api.<dominio>` → IP de la instancia.
+- **Base de datos:** **Supabase** (PostgreSQL). En `.env` del servidor: `DATABASE_URL` (pooler) y `DIRECT_URL` (conexión directa para Prisma/migraciones). Secretos solo en el servidor o en el gestor del hosting, nunca en git.
+- **URL del API para el front:** prefijo **`/api`** obligatorio en la base URL (p. ej. `https://api.<dominio>/api`). En Vercel el `vercel.json` reescribe y puede ocultar ese prefijo; contra el host propio no.
+- **CI:** `.github/workflows/deploy-ec2-backend.yml` — en push a **`main`** con cambios bajo `BookMatch-Backend/`, despliegue por SSH al EC2 (secretos `EC2_HOST`, `EC2_USER`, `EC2_SSH_KEY`).
+- **Alternativa / respaldo:** mismo código desplegable en **Vercel** (`vercel.json`); ver `README.md` y Confluence **Deployment y producción**.
+
 ## Reglas (cuándo aplican)
 
 | Regla | Activación | Uso |
@@ -62,4 +71,4 @@ En ajustes de Cursor podéis crear modos de chat con instrucciones de sistema ba
 
 ---
 
-*Última actualización: documentación de agentes y convenciones BookMatch.*
+*Última actualización: documentación de agentes y convenciones BookMatch (incl. despliegue backend EC2 / dominio HTTPS).*
