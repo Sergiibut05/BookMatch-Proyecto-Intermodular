@@ -1,4 +1,12 @@
-import { Component, OnDestroy, afterNextRender, inject } from '@angular/core';
+import { DOCUMENT } from '@angular/common';
+import {
+  Component,
+  ElementRef,
+  OnDestroy,
+  afterNextRender,
+  inject,
+  viewChild,
+} from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import gsap from 'gsap';
@@ -14,10 +22,12 @@ gsap.registerPlugin(ScrollTrigger);
   styleUrl: './landing.component.scss',
 })
 export class LandingComponent implements OnDestroy {
-  private router      = inject(Router);
-  private authService = inject(AuthService);
+  private readonly document = inject(DOCUMENT);
+  private readonly router = inject(Router);
+  private readonly authService = inject(AuthService);
+  private readonly landingRoot = viewChild<ElementRef<HTMLElement>>('landingRoot');
 
-  mobileMenuOpen = false;
+  private gsapLandingCtx?: gsap.Context;
 
   constructor() {
     if (this.authService.isAuthenticated()) {
@@ -28,10 +38,105 @@ export class LandingComponent implements OnDestroy {
       if (user) this.router.navigate(['/home']);
       sub.unsubscribe();
     });
-    afterNextRender(() => this.initAnimations());
+
+    afterNextRender(() => {
+      const root = this.landingRoot()?.nativeElement;
+      if (!root) return;
+
+      this.document.documentElement.style.scrollBehavior = 'smooth';
+
+      this.gsapLandingCtx = gsap.context(() => {
+        const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (!reduced) {
+          this.initHeroIntro(root);
+        }
+        this.initScrollReveal();
+      }, root);
+    });
   }
 
-  private initAnimations(): void {
+  scrollToFeatures(): void {
+    this.document.getElementById('features')?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start',
+    });
+  }
+
+  private initHeroIntro(root: HTMLElement): void {
+    const media = root.querySelector<HTMLElement>('.landing-hero__media');
+    const header = root.querySelector<HTMLElement>('.landing-header');
+    const eyebrow = root.querySelector<HTMLElement>('.landing-hero-eyebrow');
+    const headlineLines = root.querySelectorAll<HTMLElement>(
+      '.landing-hero-headline__line',
+    );
+    const sub = root.querySelector<HTMLElement>('.landing-hero-sub');
+    const actions = root.querySelector<HTMLElement>('.landing-hero-foot__actions');
+    const scrollBtn = root.querySelector<HTMLElement>('.landing-hero-scroll');
+    const scrollIcon = root.querySelector<HTMLElement>('.landing-hero-scroll__icon');
+
+    const fadeTargets = [
+      header,
+      eyebrow,
+      ...Array.from(headlineLines),
+      sub,
+      actions,
+      scrollBtn,
+    ].filter((el): el is HTMLElement => !!el);
+
+    const isDesktop = window.matchMedia('(min-width: 901px)').matches;
+
+    gsap.set(fadeTargets, { opacity: 0, y: 22, force3D: true });
+    if (media && isDesktop) {
+      gsap.set(media, {
+        scale: 1.18,
+        transformOrigin: 'center center',
+        force3D: true,
+      });
+    }
+
+    const tl = gsap.timeline({
+      defaults: { ease: 'power2.out', force3D: true },
+    });
+
+    if (media && isDesktop) {
+      tl.to(media, { scale: 1, duration: 2, ease: 'power3.out' }, 0);
+    }
+    if (header) {
+      tl.to(header, { opacity: 1, y: 0, duration: 0.75 }, 0.15);
+    }
+    if (eyebrow) {
+      tl.to(eyebrow, { opacity: 1, y: 0, duration: 0.6 }, 0.4);
+    }
+    if (headlineLines.length) {
+      tl.to(
+        Array.from(headlineLines),
+        { opacity: 1, y: 0, duration: 0.95, stagger: 0.14 },
+        0.55,
+      );
+    }
+    if (sub) {
+      tl.to(sub, { opacity: 1, y: 0, duration: 0.7 }, '-=0.5');
+    }
+    if (actions) {
+      tl.to(actions, { opacity: 1, y: 0, duration: 0.6 }, '-=0.4');
+    }
+    if (scrollBtn) {
+      tl.to(scrollBtn, { opacity: 1, y: 0, duration: 0.5 }, '-=0.35');
+    }
+
+    if (scrollIcon) {
+      gsap.to(scrollIcon, {
+        y: 6,
+        repeat: -1,
+        yoyo: true,
+        duration: 1.4,
+        ease: 'sine.inOut',
+        delay: 1.6,
+      });
+    }
+  }
+
+  private initScrollReveal(): void {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
     const sections = document.querySelectorAll<HTMLElement>('.anim-section');
@@ -53,7 +158,6 @@ export class LandingComponent implements OnDestroy {
       );
     });
 
-    // Feature cards stagger
     const cards = document.querySelectorAll<HTMLElement>('.feature-card');
     if (cards.length) {
       gsap.fromTo(
@@ -74,7 +178,6 @@ export class LandingComponent implements OnDestroy {
       );
     }
 
-    // Stats counter-like pop
     const stats = document.querySelectorAll<HTMLElement>('.stat');
     if (stats.length) {
       gsap.fromTo(
@@ -98,6 +201,7 @@ export class LandingComponent implements OnDestroy {
   }
 
   ngOnDestroy(): void {
-    ScrollTrigger.getAll().forEach(st => st.kill());
+    this.gsapLandingCtx?.revert();
+    this.document.documentElement.style.scrollBehavior = '';
   }
 }

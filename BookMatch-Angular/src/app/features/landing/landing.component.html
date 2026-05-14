@@ -1,78 +1,69 @@
-<div class="landing">
+<div class="landing" #landingRoot>
 
-  <!-- ═══ NAVBAR ═══ -->
-  <header class="nav">
-    <div class="nav__inner">
-      <a routerLink="/" class="nav__logo">
-        <span class="nav__logo-icon">📖</span>
-        <span class="nav__logo-text">BookMatch</span>
-      </a>
-      <nav class="nav__links">
-        <a href="#features" class="nav__link">Features</a>
-        <a href="#app" class="nav__link">Cómo funciona</a>
-        <a href="#social-proof" class="nav__link">Comunidad</a>
-      </nav>
-      <div class="nav__actions">
-        <a routerLink="/auth/login" class="nav__login">Iniciar sesión</a>
-        <a routerLink="/auth/register" class="nav__cta">Crear cuenta</a>
+  <!-- Hero: imagen + capas de composición (vignette + grano) + UI editorial -->
+  <div class="hero-stack">
+    <header class="landing-header">
+      <div class="landing-header__inner">
+        <a routerLink="/" class="landing-header__brand" aria-label="BookMatch — inicio">
+          <img
+            class="landing-header__logo"
+            src="assets/bookMatch-logo-transparent-gold.png"
+            alt=""
+            width="160"
+            height="160"
+            fetchpriority="high"
+          >
+          <span class="landing-header__wordmark">BookMatch</span>
+        </a>
+        <a routerLink="/auth/login" class="hero-btn hero-btn--solid hero-btn--sm">
+          Iniciar sesión
+        </a>
       </div>
-      <!-- Mobile hamburger -->
-      <button class="nav__hamburger" aria-label="Menú" (click)="mobileMenuOpen = !mobileMenuOpen">
-        <span class="material-symbols-outlined">{{ mobileMenuOpen ? 'close' : 'menu' }}</span>
+    </header>
+
+    <section class="landing-hero" id="hero" aria-label="Inicio">
+      <div class="landing-hero__media">
+        <img
+          class="landing-hero__image"
+          src="assets/Bookmatch-altar.webp"
+          alt=""
+          width="1600"
+          height="900"
+          fetchpriority="high"
+          decoding="async"
+        >
+      </div>
+      <div class="landing-hero__vignette" aria-hidden="true"></div>
+      <div class="landing-hero__grain" aria-hidden="true"></div>
+    </section>
+
+    <div class="landing-hero-head">
+      <span class="landing-hero-eyebrow">Una biblioteca pensada para ti</span>
+      <h1 class="landing-hero-headline">
+        <span class="landing-hero-headline__line">Descubre tu próxima <em>historia</em>.</span>
+      </h1>
+    </div>
+
+    <div class="landing-hero-foot">
+      <p class="landing-hero-sub">
+        Recomendaciones afinadas a tu gusto, organiza tu colección
+        y conecta con quien lee como tú.
+      </p>
+      <div class="landing-hero-foot__actions">
+        <a routerLink="/auth/register" class="hero-btn hero-btn--solid">Crear cuenta</a>
+        <a routerLink="/auth/login" class="hero-btn hero-btn--ghost">Iniciar sesión</a>
+      </div>
+      <button
+        type="button"
+        class="landing-hero-scroll"
+        (click)="scrollToFeatures()"
+        aria-label="Ir a la siguiente sección"
+      >
+        <span class="landing-hero-scroll__label">Descubre más</span>
+        <span class="material-symbols-outlined landing-hero-scroll__icon" aria-hidden="true">expand_more</span>
       </button>
     </div>
-    <!-- Mobile menu -->
-    @if (mobileMenuOpen) {
-      <div class="nav__mobile">
-        <a href="#features" class="nav__mobile-link" (click)="mobileMenuOpen = false">Features</a>
-        <a href="#app" class="nav__mobile-link" (click)="mobileMenuOpen = false">Cómo funciona</a>
-        <a href="#social-proof" class="nav__mobile-link" (click)="mobileMenuOpen = false">Comunidad</a>
-        <div class="nav__mobile-actions">
-          <a routerLink="/auth/login" class="nav__mobile-link">Iniciar sesión</a>
-          <a routerLink="/auth/register" class="nav__cta nav__cta--full">Crear cuenta</a>
-        </div>
-      </div>
-    }
-  </header>
-
-  <!-- ═══ HERO ═══ -->
-  <section class="hero" id="hero">
-    <div class="hero__inner">
-      <div class="hero__text anim-section">
-        <h1 class="hero__title">
-          Encuentra tu<br><em>próximo capítulo.</em>
-        </h1>
-        <p class="hero__sub">
-          BookMatch aprende de tus gustos para recomendarte libros,
-          organizar tu colección y abrirte puertas a nuevas historias.
-        </p>
-        <div class="hero__ctas">
-          <a routerLink="/auth/register" class="btn btn--primary">Empieza gratis</a>
-          <a href="#features" class="btn btn--outline">
-            <span class="material-symbols-outlined btn__icon">play_arrow</span>
-            Ver cómo funciona
-          </a>
-        </div>
-        <div class="hero__proof">
-          <div class="hero__stars">★★★★★</div>
-          <span class="hero__proof-text">+10.000 lectores ya encontraron su próximo libro</span>
-        </div>
-      </div>
-      <div class="hero__visual anim-section">
-        <img
-          class="hero__image"
-          src="/assets/Bookmatch-altar.webp"
-          alt="Libro BookMatch sobre altar"
-          loading="eager"
-          fetchpriority="high"
-        >
-        <!-- Floating decorative icons -->
-        <span class="hero__float hero__float--heart">❤️</span>
-        <span class="hero__float hero__float--bookmark">🔖</span>
-        <span class="hero__float hero__float--pen">✏️</span>
-      </div>
-    </div>
-  </section>
+  </div>
 
   <!-- ═══ FEATURES ═══ -->
   <section class="features" id="features">
