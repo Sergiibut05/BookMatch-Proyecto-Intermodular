@@ -9,14 +9,19 @@ $brown-light: #8B6540;
 $brown-pale:  #A88968;
 $gold:        #D4A356;
 $cream-warm:   #FCF5E2;
+$sand:        #EDE3D0;
 $text:        #2D1B0E;
 $text-muted:  #6B5544;
 $white:       #FFFFFF;
 $card-shadow: 0 2px 20px rgba(0,0,0,0.06);
 $ease:        cubic-bezier(0.23, 1, 0.32, 1);
 
+/* Colores de texto sobre fondos oscuros */
+$on-dark:       rgba(252, 245, 226, 0.92);
+$on-dark-muted: rgba(252, 245, 226, 0.55);
+
 /* Hero editorial palette (refined, contained) */
-$hero-bg:        #f5efe4;
+$hero-bg:        #F1EBE1;
 $hero-bg-deep:   #ece2d0;
 $hero-brown:     #5b341d;
 $hero-brown-mid: #7a4a2d;
@@ -50,14 +55,11 @@ $hero-text:      #2b2118;
   isolation: isolate;
   overflow: hidden;
 
-  /* En móvil pasamos a layout en columna real: cada bloque ocupa
-     su propio espacio y la imagen ya no flota sobre el texto. */
+  /* Móvil: mismo layout de grid que desktop, imagen sigue siendo
+     el fondo absoluto para mantener el efecto pantalla completa. */
   @media (max-width: 900px) {
-    display: flex;
-    flex-direction: column;
-    grid-template-rows: none;
+    grid-template-rows: auto 1fr auto;
     min-height: 100dvh;
-    justify-content: flex-start;
     padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
   }
 }
@@ -69,15 +71,11 @@ $hero-text:      #2b2118;
   overflow: hidden;
 
   @media (max-width: 900px) {
-    position: relative;
-    inset: auto;
-    width: 100%;
-    order: 3;
-    /* Más protagonismo: banda más alta, sin min-height fijo que deje letterboxing */
-    height: clamp(220px, 46vmin, 380px);
-    min-height: unset;
-    max-height: 42vh;
-    flex-shrink: 0;
+    /* Igual que desktop: ocupa todo el hero-stack como fondo */
+    position: absolute;
+    inset: 0;
+    height: auto;
+    max-height: none;
   }
 }
 
@@ -101,13 +99,14 @@ $hero-text:      #2b2118;
   -webkit-user-drag: none;
 
   @media (max-width: 900px) {
-    /* Rellena la banda: recorta un poco el lienzo vacío del .webp, centra el libro */
     object-fit: cover;
-    object-position: center 52%;
+    object-position: 51% 52%;
   }
 }
 
-/* Vignette suave que enmarca el libro sin oscurecer */
+/* Vignette suave que enmarca el libro sin oscurecer.
+   Solo tinta los lados y la parte superior — el borde inferior queda
+   limpio para que el #F1EBE1 del hero-stack se vea sin diferencia. */
 .landing-hero__vignette {
   position: absolute;
   inset: 0;
@@ -117,9 +116,24 @@ $hero-text:      #2b2118;
     radial-gradient(ellipse 75% 60% at 50% 50%,
       rgba(255, 235, 180, 0.10) 0%,
       transparent 55%),
-    radial-gradient(ellipse 110% 90% at 50% 50%,
-      transparent 55%,
-      rgba(91, 52, 29, 0.10) 100%);
+    linear-gradient(to bottom,
+      rgba(91, 52, 29, 0.12) 0%,
+      transparent 35%);
+
+  /* En móvil: degradado vertical que hace legibles el header (arriba)
+     y los botones CTA (abajo) sobre la imagen a pantalla completa */
+  @media (max-width: 900px) {
+    background:
+      linear-gradient(
+        to bottom,
+        rgba(245, 239, 228, 0.60) 0%,
+        rgba(245, 239, 228, 0.12) 16%,
+        transparent 32%,
+        transparent 60%,
+        rgba(245, 239, 228, 0.28) 78%,
+        rgba(245, 239, 228, 0.68) 100%
+      );
+  }
 }
 
 /* Grano cinematográfico muy sutil */
@@ -141,7 +155,6 @@ $hero-text:      #2b2118;
   padding: clamp(1.1rem, 2.6vw, 1.6rem) clamp(1.25rem, 3vw, 2rem);
 
   @media (max-width: 900px) {
-    order: 1;
     padding: 0.65rem 1rem 0.5rem;
     padding-top: max(0.65rem, env(safe-area-inset-top));
     /* Sin “línea” dura: funde con el fondo */
@@ -173,13 +186,13 @@ $hero-text:      #2b2118;
 
 .landing-header__logo {
   display: block;
-  height: clamp(3.2rem, 6vw, 4.4rem);
+  height: clamp(2.4rem, 4.5vw, 3.2rem);
   width: auto;
   object-fit: contain;
   filter: drop-shadow(0 6px 18px rgba(91, 52, 29, 0.18));
 
   @media (max-width: 900px) {
-    height: clamp(2.35rem, 9vw, 2.85rem);
+    height: clamp(2rem, 8vw, 2.5rem);
     filter: drop-shadow(0 2px 10px rgba(91, 52, 29, 0.12));
   }
 }
@@ -187,7 +200,7 @@ $hero-text:      #2b2118;
 .landing-header__wordmark {
   font-family: 'Cormorant Garamond', 'Cinzel', serif;
   font-size: clamp(1.15rem, 1.6vw, 1.4rem);
-  font-weight: 500;
+  font-weight: 700;
   letter-spacing: 0.04em;
   color: $hero-text;
 
@@ -258,8 +271,7 @@ $hero-text:      #2b2118;
   pointer-events: none;
 
   @media (max-width: 900px) {
-    order: 2;
-    padding: 0.35rem 1rem 0.25rem;
+    padding: 2.5rem 1rem 0.25rem;
     pointer-events: auto;
   }
 }
@@ -335,14 +347,13 @@ $hero-text:      #2b2118;
   flex-direction: column;
   align-items: center;
   text-align: center;
-  padding: 0 1.25rem clamp(1.5rem, 4vh, 2.25rem);
+  /* Padding inferior generoso para que "Descubre más" quede
+     siempre por encima del overlap de la sección features */
+  padding: 0 1.25rem clamp(3.5rem, 7vh, 5rem);
   gap: 1.15rem;
 
   @media (max-width: 900px) {
-    order: 4;
-    /* Evita el “abismo” vertical: NO margin-top:auto en columna flex */
-    margin-top: 0;
-    padding: 0.5rem 1rem 0.75rem;
+    padding: 0.5rem 1rem clamp(2rem, 6svh, 3.5rem);
     gap: 0.75rem;
   }
 }
@@ -357,9 +368,7 @@ $hero-text:      #2b2118;
   color: rgba(43, 33, 24, 0.72);
 
   @media (max-width: 900px) {
-    font-size: 0.88rem;
-    line-height: 1.45;
-    max-width: 22rem;
+    display: none;
   }
 }
 
@@ -402,8 +411,7 @@ $hero-text:      #2b2118;
   transition: color 180ms $ease;
 
   @media (max-width: 900px) {
-    margin-top: 0.15rem;
-    padding-bottom: 0.35rem;
+    display: none;
   }
 
   @media (hover: hover) {
@@ -470,8 +478,12 @@ $hero-text:      #2b2118;
    FEATURES
 ================================================================ */
 .features {
+  position: relative;
+  z-index: 1;
+  margin-top: -2rem;
+  border-radius: 2rem 2rem 0 0;
   padding: clamp(4rem, 8vh, 6rem) 1.5rem;
-  background: $cream;
+  background: $white;
   @media (min-width: 768px) { padding-inline: 2rem; }
 }
 
@@ -557,8 +569,8 @@ $hero-text:      #2b2118;
 ================================================================ */
 .app-showcase {
   padding: clamp(4rem, 8vh, 6rem) 1.5rem;
-  background: $brown-dark;
-  color: $cream;
+  background: $sand;
+  color: $text;
   @media (min-width: 768px) { padding-inline: 2rem; }
 }
 
@@ -584,84 +596,51 @@ $hero-text:      #2b2118;
   @media (max-width: 799px) { order: -1; }
 }
 
-.phone-frame {
-  width: clamp(220px, 28vw, 280px);
-  aspect-ratio: 9 / 17;
-  background: #1A0E06;
-  border-radius: 28px;
-  padding: 10px;
+/* Phone mockup — la captura manda, el marco solo le da contexto */
+.phone-mockup {
+  position: relative;
+  width: clamp(220px, 24vw, 280px);
+  aspect-ratio: 390 / 760;
+  border-radius: 30px;
+  overflow: hidden;
+  padding: 0.55rem;
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0) 28%),
+    linear-gradient(180deg, #1b1715 0%, #050505 100%);
+  border: 1px solid rgba(255, 255, 255, 0.10);
   box-shadow:
-    0 20px 60px rgba(0,0,0,0.35),
-    inset 0 1px 0 rgba(255,255,255,0.05);
+    0 34px 80px rgba(61, 35, 18, 0.28),
+    0 12px 28px rgba(61, 35, 18, 0.18),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+
+  @media (max-width: 799px) {
+    width: min(230px, 62vw);
+  }
 }
 
-.phone-frame__screen {
+.phone-mockup::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  box-shadow: inset 0 0 0 2px rgba(0, 0, 0, 0.72);
+  z-index: 2;
+}
+
+.phone-mockup__screenshot {
+  position: relative;
+  z-index: 1;
+  display: block;
   width: 100%;
   height: 100%;
-  background: $cream;
-  border-radius: 20px;
-  padding: 1rem 0.8rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
-  overflow: hidden;
-}
-
-.phone-screen__header {
-  display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
-  margin-bottom: 0.3rem;
-}
-
-.phone-screen__greeting {
-  font-family: 'Cinzel', serif;
-  font-size: 0.85rem;
-  font-weight: 700;
-  color: $brown-dark;
-}
-
-.phone-screen__sub {
-  font-size: 0.62rem;
-  color: $text-muted;
-}
-
-.phone-screen__section { margin-top: 0.2rem; }
-
-.phone-screen__label {
-  font-size: 0.58rem;
-  font-weight: 700;
-  color: $brown;
-  letter-spacing: 0.03em;
-}
-
-.phone-screen__books {
-  display: flex;
-  gap: 0.4rem;
-}
-
-.phone-book {
-  flex: 1;
-  aspect-ratio: 2 / 3;
-  background: linear-gradient(135deg, $brown 0%, $brown-light 100%);
-  border-radius: 4px;
-}
-
-.phone-screen__progress { margin-top: auto; }
-
-.phone-progress-bar {
-  height: 4px;
-  background: rgba(92, 58, 33, 0.12);
-  border-radius: 2px;
-  margin-top: 0.4rem;
-  overflow: hidden;
-}
-
-.phone-progress-bar__fill {
-  width: 62%;
-  height: 100%;
-  background: $brown;
-  border-radius: 2px;
+  border-radius: 26px;
+  object-fit: contain;
+  object-position: top center;
+  background: #120b07;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.08),
+    0 0 0 1px rgba(0, 0, 0, 0.72);
 }
 
 .app-showcase__content { flex: 1; }
@@ -673,7 +652,7 @@ $hero-text:      #2b2118;
   font-weight: 700;
   letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: $gold;
+  color: $brown;
   margin-bottom: 0.8rem;
 }
 
@@ -682,14 +661,14 @@ $hero-text:      #2b2118;
   font-size: clamp(1.8rem, 4vw, 2.8rem);
   font-weight: 700;
   line-height: 1.1;
-  color: $cream;
+  color: $brown-dark;
   margin: 0 0 1rem;
 }
 
 .app-showcase__text {
   font-size: clamp(0.88rem, 1.2vw, 1rem);
   line-height: 1.7;
-  color: rgba(255, 248, 240, 0.6);
+  color: $text-muted;
   margin: 0 0 1.5rem;
   max-width: 440px;
 }
@@ -707,8 +686,8 @@ $hero-text:      #2b2118;
     align-items: center;
     gap: 0.6rem;
     font-size: 0.88rem;
-    color: rgba(255, 248, 240, 0.75);
-    .material-symbols-outlined { font-size: 1.1rem; color: $gold; }
+    color: $text-muted;
+    .material-symbols-outlined { font-size: 1.1rem; color: $brown; }
   }
 }
 
@@ -717,47 +696,59 @@ $hero-text:      #2b2118;
 ================================================================ */
 .social-proof {
   padding: clamp(4rem, 8vh, 6rem) 1.5rem;
-  background: $cream-dark;
+  background: $brown-dark;
+  color: $on-dark;
   @media (min-width: 768px) { padding-inline: 2rem; }
 }
 
 .social-proof__inner {
-  display: flex;
-  flex-direction: column;
-  gap: 3rem;
-  max-width: 1100px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+  max-width: 1120px;
   margin: 0 auto;
-  align-items: center;
+  align-items: stretch;
 
   @media (min-width: 800px) {
-    flex-direction: row;
-    gap: 4rem;
-    align-items: flex-start;
+    grid-template-columns: minmax(0, 1.15fr) minmax(300px, 0.85fr);
+    gap: clamp(2rem, 5vw, 4rem);
+    align-items: center;
   }
 }
 
 .social-proof__quote {
-  flex: 1;
   position: relative;
-  max-width: 500px;
-}
+  isolation: isolate;
+  max-width: 100%;
+  padding: clamp(1.5rem, 4vw, 3rem);
+  border-radius: 28px;
+  background:
+    radial-gradient(circle at 10% 10%, rgba(255, 235, 180, 0.12), transparent 34%),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03));
+  border: 1px solid rgba(255, 235, 180, 0.14);
+  box-shadow: 0 28px 80px rgba(0, 0, 0, 0.22);
 
-.social-proof__mark {
-  font-family: 'Cinzel', serif;
-  font-size: 4rem;
-  line-height: 1;
-  color: rgba(92, 58, 33, 0.12);
-  display: block;
-  margin-bottom: -0.5rem;
+  @media (max-width: 799px) {
+    padding: 1.5rem;
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 16px;
+    border: 1px solid rgba(255, 235, 180, 0.12);
+  }
 }
 
 .social-proof__text {
   font-family: 'Lora', serif;
   font-style: italic;
-  font-size: clamp(0.95rem, 1.4vw, 1.1rem);
-  line-height: 1.7;
-  color: $text-muted;
+  font-size: clamp(1.08rem, 1.8vw, 1.55rem);
+  line-height: 1.75;
+  color: $on-dark;
   margin: 0 0 1.5rem;
+
+  @media (max-width: 799px) {
+    font-size: clamp(1rem, 4.2vw, 1.15rem);
+    line-height: 1.65;
+    margin-bottom: 1.2rem;
+  }
 }
 
 .social-proof__author {
@@ -769,6 +760,7 @@ $hero-text:      #2b2118;
 .social-proof__avatar {
   width: 40px;
   height: 40px;
+  flex-shrink: 0;
   border-radius: 50%;
   background: $brown;
   color: $white;
@@ -785,44 +777,68 @@ $hero-text:      #2b2118;
   font-family: 'Cinzel', serif;
   font-size: 0.82rem;
   font-weight: 700;
-  color: $brown-dark;
+  color: $gold;
 }
 
 .social-proof__role {
   font-size: 0.72rem;
-  color: $text-muted;
+  font-style: italic;
+  color: $on-dark-muted;
 }
 
 .social-proof__stats {
-  flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 0.9rem;
+  padding: clamp(1rem, 2vw, 1.25rem);
+  border-radius: 24px;
+  background:
+    linear-gradient(180deg, rgba(255, 235, 180, 0.08), rgba(255, 255, 255, 0.035));
+  border: 1px solid rgba(255, 235, 180, 0.12);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.18);
 
   @media (max-width: 799px) {
-    flex-direction: row;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 1.2rem;
+    width: 100%;
+    gap: 0;
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 16px;
+    border: 1px solid rgba(255, 235, 180, 0.10);
+    overflow: hidden;
   }
 }
 
 .stat {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.85rem;
+  padding: 1rem;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.055);
+  border: 1px solid rgba(255, 235, 180, 0.08);
+
+  @media (max-width: 799px) {
+    padding: 1rem 1.25rem;
+    background: transparent;
+    border-radius: 0;
+    box-shadow: none;
+
+    & + .stat {
+      border-top: 1px solid rgba(255, 235, 180, 0.08);
+    }
+  }
 }
 
 .stat__icon {
   font-size: 1.4rem;
-  color: $brown;
+  color: $gold;
   width: 44px;
   height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(92, 58, 33, 0.08);
+  background: rgba(255, 235, 180, 0.10);
   border-radius: 12px;
+  flex-shrink: 0;
 }
 
 .stat__number {
@@ -830,21 +846,23 @@ $hero-text:      #2b2118;
   font-family: 'Cinzel', serif;
   font-size: clamp(1.3rem, 2.5vw, 1.8rem);
   font-weight: 700;
-  color: $brown-dark;
+  color: $cream-warm;
   line-height: 1.1;
 }
 
 .stat__label {
   font-size: 0.75rem;
-  color: $text-muted;
+  color: $on-dark-muted;
 }
 
 /* ================================================================
    FINAL CTA
 ================================================================ */
 .final-cta {
+  /* colores muy próximos, 120 px bastan para la transición */
   padding: clamp(4rem, 8vh, 6rem) 1.5rem;
-  background: $cream;
+  background: linear-gradient(in oklab to bottom, #{$brown-dark} 0%, #{$text} 120px);
+  color: $on-dark;
   @media (min-width: 768px) { padding-inline: 2rem; }
 }
 
@@ -862,12 +880,12 @@ $hero-text:      #2b2118;
   width: 56px;
   height: 56px;
   border-radius: 16px;
-  background: rgba(92, 58, 33, 0.08);
+  background: rgba(255, 235, 180, 0.12);
   display: flex;
   align-items: center;
   justify-content: center;
   margin-bottom: 0.5rem;
-  .material-symbols-outlined { font-size: 1.6rem; color: $brown; }
+  .material-symbols-outlined { font-size: 1.6rem; color: $gold; }
 }
 
 .final-cta__title {
@@ -875,13 +893,13 @@ $hero-text:      #2b2118;
   font-size: clamp(1.5rem, 3.5vw, 2.2rem);
   font-weight: 700;
   line-height: 1.15;
-  color: $brown-dark;
+  color: $cream-warm;
   margin: 0;
 }
 
 .final-cta__sub {
   font-size: 0.92rem;
-  color: $text-muted;
+  color: $on-dark-muted;
   margin: 0 0 0.5rem;
   max-width: 420px;
 }
@@ -896,16 +914,27 @@ $hero-text:      #2b2118;
 
 .final-cta__note {
   font-size: 0.72rem;
-  color: $brown-pale;
+  color: $on-dark-muted;
+}
+
+/* Botón principal en contexto oscuro: cream sobre brown */
+.final-cta .btn--primary {
+  background: $cream-warm;
+  color: $brown-dark;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+
+  @media (hover: hover) {
+    &:hover { background: $cream; box-shadow: 0 6px 28px rgba(0, 0, 0, 0.30); }
+  }
 }
 
 /* ================================================================
    FOOTER
 ================================================================ */
 .footer {
-  background: $cream;
-  border-top: 1px solid rgba(92, 58, 33, 0.08);
+  background: $text;
   padding: clamp(3rem, 5vw, 4rem) 1.5rem 0;
+  color: $on-dark;
   @media (min-width: 768px) { padding-inline: 2rem; }
 }
 
@@ -930,12 +959,12 @@ $hero-text:      #2b2118;
   font-family: 'Cinzel', serif;
   font-size: 1.1rem;
   font-weight: 700;
-  color: $brown-dark;
+  color: $gold;
 }
 
 .footer__tagline {
   font-size: 0.8rem;
-  color: $text-muted;
+  color: $on-dark-muted;
   margin: 0.4rem 0 0;
   line-height: 1.5;
 }
@@ -961,17 +990,17 @@ $hero-text:      #2b2118;
   font-family: 'Cinzel', serif;
   font-size: 0.78rem;
   font-weight: 700;
-  color: $brown-dark;
+  color: $on-dark;
   margin: 0 0 0.3rem;
   letter-spacing: 0.02em;
 }
 
 .footer__link {
   font-size: 0.8rem;
-  color: $text-muted;
+  color: $on-dark-muted;
   text-decoration: none;
   transition: color 150ms ease;
-  @media (hover: hover) { &:hover { color: $brown; } }
+  @media (hover: hover) { &:hover { color: $gold; } }
 }
 
 .footer__bottom {
@@ -983,9 +1012,9 @@ $hero-text:      #2b2118;
   padding: 1.2rem 0;
   max-width: 1100px;
   margin: 0 auto;
-  border-top: 1px solid rgba(92, 58, 33, 0.06);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
   font-size: 0.72rem;
-  color: $brown-pale;
+  color: $on-dark-muted;
 }
 
 .footer__legal {
@@ -993,10 +1022,10 @@ $hero-text:      #2b2118;
   gap: 1rem;
 
   a {
-    color: $brown-pale;
+    color: $on-dark-muted;
     text-decoration: none;
     transition: color 150ms ease;
-    @media (hover: hover) { &:hover { color: $brown; } }
+    @media (hover: hover) { &:hover { color: $gold; } }
   }
 }
 

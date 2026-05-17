@@ -49,6 +49,7 @@ export class LandingComponent implements OnDestroy {
         const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         if (!reduced) {
           this.initHeroIntro(root);
+          this.initParallax(root);
         }
         this.initScrollReveal();
       }, root);
@@ -84,11 +85,12 @@ export class LandingComponent implements OnDestroy {
     ].filter((el): el is HTMLElement => !!el);
 
     const isDesktop = window.matchMedia('(min-width: 901px)').matches;
+    const heroScale = isDesktop ? 1.18 : 1.07;
 
     gsap.set(fadeTargets, { opacity: 0, y: 22, force3D: true });
-    if (media && isDesktop) {
+    if (media) {
       gsap.set(media, {
-        scale: 1.18,
+        scale: heroScale,
         transformOrigin: 'center center',
         force3D: true,
       });
@@ -98,8 +100,8 @@ export class LandingComponent implements OnDestroy {
       defaults: { ease: 'power2.out', force3D: true },
     });
 
-    if (media && isDesktop) {
-      tl.to(media, { scale: 1, duration: 2, ease: 'power3.out' }, 0);
+    if (media) {
+      tl.to(media, { scale: 1, duration: isDesktop ? 2 : 1.5, ease: 'power3.out' }, 0);
     }
     if (header) {
       tl.to(header, { opacity: 1, y: 0, duration: 0.75 }, 0.15);
@@ -134,6 +136,60 @@ export class LandingComponent implements OnDestroy {
         delay: 1.6,
       });
     }
+  }
+
+  private initParallax(root: HTMLElement): void {
+    const media = root.querySelector<HTMLElement>('.landing-hero__media');
+    const heroHead = root.querySelector<HTMLElement>('.landing-hero-head');
+    const heroFoot = root.querySelector<HTMLElement>('.landing-hero-foot');
+    const heroStack = root.querySelector<HTMLElement>('.hero-stack');
+
+    if (!heroStack) return;
+
+    // Imagen hero: se mueve al 40% de la velocidad de scroll → profundidad
+    if (media) {
+      gsap.to(media, {
+        y: '-20%',
+        ease: 'none',
+        scrollTrigger: {
+          trigger: heroStack,
+          start: 'top top',
+          end: 'bottom top',
+          scrub: true,
+        },
+      });
+    }
+
+    // Titular: sube y desaparece suavemente al salir del hero
+    if (heroHead) {
+      gsap.to(heroHead, {
+        y: -50,
+        opacity: 0,
+        ease: 'none',
+        scrollTrigger: {
+          trigger: heroStack,
+          start: 'top top',
+          end: '50% top',
+          scrub: 1,
+        },
+      });
+    }
+
+    // Footer hero (botón descubre más): fade-out más rápido
+    if (heroFoot) {
+      gsap.to(heroFoot, {
+        y: -35,
+        opacity: 0,
+        ease: 'none',
+        scrollTrigger: {
+          trigger: heroStack,
+          start: 'top top',
+          end: '38% top',
+          scrub: 1,
+        },
+      });
+    }
+
   }
 
   private initScrollReveal(): void {
