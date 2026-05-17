@@ -21,6 +21,20 @@
 
 ---
 
+## Despliegue en producción (resumen)
+
+| Capa | Dónde | Notas |
+|------|--------|--------|
+| **Frontend** | Vercel + dominio propio | `environment.prod.ts`: `apiUrl` debe incluir el prefijo **`/api`** (p. ej. `https://api.tu-dominio/api`). Sin `/api` las rutas no coinciden con Express. |
+| **API** | AWS EC2 (Ubuntu) | **Docker** (`BookMatch-Backend/Dockerfile`, `docker-compose.yml`): Node, Prisma, Python/venv (analytics). **Caddy** en el host: TLS (Let's Encrypt) y proxy a `127.0.0.1:3000`. DNS: registro **A** `api` → IP pública de la instancia. |
+| **Base de datos** | Supabase | `DATABASE_URL` (pooler) + `DIRECT_URL` (conexión directa) en `.env` del servidor. |
+| **CI backend** | GitHub Actions | `.github/workflows/deploy-ec2-backend.yml`: push a `main` con cambios en `BookMatch-Backend/` → SSH al EC2 → `git pull` + `docker compose build` + `up -d`. Secretos: `EC2_HOST`, `EC2_USER`, `EC2_SSH_KEY`. |
+| **Respaldo API** | Vercel (opcional) | Mismo repo; `vercel.json` reescribe al handler serverless. |
+
+Detalle operativo: **Confluence** (espacio PM) → *Deployment y producción*; convenciones para agentes: **`AGENTS.md`**.
+
+---
+
 ## 🚦 Estado del Proyecto
 
 ### ✅ Funcionalidades Implementadas
@@ -129,7 +143,7 @@ BookMatch-Proyecto-Intermodular/
 - **Node.js 20.x** (incluye npm 10) – [Descargar](https://nodejs.org/)
 - **Git** – [Descargar](https://git-scm.com/)
 - **Cuenta de Firebase** con acceso al proyecto `bookmatch-522d5`
-- **URL de la base de datos PostgreSQL** (hosteada en Render para el equipo)
+- **URL de la base de datos PostgreSQL** (proyecto en **Supabase**: `DATABASE_URL` y `DIRECT_URL` para Prisma)
 - **Cuenta de Stripe** (para pagos) – [Crear cuenta](https://stripe.com)
 
 ---
@@ -173,7 +187,7 @@ STRIPE_WEBHOOK_SECRET=whsec_...  # Opcional en desarrollo
 FRONTEND_URL=http://localhost:4200
 ```
 
-> **Nota:** Usa la URL proporcionada por Render para `DATABASE_URL`. No es necesario Docker en local.
+> **Nota:** En **Supabase**, usa `DATABASE_URL` (pooler / transacciones) y `DIRECT_URL` (conexión directa) según Prisma. No subas `.env` al repositorio.
 
 #### 2.2. Configurar Stripe
 
@@ -207,6 +221,21 @@ npm start     # requiere build previo con npm run build
 
 El backend quedará disponible en `http://localhost:3000`. La documentación Swagger está en `http://localhost:3000/api-docs`.
 
+#### 2.6. Producción en EC2 (Docker + HTTPS)
+
+En el servidor (Ubuntu + Docker; **Caddy** u otro proxy para TLS y dominio `https://api.<dominio>`):
+
+```bash
+cd BookMatch-Backend
+# .env en el servidor (mismas variables que desarrollo + FRONTEND_URL / BACKEND_PUBLIC_URL con URLs públicas HTTPS)
+docker compose build
+docker compose up -d
+# Migraciones cuando haya cambios de schema:
+docker compose run --rm api npx prisma migrate deploy
+```
+
+Redeploy desde GitHub: `.github/workflows/deploy-ec2-backend.yml` (push a `main` con cambios en `BookMatch-Backend/`); secretos del repo: `EC2_HOST`, `EC2_USER`, `EC2_SSH_KEY`.
+
 ### 3. Configurar el Frontend (`BookMatch-Angular`)
 
 ```bash
@@ -236,6 +265,8 @@ export const environment = {
     apiUrl: 'http://localhost:3000/api'
 };
 ```
+
+En **producción** (`environment.prod.ts`), `apiUrl` debe ser la URL pública del API **incluyendo** el sufijo `/api` (p. ej. `https://api.tu-dominio/api`). En despliegues serverless tipo Vercel el rewrite puede ocultar ese prefijo; contra EC2 + Express no.
 
 > **Importante:** Reemplaza `stripePublishableKey` con tu clave pública de prueba de Stripe.
 
@@ -627,5 +658,4 @@ service firebase.storage {
 
 ---
 
-**Última actualización:** Noviembre 2025  
-**Versión del documento:** 1.0.0 (MVP con pagos y perfil)
+**Última actualización:** Mayo 2026 — despliegue API en EC2 (Docker/Caddy), Supabase, dominio propio y CI GitHub Actions.

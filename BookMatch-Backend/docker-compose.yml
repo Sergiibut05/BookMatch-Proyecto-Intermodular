@@ -1,0 +1,12 @@
+# Ejemplo para EC2: copia .env al servidor (no lo subas al repo).
+# Ajusta build/image según uses build local o imagen de un registry.
+
+services:
+  api:
+    build: .
+    image: bookmatch-api:local
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    restart: unless-stopped

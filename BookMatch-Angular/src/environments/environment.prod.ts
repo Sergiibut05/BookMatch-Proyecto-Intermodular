@@ -1,7 +1,7 @@
 /**
  * Configuración del entorno de producción.
  * Usada al hacer build con --configuration=production.
- * API apunta al backend desplegado en Vercel.
+ * API en producción (misma base que en local: …/api; en Vercel el rewrite ocultaba el prefijo).
  */
 export const environment = {
     production: true,
@@ -16,5 +16,5 @@ export const environment = {
         measurementId: "G-YD2T0NCDTC"
     },
     stripePublishableKey: 'pk_test_51SXKSE9RfkpN8LkuajmtkGe2fBJNNYiVhepYyANGrlr5xBW9nMJXEm76iUAoJb3iqutIywJviuf4QQJHFNFQQr0d007T7bx4gt',
-    apiUrl: 'https://book-match-proyecto-intermodular-k5.vercel.app/api'
+    apiUrl: 'https://api.bookmatch.club/api'
 };

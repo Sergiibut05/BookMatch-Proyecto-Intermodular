@@ -27,7 +27,7 @@ export class SearchResultsComponent implements OnInit {
   /** Término de búsqueda (query param q). */
   searchQuery = signal<string>('');
   /** Tipo de búsqueda: libro o foro. */
-  searchType = signal<'book' | 'forum'>('book');
+  searchType = signal<'book' | 'forum' | 'trade'>('book');
 
   /** Resultados de libros. */
   books = signal<CatalogBook[]>([]);
@@ -55,7 +55,7 @@ export class SearchResultsComponent implements OnInit {
       const type = params['type'] || 'book';
       
       this.searchQuery.set(query);
-      this.searchType.set(type === 'forum' ? 'forum' : 'book');
+      this.searchType.set(type === 'forum' ? 'forum' : type === 'trade' ? 'trade' : 'book');
       this.currentPage.set(1);
       
       if (query) {
@@ -77,8 +77,15 @@ export class SearchResultsComponent implements OnInit {
 
     if (this.searchType() === 'book') {
       this.searchBooks(query);
-    } else {
+    } else if (this.searchType() === 'forum') {
       this.searchForums(query);
+    } else {
+      // UI-first: la búsqueda real de trueques se implementará cuando exista API/servicio.
+      this.books.set([]);
+      this.forums.set([]);
+      this.totalResults.set(0);
+      this.totalPages.set(1);
+      this.isLoading.set(false);
     }
   }
 

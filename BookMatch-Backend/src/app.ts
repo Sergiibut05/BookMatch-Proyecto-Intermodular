@@ -15,6 +15,7 @@ import ordersRoutes from './modules/orders/orders.routes.js';
 import forumsRoutes from './modules/forums/forums.routes.js';
 import commentsRoutes from './modules/comments/comments.routes.js';
 import playlistsRoutes from './modules/playlists/playlists.routes.js';
+import tradesRoutes from './modules/trades/trades.routes.js';
 import aiChatRoutes from './routes/ai-chat.routes.js';
 import analyticsRoutes from './modules/analytics/analytics.routes.js';
 import { stripeWebhookCtrl } from './modules/payments/payments.controller.js';
@@ -31,6 +32,8 @@ const applyRateLimit = !isTest && !isDev;
 // CORS debe estar antes de todo, incluso antes del webhook
 const allowedOrigins = [
   env.FRONTEND_URL || 'http://localhost:4200',
+  'https://bookmatch.club',
+  'https://www.bookmatch.club',
   'https://book-match-proyecto-intermodular-b8.vercel.app',
   /^https:\/\/book-match-proyecto-intermodular.*\.vercel\.app$/,
   // Orígenes de apps móviles/webview
@@ -64,7 +67,7 @@ const corsOptions = {
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Accept-Language', 'Content-Language'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Accept-Language', 'Content-Language', 'x-dev-user-id'],
   exposedHeaders: ['Content-Type', 'Authorization'],
   preflightContinue: false,
   optionsSuccessStatus: 204
@@ -106,6 +109,7 @@ app.use('/api/orders', ordersRoutes);
 app.use('/api/forums', forumsRoutes);
 app.use('/api/comments', commentsRoutes);
 app.use('/api/playlists', playlistsRoutes);
+app.use('/api/trades', tradesRoutes);
 app.use('/api/ai-chat', aiChatRoutes);
 app.use('/api/analytics', analyticsRoutes);
 

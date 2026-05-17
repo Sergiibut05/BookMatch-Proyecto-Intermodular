@@ -51,6 +51,12 @@
           <span class="font-medium">{{ 'HEADER.PLAYLISTS' | translate }}</span>
         </a>
       </div>
+      <div class="menu-item w-full">
+        <a routerLink="/trueque" (click)="closeMenu()" class="menu-link flex items-center justify-start gap-3 w-full p-2 cursor-pointer">
+          <span class="material-symbols-outlined text-xl">swap_horiz</span>
+          <span class="font-medium">{{ 'HEADER.TRUEQUE' | translate }}</span>
+        </a>
+      </div>
       <div *isAdmin class="menu-item w-full">
         <a routerLink="/admin/books/create" (click)="closeMenu()" class="menu-link flex items-center justify-start gap-3 w-full p-2 cursor-pointer" style="color: #E0A15E;">
           <span class="material-symbols-outlined text-xl">add_circle</span>

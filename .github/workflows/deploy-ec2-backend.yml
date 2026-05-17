@@ -1,0 +1,43 @@
+# Despliegue automático del backend en EC2 al subir cambios a main.
+#
+# Configuración en GitHub → Settings → Secrets and variables → Actions:
+#   EC2_HOST      → IP pública o DNS del servidor (ej. 16.171.x.x)
+#   EC2_USER      → usuario SSH (ej. ubuntu)
+#   EC2_SSH_KEY   → contenido completo de la clave PRIVADA (.pem) que usa SSH
+#
+# En el EC2 el repo debe estar clonado en ~/bookmatch y poder hacer
+# `git pull origin main` (deploy key o credenciales git).
+
+name: Deploy backend to EC2
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "BookMatch-Backend/**"
+      - ".github/workflows/deploy-ec2-backend.yml"
+
+concurrency:
+  group: deploy-ec2-backend
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: SSH — pull, build, up
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script_stop: true
+          script: |
+            set -e
+            cd ~/bookmatch
+            git fetch origin main
+            git checkout main
+            git pull origin main
+            cd BookMatch-Backend
+            docker compose build
+            docker compose up -d
