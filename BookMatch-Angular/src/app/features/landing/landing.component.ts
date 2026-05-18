@@ -49,8 +49,8 @@ export class LandingComponent implements OnDestroy {
         const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         if (!reduced) {
           this.initHeroIntro(root);
-          this.initParallax(root);
         }
+        this.initGlobalBgTransition(root);
         this.initScrollReveal();
       }, root);
     });
@@ -138,58 +138,41 @@ export class LandingComponent implements OnDestroy {
     }
   }
 
-  private initParallax(root: HTMLElement): void {
-    const media = root.querySelector<HTMLElement>('.landing-hero__media');
-    const heroHead = root.querySelector<HTMLElement>('.landing-hero-head');
-    const heroFoot = root.querySelector<HTMLElement>('.landing-hero-foot');
-    const heroStack = root.querySelector<HTMLElement>('.hero-stack');
+  /**
+   * Apple-style global background color transition.
+   * Instead of each section having its own background, the .landing
+   * wrapper background smoothly interpolates via ScrollTrigger scrub
+   * as the user scrolls between sections.
+   */
+  private initGlobalBgTransition(root: HTMLElement): void {
+    // Color stops matching the original section palettes
+    const transitions: { trigger: string; from: string; to: string }[] = [
+      { trigger: '.features',     from: '#F1EBE1', to: '#E8DBCA' },  // cream → warm cream
+      { trigger: '.app-showcase', from: '#E8DBCA', to: '#D6C4A0' },  // warm cream → golden sand
+      { trigger: '.social-proof', from: '#D6C4A0', to: '#7B5B38' },  // golden sand → warm golden-brown
+      { trigger: '.final-cta',    from: '#7B5B38', to: '#2D1B0E' },  // golden-brown → dark
+    ];
 
-    if (!heroStack) return;
+    transitions.forEach(({ trigger, from, to }) => {
+      const el = root.querySelector(trigger);
+      if (!el) return;
 
-    // Imagen hero: se mueve al 40% de la velocidad de scroll → profundidad
-    if (media) {
-      gsap.to(media, {
-        y: '-20%',
-        ease: 'none',
-        scrollTrigger: {
-          trigger: heroStack,
-          start: 'top top',
-          end: 'bottom top',
-          scrub: true,
+      gsap.fromTo(
+        root,
+        { backgroundColor: from },
+        {
+          backgroundColor: to,
+          ease: 'none',
+          immediateRender: false,
+          scrollTrigger: {
+            trigger: el,
+            start: 'top 80%',
+            end: 'top 20%',
+            scrub: true,
+          },
         },
-      });
-    }
-
-    // Titular: sube y desaparece suavemente al salir del hero
-    if (heroHead) {
-      gsap.to(heroHead, {
-        y: -50,
-        opacity: 0,
-        ease: 'none',
-        scrollTrigger: {
-          trigger: heroStack,
-          start: 'top top',
-          end: '50% top',
-          scrub: 1,
-        },
-      });
-    }
-
-    // Footer hero (botón descubre más): fade-out más rápido
-    if (heroFoot) {
-      gsap.to(heroFoot, {
-        y: -35,
-        opacity: 0,
-        ease: 'none',
-        scrollTrigger: {
-          trigger: heroStack,
-          start: 'top top',
-          end: '38% top',
-          scrub: 1,
-        },
-      });
-    }
-
+      );
+    });
   }
 
   private initScrollReveal(): void {
