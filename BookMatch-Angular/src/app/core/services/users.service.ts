@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, from } from 'rxjs';
-import { map, switchMap } from 'rxjs/operators';
+import { map, switchMap, take } from 'rxjs/operators';
 import { AuthService } from './auth.service';
 import { environment } from '../../../environments/environment';
 
@@ -58,6 +58,7 @@ export class UsersService {
 
   private authHeaders(): Observable<HttpHeaders> {
     return this.authService.getToken().pipe(
+      take(1),
       map(token => {
         let headers = new HttpHeaders();
         if (token) {

@@ -301,10 +301,21 @@ export async function completeTrade(id: number, userId: number): Promise<TradeDe
     throw httpError(409, 'Transición inválida');
   }
 
-  const updated = await prisma.trade.update({
-    where: { id },
-    data: { status: 'COMPLETED' },
-    include: tradeDetailInclude,
+  const updated = await prisma.$transaction(async (tx) => {
+    for (const item of trade.items) {
+      const newOwnerId = item.side === 'SENDER' ? trade.receiverId : trade.senderId;
+      await tx.userBook.update({
+        where: { id: item.userBookId },
+        data: { ownerId: newOwnerId },
+      });
+    }
+
+    return tx.trade.update({
+      where: { id },
+      data: { status: 'COMPLETED' },
+      include: tradeDetailInclude,
+    });
   });
+
   return toDetail(updated);
 }

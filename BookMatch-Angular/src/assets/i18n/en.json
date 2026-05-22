@@ -160,7 +160,12 @@
         "DELETE_LIBRARY_CONFIRM": "Remove this book from your swap library?",
         "TRADE_CARD_ARIA": "Swap #{{id}}, status: {{status}}",
         "DETAIL_TITLE_LOADING": "Swap details",
-        "DETAIL_MODAL_SUB": "Loading swap details…"
+        "DETAIL_MODAL_SUB": "Loading swap details…",
+        "PHONE_MODAL_TITLE": "Your phone number",
+        "PHONE_MODAL_BODY": "We need your phone number so you and other readers can coordinate swaps on WhatsApp after a trade is accepted. You must save it before using this section.",
+        "PHONE_MODAL_PLACEHOLDER": "E.g. +34 612 345 678",
+        "PHONE_MODAL_SAVE": "Save and continue",
+        "PHONE_MODAL_ERROR": "We could not save your phone number. Please try again."
     },
     "PLAYLISTS": {
         "TITLE": "My playlists",

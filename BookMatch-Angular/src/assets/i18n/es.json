@@ -160,7 +160,12 @@
         "DELETE_LIBRARY_CONFIRM": "¿Eliminar este libro de tu biblioteca de trueque?",
         "TRADE_CARD_ARIA": "Trueque número {{id}}, estado: {{status}}",
         "DETAIL_TITLE_LOADING": "Detalle del trueque",
-        "DETAIL_MODAL_SUB": "Cargando datos del intercambio…"
+        "DETAIL_MODAL_SUB": "Cargando datos del intercambio…",
+        "PHONE_MODAL_TITLE": "Tu número de teléfono",
+        "PHONE_MODAL_BODY": "Para coordinar los intercambios por WhatsApp cuando aceptéis un trueque, necesitamos tu teléfono. No podrás usar esta sección hasta guardarlo.",
+        "PHONE_MODAL_PLACEHOLDER": "Ej: +34 612 345 678",
+        "PHONE_MODAL_SAVE": "Guardar y continuar",
+        "PHONE_MODAL_ERROR": "No se ha podido guardar el teléfono. Inténtalo de nuevo."
     },
     "PLAYLISTS": {
         "TITLE": "Mis playlists",
