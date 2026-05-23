@@ -1,10 +1,11 @@
-import { ApplicationConfig, provideBrowserGlobalErrorListeners, provideZoneChangeDetection, importProvidersFrom } from '@angular/core';
+import { ApplicationConfig, provideBrowserGlobalErrorListeners, provideZoneChangeDetection, importProvidersFrom, inject } from '@angular/core';
 import { provideRouter, withViewTransitions, withInMemoryScrolling } from '@angular/router';
 import { provideHttpClient, withFetch, HttpClient } from '@angular/common/http';
 import { TranslateModule, TranslateLoader } from '@ngx-translate/core';
-import { provideFirebaseApp, initializeApp } from '@angular/fire/app';
+import { provideFirebaseApp, initializeApp, FirebaseApp } from '@angular/fire/app';
 import { provideAuth, getAuth } from '@angular/fire/auth';
-import { provideAnalytics, getAnalytics, ScreenTrackingService } from '@angular/fire/analytics';
+import { provideAnalytics, ScreenTrackingService } from '@angular/fire/analytics';
+import { initializeAnalytics } from 'firebase/analytics';
 import { provideDatabase, getDatabase } from '@angular/fire/database';
 import { provideStorage, getStorage } from '@angular/fire/storage';
 import { provideFirestore, getFirestore } from '@angular/fire/firestore';
@@ -64,7 +65,14 @@ export const appConfig: ApplicationConfig = {
     }),
     provideHttpClient(withFetch()),
     provideFirebaseApp(() => initializeApp(environment.firebase)),
-    provideAnalytics(() => getAnalytics()),
+    provideAnalytics(() => {
+      const app = inject(FirebaseApp);
+      return initializeAnalytics(app, {
+        config: {
+          debug_mode: !environment.production
+        }
+      });
+    }),
     ScreenTrackingService,
     provideAuth(() => getAuth()),
     provideFirestore(() => getFirestore()),

@@ -12,6 +12,9 @@ export const getDashboardAnalytics = (): Promise<any> => {
     exec(`"${pythonPath}" "${scriptPath}"`, (error, stdout, stderr) => {
       if (error) {
         console.error(`Error executing Python script: ${error.message}`);
+        if (stderr) {
+          console.error(`Python stderr: ${stderr}`);
+        }
         return reject(error);
       }
       
@@ -39,6 +42,9 @@ export const getTrafficAnalytics = (): Promise<any> => {
     exec(`"${pythonPath}" "${scriptPath}"`, (error, stdout, stderr) => {
       if (error) {
         console.error(`Error executing Python script (GA4): ${error.message}`);
+        if (stderr) {
+          console.error(`Python GA4 stderr: ${stderr}`);
+        }
         return reject(error);
       }
       
