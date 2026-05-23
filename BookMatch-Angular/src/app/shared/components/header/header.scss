@@ -139,7 +139,7 @@
   }
 
   &:hover {
-    background-color: rgba(224, 161, 94, 0.2);
+    background-color: rgba(69, 51, 45, 0.08);
   }
 }
 
@@ -171,23 +171,23 @@ nav {
   background: rgba(255, 255, 255, 0.9) !important;
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  border: 2px solid rgba(224, 161, 94, 0.3) !important;
+  border: 2px solid rgba(69, 51, 45, 0.15) !important;
   color: #45332D !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   
   &::placeholder {
     color: rgba(69, 51, 45, 0.5);
   }
   
   &:focus {
-    border-color: rgba(224, 161, 94, 0.6) !important;
-    box-shadow: 0 4px 12px rgba(224, 161, 94, 0.2), 0 0 0 3px rgba(224, 161, 94, 0.1);
+    border-color: rgba(69, 51, 45, 0.4) !important;
+    box-shadow: 0 4px 12px rgba(69, 51, 45, 0.1), 0 0 0 3px rgba(69, 51, 45, 0.05);
     background: rgba(255, 255, 255, 0.95) !important;
   }
 }
 
 .search-button {
-  background: rgba(224, 161, 94, 0.9) !important;
+  background: rgba(69, 51, 45, 0.9) !important;
   color: #FCF5E2 !important;
   border: none;
   backdrop-filter: blur(8px);
@@ -195,8 +195,8 @@ nav {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   
   &:hover {
-    background: rgba(224, 161, 94, 1) !important;
-    box-shadow: 0 4px 8px rgba(224, 161, 94, 0.3);
+    background: rgba(69, 51, 45, 1) !important;
+    box-shadow: 0 4px 8px rgba(69, 51, 45, 0.3);
   }
   
   svg {
