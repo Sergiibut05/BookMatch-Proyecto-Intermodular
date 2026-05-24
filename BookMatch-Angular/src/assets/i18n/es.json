@@ -405,6 +405,13 @@
         "ORDER": "Pedido #",
         "AT": "a las"
     },
+    "COOKIE_CONSENT": {
+        "ARIA_LABEL": "Preferencias de cookies",
+        "MESSAGE": "Usamos cookies analíticas (Firebase / Google Analytics) para entender el uso de BookMatch y mejorar la experiencia.",
+        "ACCEPT": "Aceptar",
+        "REJECT": "Rechazar",
+        "POLICY": "Política de cookies"
+    },
     "FOOTER": {
         "ABOUT_US": "Sobre Nosotros",
         "DESCRIPTION": "BookMatch es tu librería online de confianza. Encuentra los mejores libros y disfruta de una experiencia de compra única.",

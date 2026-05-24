@@ -7,7 +7,7 @@
     <div class="brand-container flex items-center gap-2 cursor-pointer" (click)="goHome(); closeMenu()">
       <img src="assets/bookMatch-logo-transparent.png" alt="BookMatch Logo" class="h-9 w-[44px] object-contain" loading="lazy" decoding="async" />
       <h2 class="text-lg" style="font-family: 'Lora', 'Georgia', serif; font-weight: 500; letter-spacing: -0.01em;">
-        <span class="brand-book text-[#45332D]">Book</span><span class="brand-match text-[#E0A15E] italic">Match</span>
+        <span class="brand-book text-[#45332D] font-semibold">Book</span><span class="brand-match text-[#D4944E] italic">Match</span>
       </h2>
     </div>
     <button (click)="closeMenu()" class="close-button" aria-label="Cerrar menú">
@@ -78,7 +78,7 @@
       </div>
       
       <!-- SECCIÓN 3: GESTIÓN (ADMIN) -->
-      <div *isAdmin class="menu-section mb-6">
+      <div *isAdmin class="menu-section menu-section--admin mb-6">
         <h3 class="menu-section-title px-2 mb-2 text-[10px] font-bold tracking-wider text-[#E0A15E] uppercase" style="font-family: 'Lora', 'Georgia', serif;">
           Administración
         </h3>
@@ -154,7 +154,7 @@
         <div class="brand-container flex items-center gap-1.5 cursor-pointer" (click)="goHome()">
           <img src="assets/bookMatch-logo-transparent.png" alt="BookMatch Logo" class="h-8 w-[36px] md:h-9 md:w-[44px] object-contain" loading="lazy" decoding="async" />
           <h1 class="hidden min-[380px]:block text-base sm:text-lg md:text-xl lg:text-2xl" style="font-family: 'Lora', 'Georgia', serif; font-weight: 500; letter-spacing: -0.01em;">
-            <span class="brand-book text-[#45332D]">Book</span><span class="brand-match text-[#E0A15E] italic">Match</span>
+            <span class="brand-book text-[#45332D] font-semibold">Book</span><span class="brand-match text-[#D4944E] italic">Match</span>
           </h1>
         </div>
       </div>

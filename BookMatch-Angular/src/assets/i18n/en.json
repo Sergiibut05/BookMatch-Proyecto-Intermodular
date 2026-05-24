@@ -404,6 +404,13 @@
         "ORDER": "Order #",
         "AT": "at"
     },
+    "COOKIE_CONSENT": {
+        "ARIA_LABEL": "Cookie preferences",
+        "MESSAGE": "We use analytics cookies (Firebase / Google Analytics) to understand how BookMatch is used and improve the experience.",
+        "ACCEPT": "Accept",
+        "REJECT": "Reject",
+        "POLICY": "Cookie policy"
+    },
     "FOOTER": {
         "ABOUT_US": "About Us",
         "DESCRIPTION": "BookMatch is your trusted online bookstore. Find the best books and enjoy a unique shopping experience.",

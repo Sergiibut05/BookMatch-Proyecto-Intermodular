@@ -1,0 +1,110 @@
+$ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+
+.cookie-banner {
+  position: fixed;
+  inset-inline: 0;
+  bottom: 0;
+  z-index: 1200;
+  padding: 0.85rem 1rem calc(0.85rem + env(safe-area-inset-bottom));
+  pointer-events: none;
+  animation: cookie-banner-enter 280ms $ease-out both;
+}
+
+.cookie-banner__inner {
+  pointer-events: auto;
+  max-width: 920px;
+  margin: 0 auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.85rem 1.25rem;
+  padding: 0.95rem 1.15rem;
+  border-radius: 16px;
+  background: rgba(252, 245, 226, 0.96);
+  border: 1px solid rgba(69, 51, 45, 0.1);
+  box-shadow: 0 12px 40px rgba(69, 51, 45, 0.14);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.cookie-banner__text {
+  margin: 0;
+  flex: 1 1 280px;
+  font-family: 'Lora', 'Georgia', serif;
+  font-size: 0.84rem;
+  line-height: 1.55;
+  color: #45332D;
+}
+
+.cookie-banner__link {
+  color: #D4944E;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  white-space: nowrap;
+
+  &:hover {
+    color: #E0A15E;
+  }
+}
+
+.cookie-banner__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.cookie-banner__btn {
+  font-family: 'Lora', 'Georgia', serif;
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 0.55rem 1rem;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: background-color 160ms $ease-out, color 160ms $ease-out, transform 120ms $ease-out;
+
+  &:active {
+    transform: scale(0.97);
+  }
+}
+
+.cookie-banner__btn--ghost {
+  background: transparent;
+  color: #45332D;
+  border-color: rgba(69, 51, 45, 0.18);
+
+  @media (hover: hover) {
+    &:hover {
+      background: rgba(69, 51, 45, 0.05);
+    }
+  }
+}
+
+.cookie-banner__btn--primary {
+  background: #45332D;
+  color: #FCF5E2;
+
+  @media (hover: hover) {
+    &:hover {
+      background: #5a4038;
+    }
+  }
+}
+
+@keyframes cookie-banner-enter {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cookie-banner {
+    animation: none;
+  }
+}

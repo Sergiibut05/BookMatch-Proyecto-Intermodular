@@ -51,7 +51,7 @@ export class LandingComponent implements OnDestroy {
           this.initHeroIntro(root);
         }
         this.initGlobalBgTransition(root);
-        this.initScrollReveal();
+        this.initScrollReveal(root);
       }, root);
     });
   }
@@ -175,10 +175,10 @@ export class LandingComponent implements OnDestroy {
     });
   }
 
-  private initScrollReveal(): void {
+  private initScrollReveal(root: HTMLElement): void {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
-    const sections = document.querySelectorAll<HTMLElement>('.anim-section');
+    const sections = root.querySelectorAll<HTMLElement>('.anim-section');
     sections.forEach((el) => {
       gsap.fromTo(
         el,
@@ -197,11 +197,11 @@ export class LandingComponent implements OnDestroy {
       );
     });
 
-    const cards = document.querySelectorAll<HTMLElement>('.feature-card');
+    const cards = root.querySelectorAll<HTMLElement>('.feature-card');
     if (cards.length) {
       gsap.fromTo(
         Array.from(cards),
-        { y: 40, opacity: 0 },
+        { y: 28, opacity: 0 },
         {
           y: 0,
           opacity: 1,
@@ -209,15 +209,15 @@ export class LandingComponent implements OnDestroy {
           duration: 0.65,
           ease: 'power2.out',
           scrollTrigger: {
-            trigger: '.features__grid',
-            start: 'top 78%',
+            trigger: root.querySelector('.features__grid'),
+            start: 'top 85%',
             once: true,
           },
         },
       );
     }
 
-    const stats = document.querySelectorAll<HTMLElement>('.stat');
+    const stats = root.querySelectorAll<HTMLElement>('.stat');
     if (stats.length) {
       gsap.fromTo(
         Array.from(stats),
@@ -230,7 +230,7 @@ export class LandingComponent implements OnDestroy {
           duration: 0.55,
           ease: 'power2.out',
           scrollTrigger: {
-            trigger: '.social-proof__stats',
+            trigger: root.querySelector('.social-proof__stats'),
             start: 'top 80%',
             once: true,
           },

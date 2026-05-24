@@ -231,6 +231,17 @@ $ease-out-fast: cubic-bezier(0.23, 1, 0.32, 1); // Strong crisp ease-out
   }
 }
 
+// Sección admin: indicador hover en naranja acorde al apartado
+.menu-section--admin {
+  .menu-link:hover {
+    background-color: rgba(224, 161, 94, 0.08);
+
+    &::before {
+      background-color: #E0A15E;
+    }
+  }
+}
+
 // Tarjeta de perfil integrada
 .user-profile-card {
   transition: background-color 0.2s, border-color 0.2s, transform 0.16s $ease-out-fast;
@@ -410,7 +421,7 @@ a[routerLink] {
   
   &:hover h1, &:hover h2 {
     .brand-match {
-      color: #D4944E; // Deeper warm gold on hover
+      color: #E0A15E;
     }
   }
 }
