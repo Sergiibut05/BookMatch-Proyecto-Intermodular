@@ -1,121 +1,132 @@
 <app-header></app-header>
 
-<div class="min-h-screen" style="background-color: #FCF5E2;">
-  <div class="max-w-[1414px] mx-auto px-4 py-8">
-    
-    <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
-      <h1 class="text-4xl font-bold capitalize" style="color: #45332D;">{{ category() }}</h1>
-      
-      <button (click)="toggleMobileFilters()" 
-              class="md:hidden flex items-center gap-2 px-4 py-2 rounded-lg font-medium shadow-sm"
-              style="background-color: white; color: #45332D; border: 1px solid #E9E1D1;">
-        <span class="material-symbols-outlined">tune</span>
+<div class="min-h-screen" style="background-color: #FCF5E2; font-family: 'Lora', 'Georgia', serif;">
+  <div class="max-w-[1414px] mx-auto px-4 sm:px-6 py-8 md:py-12">
+
+    <!-- Cabecera de sección -->
+    <div class="cat-page-header">
+      <div>
+        <h1 class="cat-page-title">{{ category() }}</h1>
+        <p class="cat-page-subtitle" style="color: rgba(69,51,45,0.50);">
+          {{ total() }} {{ 'CATEGORIES.RESULTS_FOUND' | translate }}
+        </p>
+      </div>
+      <button (click)="toggleMobileFilters()"
+              class="cat-mobile-filter-btn md:hidden"
+              aria-label="Filtros">
+        <span class="material-symbols-outlined text-lg">tune</span>
         {{ 'CATEGORIES.FILTER_ORDER' | translate }}
       </button>
     </div>
 
-    <div class="flex flex-col md:flex-row gap-8">
-      
-      <aside class="md:w-1/4 flex-shrink-0">
-        <div [class.hidden]="!showMobileFilters()" 
-            class="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
-            (click)="toggleMobileFilters()"></div>
+    <div class="flex flex-col md:flex-row gap-8 md:gap-10">
 
+      <!-- ==================== SIDEBAR FILTROS ==================== -->
+      <aside class="md:w-[260px] lg:w-[280px] flex-shrink-0">
+        <!-- Overlay móvil -->
+        <div [class.hidden]="!showMobileFilters()"
+             class="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 md:hidden"
+             (click)="toggleMobileFilters()"></div>
+
+        <!-- Panel -->
         <div [class.translate-x-0]="showMobileFilters()"
-            [class.-translate-x-full]="!showMobileFilters()"
-            class="fixed md:static inset-y-0 left-0 z-50 w-[280px] md:w-full md:translate-x-0 transition-transform duration-300 ease-in-out bg-white md:bg-transparent shadow-2xl md:shadow-none p-6 md:p-0 overflow-y-auto md:overflow-visible"
-            style="background-color: #FCF5E2;">
-          
-          <div class="md:bg-white md:p-6 md:rounded-xl md:shadow-sm md:border" style="border-color: #E9E1D1;">
-            
-            <div class="flex justify-between items-center mb-6 md:hidden">
-              <h2 class="text-xl font-bold" style="color: #45332D;">{{ 'CATEGORIES.FILTERS' | translate }}</h2>
-              <button (click)="toggleMobileFilters()" class="p-1">
-                <span class="material-symbols-outlined">{{ 'CATEGORIES.CLOSE' | translate }}</span>
+             [class.-translate-x-full]="!showMobileFilters()"
+             class="fixed md:static inset-y-0 left-0 z-50 w-[290px] md:w-full
+                    md:translate-x-0 transition-transform duration-300
+                    shadow-2xl md:shadow-none p-6 md:p-0 overflow-y-auto md:overflow-visible"
+             style="background-color: #FCF5E2;">
+
+          <div class="cat-sidebar">
+
+            <!-- Header móvil -->
+            <div class="flex justify-between items-center mb-5 md:hidden">
+              <h2 class="text-lg font-semibold" style="color: #45332D;">{{ 'CATEGORIES.FILTERS' | translate }}</h2>
+              <button (click)="toggleMobileFilters()" class="cat-icon-btn">
+                <span class="material-symbols-outlined text-lg">close</span>
               </button>
             </div>
 
-            <div class="mb-6">
-              <label class="flex items-center gap-3 cursor-pointer group">
-                <input type="checkbox" [(ngModel)]="inStockValue" (change)="applyFilters()" 
-                      class="w-5 h-5 rounded border-2 cursor-pointer transition-colors focus:ring-2 focus:ring-offset-1"
-                      style="accent-color: #E0A15E; border-color: #D4C9B9;">
-                <span class="text-sm font-medium transition-colors group-hover:text-[#E0A15E]" style="color: #45332D;">
-                  {{ 'CATEGORIES.ONLY_INSTOCK' | translate }}
-                </span>
-              </label>
+            <!-- Solo en stock -->
+            <label class="cat-checkbox-row">
+              <input type="checkbox" [(ngModel)]="inStockValue" (change)="applyFilters()"
+                     class="cat-checkbox">
+              <span>{{ 'CATEGORIES.ONLY_INSTOCK' | translate }}</span>
+            </label>
+
+            <div class="cat-divider"></div>
+
+            <!-- Ordenar por -->
+            <div class="cat-filter-group">
+              <h3 class="cat-filter-label">{{ 'CATEGORIES.ORDERBY' | translate }}</h3>
+              <div class="cat-dropdown" (click)="$event.stopPropagation()">
+                <button class="cat-dropdown__trigger" (click)="toggleSortDropdown($event)">
+                  <span>{{ getSortLabel() | translate }}</span>
+                  <span class="material-symbols-outlined cat-dropdown__chevron" [class.cat-dropdown__chevron--open]="sortDropdownOpen()">expand_more</span>
+                </button>
+                @if (sortDropdownOpen()) {
+                  <div class="cat-dropdown__menu">
+                    @for (opt of sortOptions; track opt.value) {
+                      <button class="cat-dropdown__item" [class.cat-dropdown__item--active]="sortBy() === opt.value" (click)="selectSort(opt.value)">
+                        {{ opt.labelKey | translate }}
+                        @if (sortBy() === opt.value) {
+                          <span class="material-symbols-outlined cat-dropdown__check">check</span>
+                        }
+                      </button>
+                    }
+                  </div>
+                }
+              </div>
             </div>
 
-            <hr class="mb-6" style="border-color: #E9E1D1;">
+            <div class="cat-divider"></div>
 
-            <div class="mb-6">
-              <h3 class="text-sm font-bold uppercase mb-3" style="color: #4E6A6A; letter-spacing: 0.05em;">{{ 'CATEGORIES.ORDERBY' | translate }}</h3>
-              <select [ngModel]="sortBy()" (change)="onSortChange($event)"
-                class="w-full px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-offset-2"
-                style="border-color: #E9E1D1; background-color: white; color: #45332D;">
-                <option value="newest">{{ 'CATEGORIES.MORE_RECENT' | translate }}</option>
-                <option value="price_asc">{{ 'CATEGORIES.LESS_TO_MORE' | translate }}</option>
-                <option value="price_desc">{{ 'CATEGORIES.MORE_TO_LESS' | translate }}</option>
-                <option value="alphabetical">{{ 'CATEGORIES.ALPHABETIC' | translate }}</option>
-              </select>
-            </div>
-
-            <hr class="mb-6" style="border-color: #E9E1D1;">
-
-            <div class="mb-6">
-              <h3 class="text-sm font-bold uppercase mb-3" style="color: #4E6A6A; letter-spacing: 0.05em;">{{ 'CATEGORIES.PRICE' | translate }}</h3>
-              <div class="flex items-center gap-2 mb-4">
+            <!-- Precio -->
+            <div class="cat-filter-group">
+              <h3 class="cat-filter-label">{{ 'CATEGORIES.PRICE' | translate }}</h3>
+              <div class="flex items-center gap-2 mb-3">
                 <div class="relative w-full">
-                  <span class="absolute left-3 top-2 text-sm" style="color: #D4C9B9;">{{ 'CATEGORIES.MONEY' | translate }}</span>
-                  <input type="number" [(ngModel)]="minPriceValue" placeholder="Min" min="0"
-                    class="w-full pl-6 pr-2 py-2 rounded-lg border text-sm focus:outline-none focus:ring-2"
-                    style="border-color: #E9E1D1; background-color: white; color: #45332D;">
+                  <span class="cat-input-prefix">{{ 'CATEGORIES.MONEY' | translate }}</span>
+                  <input type="number" [(ngModel)]="minPriceValue" placeholder="Min" min="0" class="cat-input cat-input--price">
                 </div>
-                <span style="color: #45332D;">-</span>
+                <span style="color: rgba(69,51,45,0.30);">—</span>
                 <div class="relative w-full">
-                  <span class="absolute left-3 top-2 text-sm" style="color: #D4C9B9;">{{ 'CATEGORIES.MONEY' | translate }}</span>
-                  <input type="number" [(ngModel)]="maxPriceValue" placeholder="Max" min="0"
-                    class="w-full pl-6 pr-2 py-2 rounded-lg border text-sm focus:outline-none focus:ring-2"
-                    style="border-color: #E9E1D1; background-color: white; color: #45332D;">
+                  <span class="cat-input-prefix">{{ 'CATEGORIES.MONEY' | translate }}</span>
+                  <input type="number" [(ngModel)]="maxPriceValue" placeholder="Max" min="0" class="cat-input cat-input--price">
                 </div>
               </div>
-              <button (click)="applyFilters()" 
-                      class="w-full py-2 rounded-lg font-medium transition-colors"
-                      style="background-color: #45332D; color: #FCF5E2;">
-                      {{ 'CATEGORIES.APLIE_PRICE' | translate }}
+              <button (click)="applyFilters()" class="cat-btn-primary w-full">
+                {{ 'CATEGORIES.APLIE_PRICE' | translate }}
               </button>
             </div>
 
-            <hr class="mb-6" style="border-color: #E9E1D1;">
+            <div class="cat-divider"></div>
 
-            <div class="mb-6">
-              <h3 class="text-sm font-bold uppercase mb-3" style="color: #4E6A6A; letter-spacing: 0.05em;">{{ 'CATEGORIES.MINIM_VALORATION' | translate }}</h3>
-              <div class="flex flex-col gap-2">
+            <!-- Valoración -->
+            <div class="cat-filter-group">
+              <h3 class="cat-filter-label">{{ 'CATEGORIES.MINIM_VALORATION' | translate }}</h3>
+              <div class="flex flex-col gap-0.5">
                 @for (star of [5, 4, 3, 2, 1]; track star) {
-                  <button (click)="setRating(star)" 
-                          class="flex items-center gap-2 p-1 rounded hover:bg-[#FCF5E2] w-full group transition-colors">
-                    <div class="flex text-[#E0A15E]">
+                  <button (click)="setRating(star)" class="cat-star-row"
+                          [class.cat-star-row--active]="minRating() === star">
+                    <div class="flex">
                       @for (i of [1,2,3,4,5]; track i) {
-                        <span class="material-symbols-outlined text-lg"
-                          [style.font-variation-settings]="i <= star ? '\'FILL\' 1' : '\'FILL\' 0'">
-                           star
+                        <span class="material-symbols-outlined cat-star-icon"
+                              [style.font-variation-settings]="i <= star ? '\'FILL\' 1' : '\'FILL\' 0'">
+                          star
                         </span>
                       }
                     </div>
-                    <span class="text-sm" [style.font-weight]="minRating() === star ? 'bold' : 'normal'"
-                          [style.color]="minRating() === star ? '#E0A15E' : '#45332D'">
-                      {{ star }} {{ 'CATEGORIES.STARS_OR_MORE' | translate }}
-                    </span>
+                    <span class="cat-star-label">{{ star }}+</span>
                   </button>
                 }
               </div>
             </div>
 
+            <!-- Limpiar filtros -->
             @if (minPrice() !== null || maxPrice() !== null || minRating() !== null || inStock() === true) {
-              <button (click)="clearFilters()" 
-                      class="w-full py-2 text-sm underline transition-colors"
-                      style="color: #E0A15E;">
-                      {{ 'CATEGORIES.CLEAN_FILTERS' | translate }}
+              <div class="cat-divider"></div>
+              <button (click)="clearFilters()" class="cat-btn-ghost w-full">
+                {{ 'CATEGORIES.CLEAN_FILTERS' | translate }}
               </button>
             }
 
@@ -123,159 +134,159 @@
         </div>
       </aside>
 
-      <main class="flex-1 w-full">
-        <div class="flex items-center justify-between mb-6 pb-4 border-b" style="border-color: #E9E1D1;">
-          <div class="text-sm font-medium hidden sm:block" style="color: #4E6A6A;">
-            {{ total() }} {{ 'CATEGORIES.RESULTS_FOUND' | translate }}
-          </div>
+      <!-- ==================== CONTENIDO PRINCIPAL ==================== -->
+      <main class="flex-1 min-w-0">
 
-          <div class="flex items-center gap-4 ml-auto">
-            <div class="flex items-center gap-2">
-              <label for="limit-select" class="text-sm hidden sm:block" style="color: #45332D;">{{ 'CATEGORIES.SHOW' | translate }}</label>
-              <select id="limit-select" [value]="limit()" (change)="onLimitChange($event)"
-                class="px-2 py-1 rounded-lg border focus:outline-none text-sm"
-                style="border-color: #E9E1D1; background-color: white; color: #45332D;">
-                <option value="10">10</option>
-                <option value="15">15</option>
-                <option value="20">20</option>
-                <option value="30">30</option>
-              </select>
-            </div>
-
-            <div class="flex items-center gap-1 bg-white p-1 rounded-lg border" style="border-color: #E9E1D1;">
-              <button (click)="toggleView()" class="p-1.5 rounded transition-colors"
-                [style.background-color]="onGrid() ? '#E0A15E' : 'transparent'" 
-                [style.color]="onGrid() ? '#FCF5E2' : '#45332D'">
-                <span class="material-symbols-outlined text-sm">grid_view</span>
-              </button>
-              <button (click)="toggleView()" class="p-1.5 rounded transition-colors"
-                [style.background-color]="!onGrid() ? '#E0A15E' : 'transparent'" 
-                [style.color]="!onGrid() ? '#FCF5E2' : '#45332D'">
-                <span class="material-symbols-outlined text-sm">view_list</span>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        @if (onGrid()) {
-        <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          @for (book of books(); track book.id) {
-          <div class="book-card-grid bg-white rounded-xl shadow-md transition-all duration-500 ease-out cursor-pointer hover:shadow-lg"
-            (click)="onBookClick(book)">
-            <div class="p-3">
-              @if (book.coverUrl) {
-              <img [src]="book.coverUrl" [alt]="book.title" class="w-full rounded-lg object-cover" style="aspect-ratio: 2/3;"
-                (error)="$event.target.src='https://via.placeholder.com/300x450?text=' + book.title">
-              } @else {
-              <div class="w-full rounded-lg flex items-center justify-center" style="aspect-ratio: 2/3; background: #E0A15E;">
-                <span class="text-4xl">📖</span>
-              </div>
-              }
-            </div>
-            <div class="px-4 pb-4 pt-0">
-              <h3 class="text-base font-semibold mb-1 line-clamp-2 h-[3rem]" style="color: #45332D;">{{ book.title }}</h3>
-              <p class="text-xs mb-2 truncate" style="color: #4E6A6A;">{{ book.author }}</p>
-              <div class="flex items-center justify-between mt-2">
-                <div class="flex flex-col">
-                  <span class="text-xs line-through" style="color: #D4C9B9;">{{ getDiscountedPrice(book.price) | number:'1.2-2' }}{{ 'CATEGORIES.MONEY' | translate }}</span>
-                  <span class="text-lg font-bold" style="color: #E0A15E;">{{ book.price | number:'1.2-2' }}{{ 'CATEGORIES.MONEY' | translate }}</span>
-                </div>
-                <button class="p-2 rounded-full hover:bg-gray-100 transition-colors" 
-                        style="color: #45332D;" (click)="$event.stopPropagation(); onBuyClick()">
-                  <span class="material-symbols-outlined">shopping_cart</span>
-                </button>
-              </div>
-            </div>
-          </div>
-          }
-        </div>
-        }
-
-        @if (!onGrid()) {
-        <div class="space-y-4">
-          @for (book of books(); track book.id) {
-          <div class="bg-white rounded-xl shadow-md p-4 flex gap-4 cursor-pointer hover:shadow-lg transition-all"
-            (click)="onBookClick(book)">
-            <div class="w-24 sm:w-32 flex-shrink-0">
-              @if (book.coverUrl) {
-              <img [src]="book.coverUrl" [alt]="book.title" class="w-full rounded-lg object-cover" style="aspect-ratio: 2/3;">
-              } @else {
-              <div class="w-full rounded-lg flex items-center justify-center" style="aspect-ratio: 2/3; background: #E0A15E;">
-                <span>📖</span>
-              </div>
-              }
-            </div>
-            <div class="flex-1 flex flex-col justify-between">
-              <div>
-                <h3 class="text-lg font-bold mb-1" style="color: #45332D;">{{ book.title }}</h3>
-                <p class="text-sm mb-2" style="color: #4E6A6A;">{{ book.author }}</p>
-                <p class="text-sm line-clamp-2 hidden sm:block" style="color: #4E6A6A; opacity: 0.8;">{{ book.description }}</p>
-              </div>
-              <div class="flex justify-between items-end mt-4">
-                <div class="flex flex-col">
-                  <span class="text-xs line-through" style="color: #D4C9B9;">{{ getDiscountedPrice(book.price) | number:'1.2-2' }}{{ 'CATEGORIES.MONEY' | translate }}</span>
-                  <span class="text-xl font-bold" style="color: #E0A15E;">{{ book.price | number:'1.2-2' }}{{ 'CATEGORIES.MONEY' | translate }}</span>
-                </div>
-                <button class="px-4 py-2 rounded-lg text-sm font-medium"
-                  style="background-color: #E0A15E; color: #FCF5E2;" (click)="$event.stopPropagation(); onBuyClick()">
-                  {{ 'CATEGORIES.BUY' | translate }}
-                </button>
-              </div>
-            </div>
-          </div>
-          }
-        </div>
-        }
-
-        @if (books().length === 0) {
-        <div class="text-center py-12">
-          <div class="inline-block p-6 bg-white rounded-xl shadow-sm">
-            <p class="text-lg" style="color: #D4C9B9;">{{ 'CATEGORIES.NOT_FOUND' | translate }}</p>
-            <button (click)="clearFilters()" class="mt-2 font-medium underline" style="color: #E0A15E;">{{ 'CATEGORIES.CLEAN_FILTERS2' | translate }}</button>
-          </div>
-        </div>
-        }
-
-        @if (total() > 0) {
-        <div class="mt-8 flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 border-t" style="border-color: #E9E1D1;">
-          <div class="text-sm text-center sm:text-left" style="color: #45332D;">
-            {{ startItem }} - {{ endItem }} {{ 'CATEGORIES.FROM' | translate }} {{ total() }}
-          </div>
+        <!-- Toolbar -->
+        <div class="cat-toolbar">
           <div class="flex items-center gap-2">
-            <button (click)="previousPage()" [disabled]="page() === 1"
-              class="px-3 py-1.5 rounded-lg text-sm font-medium disabled:opacity-50"
-              [style.background-color]="page() === 1 ? '#E9E1D1' : '#E0A15E'"
-              [style.color]="page() === 1 ? '#D4C9B9' : '#FCF5E2'">
-              {{ 'CATEGORIES.LAST' | translate }}
+            <span class="text-xs hidden sm:block" style="color: rgba(69,51,45,0.50);">{{ 'CATEGORIES.SHOW' | translate }}</span>
+            <div class="cat-dropdown cat-dropdown--sm" (click)="$event.stopPropagation()">
+              <button class="cat-dropdown__trigger cat-dropdown__trigger--sm" (click)="toggleLimitDropdown($event)">
+                <span>{{ limit() }}</span>
+                <span class="material-symbols-outlined cat-dropdown__chevron" [class.cat-dropdown__chevron--open]="limitDropdownOpen()">expand_more</span>
+              </button>
+              @if (limitDropdownOpen()) {
+                <div class="cat-dropdown__menu">
+                  @for (opt of limitOptions; track opt) {
+                    <button class="cat-dropdown__item" [class.cat-dropdown__item--active]="limit() === opt" (click)="selectLimit(opt)">
+                      {{ opt }}
+                      @if (limit() === opt) {
+                        <span class="material-symbols-outlined cat-dropdown__check">check</span>
+                      }
+                    </button>
+                  }
+                </div>
+              }
+            </div>
+          </div>
+
+          <div class="cat-view-toggle">
+            <button (click)="toggleView()" class="cat-view-btn"
+                    [class.cat-view-btn--active]="onGrid()">
+              <span class="material-symbols-outlined text-base">grid_view</span>
             </button>
-            <div class="flex gap-1">
+            <button (click)="toggleView()" class="cat-view-btn"
+                    [class.cat-view-btn--active]="!onGrid()">
+              <span class="material-symbols-outlined text-base">view_list</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- GRID VIEW -->
+        @if (onGrid()) {
+          <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 md:gap-6">
+            @for (book of books(); track book.id) {
+              <div class="cat-book-card" (click)="onBookClick(book)">
+                <div class="cat-book-cover">
+                  @if (book.coverUrl) {
+                    <img [src]="book.coverUrl" [alt]="book.title" class="cat-book-cover__img"
+                         loading="lazy" decoding="async"
+                         (error)="$event.target.src='assets/placeholder-book.png'">
+                  } @else {
+                    <div class="cat-book-cover__placeholder">
+                      <span class="material-symbols-outlined" style="font-size: 2.5rem; color: rgba(69,51,45,0.25);">menu_book</span>
+                    </div>
+                  }
+                  <div class="cat-book-cover__spine" aria-hidden="true"></div>
+                  @if (book.stock === 0) {
+                    <div class="cat-book-cover__sold-out">
+                      <span>Agotado</span>
+                    </div>
+                  }
+                </div>
+                <div class="cat-book-meta">
+                  <h3 class="cat-book-meta__title">{{ book.title }}</h3>
+                  <p class="cat-book-meta__author">{{ book.author }}</p>
+                  <div class="cat-book-meta__price-row">
+                    <div>
+                      <span class="cat-book-meta__price-old">{{ getDiscountedPrice(book.price) | number:'1.2-2' }}{{ 'CATEGORIES.MONEY' | translate }}</span>
+                      <span class="cat-book-meta__price">{{ book.price | number:'1.2-2' }}{{ 'CATEGORIES.MONEY' | translate }}</span>
+                    </div>
+                    <button class="cat-icon-btn" (click)="$event.stopPropagation(); onBuyClick()" aria-label="Añadir al carrito">
+                      <span class="material-symbols-outlined text-lg">shopping_cart</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+        }
+
+        <!-- LIST VIEW -->
+        @if (!onGrid()) {
+          <div class="space-y-3">
+            @for (book of books(); track book.id) {
+              <div class="cat-list-card" (click)="onBookClick(book)">
+                <div class="cat-list-card__cover">
+                  @if (book.coverUrl) {
+                    <img [src]="book.coverUrl" [alt]="book.title" class="cat-book-cover__img"
+                         loading="lazy" decoding="async">
+                  } @else {
+                    <div class="cat-book-cover__placeholder">
+                      <span class="material-symbols-outlined" style="font-size: 1.5rem; color: rgba(69,51,45,0.25);">menu_book</span>
+                    </div>
+                  }
+                  <div class="cat-book-cover__spine" aria-hidden="true"></div>
+                </div>
+                <div class="flex-1 flex flex-col justify-between min-w-0">
+                  <div>
+                    <h3 class="cat-list-card__title">{{ book.title }}</h3>
+                    <p class="cat-list-card__author">{{ book.author }}</p>
+                    <p class="cat-list-card__desc hidden sm:block">{{ book.description }}</p>
+                  </div>
+                  <div class="flex justify-between items-end mt-3">
+                    <div>
+                      <span class="cat-book-meta__price-old">{{ getDiscountedPrice(book.price) | number:'1.2-2' }}{{ 'CATEGORIES.MONEY' | translate }}</span>
+                      <span class="cat-book-meta__price" style="font-size: 1.125rem;">{{ book.price | number:'1.2-2' }}{{ 'CATEGORIES.MONEY' | translate }}</span>
+                    </div>
+                    <button class="cat-btn-primary cat-btn-primary--sm" (click)="$event.stopPropagation(); onBuyClick()">
+                      {{ 'CATEGORIES.BUY' | translate }}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+        }
+
+        <!-- Empty state -->
+        @if (books().length === 0) {
+          <div class="cat-empty-state">
+            <span class="material-symbols-outlined" style="font-size: 3rem; color: rgba(69,51,45,0.18);">search_off</span>
+            <p style="color: rgba(69,51,45,0.50);">{{ 'CATEGORIES.NOT_FOUND' | translate }}</p>
+            <button (click)="clearFilters()" class="cat-btn-ghost">{{ 'CATEGORIES.CLEAN_FILTERS2' | translate }}</button>
+          </div>
+        }
+
+        <!-- Paginación -->
+        @if (total() > 0) {
+          <div class="cat-pagination">
+            <span class="text-xs" style="color: rgba(69,51,45,0.50);">
+              {{ startItem }}–{{ endItem }} {{ 'CATEGORIES.FROM' | translate }} {{ total() }}
+            </span>
+            <div class="flex items-center gap-1.5">
+              <button (click)="previousPage()" [disabled]="page() === 1" class="cat-page-btn">
+                <span class="material-symbols-outlined text-base">chevron_left</span>
+              </button>
               @for (pageNum of getPageNumbers(); track pageNum) {
                 @if (pageNum === '...') {
-                  <span class="px-2">...</span>
+                  <span class="cat-page-ellipsis">…</span>
                 } @else {
-                  <button (click)="goToPage($any(pageNum))"
-                    class="w-8 h-8 rounded-lg text-sm flex items-center justify-center border"
-                    [style.background-color]="page() === pageNum ? '#E0A15E' : 'white'"
-                    [style.color]="page() === pageNum ? '#FCF5E2' : '#45332D'"
-                    style="border-color: #E9E1D1;">
+                  <button (click)="goToPage($any(pageNum))" class="cat-page-btn"
+                          [class.cat-page-btn--active]="page() === pageNum">
                     {{ pageNum }}
                   </button>
                 }
               }
+              <button (click)="nextPage()" [disabled]="page() === totalPages" class="cat-page-btn">
+                <span class="material-symbols-outlined text-base">chevron_right</span>
+              </button>
             </div>
-            <button (click)="nextPage()" [disabled]="page() === totalPages"
-              class="px-3 py-1.5 rounded-lg text-sm font-medium disabled:opacity-50"
-              [style.background-color]="page() === totalPages ? '#E9E1D1' : '#E0A15E'"
-              [style.color]="page() === totalPages ? '#D4C9B9' : '#FCF5E2'">
-              {{ 'CATEGORIES.NEXT' | translate }}
-            </button>
           </div>
-        </div>
         }
+
       </main>
     </div>
   </div>
 </div>
-
-<!-- Modal del chat con IA -->
-<app-ai-chat-modal></app-ai-chat-modal>

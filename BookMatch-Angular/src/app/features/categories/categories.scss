@@ -1,61 +1,712 @@
-// Estilos para Material Symbols
-.material-symbols-outlined {
-  font-family: 'Material Symbols Outlined';
-  font-weight: normal;
-  font-style: normal;
-  font-size: 24px;
-  line-height: 1;
-  letter-spacing: normal;
-  text-transform: none;
-  display: inline-block;
-  white-space: nowrap;
-  word-wrap: normal;
-  direction: ltr;
-  -webkit-font-feature-settings: 'liga';
-  -webkit-font-smoothing: antialiased;
+// ─── Design tokens (alineados con header + carousel) ─────────────────────────
+$font-serif:     'Lora', 'Georgia', serif;
+$color-walnut:   #45332D;
+$color-sand:     #8A766A;
+$color-gold:     #E0A15E;
+$color-cream:    #FCF5E2;
+$color-border:   rgba(69, 51, 45, 0.10);
+$ease-out-fast:  cubic-bezier(0.23, 1, 0.32, 1);
+$ease-spring:    cubic-bezier(0.34, 1.56, 0.64, 1);
+
+// Gradiente de lomo de libro (igual que el carousel)
+$book-spine-gradient: linear-gradient(
+  to right,
+  rgba(0,0,0,0.18)   0%,
+  rgba(0,0,0,0.08)   0.75%,
+  rgba(255,255,255,0.55) 1.0%,
+  rgba(255,255,255,0.65) 1.3%,
+  rgba(255,255,255,0.50) 1.4%,
+  rgba(255,255,255,0.30) 1.5%,
+  rgba(255,255,255,0.28) 2.4%,
+  rgba(0,0,0,0.05)   2.7%,
+  rgba(0,0,0,0.05)   3.5%,
+  rgba(255,255,255,0.28) 4%,
+  rgba(255,255,255,0.28) 4.5%,
+  rgba(244,244,244,0.08) 5.4%,
+  rgba(244,244,244,0.08) 99%,
+  rgba(100,80,60,0.22)  100%
+);
+
+// ─── Page header ──────────────────────────────────────────────────────────────
+.cat-page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 2rem;
+  gap: 1rem;
+
+  @media (min-width: 768px) {
+    margin-bottom: 2.5rem;
+  }
 }
 
-// Estilos para la vista Grid
-.book-card-grid {
+.cat-page-title {
+  font-family: $font-serif;
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: $color-walnut;
+  text-transform: capitalize;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+
+  @media (min-width: 768px) {
+    font-size: 2.25rem;
+  }
+}
+
+.cat-page-subtitle {
+  font-family: $font-serif;
+  font-size: 0.8125rem;
+  margin-top: 0.25rem;
+}
+
+.cat-mobile-filter-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: $font-serif;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: $color-walnut;
+  background: rgba(255,255,255,0.7);
+  backdrop-filter: blur(8px);
+  border: 1px solid $color-border;
+  padding: 0.5rem 0.875rem;
+  border-radius: 0.625rem;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s $ease-out-fast;
+
+  &:active { transform: scale(0.96); }
+}
+
+// ─── Sidebar ──────────────────────────────────────────────────────────────────
+.cat-sidebar {
+  @media (min-width: 768px) {
+    background: rgba(255,255,255,0.65);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid $color-border;
+    border-radius: 1rem;
+    padding: 1.25rem;
+  }
+}
+
+.cat-divider {
+  height: 1px;
+  background: $color-border;
+  margin: 1rem 0;
+}
+
+.cat-filter-group {
+  margin-bottom: 0;
+}
+
+.cat-filter-label {
+  font-family: $font-serif;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: $color-sand;
+  margin-bottom: 0.625rem;
+  display: block;
+}
+
+// Checkbox
+.cat-checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  cursor: pointer;
+  font-family: $font-serif;
+  font-size: 0.8125rem;
+  color: $color-walnut;
+  transition: color 0.15s;
+  padding: 0.25rem 0;
+
+  &:hover { color: $color-gold; }
+}
+
+.cat-checkbox {
+  width: 1.125rem;
+  height: 1.125rem;
+  border-radius: 0.3rem;
+  border: 1.5px solid rgba(69,51,45,0.25);
+  accent-color: $color-walnut;
+  cursor: pointer;
+}
+
+// Select
+.cat-select {
+  width: 100%;
+  font-family: $font-serif;
+  font-size: 0.8125rem;
+  color: $color-walnut;
+  background: rgba(255,255,255,0.8);
+  border: 1px solid $color-border;
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.625rem;
+  cursor: pointer;
+  transition: border-color 0.2s;
+
+  &:focus {
+    outline: none;
+    border-color: rgba(69,51,45,0.3);
+    box-shadow: 0 0 0 3px rgba(69,51,45,0.05);
+  }
+
+  &--sm {
+    width: auto;
+    padding: 0.3rem 0.5rem;
+    font-size: 0.75rem;
+  }
+}
+
+// Inputs
+.cat-input-prefix {
+  position: absolute;
+  left: 0.625rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.75rem;
+  color: rgba(69,51,45,0.35);
+  pointer-events: none;
+}
+
+.cat-input {
+  width: 100%;
+  font-family: $font-serif;
+  font-size: 0.8125rem;
+  color: $color-walnut;
+  background: rgba(255,255,255,0.8);
+  border: 1px solid $color-border;
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.5rem;
+  transition: border-color 0.2s;
+
+  &--price {
+    padding-left: 1.5rem;
+  }
+
+  &:focus {
+    outline: none;
+    border-color: rgba(69,51,45,0.3);
+    box-shadow: 0 0 0 3px rgba(69,51,45,0.05);
+  }
+}
+
+// Stars
+.cat-star-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.5rem;
+  border-radius: 0.5rem;
+  border: none;
+  background: transparent;
+  width: 100%;
+  cursor: pointer;
+  font-family: $font-serif;
+  transition: background 0.15s;
+
   &:hover {
-    transform: scale(1.05);
-    background-color: rgba(255, 255, 255, 0.95) !important;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15) !important;
-    
-    .book-image-grid {
-      transform: scale(1.0);
+    background: rgba(69,51,45,0.04);
+  }
+
+  &--active {
+    background: rgba(224,161,94,0.10);
+  }
+}
+
+.cat-star-icon {
+  font-size: 1rem;
+  color: $color-gold;
+}
+
+.cat-star-label {
+  font-size: 0.75rem;
+  color: $color-sand;
+  font-weight: 500;
+}
+
+// ─── Buttons ──────────────────────────────────────────────────────────────────
+.cat-btn-primary {
+  font-family: $font-serif;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: $color-cream;
+  background: $color-walnut;
+  border: none;
+  border-radius: 0.5rem;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s $ease-out-fast;
+
+  &:hover { background: #3a2a22; }
+  &:active { transform: scale(0.97); }
+
+  &--sm {
+    padding: 0.4rem 0.875rem;
+    font-size: 0.75rem;
+    border-radius: 0.5rem;
+  }
+}
+
+.cat-btn-ghost {
+  font-family: $font-serif;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: $color-sand;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  transition: color 0.15s;
+  padding: 0.4rem 0;
+
+  &:hover { color: $color-walnut; }
+}
+
+.cat-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.375rem;
+  border-radius: 0.5rem;
+  background: transparent;
+  border: none;
+  color: $color-walnut;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, transform 0.15s $ease-out-fast;
+
+  &:hover {
+    background: rgba(69,51,45,0.06);
+    color: $color-sand;
+  }
+  &:active { transform: scale(0.92); }
+}
+
+// ─── Toolbar ──────────────────────────────────────────────────────────────────
+.cat-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.25rem;
+  padding-bottom: 0.875rem;
+  border-bottom: 1px solid $color-border;
+}
+
+.cat-view-toggle {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  background: rgba(69,51,45,0.04);
+  padding: 3px;
+  border-radius: 0.5rem;
+}
+
+.cat-view-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.35rem;
+  border-radius: 0.375rem;
+  border: none;
+  background: transparent;
+  color: rgba(69,51,45,0.40);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+
+  &--active {
+    background: $color-walnut;
+    color: $color-cream;
+    box-shadow: 0 1px 4px rgba(69,51,45,0.15);
+  }
+}
+
+// ─── Grid book card ───────────────────────────────────────────────────────────
+.cat-book-card {
+  cursor: pointer;
+  transition: transform 0.28s $ease-out-fast;
+
+  &:hover {
+    .cat-book-cover {
+      box-shadow:
+        2px 14px 32px rgba(69,51,45,0.22),
+        0 0 0 0.5px rgba(0,0,0,0.06);
     }
-    
-    .book-content-grid {
-      opacity: 0.9;
+    .cat-book-meta__title {
+      color: #342520;
+    }
+  }
+
+  &:active {
+    transform: scale(0.98);
+  }
+}
+
+.cat-book-cover {
+  position: relative;
+  aspect-ratio: 2 / 3;
+  border-radius: 2px 6px 6px 2px;
+  overflow: hidden;
+  background: #d5cdc0;
+  box-shadow:
+    2px 6px 16px rgba(69,51,45,0.12);
+  transition: box-shadow 0.3s $ease-out-fast;
+
+  &__img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  &__spine {
+    position: absolute;
+    inset: 0;
+    background: $book-spine-gradient;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  &__placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(69,51,45,0.06);
+  }
+
+  &__sold-out {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.48);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
+
+    span {
+      font-family: $font-serif;
+      font-size: 0.6875rem;
+      font-weight: 700;
+      color: #fff;
+      background: #c0392b;
+      padding: 0.2rem 0.6rem;
+      border-radius: 99px;
+      letter-spacing: 0.02em;
     }
   }
 }
 
-.book-image-grid {
-  display: block;
-  transform: scale(0.95);
-  
+.cat-book-meta {
+  padding: 0.625rem 0.125rem 0;
+  font-family: $font-serif;
+
+  &__title {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: $color-walnut;
+    line-height: 1.35;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    margin-bottom: 0.125rem;
+    transition: color 0.15s;
+
+    @media (min-width: 768px) {
+      font-size: 0.875rem;
+    }
+  }
+
+  &__author {
+    font-size: 0.6875rem;
+    font-style: italic;
+    color: $color-sand;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 0.375rem;
+  }
+
+  &__price-row {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-top: 0.25rem;
+  }
+
+  &__price-old {
+    display: block;
+    font-size: 0.625rem;
+    color: rgba(69,51,45,0.35);
+    text-decoration: line-through;
+    line-height: 1;
+  }
+
+  &__price {
+    display: block;
+    font-size: 0.9375rem;
+    font-weight: 700;
+    color: $color-walnut;
+    line-height: 1.2;
+  }
 }
 
-// Estilos para la vista List
-.book-card-list {
+// ─── List card ────────────────────────────────────────────────────────────────
+.cat-list-card {
+  display: flex;
+  gap: 1rem;
+  padding: 0.875rem;
+  background: rgba(255,255,255,0.55);
+  backdrop-filter: blur(6px);
+  border: 1px solid $color-border;
+  border-radius: 0.75rem;
+  cursor: pointer;
+  transition: background 0.2s, box-shadow 0.28s $ease-out-fast, transform 0.15s $ease-out-fast;
+
   &:hover {
-    transform: scale(1.02);
-    background-color: rgba(255, 255, 255, 0.95) !important;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15) !important;
-    
-    .book-image-list {
-      transform: scale(1.05);
+    background: rgba(255,255,255,0.85);
+    box-shadow: 0 8px 28px rgba(69,51,45,0.10);
+  }
+
+  &:active {
+    transform: scale(0.99);
+  }
+
+  &__cover {
+    position: relative;
+    width: 5.5rem;
+    flex-shrink: 0;
+    aspect-ratio: 2 / 3;
+    border-radius: 2px 5px 5px 2px;
+    overflow: hidden;
+    background: #d5cdc0;
+
+    @media (min-width: 640px) {
+      width: 7rem;
     }
-    
-    .book-content-list {
-      opacity: 0.9;
+  }
+
+  &__title {
+    font-family: $font-serif;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: $color-walnut;
+    line-height: 1.3;
+    margin-bottom: 0.125rem;
+  }
+
+  &__author {
+    font-family: $font-serif;
+    font-size: 0.75rem;
+    font-style: italic;
+    color: $color-sand;
+    margin-bottom: 0.25rem;
+  }
+
+  &__desc {
+    font-family: $font-serif;
+    font-size: 0.75rem;
+    color: rgba(69,51,45,0.50);
+    line-height: 1.5;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+}
+
+// ─── Empty state ──────────────────────────────────────────────────────────────
+.cat-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 4rem 1rem;
+  font-family: $font-serif;
+  text-align: center;
+}
+
+// ─── Pagination ───────────────────────────────────────────────────────────────
+.cat-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 2rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid $color-border;
+  font-family: $font-serif;
+}
+
+.cat-page-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2rem;
+  height: 2rem;
+  padding: 0 0.4rem;
+  border-radius: 0.5rem;
+  border: 1px solid transparent;
+  background: transparent;
+  font-family: $font-serif;
+  font-size: 0.8125rem;
+  color: $color-sand;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s, transform 0.12s $ease-out-fast;
+
+  &:hover:not(:disabled) {
+    background: rgba(69,51,45,0.05);
+    color: $color-walnut;
+  }
+
+  &:active:not(:disabled) {
+    transform: scale(0.93);
+  }
+
+  &:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
+
+  &--active {
+    background: $color-walnut;
+    color: $color-cream;
+    border-color: $color-walnut;
+    font-weight: 600;
+
+    &:hover {
+      background: $color-walnut !important;
+      color: $color-cream !important;
     }
   }
 }
 
-.book-image-list {
-  display: block;
+.cat-page-ellipsis {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  font-size: 0.8125rem;
+  color: rgba(69,51,45,0.30);
 }
 
+// ─── Custom dropdown ────────────────────────────────────────────────────────
+.cat-dropdown {
+  position: relative;
+
+  &--sm {
+    .cat-dropdown__menu {
+      min-width: 4rem;
+    }
+  }
+
+  &__trigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    width: 100%;
+    font-family: $font-serif;
+    font-size: 0.8125rem;
+    color: $color-walnut;
+    background: rgba(255,255,255,0.8);
+    border: 1px solid $color-border;
+    border-radius: 0.5rem;
+    padding: 0.5rem 0.625rem;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.15s;
+
+    &:hover {
+      background: rgba(255,255,255,0.95);
+    }
+
+    &:focus {
+      outline: none;
+      border-color: rgba(69,51,45,0.3);
+      box-shadow: 0 0 0 3px rgba(69,51,45,0.05);
+    }
+
+    &--sm {
+      padding: 0.3rem 0.5rem;
+      font-size: 0.75rem;
+      gap: 0.25rem;
+    }
+  }
+
+  &__chevron {
+    font-size: 1.125rem;
+    color: $color-sand;
+    transition: transform 0.2s $ease-out-fast;
+
+    &--open {
+      transform: rotate(180deg);
+    }
+  }
+
+  &__menu {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    min-width: 100%;
+    background: rgba(255,255,255,0.96);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid $color-border;
+    border-radius: 0.625rem;
+    padding: 0.25rem;
+    box-shadow: 0 8px 28px rgba(69,51,45,0.12), 0 2px 6px rgba(69,51,45,0.06);
+    z-index: 20;
+    // Emil: enter with ease-out, opacity + translateY from near-visible
+    animation: dropdown-in 0.16s $ease-out-fast;
+  }
+
+  &__item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 0.45rem 0.625rem;
+    border: none;
+    background: transparent;
+    font-family: $font-serif;
+    font-size: 0.8125rem;
+    color: $color-walnut;
+    border-radius: 0.375rem;
+    cursor: pointer;
+    transition: background 0.12s;
+    text-align: left;
+    white-space: nowrap;
+
+    &:hover {
+      background: rgba(69,51,45,0.05);
+    }
+
+    &--active {
+      font-weight: 600;
+      color: $color-walnut;
+    }
+  }
+
+  &__check {
+    font-size: 1rem;
+    color: $color-gold;
+  }
+}
+
+@keyframes dropdown-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

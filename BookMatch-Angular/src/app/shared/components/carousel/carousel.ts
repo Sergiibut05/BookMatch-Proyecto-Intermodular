@@ -122,34 +122,34 @@ export class Carousel implements OnInit, OnDestroy {
     const el = this.carouselRef?.nativeElement;
     if (!el) return 0;
     const firstCard = el.querySelector<HTMLElement>('.book-card');
-    const gap = 16;
+    const gap = parseFloat(getComputedStyle(el).gap) || 16;
     const cardWidth = firstCard ? firstCard.offsetWidth : 200;
     return cardWidth + gap;
-  }
-
-  private snapToNearest() {
-    const el = this.carouselRef?.nativeElement;
-    if (!el) return;
-    const step = this.getStep();
-    if (step <= 0) return;
-    const nearest = Math.round(el.scrollLeft / step) * step;
-    el.scrollTo({ left: nearest, behavior: 'smooth' });
   }
 
   /** Desplaza el carrusel una tarjeta hacia atrás. */
   prev() {
     const el = this.carouselRef?.nativeElement;
     if (!el) return;
-    el.scrollBy({ left: -this.getStep(), behavior: 'smooth' });
-    setTimeout(() => this.snapToNearest(), 220);
+    const step = this.getStep();
+    if (step <= 0) return;
+    // Snap point anterior: índice de la tarjeta actual - 1
+    const currentIndex = Math.round(el.scrollLeft / step);
+    const target = Math.max((currentIndex - 1) * step, 0);
+    el.scrollTo({ left: target, behavior: 'smooth' });
   }
 
   /** Desplaza el carrusel una tarjeta hacia delante. */
   next() {
     const el = this.carouselRef?.nativeElement;
     if (!el) return;
-    el.scrollBy({ left: this.getStep(), behavior: 'smooth' });
-    setTimeout(() => this.snapToNearest(), 220);
+    const step = this.getStep();
+    if (step <= 0) return;
+    const maxScroll = el.scrollWidth - el.clientWidth;
+    // Snap point siguiente: índice actual + 1, clampado al máximo real
+    const currentIndex = Math.round(el.scrollLeft / step);
+    const target = Math.min((currentIndex + 1) * step, maxScroll);
+    el.scrollTo({ left: target, behavior: 'smooth' });
   }
 
   /** Navega a la vista de categoría completa. */

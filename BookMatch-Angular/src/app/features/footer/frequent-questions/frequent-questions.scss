@@ -1,7 +1,11 @@
+$ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+
 .faq-container {
   min-height: 100vh;
   background-color: #FCF5E2;
   padding: 2rem 0;
+  font-family: 'Lora', 'Georgia', serif;
+  color: #45332D;
 }
 
 .faq-content {
@@ -10,19 +14,27 @@
 }
 
 .faq-item {
-  transition: all 0.3s ease;
+  // Solo propiedades que realmente cambian
+  transition: box-shadow 200ms $ease-out;
+
+  &:has(button:hover) {
+    box-shadow: 0 4px 16px rgba(69, 51, 45, 0.08);
+  }
 }
 
 .faq-item button {
   cursor: pointer;
-}
+  // Background + color — específico, no `all`
+  transition: background-color 180ms ease;
 
-.faq-item button:hover {
-  background-color: #FCF5E2 !important;
+  &:active {
+    opacity: 0.85;
+    transition-duration: 80ms;
+  }
 }
 
 .faq-item svg {
-  transition: transform 0.3s ease;
+  transition: transform 220ms $ease-out;
 }
 
 @media (max-width: 768px) {

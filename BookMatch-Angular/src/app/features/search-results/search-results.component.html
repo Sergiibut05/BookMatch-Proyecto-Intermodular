@@ -1,144 +1,115 @@
 <app-header></app-header>
 
-<div class="min-h-screen" style="background-color: #FCF5E2;">
-  <div class="container mx-auto px-4 py-8">
-    <h1 class="text-2xl md:text-3xl font-bold mb-2" style="color: #45332D;">
-      {{ 'SEARCH_RESULTS.TITLE' | translate }}
-    </h1>
-    @if (searchQuery() && !isLoading()) {
-      <p class="text-base md:text-lg" style="color: #4E6A6A;">
-        @if (searchType() === 'book') {
-          {{ 'SEARCH_RESULTS.RESULTS_FOUND' | translate: { count: totalResults() } }} 
-          {{ 'SEARCH_RESULTS.FOR_BOOKS' | translate: { query: searchQuery() } }}
-        } @else if (searchType() === 'forum') {
-          {{ 'SEARCH_RESULTS.RESULTS_FOUND' | translate: { count: totalResults() } }} 
-          {{ 'SEARCH_RESULTS.FOR_FORUMS' | translate: { query: searchQuery() } }}
-        } @else {
-          {{ 'SEARCH_RESULTS.RESULTS_FOUND' | translate: { count: totalResults() } }} 
-          {{ 'SEARCH_RESULTS.FOR_TRADES' | translate: { query: searchQuery() } }}
-        }
-      </p>
-    }
+<div class="min-h-screen" style="background-color: #FCF5E2; font-family: 'Lora', 'Georgia', serif;">
+  <div class="max-w-[1200px] mx-auto px-4 sm:px-6 py-6 sm:py-10">
 
+    <!-- Header -->
+    <div class="mb-6 sm:mb-10">
+      <h1 class="text-xl sm:text-2xl md:text-3xl font-bold mb-1" style="color: #45332D;">
+        {{ 'SEARCH_RESULTS.TITLE' | translate }}
+      </h1>
+      @if (searchQuery() && !isLoading()) {
+        <p class="text-sm sm:text-base" style="color: #8A766A;">
+          @if (searchType() === 'book') {
+            {{ 'SEARCH_RESULTS.RESULTS_FOUND' | translate: { count: totalResults() } }} 
+            {{ 'SEARCH_RESULTS.FOR_BOOKS' | translate: { query: searchQuery() } }}
+          } @else if (searchType() === 'forum') {
+            {{ 'SEARCH_RESULTS.RESULTS_FOUND' | translate: { count: totalResults() } }} 
+            {{ 'SEARCH_RESULTS.FOR_FORUMS' | translate: { query: searchQuery() } }}
+          } @else {
+            {{ 'SEARCH_RESULTS.RESULTS_FOUND' | translate: { count: totalResults() } }} 
+            {{ 'SEARCH_RESULTS.FOR_TRADES' | translate: { query: searchQuery() } }}
+          }
+        </p>
+      }
+    </div>
+
+    <!-- Loading -->
     @if (isLoading()) {
       <div class="flex justify-center items-center py-20">
         <div class="text-center">
-          <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2" style="border-color: #45332D;"></div>
-          <p class="mt-4 text-lg" style="color: #45332D;">{{ 'SEARCH_RESULTS.LOADING' | translate }}</p>
+          <div class="inline-block animate-spin rounded-full h-10 w-10 border-[3px] border-t-transparent" style="border-color: #E0A15E; border-top-color: transparent;"></div>
+          <p class="mt-4 text-sm" style="color: #8A766A;">{{ 'SEARCH_RESULTS.LOADING' | translate }}</p>
         </div>
       </div>
     }
 
+    <!-- Error -->
     @if (error() && !isLoading()) {
-      <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-        <p class="text-red-800">{{ error() }}</p>
+      <div class="rounded-lg p-4 mb-6" style="background: rgba(239,68,68,0.06); border: 1px solid rgba(239,68,68,0.15);">
+        <p class="text-sm text-red-700">{{ error() }}</p>
       </div>
     }
 
+    <!-- Empty state -->
     @if (!isLoading() && !error() && totalResults() === 0) {
       <div class="text-center py-20">
-        <div class="mb-4">
-          <span class="material-symbols-outlined text-6xl" style="color: #D4C9B9;">search_off</span>
-        </div>
-        <h2 class="text-2xl font-bold mb-2" style="color: #45332D;">
+        <span class="material-symbols-outlined mb-3" style="font-size: 3rem; color: rgba(69,51,45,0.18);">search_off</span>
+        <h2 class="text-xl sm:text-2xl font-bold mb-2" style="color: #45332D;">
           {{ 'SEARCH_RESULTS.NO_RESULTS' | translate }}
         </h2>
-        <p class="text-base" style="color: #4E6A6A;">
+        <p class="text-sm" style="color: #8A766A;">
           {{ 'SEARCH_RESULTS.NO_RESULTS_DESC' | translate }}
         </p>
       </div>
     }
 
+    <!-- Book results grid -->
     @if (!isLoading() && !error() && searchType() === 'book' && books().length > 0) {
-      <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
+      <div class="sr-grid">
         @for (book of books(); track book.id) {
-          <div 
-            class="book-card-grid bg-white rounded-xl shadow-md transition-all duration-500 ease-out cursor-pointer hover:shadow-lg"
-            (click)="goToBook(book.id)">
-            <div class="p-3">
+          <div class="sr-book-card" (click)="goToBook(book.id)">
+            <div class="sr-book-cover">
               @if (book.coverUrl) {
                 <img 
                   [src]="book.coverUrl" 
                   [alt]="book.title" 
-                  class="w-full rounded-lg object-cover" 
-                  style="aspect-ratio: 2/3;"
-                  (error)="$event.target.src='https://via.placeholder.com/300x450?text=' + book.title">
+                  class="sr-book-cover__img"
+                  loading="lazy" decoding="async"
+                  (error)="$event.target.src='assets/placeholder-book.png'">
               } @else {
-                <div class="w-full rounded-lg flex items-center justify-center" style="aspect-ratio: 2/3; background: #E0A15E;">
-                  <span class="text-4xl">📖</span>
+                <div class="sr-book-cover__placeholder">
+                  <span class="material-symbols-outlined" style="font-size: 2rem; color: rgba(69,51,45,0.25);">menu_book</span>
                 </div>
               }
+              <div class="sr-book-cover__spine" aria-hidden="true"></div>
             </div>
-            <div class="px-4 pb-4 pt-0">
-              <h3 class="text-base font-semibold mb-1 line-clamp-2 h-[3rem]" style="color: #45332D;">
-                {{ book.title }}
-              </h3>
-              <p class="text-xs mb-2 truncate" style="color: #4E6A6A;">{{ book.author }}</p>
-              <div class="flex items-center justify-between mt-2">
-                <div class="flex flex-col">
-                  <span class="text-lg font-bold" style="color: #E0A15E;">
-                    {{ book.price | number:'1.2-2' }}€
-                  </span>
-                </div>
-                <button 
-                  class="p-2 rounded-full hover:bg-gray-100 transition-colors" 
-                  style="color: #45332D;" 
-                  (click)="$event.stopPropagation(); goToBook(book.id)">
-                  <span class="material-symbols-outlined">shopping_cart</span>
-                </button>
-              </div>
+            <div class="sr-book-meta">
+              <h3 class="sr-book-meta__title">{{ book.title }}</h3>
+              <p class="sr-book-meta__author">{{ book.author }}</p>
+              <span class="sr-book-meta__price">{{ book.price | number:'1.2-2' }}€</span>
             </div>
           </div>
         }
       </div>
     }
 
+    <!-- Forum results -->
     @if (!isLoading() && !error() && searchType() === 'forum' && forums().length > 0) {
-      <div class="space-y-4 mb-8">
+      <div class="space-y-3 sm:space-y-4 mb-8">
         @for (forum of forums(); track forum.id) {
-          <div 
-            (click)="goToForum(forum.id)"
-            class="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-200 cursor-pointer overflow-hidden border border-transparent hover:border-opacity-50"
-            style="border-color: #E0A15E;"
-            onmouseover="this.style.transform='translateY(-4px)'"
-            onmouseout="this.style.transform='translateY(0)'">
-            
-            <div class="p-6 border-b" style="border-color: #E9E1D1;">
-              <h3 class="text-xl font-bold mb-2" style="color: #45332D;">
-                {{ forum.title }}
-              </h3>
-              <p class="text-sm line-clamp-2" style="color: #4E6A6A;">
+          <div (click)="goToForum(forum.id)" class="sr-forum-card">
+            <div class="p-4 sm:p-6 border-b" style="border-color: rgba(69,51,45,0.06);">
+              <h3 class="text-base sm:text-lg font-bold mb-1" style="color: #45332D;">{{ forum.title }}</h3>
+              <p class="text-xs sm:text-sm line-clamp-2" style="color: #8A766A;">
                 {{ forum.description || ('FORUM.NO_DESCRIPTION' | translate) }}
               </p>
             </div>
-
-            <div class="px-6 py-4 flex items-center justify-between">
-              <div class="flex items-center gap-3">
-                @if (getCreatorAvatar(forum)) {
-                  <img 
-                    [src]="getCreatorAvatar(forum)!" 
-                    [alt]="getCreatorName(forum)"
-                    class="w-8 h-8 rounded-full object-cover">
-                } @else {
-                  <div class="w-8 h-8 rounded-full flex items-center justify-center" style="background-color: #E0A15E;">
-                    <span class="text-white text-xs font-semibold">
-                      {{ getCreatorName(forum).charAt(0).toUpperCase() }}
-                    </span>
-                  </div>
-                }
-                <div>
-                  <p class="text-sm font-medium" style="color: #45332D;">
-                    {{ getCreatorName(forum) }}
-                  </p>
-                  <p class="text-xs" style="color: #4E6A6A;">
-                    {{ getTotalPosts(forum) }} 
-                    @if (getTotalPosts(forum) === 1) {
-                      {{ 'FORUM.TOPIC_SINGULAR' | translate }}
-                    } @else {
-                      {{ 'FORUM.TOPIC_PLURAL' | translate }}
-                    }
-                  </p>
+            <div class="px-4 sm:px-6 py-3 flex items-center gap-2.5">
+              @if (getCreatorAvatar(forum)) {
+                <img [src]="getCreatorAvatar(forum)!" [alt]="getCreatorName(forum)" class="w-7 h-7 rounded-full object-cover" />
+              } @else {
+                <div class="w-7 h-7 rounded-full flex items-center justify-center" style="background-color: #45332D;">
+                  <span class="text-white text-[10px] font-bold">{{ getCreatorName(forum).charAt(0).toUpperCase() }}</span>
                 </div>
+              }
+              <div>
+                <p class="text-xs font-semibold" style="color: #45332D;">{{ getCreatorName(forum) }}</p>
+                <p class="text-[10px]" style="color: #8A766A;">
+                  {{ getTotalPosts(forum) }}
+                  @if (getTotalPosts(forum) === 1) { {{ 'FORUM.TOPIC_SINGULAR' | translate }} }
+                  @else { {{ 'FORUM.TOPIC_PLURAL' | translate }} }
+                </p>
               </div>
             </div>
           </div>
@@ -146,25 +117,21 @@
       </div>
     }
 
+    <!-- Pagination -->
     @if (!isLoading() && !error() && totalResults() > 0 && totalPages() > 1) {
-      <div class="flex justify-center items-center gap-2 mt-8">
+      <div class="sr-pagination">
         <button
           (click)="goToPage(currentPage() - 1)"
           [disabled]="currentPage() === 1"
-          class="px-4 py-2 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          style="background-color: #E0A15E; color: #FCF5E2;"
-          [class.opacity-50]="currentPage() === 1">
-          {{ 'CATEGORIES.LAST' | translate }}
+          class="sr-page-btn">
+          <span class="material-symbols-outlined text-base">chevron_left</span>
         </button>
 
         @for (page of getPageNumbers(); track page) {
           <button
             (click)="goToPage(page)"
-            [class]="page === currentPage() 
-              ? 'px-4 py-2 rounded-lg font-bold' 
-              : 'px-4 py-2 rounded-lg transition-colors'"
-            [style.background-color]="page === currentPage() ? '#45332D' : '#E0A15E'"
-            [style.color]="'#FCF5E2'">
+            class="sr-page-btn"
+            [class.sr-page-btn--active]="page === currentPage()">
             {{ page }}
           </button>
         }
@@ -172,13 +139,10 @@
         <button
           (click)="goToPage(currentPage() + 1)"
           [disabled]="currentPage() === totalPages()"
-          class="px-4 py-2 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          style="background-color: #E0A15E; color: #FCF5E2;"
-          [class.opacity-50]="currentPage() === totalPages()">
-          {{ 'CATEGORIES.NEXT' | translate }}
+          class="sr-page-btn">
+          <span class="material-symbols-outlined text-base">chevron_right</span>
         </button>
       </div>
     }
   </div>
 </div>
-

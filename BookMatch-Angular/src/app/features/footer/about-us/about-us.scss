@@ -1,23 +1,34 @@
+$ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+
 .about-us-container {
   min-height: 100vh;
   background-color: #FCF5E2;
   padding: 2rem 0;
+  font-family: 'Lora', 'Georgia', serif;
+  color: #45332D;
 }
 
 .team-member-card {
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  // Solo transform + box-shadow — nunca `all`
+  transition: transform 220ms $ease-out, box-shadow 220ms $ease-out;
+
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 28px rgba(69, 51, 45, 0.12);
+    }
+  }
+
+  // Press feedback — Emil: los elementos pressables deben responder
+  &:active {
+    transform: translateY(-2px) scale(0.98);
+    transition-duration: 100ms;
+  }
 }
 
-.team-member-card:hover {
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-}
-
+// Imagen: sin zoom independiente — el card ya sube, no hace falta doble efecto
 .team-member-card img {
-  transition: transform 0.3s ease;
-}
-
-.team-member-card:hover img {
-  transform: scale(1.1);
+  transition: none;
 }
 
 @media (max-width: 768px) {

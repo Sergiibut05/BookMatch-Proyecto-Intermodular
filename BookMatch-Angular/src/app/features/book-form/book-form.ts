@@ -22,6 +22,45 @@ import { TranslateService } from '@ngx-translate/core';
     templateUrl: './book-form.html',
     styles: [`
         :host { display: block; }
+        .bf-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            font-family: 'Lora', 'Georgia', serif;
+            font-weight: 700;
+            border-radius: 0.75rem;
+            cursor: pointer;
+            transition: background 0.2s cubic-bezier(0.23, 1, 0.32, 1),
+                        box-shadow 0.2s cubic-bezier(0.23, 1, 0.32, 1),
+                        transform 0.12s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+        .bf-btn:active:not(:disabled) { transform: scale(0.97); }
+        .bf-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+        .bf-btn--submit {
+            flex: 1;
+            padding: 0.875rem 1.25rem;
+            font-size: 0.9375rem;
+            background: #45332D;
+            color: #FCF5E2;
+            border: none;
+            box-shadow: 0 4px 12px rgba(69, 51, 45, 0.10);
+        }
+        .bf-btn--submit:hover:not(:disabled) {
+            background: #3a2923;
+            box-shadow: 0 6px 20px rgba(69, 51, 45, 0.18);
+        }
+        .bf-btn--cancel {
+            padding: 0.875rem 1.5rem;
+            font-size: 0.9375rem;
+            background: transparent;
+            color: #45332D;
+            border: 1.5px solid rgba(69, 51, 45, 0.2);
+        }
+        .bf-btn--cancel:hover {
+            background: rgba(69, 51, 45, 0.04);
+            border-color: rgba(69, 51, 45, 0.35);
+        }
     `]
 })
 export class BookFormComponent implements OnInit {

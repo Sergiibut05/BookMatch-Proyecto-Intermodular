@@ -15,38 +15,47 @@
   -webkit-font-smoothing: antialiased;
 }
 
-// Overlay (fondo oscuro)
+// Easing variables (Emil's custom curves)
+$ease-drawer: cubic-bezier(0.32, 0.72, 0, 1); // iOS-like drawer curve
+$ease-out-fast: cubic-bezier(0.23, 1, 0.32, 1); // Strong crisp ease-out
+
+// Overlay con blur y fondo templado
 .menu-overlay {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: rgba(69, 51, 45, 0.35); // Walnut/marrón con transparencia
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
   z-index: 999;
-  animation: fadeIn 0.3s ease-in-out;
+  animation: fadeIn 0.4s $ease-out-fast forwards;
 }
 
-// Menú lateral
+// Menú lateral premium estilo editorial
 .side-menu {
+  font-family: 'Lora', 'Georgia', serif;
   position: fixed;
   top: 0;
   left: 0;
   height: 100%;
-  width: 280px;
+  width: 320px;
   max-width: 85vw;
-  background-color: #FCF5E2;
-  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+  background-color: rgba(252, 245, 226, 0.94); // Crema cálida translúcida
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
+  border-right: 1px solid rgba(69, 51, 45, 0.08);
+  box-shadow: 10px 0 40px rgba(69, 51, 45, 0.08);
   z-index: 1000;
   transform: translateX(-100%);
-  transition: transform 0.3s ease-in-out;
+  transition: transform 0.45s $ease-drawer;
   display: flex;
   flex-direction: column;
 
-  // En pantallas pequeñas, el menú ocupa más espacio
   @media (max-width: 640px) {
-    width: 75vw;
-    max-width: 300px;
+    width: 78vw;
+    max-width: 290px;
   }
 }
 
@@ -55,24 +64,72 @@
   transform: translateX(0);
 }
 
-// Header del menú
+// Animación de cascada/stagger para los elementos del menú
+.side-menu {
+  .menu-section {
+    opacity: 0;
+    transform: translateY(12px);
+    transition: transform 0.45s $ease-drawer, opacity 0.4s ease;
+  }
+
+  .menu-item {
+    opacity: 0;
+    transform: translateX(-16px);
+    transition: transform 0.4s $ease-drawer, opacity 0.35s ease;
+  }
+  
+  .user-profile-card {
+    opacity: 0;
+    transform: translateY(16px);
+    transition: transform 0.5s $ease-drawer, opacity 0.4s ease;
+  }
+}
+
+// Disparar las animaciones cuando se añade la clase menu-open
+.side-menu.menu-open {
+  .menu-section {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .menu-item {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  
+  .user-profile-card {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// Retrasos de cascada en cascada
+@for $i from 1 through 12 {
+  .side-menu.menu-open .menu-item:nth-child(#{$i}) {
+    transition-delay: #{$i * 35}ms;
+  }
+}
+
+.side-menu.menu-open .menu-section:nth-child(1) { transition-delay: 50ms; }
+.side-menu.menu-open .menu-section:nth-child(2) { transition-delay: 180ms; }
+.side-menu.menu-open .menu-section:nth-child(3) { transition-delay: 260ms; }
+.side-menu.menu-open .user-profile-card { transition-delay: 320ms; }
+
+// Header del menú lateral
 .side-menu-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem 1.5rem;
-  border-bottom: 1px solid #E9E1D1;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid rgba(69, 51, 45, 0.08);
 
   @media (max-width: 640px) {
-    padding: 0.75rem 1rem;
+    padding: 0.875rem 1.125rem;
   }
 
   h2 {
     font-size: 1.25rem;
-
-    @media (max-width: 640px) {
-      font-size: 1.125rem;
-    }
+    font-weight: 600;
   }
 }
 
@@ -84,63 +141,127 @@
   background: none;
   border: none;
   cursor: pointer;
-  border-radius: 0.5rem;
-  transition: background-color 0.2s;
+  border-radius: 0.75rem;
+  transition: background-color 0.2s, transform 0.15s $ease-out-fast;
 
   &:hover {
-    background-color: rgba(69, 51, 45, 0.1);
+    background-color: rgba(69, 51, 45, 0.08);
+  }
+
+  &:active {
+    transform: scale(0.92);
   }
 }
 
-// Contenido del menú
+// Contenido del menú lateral
 .side-menu-content {
   flex: 1;
-  padding: 1rem;
+  padding: 1.25rem;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
 
   @media (max-width: 640px) {
-    padding: 0.75rem;
+    padding: 0.875rem;
   }
 }
 
-// Wrapper para los items del menú (crece para empujar el selector de idioma abajo)
-.menu-items-wrapper {
-  flex: 1;
+// Labeled Sections
+.menu-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.menu-section-title {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding-left: 0.5rem;
+  margin-bottom: 0.375rem;
+}
+
+// Items de menú (Links individuales con indicador flotante pill en hover)
+.menu-link {
+  color: #45332D;
+  text-decoration: none;
+  border-radius: 0.75rem;
+  padding: 0.625rem 0.75rem;
+  transition: transform 0.16s $ease-out-fast, background-color 0.2s, color 0.2s;
+  font-size: 0.9375rem;
+  display: flex;
+  align-items: center;
+  position: relative;
+  
+  span.material-symbols-outlined {
+    transition: transform 0.2s $ease-out-fast;
+  }
+
+  // Indicador flotante en hover estilo Emil (vertical rounded pill a 50% de altura)
+  &::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 25%;
+    height: 50%;
+    width: 3px;
+    background-color: #8A766A;
+    border-radius: 99px;
+    opacity: 0;
+    transition: opacity 0.2s ease, transform 0.2s $ease-out-fast;
+    transform: scaleY(0.7);
+  }
+
+  &:hover {
+    background-color: rgba(69, 51, 45, 0.045);
+    color: #45332D;
+    
+    &::before {
+      opacity: 1;
+      transform: scaleY(1);
+    }
+    
+    span.material-symbols-outlined {
+      transform: translateX(2px); // Subtle micro-interaction
+    }
+  }
+
+  &:active {
+    transform: scale(0.97);
+  }
+}
+
+// Tarjeta de perfil integrada
+.user-profile-card {
+  transition: background-color 0.2s, border-color 0.2s, transform 0.16s $ease-out-fast;
+  box-shadow: 0 4px 12px rgba(69, 51, 45, 0.03);
+  
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.8) !important;
+    border-color: rgba(69, 51, 45, 0.15) !important;
+  }
+
+  &:active {
+    transform: scale(0.98);
+  }
+}
+
+.logout-icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s, transform 0.15s $ease-out-fast;
+
+  &:active {
+    transform: scale(0.92);
+  }
 }
 
 // Wrapper para el selector de idioma (pegado abajo)
 .language-selector-wrapper {
-  padding-top: 1rem;
-  border-top: 1px solid #E9E1D1;
   margin-top: auto;
-  
-  @media (max-width: 640px) {
-    padding-top: 0.75rem;
-  }
-}
-
-// Items del menú
-.menu-item {
-  margin-bottom: 0.5rem;
-}
-
-.menu-link {
-  color: #45332D;
-  text-decoration: none;
-  border-radius: 0.5rem;
-  transition: background-color 0.2s;
-  font-size: 0.9375rem;
-
-  @media (max-width: 640px) {
-    padding: 0.625rem 0.875rem;
-    font-size: 0.875rem;
-  }
-
-  &:hover {
-    background-color: rgba(69, 51, 45, 0.08);
-  }
 }
 
 // Animación de fade in para el overlay
@@ -153,50 +274,95 @@
   }
 }
 
-// Estilos para header translúcido (glassmorphism)
+// Navbar principal (Glassmorphism de crema cálida)
 nav {
-  background: rgba(255, 255, 255, 0.7) !important;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.4) !important;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  font-family: 'Lora', 'Georgia', serif;
+  background: rgba(252, 245, 226, 0.8) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  border-bottom: 1px solid rgba(69, 51, 45, 0.08) !important;
+  box-shadow: 0 4px 20px -2px rgba(69, 51, 45, 0.05);
+  transition: transform 0.35s $ease-drawer, background-color 0.3s, box-shadow 0.35s $ease-drawer;
+  transform: translate3d(0, 0, 0);
+  will-change: transform;
+
+  // Auto-hide al scroll solo en desktop; móvil mantiene su propio comportamiento
+  &.header-hidden {
+    @media (min-width: 768px) {
+      transform: translate3d(0, -100%, 0);
+      pointer-events: none;
+      box-shadow: none;
+    }
+  }
 }
 
-// Estilos mejorados para el buscador
-.search-container {
-  position: relative;
+// Botones e iconos interactivos con estilo consistente premium en el navbar
+.navbar-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+  border-radius: 0.75rem; // Rounded-xl
+  color: #45332D;
+  background-color: transparent;
+  border: none;
+  transition: background-color 0.2s, color 0.2s, transform 0.15s $ease-out-fast;
+  cursor: pointer;
+  
+  svg, .material-symbols-outlined {
+    color: #45332D;
+    transition: color 0.2s, transform 0.2s $ease-out-fast;
+  }
+
+  &:hover {
+    background-color: rgba(69, 51, 45, 0.05); // Soft cream-walnut tint
+    
+    svg, .material-symbols-outlined {
+      color: #8A766A; // Soft brown highlight
+      transform: translateY(-1px); // Lift feedback
+    }
+  }
+
+  &:active {
+    transform: scale(0.93); // Press feedback
+  }
 }
 
+// Buscador contextual de libros (Cohesionado con el botón buscar en marrón)
 .search-input {
-  background: rgba(255, 255, 255, 0.9) !important;
+  background: rgba(255, 255, 255, 0.95) !important;
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  border: 2px solid rgba(69, 51, 45, 0.15) !important;
+  border: 2px solid rgba(69, 51, 45, 0.12) !important;
   color: #45332D !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  box-shadow: inset 0 2px 4px rgba(69, 51, 45, 0.02);
+  transition: border-color 0.2s, box-shadow 0.2s, background-color 0.2s !important;
+  font-family: inherit;
   
   &::placeholder {
-    color: rgba(69, 51, 45, 0.5);
+    color: rgba(69, 51, 45, 0.45);
   }
   
   &:focus {
-    border-color: rgba(69, 51, 45, 0.4) !important;
-    box-shadow: 0 4px 12px rgba(69, 51, 45, 0.1), 0 0 0 3px rgba(69, 51, 45, 0.05);
-    background: rgba(255, 255, 255, 0.95) !important;
+    border-color: rgba(69, 51, 45, 0.4) !important; // Cohesive walnut border focus
+    box-shadow: 0 4px 16px rgba(69, 51, 45, 0.08), 0 0 0 4px rgba(69, 51, 45, 0.03) !important;
+    background: #ffffff !important;
   }
 }
 
 .search-button {
-  background: rgba(69, 51, 45, 0.9) !important;
+  background: rgba(69, 51, 45, 0.95) !important;
   color: #FCF5E2 !important;
   border: none;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: background-color 0.2s, box-shadow 0.2s, transform 0.15s $ease-out-fast;
   
   &:hover {
     background: rgba(69, 51, 45, 1) !important;
-    box-shadow: 0 4px 8px rgba(69, 51, 45, 0.3);
+    box-shadow: 0 4px 10px rgba(69, 51, 45, 0.25);
+  }
+  
+  &:active {
+    transform: scale(0.9) translateY(-50%) !important; // Keep translation alignment intact
   }
   
   svg {
@@ -204,3 +370,73 @@ nav {
   }
 }
 
+// Enlaces en routerLink generales
+a[routerLink] {
+  transition: transform 0.15s $ease-out-fast;
+  &:active {
+    transform: scale(0.94);
+  }
+}
+
+// Brand container styling with spring-like logo tilt and focus on BookMatch
+.brand-container {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  transition: transform 0.2s $ease-out-fast;
+  
+  img {
+    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); // Springy tilt curve
+  }
+  
+  &:hover img {
+    transform: rotate(-7deg) scale(1.1); // Playful tilt of golden book
+  }
+  
+  &:active {
+    transform: scale(0.97); // Instant press feedback
+  }
+  
+  h1, h2 {
+    transition: transform 0.2s $ease-out-fast;
+    user-select: none;
+    
+    // Subtle hover transition
+    .brand-match {
+      transition: color 0.2s;
+    }
+  }
+  
+  &:hover h1, &:hover h2 {
+    .brand-match {
+      color: #D4944E; // Deeper warm gold on hover
+    }
+  }
+}
+
+// Responsive search row animation for mobile ('La Casa del Libro' style)
+.search-mobile-row {
+  max-height: 80px;
+  opacity: 1;
+  overflow: hidden;
+  transition: max-height 0.35s cubic-bezier(0.32, 0.72, 0, 1), 
+              opacity 0.25s ease, 
+              margin-top 0.35s cubic-bezier(0.32, 0.72, 0, 1),
+              transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
+  transform: translateY(0);
+  
+  &--hidden {
+    max-height: 0 !important;
+    opacity: 0 !important;
+    margin-top: 0 !important;
+    pointer-events: none;
+    transform: translateY(-10px);
+  }
+}
+
+// Fluid mobile inputs sizing
+.mobile-search-input {
+  box-shadow: 0 2px 8px rgba(69, 51, 45, 0.04) !important;
+  font-size: 0.9375rem !important; // Slightly larger for comfortable typing on phones
+}

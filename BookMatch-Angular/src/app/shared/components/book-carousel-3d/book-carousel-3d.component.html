@@ -1,35 +1,48 @@
 <div class="book-carousel-3d-container">
+  <!-- Gradient overlays: top + bottom fade. Crean transicion suave entre la
+       seccion anterior (cream) y la siguiente (cream del home), evitando
+       el corte abrupto que tenia la version anterior. -->
+  <span class="bc3d-fade bc3d-fade--top" aria-hidden="true"></span>
+  <span class="bc3d-fade bc3d-fade--bottom" aria-hidden="true"></span>
+
   <canvas #canvas class="webgl"></canvas>
-  <div class="top-gradient"></div>
-  <h1 class="main-title">{{ title }}</h1>
-  
-  <div class="book-info" [class.visible]="centerBookIndex() !== null">
-    <h2 class="book-title">{{ currentBook()?.title }}</h2>
-    <p class="book-author">{{ currentBook()?.author }}</p>
+
+  <!-- Eyebrow + Title -->
+  <div class="bc3d-header" aria-hidden="true">
+    <span class="bc3d-eyebrow">Lo mas leido</span>
+    <h2 class="bc3d-title">{{ title }}</h2>
   </div>
-  
-  <button 
+
+  <!-- Centered book info -->
+  <div class="bc3d-book-info" [class.is-visible]="centerBookIndex() !== null">
+    <h3 class="bc3d-book-info__title">{{ currentBook()?.title }}</h3>
+    <p class="bc3d-book-info__author">{{ currentBook()?.author }}</p>
+  </div>
+
+  <!-- Discover CTA -->
+  <button
     *ngIf="currentBook()"
     (click)="onDiscoverClick()"
-    class="discover-button"
-    [class.visible]="centerBookIndex() !== null">
-    Discover More
+    class="bc3d-discover-btn"
+    [class.is-visible]="centerBookIndex() !== null">
+    <span>Ver libro</span>
+    <span class="material-symbols-outlined bc3d-discover-btn__arrow">arrow_forward</span>
   </button>
-  
-  <button 
-    (click)="onPrevClick()"
-    class="carousel-arrow carousel-arrow-left"
-    aria-label="Previous book">
-    ←
-  </button>
-  
-  <button 
-    (click)="onNextClick()"
-    class="carousel-arrow carousel-arrow-right"
-    aria-label="Next book">
-    →
-  </button>
-  
-  <div class="bottom-gradient"></div>
-</div>
 
+  <!-- Premium nav buttons — visibles siempre (no solo hover) -->
+  <button
+    (click)="onPrevClick()"
+    class="bc3d-nav bc3d-nav--left"
+    type="button"
+    aria-label="Libro anterior">
+    <span class="material-symbols-outlined">chevron_left</span>
+  </button>
+
+  <button
+    (click)="onNextClick()"
+    class="bc3d-nav bc3d-nav--right"
+    type="button"
+    aria-label="Libro siguiente">
+    <span class="material-symbols-outlined">chevron_right</span>
+  </button>
+</div>

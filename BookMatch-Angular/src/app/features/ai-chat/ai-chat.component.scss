@@ -15,8 +15,9 @@
   --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
 
   display: block;
-  background: #f8f1e0; // Fondo plano crema, sin degradados ruidosos.
-  position: relative; // referencia para el drawer del panel playlist
+  font-family: 'Lora', 'Georgia', serif;
+  background: #f8f1e0;
+  position: relative;
 }
 
 .chat-shell {

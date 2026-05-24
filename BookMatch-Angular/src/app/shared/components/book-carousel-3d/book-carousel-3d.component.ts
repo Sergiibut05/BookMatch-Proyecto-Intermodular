@@ -103,17 +103,37 @@ export class BookCarousel3dComponent implements OnInit, AfterViewInit, OnDestroy
   /** Datos del libro actualmente centrado. */
   currentBook = signal<BookData | null>(null);
 
-  // Background colors for each book
+  // Background colors per book — paleta "biblioteca" muted. Cada color esta
+  // mezclado ~50/50 con el cream base (#EDE0CA), lo que mantiene mismo nivel
+  // de luminosidad (~79% L) pero permite que el hue se note. Los libros se
+  // sienten "envejecidos" / "encuadernados" sin chocar con el page bg cream.
   private bookBackgroundColors = [
-    0xDFEFED,
-    0xFFE5E5,
-    0xE5FFE5,
-    0xFFFFF5,
-    0xFFF5E5
+    0xEDE0CA, // 1. Cream base (matches hero)
+    0xE3C4B3, // 2. Cream rosa (hint de rose dust)
+    0xD2D2B9, // 3. Cream verde (hint de sage)
+    0xEDD4AD, // 4. Cream apricot (hint dorado calido)
+    0xDDC4A0, // 5. Muted stone (cierre neutro)
   ];
 
-  /** Inyecta el Router para navegar al libro al hacer click. */
-  constructor(private router: Router) {}
+  /** Indice del libro cuyo color ya esta aplicado al :host (evita writes redundantes). */
+  private lastAppliedBookIndex = -1;
+
+  // ── Snap duration-based con easing cubic ────────────────────────────────────
+  // En vez de boostear smoothness (que pega un salto), animamos el offset por
+  // duracion fija con curva ease-out-quart (fuerte deceleracion al final).
+  private isSnapping = false;
+  private snapStartTime = 0;
+  private snapStartOffset = 0;
+  private snapTargetOffset = 0;
+  private snapDurationMs = 0;
+  private readonly SNAP_MIN_MS = 380;
+  private readonly SNAP_MAX_MS = 620;
+
+  /** Timer del snap diferido tras un wheel input. */
+  private wheelSnapTimer: ReturnType<typeof setTimeout> | null = null;
+
+  /** Inyecta Router y ElementRef (este ultimo se usa para pintar el bg dinamico via CSS). */
+  constructor(private router: Router, private elementRef: ElementRef<HTMLElement>) {}
 
   /** Detecta si es móvil y ajusta la configuración del carrusel. */
   ngOnInit() {
@@ -158,7 +178,10 @@ export class BookCarousel3dComponent implements OnInit, AfterViewInit, OnDestroy
       this.carouselConfig.dragSensitivity = 0.002;
       this.carouselConfig.buttonStep = 0.3;
       this.carouselConfig.bookSpacing = 0.3;
-      this.carouselConfig.curveHeight = 0.30;
+      // Curva mas baja: antes 0.30 levantaba el libro centrado hasta el pico
+      // de la cosenoidal (y=0.3 en world), tan alto que pisaba el header en
+      // pantallas chicas. Con 0.15 el libro queda mas centrado verticalmente.
+      this.carouselConfig.curveHeight = 0.15;
     }
   }
 
@@ -171,9 +194,9 @@ export class BookCarousel3dComponent implements OnInit, AfterViewInit, OnDestroy
       return;
     }
 
-    // Scene
+    // Scene — sin background propio. El bg lo pone el :host via CSS para que
+    // coincida exactamente con el color del page-bg (sin sRGB drift de WebGL).
     this.scene = new THREE.Scene();
-    this.scene.background = new THREE.Color(this.backgroundColor);
 
     // Sizes - use container dimensions
     const sizes = {
@@ -184,25 +207,34 @@ export class BookCarousel3dComponent implements OnInit, AfterViewInit, OnDestroy
     // Camera
     this.camera = new THREE.PerspectiveCamera(75, sizes.width / sizes.height, 0.1, 100);
     if (this.isMobile) {
-      this.camera.position.set(0, 0.3, 0.7);
+      // Mobile: camara cerca (Z=0.55) y a media altura (Y=0.18) para libros
+      // grandes (~59% del viewport) posicionados en el centro vertical de la
+      // seccion. El book-info flotante esta oculto en mobile, asi que el
+      // espacio inferior queda libre para el discover button.
+      this.camera.position.set(0, 0.18, 0.55);
     } else {
       this.camera.position.set(0, 0.2, 0.5);
     }
     this.scene.add(this.camera);
 
-    // Renderer - try WebGPU first, fallback to WebGL
+    // Renderer - try WebGPU first, fallback to WebGL. Ambos con alpha:true
+    // para que el bg del :host (CSS) se vea a traves del canvas sin mismatch.
     try {
       this.renderer = new WebGPURenderer({
         canvas: canvas,
-        antialias: true
+        antialias: true,
+        alpha: true
       });
       await this.renderer.init();
     } catch (error) {
-    this.renderer = new THREE.WebGLRenderer({
-      canvas: canvas,
-      antialias: true
-    });
+      this.renderer = new THREE.WebGLRenderer({
+        canvas: canvas,
+        antialias: true,
+        alpha: true,
+        premultipliedAlpha: true
+      });
     }
+    this.renderer.setClearColor(0x000000, 0);
     this.renderer.setSize(sizes.width, sizes.height);
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
@@ -358,6 +390,7 @@ export class BookCarousel3dComponent implements OnInit, AfterViewInit, OnDestroy
   }
 
   private onMouseDown(event: MouseEvent) {
+    this.cancelSnap();
     this.isDragging = true;
     this.wasDragged = false;
     this.mouseDownX = event.clientX;
@@ -368,12 +401,16 @@ export class BookCarousel3dComponent implements OnInit, AfterViewInit, OnDestroy
   }
 
   private onMouseUp() {
+    if (this.isDragging) {
+      this.snapToNearestBook();
+    }
     this.isDragging = false;
     const canvas = this.canvasRef.nativeElement;
     canvas.style.cursor = 'default';
   }
 
   private onTouchStart(event: TouchEvent) {
+    this.cancelSnap();
     // Guardar posición inicial para detectar dirección
     this.touchStartX = event.touches[0].clientX;
     this.touchStartY = event.touches[0].clientY;
@@ -409,7 +446,8 @@ export class BookCarousel3dComponent implements OnInit, AfterViewInit, OnDestroy
   private onTouchEnd(event: TouchEvent) {
     // Solo hacer preventDefault si era un swipe horizontal
     if (this.isHorizontalSwipe) {
-    event.preventDefault();
+      event.preventDefault();
+      this.snapToNearestBook();
     }
     this.isDragging = false;
     this.isHorizontalSwipe = false;
@@ -419,14 +457,63 @@ export class BookCarousel3dComponent implements OnInit, AfterViewInit, OnDestroy
     if (this.isMouseOverCanvas) {
       // Detectar si el scroll es principalmente horizontal o vertical
       const isHorizontalScroll = Math.abs(event.deltaX) > Math.abs(event.deltaY);
-      
+
       if (isHorizontalScroll) {
         // Scroll horizontal: controlar el carrusel
-      event.preventDefault();
+        event.preventDefault();
+        this.cancelSnap();
         const newOffset = this.targetCarouselOffset - event.deltaX * this.carouselConfig.scrollSensitivity;
-      this.targetCarouselOffset = Math.max(this.carouselMinOffset, Math.min(this.carouselMaxOffset, newOffset));
+        this.targetCarouselOffset = Math.max(this.carouselMinOffset, Math.min(this.carouselMaxOffset, newOffset));
+
+        // Snap diferido tras 180ms sin nuevos eventos de wheel
+        if (this.wheelSnapTimer) clearTimeout(this.wheelSnapTimer);
+        this.wheelSnapTimer = setTimeout(() => this.snapToNearestBook(), 180);
       }
       // Si es scroll vertical, no hacer preventDefault() para permitir scroll normal de la página
+    }
+  }
+
+  /**
+   * Snap a la posicion del libro mas cercano. Animacion duration-based con
+   * ease-out-quart para que el settle se sienta cojin (no como un salto).
+   * Duracion escalada por distancia: distancias mayores → tiempo proporcional.
+   */
+  private snapToNearestBook(): void {
+    if (!isFinite(this.carouselMinOffset) || !isFinite(this.carouselMaxOffset)) return;
+
+    const step = this.carouselConfig.bookSpacing;
+    const snapped = Math.round(this.targetCarouselOffset / step) * step;
+    const clampedTarget = Math.max(
+      this.carouselMinOffset,
+      Math.min(this.carouselMaxOffset, snapped)
+    );
+
+    // Si ya estamos donde queremos (< 1% de un step), no animar.
+    if (Math.abs(this.carouselOffset - clampedTarget) < step * 0.01) {
+      this.targetCarouselOffset = clampedTarget;
+      this.carouselOffset = clampedTarget;
+      return;
+    }
+
+    // Iniciar animacion duration-based desde la posicion actual
+    this.snapStartOffset = this.carouselOffset;
+    this.snapTargetOffset = clampedTarget;
+    this.snapStartTime = performance.now();
+
+    // Duracion escalada: mas larga si la distancia es mayor (sensacion natural).
+    // Para una distancia de 1 libro entero, ~520ms. Distancias chicas → 380ms.
+    const distance = Math.abs(clampedTarget - this.snapStartOffset);
+    const distanceFactor = Math.min(1, distance / step);
+    this.snapDurationMs = this.SNAP_MIN_MS + (this.SNAP_MAX_MS - this.SNAP_MIN_MS) * distanceFactor;
+
+    this.isSnapping = true;
+  }
+
+  /** Cancela cualquier snap en curso (cuando el usuario empieza un drag nuevo). */
+  private cancelSnap(): void {
+    if (this.isSnapping) {
+      this.targetCarouselOffset = this.carouselOffset; // congelar donde estamos
+      this.isSnapping = false;
     }
   }
 
@@ -460,21 +547,31 @@ export class BookCarousel3dComponent implements OnInit, AfterViewInit, OnDestroy
   }
 
   /**
-   * Navega al libro anterior en el carrusel.
+   * Desplaza el carrusel al libro anterior, garantizando que el destino
+   * cae exactamente sobre un libro (animacion duration-based con ease-out).
    */
-  /** Desplaza el carrusel al libro anterior. */
   onPrevClick() {
-    const newOffset = this.targetCarouselOffset + this.carouselConfig.buttonStep;
-    this.targetCarouselOffset = Math.max(this.carouselMinOffset, Math.min(this.carouselMaxOffset, newOffset));
+    const step = this.carouselConfig.bookSpacing;
+    const currentSnapped = Math.round(this.carouselOffset / step) * step;
+    this.targetCarouselOffset = Math.max(
+      this.carouselMinOffset,
+      Math.min(this.carouselMaxOffset, currentSnapped + step)
+    );
+    this.snapToNearestBook();
   }
 
   /**
-   * Navega al libro siguiente en el carrusel.
+   * Desplaza el carrusel al libro siguiente, garantizando que el destino
+   * cae exactamente sobre un libro (animacion duration-based con ease-out).
    */
-  /** Desplaza el carrusel al libro siguiente. */
   onNextClick() {
-    const newOffset = this.targetCarouselOffset - this.carouselConfig.buttonStep;
-    this.targetCarouselOffset = Math.max(this.carouselMinOffset, Math.min(this.carouselMaxOffset, newOffset));
+    const step = this.carouselConfig.bookSpacing;
+    const currentSnapped = Math.round(this.carouselOffset / step) * step;
+    this.targetCarouselOffset = Math.max(
+      this.carouselMinOffset,
+      Math.min(this.carouselMaxOffset, currentSnapped - step)
+    );
+    this.snapToNearestBook();
   }
 
   /**
@@ -498,12 +595,28 @@ export class BookCarousel3dComponent implements OnInit, AfterViewInit, OnDestroy
     // Limit offset
     this.targetCarouselOffset = Math.max(this.carouselMinOffset, Math.min(this.carouselMaxOffset, this.targetCarouselOffset));
 
-    // Animate carousel offset smoothly
-    this.carouselOffset = THREE.MathUtils.lerp(
-      this.carouselOffset,
-      this.targetCarouselOffset,
-      this.carouselConfig.smoothness
-    );
+    // Animate carousel offset.
+    // - Durante drag/wheel: lerp exponencial (sensible, interruptible)
+    // - Durante snap: animacion duration-based con ease-out-quart para que
+    //   el settle sea cojin/smooth en vez de un salto.
+    if (this.isSnapping) {
+      const elapsed = performance.now() - this.snapStartTime;
+      const t = Math.min(1, elapsed / this.snapDurationMs);
+      // ease-out-quart: 1 - (1-t)^4 — fuerte deceleracion al final
+      const eased = 1 - Math.pow(1 - t, 4);
+      this.carouselOffset = this.snapStartOffset + (this.snapTargetOffset - this.snapStartOffset) * eased;
+      this.targetCarouselOffset = this.snapTargetOffset; // mantener target locked durante snap
+      if (t >= 1) {
+        this.isSnapping = false;
+        this.carouselOffset = this.snapTargetOffset;
+      }
+    } else {
+      this.carouselOffset = THREE.MathUtils.lerp(
+        this.carouselOffset,
+        this.targetCarouselOffset,
+        this.carouselConfig.smoothness
+      );
+    }
 
     // Find center book
     let centerBookIndex: number | null = null;
@@ -555,13 +668,16 @@ export class BookCarousel3dComponent implements OnInit, AfterViewInit, OnDestroy
       );
     });
 
-    // Update background color and current book
+    // Update background color and current book.
+    // El bg lo pinta CSS sobre el :host element (con transition smooth).
+    // Solo escribimos cuando cambia el libro centrado para evitar style writes
+    // en cada frame.
     if (centerBookIndex !== null) {
-      const targetColor = new THREE.Color(this.bookBackgroundColors[centerBookIndex % this.bookBackgroundColors.length]);
-      if (this.scene.background instanceof THREE.Color) {
-        this.scene.background.lerp(targetColor, 0.05);
-      } else {
-        this.scene.background = targetColor;
+      if (centerBookIndex !== this.lastAppliedBookIndex) {
+        this.lastAppliedBookIndex = centerBookIndex;
+        const color = this.bookBackgroundColors[centerBookIndex % this.bookBackgroundColors.length];
+        this.elementRef.nativeElement.style.backgroundColor =
+          '#' + color.toString(16).padStart(6, '0');
       }
       this.centerBookIndex.set(centerBookIndex);
       this.currentBook.set(this.books[centerBookIndex]);
@@ -601,7 +717,7 @@ export class BookCarousel3dComponent implements OnInit, AfterViewInit, OnDestroy
 
     const isMobileNow = window.innerWidth < 768;
     if (isMobileNow) {
-      this.camera.position.set(0, 0.3, 0.7);
+      this.camera.position.set(0, 0.18, 0.55);
     } else {
       this.camera.position.set(0, 0.2, 0.5);
     }
@@ -618,6 +734,10 @@ export class BookCarousel3dComponent implements OnInit, AfterViewInit, OnDestroy
     this.intersectionObserver = null;
     if (this.animationId !== null) {
       cancelAnimationFrame(this.animationId);
+    }
+    if (this.wheelSnapTimer) {
+      clearTimeout(this.wheelSnapTimer);
+      this.wheelSnapTimer = null;
     }
 
     // Dispose of Three.js resources

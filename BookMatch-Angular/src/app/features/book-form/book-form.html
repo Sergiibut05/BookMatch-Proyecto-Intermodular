@@ -1,11 +1,11 @@
 <app-header></app-header>
 
-<div class="min-h-screen" style="background-color: #FCF5E2;">
+<div class="min-h-screen" style="background-color: #FCF5E2; font-family: 'Lora', 'Georgia', serif;">
     <div class="max-w-3xl mx-auto px-4 py-10">
         
-        <div class="bg-white rounded-2xl shadow-xl p-8 border" style="border-color: #E9E1D1;">
+        <div class="bg-white rounded-2xl shadow-xl p-6 sm:p-8 border" style="border-color: #E9E1D1;">
         
-        <h1 class="text-3xl font-bold mb-8 text-center" style="color: #45332D;">
+        <h1 class="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8 text-center" style="color: #45332D;">
             {{ isEditMode() ? ('BOOK_FORM.TITLE_EDIT' | translate) : ('BOOK_FORM.TITLE_CREATE' | translate) }}
         </h1>
 
@@ -23,16 +23,17 @@
                 @if (currentCoverUrl()) {
                 <img [src]="currentCoverUrl()" class="w-full h-full object-cover">
                 } @else {
-                <span class="text-4xl">📚</span>
+                <span class="material-symbols-outlined" style="font-size: 2.5rem; color: rgba(69,51,45,0.25);">menu_book</span>
                 }
             </div>
             
             <button type="button" 
                     (click)="uploadCover()"
                     [disabled]="isUploading()"
-                    class="px-4 py-2 rounded-lg text-sm font-bold text-white transition-colors"
-                    style="background-color: #E0A15E;"
+                    class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all active:scale-95"
+                    style="background-color: #E0A15E; color: #FCF5E2;"
                     [class.opacity-50]="isUploading()">
+                <span class="material-symbols-outlined" style="font-size: 1.125rem;">cloud_upload</span>
                 {{ isUploading() ? ('BOOK_FORM.COVER.UPLOADING' | translate) : ('BOOK_FORM.COVER.BUTTON' | translate) }}
             </button>
             </div>
@@ -120,25 +121,20 @@
             @if(getFieldError('description')) { <p class="text-red-500 text-xs mt-1">{{ getFieldError('description') }}</p> }
             </div>
 
-            <div class="flex gap-4 pt-4">
-            <button type="submit" 
-                    [disabled]="bookForm.invalid || isLoading() || isUploading()"
-                    class="flex-1 py-3 rounded-xl font-bold text-white shadow-md transition-all hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
-                    style="background-color: #45332D;">
-                @if (isLoading()) {
-                <span>{{ 'BOOK_FORM.BUTTONS.SAVING' | translate }}</span>
-                } @else {
-                <span>
-                    {{ isEditMode() ? ('BOOK_FORM.BUTTONS.SAVE_CHANGES' | translate) : ('BOOK_FORM.BUTTONS.CREATE' | translate) }}
-                </span>
-                }
-            </button>
-            
+            <div class="flex flex-col-reverse sm:flex-row gap-3 sm:gap-4 pt-4">
             <button type="button" 
                     routerLink="/home"
-                    class="px-6 py-3 rounded-xl font-bold border transition-colors hover:bg-gray-50"
-                    style="border-color: #45332D; color: #45332D;">
+                    class="bf-btn bf-btn--cancel">
                 {{ 'BOOK_FORM.BUTTONS.CANCEL' | translate }}
+            </button>
+            <button type="submit" 
+                    [disabled]="bookForm.invalid || isLoading() || isUploading()"
+                    class="bf-btn bf-btn--submit">
+                @if (isLoading()) {
+                <span class="inline-block animate-pulse">{{ 'BOOK_FORM.BUTTONS.SAVING' | translate }}</span>
+                } @else {
+                <span>{{ isEditMode() ? ('BOOK_FORM.BUTTONS.SAVE_CHANGES' | translate) : ('BOOK_FORM.BUTTONS.CREATE' | translate) }}</span>
+                }
             </button>
             </div>
 

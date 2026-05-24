@@ -1,8 +1,7 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, OnInit, HostListener } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CatalogService } from '@core/services/catalog.service';
 import { Header } from '@shared/components/header/header';
-import { AiChatModalComponent } from '@shared/components/ai-chat-modal/ai-chat-modal.component';
 import { CatalogBook } from '@shared/models';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -14,7 +13,7 @@ import { TranslateModule } from '@ngx-translate/core';
  */
 @Component({
   selector: 'app-categories',
-  imports: [Header, AiChatModalComponent, CommonModule, FormsModule, TranslateModule],
+  imports: [Header, CommonModule, FormsModule, TranslateModule],
   templateUrl: './categories.html',
   styleUrl: './categories.scss',
 })
@@ -50,6 +49,55 @@ export class Categories implements OnInit {
 
   /** Panel de filtros móvil visible. */
   showMobileFilters = signal<boolean>(false);
+
+  /** Dropdown states */
+  sortDropdownOpen = signal(false);
+  limitDropdownOpen = signal(false);
+
+  sortOptions = [
+    { value: 'newest',       labelKey: 'CATEGORIES.MORE_RECENT' },
+    { value: 'price_asc',   labelKey: 'CATEGORIES.LESS_TO_MORE' },
+    { value: 'price_desc',  labelKey: 'CATEGORIES.MORE_TO_LESS' },
+    { value: 'alphabetical', labelKey: 'CATEGORIES.ALPHABETIC' },
+  ];
+
+  limitOptions = [10, 15, 20, 30];
+
+  @HostListener('document:click')
+  onDocumentClick() {
+    this.sortDropdownOpen.set(false);
+    this.limitDropdownOpen.set(false);
+  }
+
+  toggleSortDropdown(event: Event) {
+    event.stopPropagation();
+    this.limitDropdownOpen.set(false);
+    this.sortDropdownOpen.update(v => !v);
+  }
+
+  toggleLimitDropdown(event: Event) {
+    event.stopPropagation();
+    this.sortDropdownOpen.set(false);
+    this.limitDropdownOpen.update(v => !v);
+  }
+
+  selectSort(value: string) {
+    this.sortBy.set(value);
+    this.sortDropdownOpen.set(false);
+    this.page.set(1);
+    this.updateParams();
+  }
+
+  selectLimit(value: number) {
+    this.limit.set(value);
+    this.limitDropdownOpen.set(false);
+    this.page.set(1);
+    this.updateParams();
+  }
+
+  getSortLabel(): string {
+    return this.sortOptions.find(o => o.value === this.sortBy())?.labelKey || 'CATEGORIES.MORE_RECENT';
+  }
 
   /** Getter/setter para minPrice (binding en template). */
   get minPriceValue(): number | null {

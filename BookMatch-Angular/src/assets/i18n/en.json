@@ -1,5 +1,6 @@
 {
     "HEADER": {
+        "EXPLORE": "Explore",
         "HOME": "Home",
         "CATALOG": "Catalog",
         "CATEGORIES": "Categories",
@@ -65,10 +66,10 @@
         "ERROR_LOAD": "We couldn't load your playlists.",
         "ERROR_DELETE": "The playlist couldn't be deleted.",
         "STAT_TOTAL": "{{count}} playlists",
-        "STAT_BOOKS": "{{count}} curated books",
+        "STAT_BOOKS": "{{count}} added books",
         "STAT_AI": "{{count}} with AI",
         "STAT_TOTAL_LABEL": "playlists",
-        "STAT_BOOKS_LABEL": "curated books",
+        "STAT_BOOKS_LABEL": "added books",
         "STAT_AI_LABEL": "with AI",
         "OPEN_PLAYLIST": "Open playlist",
         "UPDATED_ON": "Updated {{date}}"
@@ -203,7 +204,7 @@
         "SHARED_PLAYLIST": "Shared playlist",
         "EYEBROW": "Shared from BookMatch",
         "ITEMS_COUNT": "{{count}} books",
-        "ITEMS_COUNT_LABEL": "curated books",
+        "ITEMS_COUNT_LABEL": "added books",
         "UPDATED_ON": "Updated {{date}}",
         "EMPTY": "This playlist doesn't have any books yet.",
         "EMPTY_SUB": "Ask the person who shared this link to add a few books.",
@@ -272,6 +273,33 @@
         }
     },
     "HOME": {
+        "GREETING": {
+            "LABEL": "Welcome back",
+            "HELLO": "Hello",
+            "SUBTITLE": "A new read awaits you.",
+            "CTA": "Browse the catalog",
+            "MORNING": "Good morning",
+            "AFTERNOON": "Good afternoon",
+            "NIGHT": "Good evening"
+        },
+        "ACTIONS": {
+            "CATALOG": {
+                "TITLE": "Explore catalog",
+                "DESC": "Thousands of titles organized by category"
+            },
+            "AI": {
+                "TITLE": "AI Recommender",
+                "DESC": "Get personalized suggestions from the assistant"
+            },
+            "FORUM": {
+                "TITLE": "Forum",
+                "DESC": "Share opinions and discover new reads"
+            },
+            "SWAP": {
+                "TITLE": "Swap",
+                "DESC": "Exchange books with other readers"
+            }
+        },
         "HERO": {
             "TITLE": "Discover your next favorite book",
             "SUBTITLE": "Explore thousands of books, buy, sell and exchange with our community of readers",
@@ -397,7 +425,7 @@
     "BOOK_DETAILS": {
         "LOADING": "Loading book...",
         "LOADING2": "Loading",
-        "SEE_MORE": "See more →",
+        "SEE_MORE": "See more",
         "IN_STOCK": "In stock ({{stock}} available)",
         "OUT_OF_STOCK": "Out of stock",
         "DESCRIPTION_TITLE": "Description",

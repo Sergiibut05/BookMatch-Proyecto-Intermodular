@@ -13,7 +13,7 @@ import {
   runInInjectionContext,
 } from '@angular/core';
 
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { CatalogQueryService } from '@core/services/catalog-query.service';
 import { Header } from '@shared/components/header/header';
@@ -36,7 +36,7 @@ import lottie, { type AnimationItem } from 'lottie-web';
  */
 @Component({
   selector: 'app-home',
-  imports: [Header, Carousel, Footer, TranslateModule, BookCarousel3dComponent],
+  imports: [Header, Carousel, Footer, TranslateModule, BookCarousel3dComponent, RouterLink],
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss',
 })
@@ -61,7 +61,25 @@ export class HomeComponent implements OnInit, OnDestroy {
    */
   categories = signal<Category[]>([]);
 
-  // Datos para el carrusel 3D (estáticos, no necesitan query)
+  /**
+   * Saludo dependiente de la hora del dia.
+   * Se calcula una sola vez al construir el componente — el usuario no va a
+   * estar en el home cuando cambien las horas, no merece la pena reactividad.
+   */
+  readonly timeGreetingKey = (() => {
+    const h = new Date().getHours();
+    if (h < 6)  return 'HOME.GREETING.NIGHT';
+    if (h < 13) return 'HOME.GREETING.MORNING';
+    if (h < 20) return 'HOME.GREETING.AFTERNOON';
+    return 'HOME.GREETING.NIGHT';
+  })();
+
+  /** Primer nombre del usuario para el saludo (ej. "Sergii Butrii" -> "Sergii"). */
+  firstName(): string {
+    const full = this.authService.currentUser()?.fullName ?? '';
+    return full.trim().split(/\s+/)[0] || '';
+  }
+
   featuredBooks: BookData[] = [
     {
       title: "A Winter's Embrace",

@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed, OnInit, OnDestroy } from '@angular/core';
+import { Component, inject, signal, computed, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink, NavigationEnd, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -39,6 +39,52 @@ export class Header implements OnInit, OnDestroy {
   searchQuery = signal<string>('');
   currentUrl = signal<string>('');
   searchTypeFromParams = signal<'book' | 'forum' | 'trade' | null>(null);
+  
+  isHeaderHidden = signal(false);
+  isAtTop = signal(true);
+  private lastScroll = 0;
+  private readonly desktopMediaQuery = window.matchMedia('(min-width: 768px)');
+
+  @HostListener('window:scroll', [])
+  onWindowScroll() {
+    const currentScroll = window.pageYOffset || document.documentElement.scrollTop || 0;
+
+    this.isAtTop.set(currentScroll <= 50);
+
+    if (this.desktopMediaQuery.matches) {
+      if (currentScroll <= 50) {
+        this.isHeaderHidden.set(false);
+      } else if (currentScroll > this.lastScroll && currentScroll > 80) {
+        this.isHeaderHidden.set(true);
+      } else if (currentScroll < this.lastScroll) {
+        this.isHeaderHidden.set(false);
+      }
+    } else {
+      this.isHeaderHidden.set(false);
+    }
+
+    this.lastScroll = currentScroll;
+  }
+
+  @HostListener('window:resize', [])
+  onWindowResize() {
+    if (!this.desktopMediaQuery.matches) {
+      this.isHeaderHidden.set(false);
+    }
+  }
+
+  /**
+   * Desplaza la página al inicio con suavidad y hace foco en el buscador móvil.
+   */
+  scrollToTopAndFocusSearch(): void {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setTimeout(() => {
+      const searchInput = document.getElementById('mobile-search-input') as HTMLInputElement;
+      if (searchInput) {
+        searchInput.focus();
+      }
+    }, 350);
+  }
 
   isForumRoute = computed(() => {
     const url = this.currentUrl();

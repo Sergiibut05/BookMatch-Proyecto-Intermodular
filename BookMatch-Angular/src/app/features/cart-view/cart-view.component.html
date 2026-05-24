@@ -1,6 +1,6 @@
 <app-header></app-header>
 
-<div class="min-h-screen flex flex-col" style="background-color: #FCF5E2; color: #45332D;">
+<div class="min-h-screen flex flex-col" style="background-color: #FCF5E2; color: #45332D; font-family: 'Lora', 'Georgia', serif;">
 
   <div class="flex-grow max-w-[1414px] w-full mx-auto px-4 py-8 md:py-12 relative">
 
@@ -21,7 +21,9 @@
     @if (cartItems().length === 0) {
       <div
         class="text-center py-20 bg-white/50 backdrop-blur-sm rounded-2xl border border-[#45332D]/10">
-        <div class="text-6xl mb-6">🛒</div>
+        <div class="mb-6 flex items-center justify-center">
+          <span class="material-symbols-outlined" style="font-size: 4rem; color: #C4A882; opacity: 0.7;">shopping_cart</span>
+        </div>
         <h2 class="text-2xl font-bold mb-3">{{ 'CART.EMPTY_TITLE' | translate }}</h2>
         <p class="opacity-70 mb-8 max-w-md mx-auto">{{ 'CART.EMPTY_DESC' | translate }}</p>
         <a routerLink="/home"

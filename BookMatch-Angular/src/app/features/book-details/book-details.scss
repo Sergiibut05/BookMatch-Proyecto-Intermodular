@@ -1,23 +1,129 @@
-// Aseguramos que los iconos de Google Fonts se comporten bien
+@use 'sass:color';
+
+$font-serif:    'Lora', 'Georgia', serif;
+$color-walnut:  #45332D;
+$color-gold:    #E0A15E;
+$color-cream:   #FCF5E2;
+$ease-out-fast: cubic-bezier(0.23, 1, 0.32, 1);
+
 .material-symbols-outlined {
-    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-    user-select: none; // Evita que se seleccione el texto al hacer click rápido
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  user-select: none;
 }
 
-// Clase para las estrellas rellenas
 .star-filled {
-    font-variation-settings: 'FILL' 1;
+  font-variation-settings: 'FILL' 1;
 }
 
-// Scroll suave para el contenedor de imágenes
 .overflow-x-auto {
-    scrollbar-width: thin;
-    scrollbar-color: #E0A15E transparent;
-    &::-webkit-scrollbar {
-        height: 4px;
+  scrollbar-width: thin;
+  scrollbar-color: $color-gold transparent;
+  &::-webkit-scrollbar { height: 4px; }
+  &::-webkit-scrollbar-thumb {
+    background-color: $color-gold;
+    border-radius: 4px;
+  }
+}
+
+// ─── Buy buttons ─────────────────────────────────────────────────────────────
+.bd-actions {
+  display: flex;
+  flex-direction: row;
+  gap: 0.625rem;
+  margin-top: 0.5rem;
+}
+
+.bd-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-family: $font-serif;
+  font-weight: 700;
+  border-radius: 0.625rem;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s $ease-out-fast,
+              box-shadow 0.2s $ease-out-fast,
+              transform 0.12s $ease-out-fast;
+  box-shadow: 0 4px 12px rgba(69, 51, 45, 0.10);
+
+  &:hover:not(:disabled) {
+    box-shadow: 0 6px 20px rgba(69, 51, 45, 0.18);
+  }
+
+  &:active:not(:disabled) {
+    transform: scale(0.97);
+  }
+
+  &:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  .material-symbols-outlined {
+    font-size: 1.25rem;
+  }
+
+  // ── Buy Now: primary, takes most of the space ──
+  &--buy {
+    flex: 1;
+    padding: 0.875rem 1.25rem;
+    font-size: 0.9375rem;
+    background: $color-walnut;
+    color: $color-cream;
+
+    &:hover:not(:disabled) { background: color.adjust($color-walnut, $lightness: -6%); }
+
+    @media (min-width: 640px) {
+      padding: 0.9375rem 1.5rem;
+      font-size: 1rem;
     }
-    &::-webkit-scrollbar-thumb {
-        background-color: #E0A15E;
-        border-radius: 4px;
+  }
+
+  // ── Cart: icon-only on mobile, full on desktop ──
+  &--cart {
+    padding: 0.875rem;
+    font-size: 0.875rem;
+    background: $color-gold;
+    color: $color-cream;
+    flex-shrink: 0;
+
+    &:hover:not(:disabled) { background: color.adjust($color-gold, $lightness: -6%); }
+
+    @media (min-width: 640px) {
+      padding: 0.9375rem 1.25rem;
+      font-size: 0.9375rem;
     }
+  }
+
+  &--added {
+    background: #10B981 !important;
+    color: white;
+  }
+
+  // Hide cart label text on mobile, show on sm+
+  &__cart-label {
+    display: none;
+
+    @media (min-width: 640px) {
+      display: inline;
+    }
+  }
+
+  // ── Stripe ──
+  &--stripe {
+    width: 100%;
+    padding: 0.875rem 1.25rem;
+    font-size: 0.9375rem;
+    background: #635BFF;
+    color: white;
+
+    &:hover:not(:disabled) { background: #5147e6; }
+
+    @media (min-width: 640px) {
+      padding: 0.9375rem 1.5rem;
+      font-size: 1rem;
+    }
+  }
 }

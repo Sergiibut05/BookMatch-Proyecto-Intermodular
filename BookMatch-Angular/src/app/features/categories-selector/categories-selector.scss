@@ -1,21 +1,376 @@
-.category-card {
-  transition: all 0.3s ease;
-  
+@use 'sass:color';
+
+// ─── Tokens (alineados con header, carousel, footer) ─────────────────────────
+$font-serif:     'Lora', 'Georgia', serif;
+$color-walnut:   #45332D;
+$color-sand:     #8A766A;
+$color-gold:     #E0A15E;
+$color-cream:    #FCF5E2;
+$color-border:   rgba(69, 51, 45, 0.10);
+$ease-out-fast:  cubic-bezier(0.23, 1, 0.32, 1);
+$ease-spring:    cubic-bezier(0.34, 1.56, 0.64, 1);
+
+// ─── Page shell ──────────────────────────────────────────────────────────────
+.cs-page {
+  min-height: 100vh;
+  background: $color-cream;
+  font-family: $font-serif;
+}
+
+.cs-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem 1.25rem 4rem;
+
+  @media (min-width: 768px) {
+    padding: 3rem 2rem 5rem;
+  }
+}
+
+// ─── Hero ────────────────────────────────────────────────────────────────────
+.cs-hero {
+  text-align: center;
+  max-width: 640px;
+  margin: 0 auto 3rem;
+
+  @media (min-width: 768px) {
+    margin-bottom: 4rem;
+  }
+
+  &__eyebrow {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: $color-gold;
+    margin-bottom: 0.75rem;
+  }
+
+  &__title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: $color-walnut;
+    letter-spacing: -0.025em;
+    line-height: 1.15;
+    margin-bottom: 0.75rem;
+
+    @media (min-width: 768px) {
+      font-size: 2.75rem;
+    }
+  }
+
+  &__subtitle {
+    font-size: 0.9375rem;
+    color: $color-sand;
+    line-height: 1.6;
+    max-width: 480px;
+    margin: 0 auto 2rem;
+
+    @media (min-width: 768px) {
+      font-size: 1.0625rem;
+    }
+  }
+}
+
+// ─── Search bar ──────────────────────────────────────────────────────────────
+.cs-search {
+  position: relative;
+  max-width: 480px;
+  margin: 0 auto;
+
+  &__icon {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1.25rem;
+    color: rgba(69, 51, 45, 0.30);
+    pointer-events: none;
+  }
+
+  &__input {
+    width: 100%;
+    font-family: $font-serif;
+    font-size: 0.9375rem;
+    color: $color-walnut;
+    background: rgba(255, 255, 255, 0.80);
+    border: 1.5px solid $color-border;
+    border-radius: 0.75rem;
+    padding: 0.75rem 2.75rem 0.75rem 2.75rem;
+    transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+
+    &::placeholder {
+      color: rgba(69, 51, 45, 0.35);
+    }
+
+    &:focus {
+      outline: none;
+      background: #fff;
+      border-color: rgba(69, 51, 45, 0.30);
+      box-shadow: 0 4px 16px rgba(69, 51, 45, 0.06), 0 0 0 4px rgba(69, 51, 45, 0.03);
+    }
+  }
+
+  &__clear {
+    position: absolute;
+    right: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.2rem;
+    border: none;
+    background: none;
+    color: rgba(69, 51, 45, 0.35);
+    cursor: pointer;
+    border-radius: 0.375rem;
+    transition: color 0.15s, background 0.15s;
+
+    .material-symbols-outlined { font-size: 1.125rem; }
+
+    &:hover {
+      color: $color-walnut;
+      background: rgba(69, 51, 45, 0.06);
+    }
+  }
+}
+
+// ─── Sections ────────────────────────────────────────────────────────────────
+.cs-section {
+  margin-bottom: 3rem;
+
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    margin-bottom: 1.25rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid $color-border;
+  }
+
+  &__title {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: $color-sand;
+  }
+
+  &__count {
+    font-size: 0.625rem;
+    font-weight: 700;
+    color: $color-gold;
+    background: rgba(224, 161, 94, 0.12);
+    padding: 0.15rem 0.5rem;
+    border-radius: 99px;
+    line-height: 1.4;
+  }
+}
+
+// ─── Grid layouts ────────────────────────────────────────────────────────────
+.cs-grid {
+  display: grid;
+  gap: 1rem;
+
+  &--main {
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+
+    @media (min-width: 768px) {
+      gap: 1.25rem;
+    }
+  }
+
+  &--special {
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+
+    @media (min-width: 768px) {
+      gap: 1.25rem;
+    }
+  }
+}
+
+// ─── Card ────────────────────────────────────────────────────────────────────
+.cs-card {
+  position: relative;
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid $color-border;
+  border-radius: 0.875rem;
+  padding: 1.25rem;
+  cursor: pointer;
+  // Stagger entrance
+  opacity: 0;
+  transform: translateY(10px);
+  animation: cs-card-in 0.4s $ease-out-fast forwards;
+  transition:
+    background 0.22s $ease-out-fast,
+    border-color 0.22s,
+    box-shadow 0.28s $ease-out-fast,
+    transform 0.18s $ease-out-fast;
+
   &:hover {
-    transform: translateY(-4px);
+    background: rgba(255, 255, 255, 0.92);
+    border-color: rgba(69, 51, 45, 0.18);
+    box-shadow: 0 10px 32px rgba(69, 51, 45, 0.10), 0 2px 8px rgba(69, 51, 45, 0.06);
   }
-  
+
   &:active {
-    transform: translateY(-2px) scale(0.98);
+    transform: scale(0.98);
+  }
+
+  // MAIN cards: left accent bar
+  &--main {
+    padding-left: 1.5rem;
+
+    &::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 1rem;
+      bottom: 1rem;
+      width: 3px;
+      background: $color-walnut;
+      border-radius: 0 99px 99px 0;
+      opacity: 0.5;
+      transition: opacity 0.2s, top 0.2s $ease-out-fast, bottom 0.2s $ease-out-fast;
+    }
+
+    &:hover::before {
+      opacity: 1;
+      top: 0.75rem;
+      bottom: 0.75rem;
+    }
+  }
+
+  // SPECIAL cards: smaller, subtler
+  &--special {
+    padding: 1rem 1.125rem;
+  }
+
+  // ── Card parts ──
+
+  &__top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 0.875rem;
+  }
+
+  &__icon {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 0.625rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: $color-walnut;
+    color: $color-cream;
+    flex-shrink: 0;
+    transition: transform 0.25s $ease-spring;
+
+    .material-symbols-outlined { font-size: 1.25rem; }
+
+    &--special {
+      background: rgba(69, 51, 45, 0.08);
+      color: $color-walnut;
+    }
+  }
+
+  &:hover &__icon {
+    transform: scale(1.06);
+  }
+
+  &__arrow {
+    font-size: 1.125rem;
+    color: rgba(69, 51, 45, 0.18);
+    transition: color 0.2s, transform 0.2s $ease-spring;
+  }
+
+  &:hover &__arrow {
+    color: $color-walnut;
+    transform: translateX(3px);
+  }
+
+  &__badge {
+    font-size: 0.625rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: $color-gold;
+    background: rgba(224, 161, 94, 0.12);
+    padding: 0.2rem 0.5rem;
+    border-radius: 99px;
+    white-space: nowrap;
+  }
+
+  &__name {
+    font-size: 1rem;
+    font-weight: 600;
+    color: $color-walnut;
+    line-height: 1.3;
+    margin-bottom: 0.25rem;
+    transition: color 0.15s;
+
+    @media (min-width: 768px) {
+      font-size: 1.0625rem;
+    }
+  }
+
+  &:hover &__name {
+    color: color.adjust($color-walnut, $lightness: -10%);
+  }
+
+  &__desc {
+    font-size: 0.8125rem;
+    color: $color-sand;
+    line-height: 1.55;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
 }
 
-// Asegurar que el line-clamp funcione
-.line-clamp-2 {
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+// ─── Card stagger entrance ──────────────────────────────────────────────────
+@keyframes cs-card-in {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
+// ─── Empty state ─────────────────────────────────────────────────────────────
+.cs-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 4rem 1rem;
+
+  &__icon {
+    font-size: 3rem;
+    color: rgba(69, 51, 45, 0.16);
+    margin-bottom: 1rem;
+  }
+
+  &__title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: $color-walnut;
+    margin-bottom: 0.375rem;
+  }
+
+  &__desc {
+    font-size: 0.875rem;
+    color: $color-sand;
+  }
+}
+
+// ─── Results count ───────────────────────────────────────────────────────────
+.cs-results-count {
+  text-align: center;
+  font-size: 0.8125rem;
+  color: $color-sand;
+  margin-top: 2rem;
+}

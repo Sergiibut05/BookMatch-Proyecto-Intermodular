@@ -1,6 +1,6 @@
 <app-header></app-header>
 
-<div class="min-h-screen" style="background-color: #FCF5E2;">
+<div class="min-h-screen" style="background-color: #FCF5E2; font-family: 'Lora', 'Georgia', serif;">
   <div class="max-w-[1414px] mx-auto px-4 py-8">
     
     @if (!book()) {
@@ -72,9 +72,9 @@
                 }
               </div>
               <h1 class="text-3xl md:text-5xl font-extrabold mb-2 leading-tight" style="color: #45332D;">{{ book()!.title }}</h1>
-              <p class="text-xl md:text-2xl font-medium" style="color: #4E6A6A;">{{ book()!.author }}</p>
+              <p class="text-xl md:text-2xl font-medium" style="color: #8A766A; font-style: italic;">{{ book()!.author }}</p>
               @if (book()!.isbn) {
-                 <p class="text-sm" style="color: #4E6A6A; opacity: 0.7;">ISBN: {{ book()!.isbn }}</p>
+                 <p class="text-sm" style="color: #8A766A; opacity: 0.7;">ISBN: {{ book()!.isbn }}</p>
               }
             </div>
 
@@ -93,33 +93,27 @@
                 </div>
               </div>
               
-              <div class="flex gap-3 mt-2">
-                <button 
-                  [disabled]="book()!.stock === 0 || isAddedToCart()"
-                  class="flex-1 px-6 py-3.5 rounded-lg font-bold text-lg transition-all duration-300 shadow-lg hover:shadow-xl transform active:scale-95 flex justify-center items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                  [style.background-color]="isAddedToCart() ? '#10B981' : '#E0A15E'"
-                  [style.color]="'#FCF5E2'"
-                  (click)="onAddToCart()">
-                  @if (isAddedToCart()) {
-                    <span>{{ 'BOOK_DETAILS.ADDED_TO_CART' | translate }}</span>
-                  } @else {
-                    <span class="material-symbols-outlined">shopping_cart</span> {{ 'BOOK_DETAILS.ADD_TO_CART' | translate }}
-                  }
-                </button>
+              <div class="bd-actions">
                 <button 
                   [disabled]="book()!.stock === 0"
-                  class="flex-1 px-6 py-3.5 rounded-lg font-bold text-lg transition-all duration-300 shadow-lg hover:shadow-xl transform active:scale-95 flex justify-center items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                  style="background-color: #45332D; color: #FCF5E2;"
+                  class="bd-btn bd-btn--buy"
                   (click)="onBuyNow()">
                   <span class="material-symbols-outlined">shopping_bag</span>
-                  {{ 'BOOK_DETAILS.BUY_NOW' | translate }}
+                  <span>{{ 'BOOK_DETAILS.BUY_NOW' | translate }}</span>
+                </button>
+                <button 
+                  [disabled]="book()!.stock === 0 || isAddedToCart()"
+                  class="bd-btn bd-btn--cart"
+                  [class.bd-btn--added]="isAddedToCart()"
+                  (click)="onAddToCart()">
+                  <span class="material-symbols-outlined">{{ isAddedToCart() ? 'check_circle' : 'shopping_cart' }}</span>
+                  <span class="bd-btn__cart-label">{{ isAddedToCart() ? ('BOOK_DETAILS.ADDED_TO_CART' | translate) : ('BOOK_DETAILS.ADD_TO_CART' | translate) }}</span>
                 </button>
               </div>
               
               <button 
                 [disabled]="book()!.stock === 0 || isProcessingPayment()"
-                class="w-full px-6 py-3.5 rounded-lg font-bold text-lg transition-all hover:bg-indigo-700 flex justify-center items-center gap-2 shadow-md disabled:opacity-50"
-                style="background-color: #635BFF; color: white;"
+                class="bd-btn bd-btn--stripe"
                 (click)="onBuyWithStripe()">
                 @if (isProcessingPayment()) {
                   <div class="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
@@ -136,14 +130,14 @@
               </div>
             }
 
-            <div class="pt-10 mt-6 border-t" style="border-color: #E9E1D1;">
-              <h2 class="text-2xl font-bold mb-8" style="color: #45332D;">{{ 'BOOK_DETAILS.REVIEWS_TITLE' | translate }}</h2>
+            <div class="pt-6 sm:pt-10 mt-4 sm:mt-6 border-t" style="border-color: #E9E1D1;">
+              <h2 class="text-xl sm:text-2xl font-bold mb-5 sm:mb-8" style="color: #45332D;">{{ 'BOOK_DETAILS.REVIEWS_TITLE' | translate }}</h2>
               
-              <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-10">
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-8 mb-8 sm:mb-10">
                 <div class="md:col-span-1 flex flex-col justify-center items-center md:items-start">
                   <div class="flex items-baseline gap-2">
-                    <span class="text-6xl font-extrabold" style="color: #45332D;">{{ averageRating() | number:'1.1-1' }}</span>
-                    <span class="text-gray-400 text-xl">/ 5</span>
+                    <span class="text-4xl sm:text-6xl font-extrabold" style="color: #45332D;">{{ averageRating() | number:'1.1-1' }}</span>
+                    <span class="text-gray-400 text-lg sm:text-xl">/ 5</span>
                   </div>
                   <div class="flex text-[#E0A15E] my-2">
                     @for (star of [1,2,3,4,5]; track star) {
@@ -180,64 +174,57 @@
                   </h3>
                   
                   @if (reviews() && reviews()!.length > 0) {
-                    <div class="grid grid-cols-1 gap-6"> @for (review of reviews()!; track review.id) {
-                        <div class="bg-gray-50 rounded-xl p-6 border transition-all hover:shadow-md relative" style="border-color: #E9E1D1;">
+                    <div class="grid grid-cols-1 gap-4 sm:gap-6">
+                      @for (review of reviews()!; track review.id) {
+                        <div class="bg-gray-50 rounded-xl p-4 sm:p-6 border transition-all hover:shadow-md relative" style="border-color: #E9E1D1;">
                           @if (currentUserId() && currentUserId() === review.userId) {
                             <button 
                               (click)="onDeleteReview(review.id)"
                               [disabled]="isDeletingReview()"
-                              class="absolute top-4 right-4 text-gray-400 hover:text-red-500 transition-colors p-1 rounded-full hover:bg-red-50 z-10"
+                              class="absolute top-3 right-3 sm:top-4 sm:right-4 text-gray-400 hover:text-red-500 transition-colors p-1 rounded-full hover:bg-red-50 z-10"
                               [title]="'BOOK_DETAILS.DELETE_REVIEW' | translate">
-                              <span class="material-symbols-outlined text-xl">delete</span>
+                              <span class="material-symbols-outlined text-lg sm:text-xl">delete</span>
                             </button>
                           }
-                          <div class="flex justify-between items-start mb-4 pr-8">
-                            <div class="flex items-center gap-3">
-                              
-                              <div class="relative w-10 h-10 min-w-[2.5rem] min-h-[2.5rem]">
+                          <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 sm:gap-0 mb-3 sm:mb-4 pr-8">
+                            <div class="flex items-center gap-2.5 sm:gap-3">
+                              <div class="relative w-8 h-8 sm:w-10 sm:h-10 min-w-[2rem] sm:min-w-[2.5rem]">
                                 @if (getUserAvatar(review) != null) {
-                                  
-                                  <div class="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-white shadow-sm min-w-[2.5rem] min-h-[2.5rem] absolute inset-0 z-0" 
+                                  <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-xs sm:text-sm font-bold text-white shadow-sm absolute inset-0 z-0" 
                                       style="background-color: #B88B65;">
                                     {{ getUserInitial(review) }}
                                   </div>
-
                                   <img 
                                     [src]="getUserAvatar(review)!" 
                                     [alt]="getUserName(review)"
-                                    class="w-10 h-10 rounded-full object-cover shadow-sm min-w-[2.5rem] min-h-[2.5rem] relative z-10"
+                                    class="w-8 h-8 sm:w-10 sm:h-10 rounded-full object-cover shadow-sm relative z-10"
                                     loading="lazy"
                                     onerror="this.style.display='none'; this.previousElementSibling.style.zIndex='10';"
                                   />
                                 } @else {
-                                  
-                                  <div class="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-white shadow-sm min-w-[2.5rem] min-h-[2.5rem]" 
+                                  <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-xs sm:text-sm font-bold text-white shadow-sm" 
                                       style="background-color: #B88B65;">
                                     {{ getUserInitial(review) }}
                                   </div>
                                 }
                               </div>
-                              
                               <div>
-                                <p class="font-bold text-sm" style="color: #45332D;">
-                                  {{ getUserName(review) }}
-                                </p>
-                                <p class="text-xs text-gray-500">{{ 'BOOK_DETAILS.REVIEWED_ON' | translate }} {{ review.createdAt | date:'longDate' }}</p>
+                                <p class="font-bold text-xs sm:text-sm" style="color: #45332D;">{{ getUserName(review) }}</p>
+                                <p class="text-[10px] sm:text-xs text-gray-500">{{ 'BOOK_DETAILS.REVIEWED_ON' | translate }} {{ review.createdAt | date:'mediumDate' }}</p>
                               </div>
                             </div>
-                            <div class="flex items-center gap-1 text-[#E0A15E]">
-                              <span class="font-bold text-lg mr-2" style="color: #45332D;">{{ review.rating }}.0</span>
+                            <div class="flex items-center gap-1 text-[#E0A15E] ml-10 sm:ml-0">
+                              <span class="font-bold text-sm sm:text-lg mr-1 sm:mr-2" style="color: #45332D;">{{ review.rating }}.0</span>
                               @for (star of [1,2,3,4,5]; track star) {
-                                <span class="material-symbols-outlined text-sm" 
+                                <span class="material-symbols-outlined text-xs sm:text-sm" 
                                       [style.font-variation-settings]="star <= review.rating ? '\'FILL\' 1' : '\'FILL\' 0'">
                                   star
                                 </span>
                               }
                             </div>
                           </div>
-                          
                           @if (review.comment) {
-                            <p class="text-gray-700 text-sm leading-relaxed italic">"{{ review.comment }}"</p>
+                            <p class="text-gray-700 text-xs sm:text-sm leading-relaxed italic">"{{ review.comment }}"</p>
                           }
                         </div>
                       }
@@ -251,11 +238,11 @@
                   }
                 </div>
 
-                <div class="w-full max-w-3xl mx-auto mt-4">
-                  <div class="bg-white rounded-xl p-8 border shadow-lg" style="border-color: #E9E1D1;">
-                    <div class="text-center mb-6">
-                      <h3 class="text-2xl font-bold mb-2" style="color: #45332D;">{{ 'BOOK_DETAILS.WRITE_REVIEW_TITLE' | translate }}</h3>
-                      <p class="text-sm text-gray-500">{{ 'BOOK_DETAILS.WRITE_REVIEW_DESC' | translate }}</p>
+                <div class="w-full max-w-3xl mx-auto mt-2 sm:mt-4">
+                  <div class="bg-white rounded-xl p-5 sm:p-8 border shadow-lg" style="border-color: #E9E1D1;">
+                    <div class="text-center mb-4 sm:mb-6">
+                      <h3 class="text-xl sm:text-2xl font-bold mb-1 sm:mb-2" style="color: #45332D;">{{ 'BOOK_DETAILS.WRITE_REVIEW_TITLE' | translate }}</h3>
+                      <p class="text-xs sm:text-sm text-gray-500">{{ 'BOOK_DETAILS.WRITE_REVIEW_DESC' | translate }}</p>
                     </div>
                     
                     

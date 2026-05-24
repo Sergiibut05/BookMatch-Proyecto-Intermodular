@@ -1,216 +1,325 @@
+// ============================================================================
+// Book carousel 3D — Rediseo editorial premium
+// ----------------------------------------------------------------------------
+// - Container con altura responsive (no 100vh)
+// - Gradient overlays top/bottom para transicion seamless con el resto del home
+// - Nav buttons SIEMPRE visibles (mobile-friendly), no solo en hover
+// - Header con eyebrow + title editorial estilo Lora
+// - Book info y CTA con tipografia consistente
+// - Touch targets >= 44px (a11y)
+// ============================================================================
+
+$font-serif:     'Lora', 'Georgia', serif;
+$color-walnut:   #45332D;
+$color-sand:     #8A766A;
+$color-gold:     #E0A15E;
+$color-cream:    #FCF5E2;
+$color-cream-2:  #EDE0CA;
+$ease-out-fast:  cubic-bezier(0.23, 1, 0.32, 1);
+
+:host {
+  display: block;
+  width: 100%;
+  height: 100%;
+  font-family: $font-serif;
+  // Bg inicial = bottom del hero. El JS sobrescribe inline cuando cambia el
+  // libro centrado, y la transition hace que el cambio sea fluido.
+  background-color: #EDE0CA;
+  transition: background-color 700ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
 .book-carousel-3d-container {
   position: relative;
   width: 100%;
-  height: 100vh;
+  height: 100%;
   overflow: hidden;
 }
 
 .webgl {
   position: absolute;
-  top: 0;
-  left: 0;
+  inset: 0;
   width: 100%;
   height: 100%;
   outline: none;
+  display: block;
 }
 
-.main-title {
+// ─── Gradient overlays ──────────────────────────────────────────────────────
+// El canvas WebGL renderiza colores cream que coinciden con las secciones
+// vecinas. Los overlays ayudan a desvanecer cualquier borde duro que pudiera
+// generarse, y dan profundidad atmosferica al canvas.
+.bc3d-fade {
   position: absolute;
-  top: clamp(80px, 8vh, 120px);
+  left: 0;
+  right: 0;
+  z-index: 2;
+  pointer-events: none;
+
+  // Fade top compacto: solo cubre header + el seam superior. Asi el color
+  // dinamico del :host (cream/rose/sage/etc) se ve claramente sobre los libros.
+  // IMPORTANTE: end stops con rgba(color, 0) en vez de keyword `transparent`.
+  // `transparent` = rgba(0,0,0,0), provoca interpolacion via gris/negro y
+  // crea una linea fantasma donde el gradiente se apaga.
+  &--top {
+    top: 0;
+    height: 26%;
+    background: linear-gradient(
+      180deg,
+      $color-cream-2 0%,
+      $color-cream-2 12%,                         // banda solida minima — tapa el seam superior
+      rgba(237, 224, 202, 0.72) 32%,
+      rgba(237, 224, 202, 0.30) 62%,
+      rgba(237, 224, 202, 0) 100%
+    );
+  }
+
+  &--bottom {
+    bottom: 0;
+    height: 22%;
+    background: linear-gradient(0deg, $color-cream 0%, rgba(252, 245, 226, 0) 100%);
+  }
+}
+
+// ─── Header (eyebrow + title) ───────────────────────────────────────────────
+.bc3d-header {
+  position: absolute;
+  top: clamp(2.5rem, 6vh, 4.5rem);
   left: 50%;
   transform: translateX(-50%);
-  font-family: system-ui, -apple-system, sans-serif;
-  font-size: clamp(2rem, 5vw, 3.5rem);
-  font-weight: 700;
-  color: #45332D;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  pointer-events: none;
+  width: 100%;
+  padding: 0 1.5rem;
+}
+
+.bc3d-eyebrow {
+  font-family: $font-serif;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: $color-gold;
+  position: relative;
+  padding: 0 1.5rem;
+
+  // Lineas decorativas a los lados, estilo editorial
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    width: 22px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, $color-gold, transparent);
+  }
+  &::before { left: -16px; }
+  &::after  { right: -16px; }
+
+  @media (min-width: 640px) { font-size: 0.75rem; }
+}
+
+// h2 secundario: claramente subordinado al h1 "Hola, Sergii" del hero.
+// ~54% del tamano del hero a 1024px (30px vs 56px) + peso 500 = jerarquia limpia.
+.bc3d-title {
+  font-family: $font-serif;
+  font-size: clamp(1.25rem, 2.8vw, 1.875rem);
+  font-weight: 500;
+  color: $color-walnut;
+  text-align: center;
+  letter-spacing: -0.005em;
+  line-height: 1.15;
+  margin: 0;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+// ─── Centered book info (title + author) ────────────────────────────────────
+.bc3d-book-info {
+  position: absolute;
+  left: 50%;
+  bottom: clamp(7rem, 16vh, 9.5rem);
+  transform: translateX(-50%) translateY(8px);
   text-align: center;
   z-index: 10;
-  text-shadow: 2px 2px 8px rgba(255, 255, 255, 0.5);
-  letter-spacing: 1px;
   pointer-events: none;
-}
+  opacity: 0;
+  width: calc(100% - 2rem);
+  max-width: 28rem;
+  padding: 0 1rem;
+  transition:
+    opacity 0.32s $ease-out-fast,
+    transform 0.32s $ease-out-fast;
 
-// Media query específica para 1080p y similares (1920px - 2560px)
-@media (min-width: 1920px) and (max-width: 2560px) {
-  .main-title {
-    top: clamp(100px, 10vh, 140px);
+  &.is-visible {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  &__title {
+    font-family: $font-serif;
+    font-size: clamp(1rem, 2.2vw, 1.4rem);
+    font-weight: 600;
+    color: $color-walnut;
+    margin: 0 0 0.125rem;
+    letter-spacing: -0.012em;
+    line-height: 1.25;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+
+  &__author {
+    font-family: $font-serif;
+    font-style: italic;
+    font-size: clamp(0.75rem, 1.6vw, 0.9375rem);
+    color: $color-sand;
+    margin: 0;
   }
 }
 
-// Media query para pantallas medianas (1024px - 1920px)
-@media (max-width: 1920px) and (min-width: 1024px) {
-  .main-title {
-    top: clamp(90px, 9vh, 130px);
-  }
-}
-
-@media (max-width: 768px) {
-  .main-title {
-    top: clamp(60px, 8vh, 100px);
-    font-size: clamp(1.5rem, 6vw, 2.5rem);
-    letter-spacing: 0.5px;
-  }
-}
-
-.bottom-gradient {
+// ─── Discover CTA pill ──────────────────────────────────────────────────────
+.bc3d-discover-btn {
   position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  height: 25%;
-  background: linear-gradient(to top, #FCF5E2 0%, transparent 100%);
+  left: 50%;
+  bottom: clamp(2.75rem, 7vh, 4rem);
+  transform: translateX(-50%) translateY(8px);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1.5rem;
+  font-family: $font-serif;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: $color-cream;
+  background: $color-walnut;
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  z-index: 10;
+  opacity: 0;
   pointer-events: none;
-  z-index: 1;
+  box-shadow:
+    0 6px 20px -6px rgba(69, 51, 45, 0.45),
+    0 1px 0 rgba(255, 255, 255, 0.06) inset;
+  transition:
+    opacity 0.32s $ease-out-fast,
+    transform 0.18s $ease-out-fast,
+    background 0.2s $ease-out-fast,
+    box-shadow 0.22s $ease-out-fast;
+
+  &.is-visible {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      background: #3a2923;
+      box-shadow:
+        0 10px 28px -6px rgba(69, 51, 45, 0.55),
+        0 1px 0 rgba(255, 255, 255, 0.06) inset;
+
+      .bc3d-discover-btn__arrow { transform: translateX(3px); }
+    }
+  }
+
+  &:active {
+    transform: translateX(-50%) scale(0.97);
+  }
+
+  &__arrow {
+    font-size: 1rem !important;
+    transition: transform 0.22s $ease-out-fast;
+  }
 }
 
-.top-gradient {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 20%;
-  background: linear-gradient(to bottom, #FCF5E2 0%, transparent 100%);
-  pointer-events: none;
-  z-index: 1;
-}
-
-.carousel-arrow {
+// ─── Premium nav buttons (siempre visibles) ─────────────────────────────────
+// Pill cream con backdrop blur + chevron walnut. Funcionan sin hover, ideales
+// para mobile/touch. Tienen tamao tactil >= 44px.
+.bc3d-nav {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  background: #E0A15E;
-  border: 2px solid #E0A15E;
-  color: #FCF5E2;
-  font-size: 1.5rem;
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
-  cursor: pointer;
-  z-index: 10;
-  transition: all 0.3s ease;
-  backdrop-filter: blur(10px);
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  line-height: 1;
-  padding: 0;
-}
-
-.carousel-arrow:hover {
-  transform: translateY(-50%) scale(1.1);
-}
-
-.carousel-arrow:active {
-  transform: translateY(-50%) scale(0.95);
-}
-
-.carousel-arrow-left {
-  left: 20px;
-}
-
-.carousel-arrow-right {
-  right: 20px;
-}
-
-@media (max-width: 768px) {
-  .carousel-arrow {
-    width: 44px;
-    height: 44px;
-    font-size: 1.25rem;
-  }
-  
-  .carousel-arrow-left {
-    left: 12px;
-  }
-  
-  .carousel-arrow-right {
-    right: 12px;
-  }
-}
-
-/* Book Info */
-.book-info {
-  position: absolute;
-  bottom: 160px;
-  left: 50%;
-  transform: translateX(-50%);
-  text-align: center;
-  z-index: 10;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.book-info.visible {
-  opacity: 1;
-}
-
-.book-title {
-  font-family: system-ui, -apple-system, sans-serif;
-  font-size: clamp(1.2rem, 3vw, 2rem);
-  font-weight: 700;
-  color: #45332D;
-  margin-bottom: 8px;
-  text-shadow: 2px 2px 6px rgba(255, 255, 255, 0.8);
-  letter-spacing: 0.5px;
-}
-
-.book-author {
-  font-family: system-ui, -apple-system, sans-serif;
-  font-size: clamp(0.9rem, 2vw, 1.2rem);
-  color: #45332D;
-  text-shadow: 1px 1px 4px rgba(255, 255, 255, 0.6);
-  font-weight: 500;
-  opacity: 0.9;
-}
-
-/* Discover Button */
-.discover-button {
-  position: absolute;
-  bottom: 80px;
-  left: 50%;
-  transform: translateX(-50%);
-  padding: 14px 40px;
-  font-family: system-ui, -apple-system, sans-serif;
-  font-size: clamp(1rem, 2.5vw, 1.3rem);
-  font-weight: 600;
-  color: #FCF5E2;
-  background: #E0A15E;
-  border: 2px solid #E0A15E;
-  border-radius: 30px;
-  cursor: pointer;
-  z-index: 10;
-  transition: all 0.3s ease;
+  width: 44px;
+  height: 44px;
+  background: rgba(255, 255, 255, 0.72);
   backdrop-filter: blur(10px);
-  opacity: 0;
-  pointer-events: none;
-  box-shadow: 0 4px 12px rgba(69, 51, 45, 0.3);
-}
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(69, 51, 45, 0.10);
+  border-radius: 999px;
+  color: $color-walnut;
+  cursor: pointer;
+  z-index: 11;
+  box-shadow: 0 4px 14px -4px rgba(69, 51, 45, 0.18);
+  transition:
+    background 0.18s $ease-out-fast,
+    box-shadow 0.22s $ease-out-fast,
+    transform 0.14s $ease-out-fast,
+    border-color 0.18s $ease-out-fast;
 
-.discover-button.visible {
-  opacity: 1;
-  pointer-events: auto;
-}
+  .material-symbols-outlined { font-size: 22px; }
 
-.discover-button:hover {
-  background: #D08F4E;
-  border-color: #D08F4E;
-  transform: translateX(-50%) scale(1.05);
-  box-shadow: 0 6px 16px rgba(69, 51, 45, 0.4);
-}
-
-.discover-button:active {
-  transform: translateX(-50%) scale(0.98);
-}
-
-@media (max-width: 768px) {
-  .book-info {
-    bottom: 140px;
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      background: rgba(255, 255, 255, 0.92);
+      border-color: rgba(69, 51, 45, 0.16);
+      box-shadow: 0 8px 22px -4px rgba(69, 51, 45, 0.28);
+    }
   }
-  
-  .discover-button {
-    bottom: 60px;
-    padding: 12px 32px;
+
+  &:active {
+    transform: translateY(-50%) scale(0.93);
+  }
+
+  &--left  { left: clamp(0.75rem, 2vw, 2rem); }
+  &--right { right: clamp(0.75rem, 2vw, 2rem); }
+
+  @media (min-width: 640px) {
+    width: 48px;
+    height: 48px;
+    .material-symbols-outlined { font-size: 24px; }
   }
 }
 
+// ─── Responsive tweaks ──────────────────────────────────────────────────────
+@media (max-width: 640px) {
+  .bc3d-header {
+    // Header bien pegado al borde superior para dejar todo el espacio vertical
+    // posible a los libros, que ahora son muy grandes y suben mucho.
+    top: clamp(0.625rem, 2.5vh, 1.5rem);
+    gap: 0.3125rem;
+  }
+  .bc3d-eyebrow {
+    letter-spacing: 0.18em;
+    &::before, &::after { width: 16px; }
+  }
+  // En mobile el titulo del libro ya se ve en la propia portada (textura del
+  // GLB). Ocultar el book-info flotante libera ~80px de espacio vertical y
+  // permite que los libros se vean a mayor tamano. El discover button sigue
+  // como CTA principal.
+  .bc3d-book-info {
+    display: none;
+  }
+  .bc3d-discover-btn {
+    bottom: clamp(1.5rem, 5vh, 2.5rem);
+    padding: 0.5625rem 1.25rem;
+    font-size: 0.8125rem;
+  }
+}
+
+// ─── Accessibility ──────────────────────────────────────────────────────────
+@media (prefers-reduced-motion: reduce) {
+  .bc3d-book-info,
+  .bc3d-discover-btn,
+  .bc3d-nav { transition: none; }
+  .bc3d-discover-btn__arrow { transition: none; }
+}

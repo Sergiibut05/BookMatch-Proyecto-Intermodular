@@ -1,5 +1,6 @@
 {
     "HEADER": {
+        "EXPLORE": "Explorar",
         "HOME": "Inicio",
         "CATALOG": "Catálogo",
         "CATEGORIES": "Categorías",
@@ -65,10 +66,10 @@
         "ERROR_LOAD": "No se han podido cargar tus playlists.",
         "ERROR_DELETE": "No se ha podido eliminar la playlist.",
         "STAT_TOTAL": "{{count}} playlists",
-        "STAT_BOOKS": "{{count}} libros curados",
+        "STAT_BOOKS": "{{count}} libros añadidos",
         "STAT_AI": "{{count}} con IA",
         "STAT_TOTAL_LABEL": "playlists",
-        "STAT_BOOKS_LABEL": "libros curados",
+        "STAT_BOOKS_LABEL": "libros añadidos",
         "STAT_AI_LABEL": "con IA",
         "OPEN_PLAYLIST": "Abrir playlist",
         "UPDATED_ON": "Actualizada {{date}}"
@@ -203,7 +204,7 @@
         "SHARED_PLAYLIST": "Playlist compartida",
         "EYEBROW": "Compartida desde BookMatch",
         "ITEMS_COUNT": "{{count}} libros",
-        "ITEMS_COUNT_LABEL": "libros curados",
+        "ITEMS_COUNT_LABEL": "libros añadidos",
         "UPDATED_ON": "Actualizada {{date}}",
         "EMPTY": "Esta playlist aún no tiene libros.",
         "EMPTY_SUB": "Pídele a quien te compartió el enlace que añada algún libro.",
@@ -272,6 +273,33 @@
         }
     },
     "HOME": {
+        "GREETING": {
+            "LABEL": "Bienvenido de vuelta",
+            "HELLO": "Hola",
+            "SUBTITLE": "Una nueva lectura te espera.",
+            "CTA": "Explorar el catálogo",
+            "MORNING": "Buenos días",
+            "AFTERNOON": "Buenas tardes",
+            "NIGHT": "Buenas noches"
+        },
+        "ACTIONS": {
+            "CATALOG": {
+                "TITLE": "Explorar catálogo",
+                "DESC": "Miles de títulos organizados por categoría"
+            },
+            "AI": {
+                "TITLE": "Recomendador IA",
+                "DESC": "Pide sugerencias personalizadas al asistente"
+            },
+            "FORUM": {
+                "TITLE": "Foro",
+                "DESC": "Comparte opiniones y descubre lecturas"
+            },
+            "SWAP": {
+                "TITLE": "Trueque",
+                "DESC": "Intercambia libros con otros lectores"
+            }
+        },
         "HERO": {
             "TITLE": "Descubre tu próximo libro favorito",
             "SUBTITLE": "Explora miles de libros, compra, vende e intercambia con nuestra comunidad de lectores",
@@ -398,7 +426,7 @@
     "BOOK_DETAILS": {
         "LOADING": "Cargando libro...",
         "LOADING2": "Cargando",
-        "SEE_MORE": "Ver más →",
+        "SEE_MORE": "Ver más",
         "IN_STOCK": "En stock ({{stock}} disponibles)",
         "OUT_OF_STOCK": "Agotado",
         "DESCRIPTION_TITLE": "Descripción",

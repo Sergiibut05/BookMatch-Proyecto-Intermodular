@@ -1,16 +1,22 @@
+$ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+
 .payment-methods-container {
   min-height: 100vh;
   background-color: #FCF5E2;
   padding: 2rem 0;
+  font-family: 'Lora', 'Georgia', serif;
+  color: #45332D;
 }
 
 .payment-method-card {
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
+  transition: transform 200ms $ease-out, box-shadow 200ms $ease-out;
 
-.payment-method-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 20px rgba(69, 51, 45, 0.10);
+    }
+  }
 }
 
 @media (max-width: 768px) {

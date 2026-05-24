@@ -1,0 +1,66 @@
+$font-serif:    'Lora', 'Georgia', serif;
+$color-walnut:  #45332D;
+$color-gold:    #E0A15E;
+$color-muted:   rgba(69, 51, 45, 0.55);
+$color-subtle:  rgba(69, 51, 45, 0.35);
+
+.footer-heading {
+  font-family: $font-serif;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: $color-walnut;
+  margin-bottom: 1rem;
+  opacity: 0.75;
+}
+
+.footer-body {
+  font-family: $font-serif;
+  font-size: 0.8125rem;
+  line-height: 1.65;
+  color: $color-muted;
+}
+
+.footer-label {
+  font-family: $font-serif;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: rgba(69, 51, 45, 0.65);
+  margin-bottom: 0.2rem;
+  letter-spacing: 0.02em;
+}
+
+.footer-link {
+  font-family: $font-serif;
+  font-size: 0.8125rem;
+  color: $color-muted;
+  text-decoration: none;
+  display: inline-block;
+  transition: color 0.18s ease, transform 0.18s ease;
+
+  &:hover {
+    color: $color-walnut;
+    transform: translateX(3px);
+  }
+}
+
+.social-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 0.625rem;
+  background: rgba(69, 51, 45, 0.06);
+  color: $color-muted;
+  border: 1px solid rgba(69, 51, 45, 0.10);
+  transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
+
+  &:hover {
+    background: rgba(224, 161, 94, 0.15);
+    color: $color-gold;
+    border-color: rgba(224, 161, 94, 0.35);
+    transform: translateY(-2px);
+  }
+}

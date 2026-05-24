@@ -1,24 +1,336 @@
-.carousel::-webkit-scrollbar {
-  display: none;
+@use 'sass:color';
+
+// ─── Curvas de animación (alineadas con el design system del header) ──────────
+$ease-out-fast:  cubic-bezier(0.23, 1, 0.32, 1);
+$ease-spring:    cubic-bezier(0.34, 1.56, 0.64, 1);
+
+// ─── Tipografía base ──────────────────────────────────────────────────────────
+$font-serif: 'Lora', 'Georgia', serif;
+$color-walnut:    #45332D;
+$color-sand:      #8A766A;
+$color-cream:     #FCF5E2;
+$color-border:    rgba(69, 51, 45, 0.10);
+
+// ─── Gradiente skeuomórfico de lomo de libro (Apple Books style) ──────────────
+// Inspirado en: https://varundhawan.com/blog/2022/01/18/skeuomorphic-book-cover-css
+$book-spine-gradient: linear-gradient(
+  to right,
+  rgba(0,0,0,0.18)   0%,
+  rgba(0,0,0,0.08)   0.75%,
+  rgba(255,255,255,0.55) 1.0%,
+  rgba(255,255,255,0.65) 1.3%,
+  rgba(255,255,255,0.50) 1.4%,
+  rgba(255,255,255,0.30) 1.5%,
+  rgba(255,255,255,0.28) 2.4%,
+  rgba(0,0,0,0.05)   2.7%,
+  rgba(0,0,0,0.05)   3.5%,
+  rgba(255,255,255,0.28) 4%,
+  rgba(255,255,255,0.28) 4.5%,
+  rgba(244,244,244,0.08) 5.4%,
+  rgba(244,244,244,0.08) 99%,
+  rgba(100,80,60,0.22)  100%
+);
+
+// ─── Sección completa ─────────────────────────────────────────────────────────
+.carousel-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
 }
 
-.group img {
-  will-change: transform;
-  transform-origin: center;
+// ─── Cabecera de sección ──────────────────────────────────────────────────────
+.carousel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  padding: 0 0.25rem;
 }
 
-.book-card {
-  width: 10rem;
-  height: 15rem;
-  overflow: visible;
+.carousel-section-title {
+  font-family: $font-serif;
+  font-size: 1.375rem;
+  font-weight: 600;
+  color: $color-walnut;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+
+  @media (min-width: 768px) {
+    font-size: 1.625rem;
+  }
+}
+
+.see-more-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-family: $font-serif;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: $color-sand;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.25rem 0;
+  transition: color 0.2s $ease-out-fast;
+
+  .see-more-arrow {
+    font-size: 1rem;
+    transition: transform 0.22s $ease-spring;
+  }
+
+  &:hover {
+    color: $color-walnut;
+
+    .see-more-arrow {
+      transform: translateX(4px);
+    }
+  }
+}
+
+// ─── Contenedor con flechas de navegación ─────────────────────────────────────
+.carousel-track-wrapper {
+  position: relative;
+  // Compensa el padding-top del track para que no añada espacio visual en el layout
+  margin-top: -16px;
+
+  &:hover .carousel-nav {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
+// ─── Flechas de navegación ────────────────────────────────────────────────────
+.carousel-nav {
+  position: absolute;
+  top: 38%; // Centrado en la portada (no en el total de la tarjeta)
+  transform: translateY(-50%);
+  z-index: 10;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
   border-radius: 0.75rem;
+  border: 1px solid $color-border;
+  background: rgba(252, 245, 226, 0.92);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: $color-walnut;
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  box-shadow: 0 4px 16px rgba(69, 51, 45, 0.12);
+  transition: opacity 0.25s $ease-out-fast,
+              background-color 0.2s,
+              transform 0.2s $ease-spring,
+              box-shadow 0.2s;
+
+  .material-symbols-outlined {
+    font-size: 1.375rem;
+    color: $color-walnut;
+  }
+
+  &:hover {
+    background: $color-cream;
+    box-shadow: 0 6px 20px rgba(69, 51, 45, 0.18);
+  }
+
+  &:active {
+    transform: translateY(-50%) scale(0.92);
+  }
+
+  &--prev {
+    left: -1.25rem;
+  }
+
+  &--next {
+    right: -1.25rem;
+  }
 }
 
-.book-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
+// ─── Pista deslizable ─────────────────────────────────────────────────────────
+// overflow-x: auto fuerza overflow-y: auto, pero CSS clipea en el padding-box,
+// no en el content-box. Con padding >= sombra/translateY el overflow no se recorta.
+.carousel-track {
+  display: flex;
+  gap: 1rem;
+  overflow-x: auto;
+  padding-top: 32px;      // translateY(12px) + shadow-blur(~14px) = ~26px → margen con holgura
+  padding-bottom: 1rem;
+  padding-left: 10px;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+
+  // ::after es más fiable que padding-right en contenedores flex+overflow para
+  // garantizar que el último libro tenga espacio tras él y llegue a su snap point
+  &::after {
+    content: '';
+    flex-shrink: 0;
+    width: 1rem;
+  }
+
+  @media (min-width: 768px) {
+    gap: 1.25rem;
+
+    &::after {
+      width: 1.25rem;
+    }
+  }
 }
 
+// ─── Tarjeta de libro ─────────────────────────────────────────────────────────
+.book-card {
+  flex-shrink: 0;
+  width: 140px;
+  cursor: pointer;
 
+  @media (min-width: 768px) {
+    width: 162px;
+  }
+}
+
+// ─── Portada ──────────────────────────────────────────────────────────────────
+.book-cover {
+  position: relative;
+  aspect-ratio: 2 / 3;
+  // Esquina izquierda (lomo) cuadrada; esquinas derechas ligeramente redondeadas
+  border-radius: 2px 6px 6px 2px;
+  overflow: hidden;
+  background: #d5cdc0;
+  box-shadow:
+    -3px 0 6px rgba(0, 0, 0, 0.08),
+    2px 6px 16px rgba(69, 51, 45, 0.12);
+  transition:
+    transform 0.32s $ease-out-fast,
+    box-shadow 0.32s $ease-out-fast;
+  will-change: transform, box-shadow;
+
+  &__img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  // Overlay skeuomórfico del lomo — siempre presente, sutil
+  &__spine {
+    position: absolute;
+    inset: 0;
+    background: $book-spine-gradient;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  &__badge-sold-out {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.52);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
+
+    span {
+      background: #e74c3c;
+      color: #fff;
+      font-family: $font-serif;
+      font-size: 0.6875rem;
+      font-weight: 700;
+      padding: 0.2rem 0.6rem;
+      border-radius: 99px;
+      letter-spacing: 0.03em;
+    }
+  }
+}
+
+// ─── Hover de la tarjeta — efecto Apple Books ─────────────────────────────────
+// El padding-top (16px) del carousel-track hace que el translateY (-12px)
+// caiga dentro del padding-box: CSS no recorta esa zona → el lift se ve entero.
+.book-card:hover .book-cover {
+  transform: translateY(-12px);
+  box-shadow:
+    -4px 0 10px rgba(0, 0, 0, 0.11),
+    4px 20px 38px rgba(69, 51, 45, 0.20),
+    2px 6px 12px rgba(69, 51, 45, 0.12),
+    0 0 0 0.5px rgba(0, 0, 0, 0.05);
+}
+
+// ─── Metadatos del libro ──────────────────────────────────────────────────────
+.book-meta {
+  padding: 0.55rem 0.25rem 0;
+  font-family: $font-serif;
+
+  &__title {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: $color-walnut;
+    line-height: 1.35;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    margin-bottom: 0.15rem;
+    transition: color 0.2s $ease-out-fast;
+
+    @media (min-width: 768px) {
+      font-size: 0.875rem;
+    }
+  }
+
+  &__author {
+    font-size: 0.6875rem;
+    color: $color-sand;
+    font-style: italic;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .book-card:hover &__title {
+    color: color.adjust(#45332D, $lightness: -8%);
+  }
+}
+
+// ─── Skeletons de carga ───────────────────────────────────────────────────────
+.book-cover--skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(69, 51, 45, 0.07) 25%,
+    rgba(69, 51, 45, 0.13) 50%,
+    rgba(69, 51, 45, 0.07) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  box-shadow: none;
+}
+
+.book-meta--skeleton {
+  gap: 0.4rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.skeleton-line {
+  height: 0.6rem;
+  border-radius: 99px;
+  background: linear-gradient(
+    90deg,
+    rgba(69, 51, 45, 0.07) 25%,
+    rgba(69, 51, 45, 0.13) 50%,
+    rgba(69, 51, 45, 0.07) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+
+  &--title { width: 80%; }
+  &--author { width: 55%; }
+}
+
+@keyframes shimmer {
+  0%   { background-position:  200% 0; }
+  100% { background-position: -200% 0; }
+}
