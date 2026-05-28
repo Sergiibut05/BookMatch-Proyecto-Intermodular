@@ -33,6 +33,7 @@ Este monorepo usa **Cursor** y **Antigravity**: reglas/workflows (`.cursor/rules
 | `bookmatch-jira-workflow` | Planificación / issues Jira |
 | `bookmatch-confluence-docs` | Actualizar Confluence + Changelog |
 | `bookmatch-git-branches` | Empezar tarea, sync con `develop`, commits, integración en `develop` |
+| `emil-design-eng` | Cuando el usuario pida refinamiento UI, animaciones, o diseño "wow" y de alta fidelidad |
 
 ## Hooks del proyecto
 

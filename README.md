@@ -34,42 +34,43 @@
   - Subida de fotos usando Capacitor (móvil) o input file (web)
   - Almacenamiento en Firebase Storage
   - Actualización automática en Firebase Auth y base de datos
-  - Eliminación automática de fotos antiguas al cambiar
+- ✅ **Flujo de recuperación de contraseñas** integrado en la UI (Stripe-like).
 
-#### Catálogo de Libros
+#### Catálogo de Libros y Playlists
 - ✅ Home con grid de libros consumiendo el backend protegido
 - ✅ Vista de detalles de libro con imágenes, precio, stock, categorías
-- ✅ Filtrado por categorías
-- ✅ Paginación de resultados
-- ✅ Sistema de reseñas (estructura implementada)
+- ✅ Filtrado por categorías y paginación
+- ✅ Sistema de reseñas
+- ✅ **Sistema de Playlists (Manual e IA)**
+  - Creación, edición, arrastrar y soltar libros (CDK Drag&Drop).
+  - Integración con IA (n8n + API) para generación automatizada basada en prompts.
+  - Vistas públicas (solo lectura), enlaces compartibles (share/export a JSON o Markdown).
+
+#### Analíticas Avanzadas (Admin)
+- ✅ Integración con Firebase Analytics y GA4 Data API.
+- ✅ Dashboard "estilo PowerBI" con Chart.js y UI animada.
+- ✅ Generación de datos sintéticos vía Python (`pandas`, `numpy`).
+- ✅ Endpoint protegido para ingesta de métricas globales.
 
 #### Sistema de Pagos
 - ✅ **Integración completa con Stripe Checkout**
   - Pago directo de libros individuales
   - Soporte para múltiples métodos: Card, Link, PayPal
-  - Dirección de envío obligatoria (países configurados)
-  - Modo de prueba (test mode) configurado
-  - Creación automática de órdenes en base de datos
-  - Actualización automática de stock
-  - Página de confirmación de pago
-  - Preparado para carrito (estructura lista, pendiente de implementar)
+  - Creación automática de órdenes en base de datos y actualización de stock.
+- ✅ Correos de confirmación vía SMTP integrados.
 
 #### Backend
 - ✅ Backend Express + TypeScript modularizado
 - ✅ Middleware de seguridad (auth, rate limiting, CORS, Helmet)
 - ✅ Swagger/OpenAPI para documentación interactiva
 - ✅ Prisma ORM con PostgreSQL
-- ✅ Esquema de datos completo: usuarios, categorías, libros, pedidos, reseñas
-- ✅ Endpoints protegidos con tokens de Firebase
-- ✅ Sistema de logging con Winston
-- ✅ Manejo de errores centralizado
+- ✅ Múltiples modelos: usuarios, categorías, libros, pedidos, reseñas, playlists, items.
+- ✅ Scripts avanzados: `seed.ts` para catálogos y `seed_analytics.py` para métricas.
 
 ### 🔄 En Curso / Próximos Pasos
-- ⏳ Implementación de carrito de compras
-- ⏳ Sistema de envío de correos de confirmación
+- ⏳ Implementación de carrito de compras multiproducto
 - ⏳ Vista de historial de pedidos
-- ⏳ Refinamiento de UI/UX
-- ⏳ Tests E2E
+- ⏳ Refinamiento de UI/UX y Tests E2E
 
 ---
 
@@ -112,6 +113,8 @@ BookMatch-Proyecto-Intermodular/
 │   │   │   ├── auth/               # Autenticación Firebase
 │   │   │   ├── users/              # Gestión de usuarios
 │   │   │   ├── catalog-books/      # Catálogo de libros
+│   │   │   ├── playlists/          # Listas generadas por IA y manuales
+│   │   │   ├── analytics/          # Integración con GA4 y Data Analytics
 │   │   │   └── payments/           # Integración con Stripe
 │   │   │       ├── payments.service.ts
 │   │   │       ├── payments.controller.ts
@@ -190,11 +193,19 @@ FRONTEND_URL=http://localhost:4200
 npx prisma generate
 npx prisma migrate deploy
 ```
-#### 2.4. Inicializar el Catálogo (Seeding)
-1. Ejecuta este script una única vez al montar el proyecto para llenar la base de datos con el catálogo estático de libros desde Google Books.
-
+#### 2.4. Inicializar el Catálogo y Analíticas (Seeding)
+1. Ejecuta este script para llenar la base de datos con el catálogo estático de libros.
 ```bash
 npx tsx seed.ts
+```
+
+2. Para generar datos analíticos sintéticos locales, utiliza el entorno Python (requiere tener `python3` y `pip` instalados):
+```bash
+cd scripts
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+python seed_analytics.py
 ```
 
 #### 2.5. Ejecutar el Servidor
@@ -349,6 +360,17 @@ La categoría "Novedades" se genera procedimentalmente al final:
 | POST   | `/api/payments/webhook`                 | Webhook de Stripe (sin auth)     | ❌   |
 | GET    | `/api/payments/success`                 | Verifica pago y crea Order       | ✅   |
 | GET    | `/api/payments/session/:sessionId`      | Obtiene detalles de sesión       | ✅   |
+
+### Playlists
+| Método | Ruta                    | Descripción                      | Auth |
+|--------|-------------------------|----------------------------------|------|
+| GET    | `/api/playlists`        | Obtiene listas del usuario       | ✅   |
+| POST   | `/api/playlists/generate`| Genera playlist vía IA (n8n)     | ✅   |
+
+### Analíticas
+| Método | Ruta                    | Descripción                      | Auth |
+|--------|-------------------------|----------------------------------|------|
+| GET    | `/api/analytics/traffic`| Retorna datos procesados GA4     | ✅ (Admin) |
 
 ### Utilidades
 | Método | Ruta                    | Descripción                      | Auth |
@@ -540,11 +562,11 @@ npx prisma generate  # Regenerar Prisma Client
 3. ✅ Catálogo inicial de libros y vista protegida  
 4. ✅ **Sistema de pagos con Stripe**  
 5. ✅ **Gestión de perfil de usuario con fotos**  
-6. 🔄 Carrito de compras  
-7. ⏳ Sistema de envío de correos  
-8. ⏳ Vista de historial de pedidos  
-9. ⏳ Perfil de usuario y flujos de trueque  
-10. ⏳ Recomendaciones IA en iteraciones futuras
+6. ✅ **Recomendaciones IA y Trueque/Playlists** (Sistema de listas de libros)
+7. ✅ Sistema de envío de correos (Confirmaciones vía SMTP)
+8. ✅ Dashboard Analítico (Firebase Analytics + GA4)
+9. 🔄 Carrito de compras multiproducto
+10. ⏳ Vista de historial de pedidos  
 
 ---
 
@@ -601,31 +623,26 @@ service firebase.storage {
 
 ## 📝 Changelog Reciente
 
-### Noviembre 2025
+### Mayo 2026 (Sprints 8, 9 y 10)
+- ✅ **Playlists e IA**: Integración con n8n para generación de colecciones mediante prompts.
+- ✅ **AI Chat**: Nuevo panel lateral para conversar con el asistente sobre libros y convertir hilos en playlists.
+- ✅ **Dashboard Analytics**: Nueva sección para administradores con reportes de tráfico en `Chart.js` y datos conectados a GA4.
+- ✅ **Autenticación**: UI de recuperación de contraseña añadida al modal de login.
+- ✅ **Stripe y SMTP**: Correcciones y estabilización en el envío de recibos en producción.
+- ✅ **Documentación y Agentes**: Creación y estabilización de convenciones para IA (Cursor).
 
+### Noviembre 2025
 #### Sistema de Pagos con Stripe
 - ✅ Integración completa de Stripe Checkout
 - ✅ Soporte para Card, Link y PayPal
-- ✅ Dirección de envío obligatoria
-- ✅ Creación automática de órdenes
-- ✅ Actualización automática de stock
-- ✅ Página de confirmación de pago
-- ✅ Modo de prueba configurado
+- ✅ Creación automática de órdenes y actualización de stock
 
 #### Gestión de Perfil
-- ✅ Componente de perfil implementado
-- ✅ Subida de fotos con Capacitor
-- ✅ Integración con Firebase Storage
-- ✅ Actualización en Firebase Auth y BD
+- ✅ Componente de perfil implementado con subida de fotos
+- ✅ Integración con Firebase Storage y BD
 - ✅ Eliminación automática de fotos antiguas
-
-#### Mejoras Generales
-- ✅ Servicios modulares y reutilizables
-- ✅ Manejo de errores mejorado
-- ✅ UI/UX mejorada con Tailwind CSS
-- ✅ Documentación actualizada
 
 ---
 
-**Última actualización:** Noviembre 2025  
-**Versión del documento:** 1.0.0 (MVP con pagos y perfil)
+**Última actualización:** Mayo 2026  
+**Versión del documento:** 1.5.0 (Beta con IA y Analytics)
