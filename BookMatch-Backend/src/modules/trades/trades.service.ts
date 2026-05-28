@@ -1,6 +1,7 @@
 import type { TradeSide, TradeStatus } from '@prisma/client';
 import type { Prisma } from '@prisma/client';
 import { prisma } from '../../config/db.js';
+import { env } from '../../config/env.js';
 
 export type { TradeSide, TradeStatus };
 
@@ -77,6 +78,49 @@ function httpError(status: number, message: string): Error {
   const err = new Error(message);
   (err as Error & { status: number }).status = status;
   return err;
+}
+
+/** Usuarios de scripts seed_trades.py / seed_analytics.py — receptores demo. */
+function isDemoSeedFirebaseUid(firebaseUid: string): boolean {
+  return firebaseUid.startsWith('trade_seed_') || firebaseUid.startsWith('seed_');
+}
+
+const demoAutoAcceptTimers = new Map<number, ReturnType<typeof setTimeout>>();
+
+function scheduleDemoAutoAccept(tradeId: number, receiverFirebaseUid: string): void {
+  const delayMs = env.TRADE_DEMO_AUTO_ACCEPT_MS;
+  if (delayMs <= 0 || !isDemoSeedFirebaseUid(receiverFirebaseUid)) return;
+
+  const prev = demoAutoAcceptTimers.get(tradeId);
+  if (prev) clearTimeout(prev);
+
+  demoAutoAcceptTimers.set(
+    tradeId,
+    setTimeout(() => {
+      demoAutoAcceptTimers.delete(tradeId);
+      void acceptTradeForDemoSeed(tradeId).catch((err) => {
+        console.warn(`[trades] auto-aceptación demo fallida (trade ${tradeId}):`, err);
+      });
+    }, delayMs),
+  );
+}
+
+/** Acepta en nombre del receptor seed; solo si sigue en PROPOSED. */
+async function acceptTradeForDemoSeed(tradeId: number): Promise<void> {
+  const trade = await prisma.trade.findUnique({
+    where: { id: tradeId },
+    select: {
+      status: true,
+      receiver: { select: { firebaseUid: true } },
+    },
+  });
+  if (!trade || trade.status !== 'PROPOSED') return;
+  if (!isDemoSeedFirebaseUid(trade.receiver.firebaseUid)) return;
+
+  await prisma.trade.update({
+    where: { id: tradeId },
+    data: { status: 'ACCEPTED' },
+  });
 }
 
 function toDetail(row: TradeWithDetail): TradeDetail {
@@ -191,7 +235,10 @@ export async function createTrade(args: {
     throw httpError(409, 'No puedes proponerte un trueque a ti mismo');
   }
 
-  const receiver = await prisma.user.findUnique({ where: { id: args.receiverId }, select: { id: true } });
+  const receiver = await prisma.user.findUnique({
+    where: { id: args.receiverId },
+    select: { id: true, firebaseUid: true },
+  });
   if (!receiver) {
     throw httpError(400, 'El usuario receptor no existe');
   }
@@ -240,6 +287,8 @@ export async function createTrade(args: {
     },
     include: tradeDetailInclude,
   });
+
+  scheduleDemoAutoAccept(trade.id, receiver.firebaseUid);
 
   return toDetail(trade);
 }
