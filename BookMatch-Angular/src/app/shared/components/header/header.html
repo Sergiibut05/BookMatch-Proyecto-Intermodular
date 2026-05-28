@@ -51,7 +51,7 @@
         <div class="menu-item w-full">
           <a routerLink="/ai-chat" (click)="closeMenu()" class="menu-link flex items-center justify-start gap-3 w-full p-2.5 rounded-xl cursor-pointer">
             <span class="material-symbols-outlined text-xl text-[#45332D]">auto_stories</span>
-            <span class="font-medium text-[#45332D]">Recomendador AI</span>
+            <span class="font-medium text-[#45332D]">{{ 'HEADER.AI_RECOMMENDER' | translate }}</span>
           </a>
         </div>
       </div>
@@ -59,13 +59,13 @@
       <!-- SECCIÓN 2: COMUNIDAD Y PLAYLISTS -->
       <div class="menu-section mb-6">
         <h3 class="menu-section-title px-2 mb-2 text-[10px] font-bold tracking-wider text-[#8A766A] uppercase" style="font-family: 'Lora', 'Georgia', serif;">
-          Comunidad
+          {{ 'HEADER.COMMUNITY' | translate }}
         </h3>
         
         <div class="menu-item w-full">
           <a (click)="goForum(); $event.preventDefault()" class="menu-link flex items-center justify-start gap-3 w-full p-2.5 rounded-xl cursor-pointer">
             <span class="material-symbols-outlined text-xl text-[#45332D]">forum</span>
-            <span class="font-medium text-[#45332D]">Foro</span>
+            <span class="font-medium text-[#45332D]">{{ 'HEADER.FORUM' | translate }}</span>
           </a>
         </div>
         
@@ -80,13 +80,13 @@
       <!-- SECCIÓN 3: GESTIÓN (ADMIN) -->
       <div *isAdmin class="menu-section menu-section--admin mb-6">
         <h3 class="menu-section-title px-2 mb-2 text-[10px] font-bold tracking-wider text-[#E0A15E] uppercase" style="font-family: 'Lora', 'Georgia', serif;">
-          Administración
+          {{ 'HEADER.ADMIN' | translate }}
         </h3>
         
         <div class="menu-item w-full">
           <a routerLink="/admin/books/create" (click)="closeMenu()" class="menu-link flex items-center justify-start gap-3 w-full p-2.5 rounded-xl cursor-pointer">
             <span class="material-symbols-outlined text-xl text-[#E0A15E]">add_circle</span>
-            <span class="font-medium text-[#E0A15E]">Añadir Libro</span>
+            <span class="font-medium text-[#E0A15E]">{{ 'HEADER.ADD_BOOK' | translate }}</span>
           </a>
         </div>
         

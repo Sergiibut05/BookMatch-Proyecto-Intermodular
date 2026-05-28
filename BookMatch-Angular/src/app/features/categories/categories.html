@@ -6,17 +6,11 @@
     <!-- Cabecera de sección -->
     <div class="cat-page-header">
       <div>
-        <h1 class="cat-page-title">{{ category() }}</h1>
+        <h1 class="cat-page-title">{{ getDisplayCategoryName() }}</h1>
         <p class="cat-page-subtitle" style="color: rgba(69,51,45,0.50);">
           {{ total() }} {{ 'CATEGORIES.RESULTS_FOUND' | translate }}
         </p>
       </div>
-      <button (click)="toggleMobileFilters()"
-              class="cat-mobile-filter-btn md:hidden"
-              aria-label="Filtros">
-        <span class="material-symbols-outlined text-lg">tune</span>
-        {{ 'CATEGORIES.FILTER_ORDER' | translate }}
-      </button>
     </div>
 
     <div class="flex flex-col md:flex-row gap-8 md:gap-10">

@@ -4,7 +4,7 @@ import { CommonModule } from '@angular/common';
 import { CatalogService } from '@core/services/catalog.service';
 import { Header } from '@shared/components/header/header';
 import { Category } from '@shared/models';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 /**
  * Selector de categorías: carga categorías (MAIN primero), búsqueda y navegación a /categories.
@@ -18,6 +18,7 @@ import { TranslateModule } from '@ngx-translate/core';
 export class CategoriesSelector implements OnInit {
   private catalogService = inject(CatalogService);
   private router = inject(Router);
+  private translate = inject(TranslateService);
 
   /** Lista de categorías (MAIN primero, luego orden por nombre). */
   categories = signal<Category[]>([]);
@@ -74,9 +75,24 @@ export class CategoriesSelector implements OnInit {
     return parent ? parent.name : null;
   }
 
+  /** Nombre de la categoría padre traducido si tiene parentId. */
+  getParentCategoryDisplayName(subcategory: Category): string | null {
+    if (!subcategory.parentId) return null;
+    const parent = this.categories().find(c => c.id === subcategory.parentId);
+    if (!parent) return null;
+    return this.getCategoryDisplayName(parent);
+  }
+
   /** Navega a la ruta de la categoría. */
   navigateToCategory(category: Category) {
     this.router.navigate(['/categories', category.slug]);
+  }
+
+  /** Devuelve el nombre de la categoría traducido al idioma actual. */
+  getCategoryDisplayName(category: Category): string {
+    const key = 'CATEGORY_NAMES.' + category.slug;
+    const translated = this.translate.instant(key);
+    return translated !== key ? translated : category.name;
   }
 
   /** Actualiza searchQuery con el valor del input. */

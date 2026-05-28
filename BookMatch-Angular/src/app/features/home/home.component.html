@@ -15,7 +15,7 @@
 
       <!-- Display title -->
       <h1 class="home-hero__title">
-        Hola, <em>{{ firstName() || '...' }}</em>.
+        {{ 'HOME.GREETING.HELLO' | translate }}, <em>{{ firstName() || '...' }}</em>.
       </h1>
 
       <!-- Italic subtitle -->
@@ -76,7 +76,7 @@
   @for (category of getMainCategories().slice(0, 4); track category.id) {
     <div class="max-w-[1414px] mx-auto px-4 pb-8 md:pb-12">
       <app-carousel 
-        [categoryTitle]="category.name" 
+        [categoryTitle]="getCategoryDisplayName(category)" 
         [categoryName]="category.slug"
         [categoryId]="category.id">
       </app-carousel>
@@ -122,7 +122,7 @@
   @for (category of getMainCategories().slice(4); track category.id) {
     <div class="max-w-[1414px] mx-auto px-4 pb-8 md:pb-12">
       <app-carousel 
-        [categoryTitle]="category.name" 
+        [categoryTitle]="getCategoryDisplayName(category)" 
         [categoryName]="category.slug"
         [categoryId]="category.id">
       </app-carousel>

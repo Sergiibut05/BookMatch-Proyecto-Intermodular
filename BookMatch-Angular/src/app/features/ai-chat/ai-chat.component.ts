@@ -538,7 +538,11 @@ export class AiChatComponent implements OnInit, AfterViewChecked {
 
       this.conversationService.createConversation(firebaseUser.uid).subscribe({
         next: (conversationId) => {
-          this.selectConversation(conversationId, false);
+          // Only auto-select the new conversation if the user hasn't navigated
+          // to a different existing conversation while the request was in flight.
+          if (this.isNewEmptyConversation()) {
+            this.selectConversation(conversationId, false);
+          }
           this.sendMessageToConversation(firebaseUser.uid, conversationId, content);
         },
         error: (error) => {

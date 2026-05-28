@@ -5,7 +5,7 @@ import { Header } from '@shared/components/header/header';
 import { CatalogBook } from '@shared/models';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 /**
  * Listado de libros por categoría (query param): filtros (precio, valoración, stock),
@@ -21,6 +21,7 @@ export class Categories implements OnInit {
   private route = inject(ActivatedRoute);
   private catalogService = inject(CatalogService);
   private router = inject(Router);
+  private translate = inject(TranslateService);
 
   /** Slug o nombre de categoría (param de ruta). */
   category = signal<string>('');
@@ -97,6 +98,18 @@ export class Categories implements OnInit {
 
   getSortLabel(): string {
     return this.sortOptions.find(o => o.value === this.sortBy())?.labelKey || 'CATEGORIES.MORE_RECENT';
+  }
+
+  /** Devuelve el nombre de la categoría actual traducido al idioma activo. */
+  getDisplayCategoryName(): string {
+    const slug = this.category();
+    const foundCat = this.categoriesList().find(c => c.slug === slug || c.name.toLowerCase() === slug.toLowerCase());
+    if (foundCat) {
+      const key = 'CATEGORY_NAMES.' + foundCat.slug;
+      const translated = this.translate.instant(key);
+      return translated !== key ? translated : foundCat.name;
+    }
+    return slug;
   }
 
   /** Getter/setter para minPrice (binding en template). */
