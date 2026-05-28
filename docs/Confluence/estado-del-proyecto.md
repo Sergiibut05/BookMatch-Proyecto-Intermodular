@@ -1,6 +1,6 @@
 # Estado del Proyecto
 
-### Resumen técnico (abr 2026)
+### Resumen técnico (mayo 2026)
 
 * **Frontend:** Angular **21** (standalone, lazy routes).
 * **Backend:** **Express 5**, TypeScript, Prisma, Firebase Admin, Stripe.
@@ -13,6 +13,7 @@
 * Firebase (email/contraseña y Google), sesión en cliente, **authGuard**.
 * Sincronización usuario Firebase ↔ PostgreSQL en rutas con Bearer.
 * Perfil, foto (Capacitor / web), Storage, actualización en Auth y BD.
+* **Flujo de recuperación de contraseñas** totalmente implementado en la UI (Stripe-like).
 
 #### Catálogo
 
@@ -35,9 +36,18 @@
 
 * CORS con lista de orígenes, Helmet, rate limits, Zod, Winston, tests Jest en el repo.
 
-#### IA (opcional)
+#### Playlists e IA
 
-* Pantalla **AI chat** y `POST /api/ai-chat/send-message` con proxy a **n8n** si hay `N8N_WEBHOOK_URL`; en caso contrario el backend responde **503**.
+* CRUD completo de Playlists (manuales y generadas por IA).
+* Vistas públicas con exportación a JSON y Markdown.
+* Pantalla **AI chat** rediseñada con panel lateral, memoria, drag-to-close y botón para convertir hilos en listas.
+* Integración con n8n operativa (`N8N_WEBHOOK_URL`).
+
+#### Analíticas
+
+* Dashboard avanzado de analíticas web para admins (`Chart.js`).
+* Integración real con GA4 Data API y Firebase Analytics.
+* Data sintética generada localmente vía scripts de Python (`pandas`).
 
 ### Mejoras y deuda razonable
 
@@ -53,4 +63,4 @@ Tras cada sprint relevante, actualizar viñetas y enlazar **Jira** \+ entrada en
 
 ---
 
-**Actualización:** abril 2026 — coherente con código y con páginas técnicas revisadas.
+**Actualización:** mayo 2026 — coherente con código y con páginas técnicas revisadas.

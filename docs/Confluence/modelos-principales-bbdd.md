@@ -18,6 +18,12 @@ Resumen de entidades; **fuente de verdad:** `BookMatch-Backend/prisma/schema.pri
 
 <!\[CDATA\[model Order { id Int @id @default(autoincrement()) userId Int @map("user\_id") totalAmount Decimal @map("total\_amount") @db.Decimal(10, 2) status OrderStatus @default(PENDING) paymentIntentId String? @map("payment\_intent\_id") shippingAddress String? @map("shipping\_address") createdAt DateTime @default(now()) @map("created\_at") updatedAt DateTime @updatedAt @map("updated\_at") user User @relation(...) items OrderItem\[\] @@map("orders") }\]\]>
 
+##### **Playlist** y **PlaylistItem**
+
+<![CDATA[model Playlist { id Int @id @default(autoincrement()) userId Int @map("user_id") title String description String? visibility Visibility @default(PRIVATE) status PlaylistStatus @default(IDLE) coverUrl String? createdAt DateTime @default(now()) @map("created_at") updatedAt DateTime @updatedAt @map("updated_at") items PlaylistItem[] user User @relation(fields: [userId], references: [id], onDelete: Cascade) @@map("playlists") }
+
+model PlaylistItem { id Int @id @default(autoincrement()) playlistId Int @map("playlist_id") bookId Int? @map("book_id") status PlaylistItemStatus @default(PENDING) notes String? position Int @default(0) createdAt DateTime @default(now()) @map("created_at") playlist Playlist @relation(fields: [playlistId], references: [id], onDelete: Cascade) book CatalogBook? @relation(fields: [bookId], references: [id], onDelete: SetNull) @@map("playlist_items") }]]>
+
 ##### **Forum** / **Post** / **Comment** / **Vote**
 
 Foros, posts, comentarios anidados (`parentId`), imágenes (`PostImage`), votos por usuario/post — ver `schema.prisma` para restricciones `@@unique` y `onDelete`.
@@ -27,7 +33,8 @@ Foros, posts, comentarios anidados (`parentId`), imágenes (`PostImage`), votos 
 * **CatalogBook ↔ Category:** N:M vía `CatalogBookCategory`.
 * **User → Order → OrderItem → CatalogBook** cadena de pedido.
 * **Forum → Post → Comment / Vote / PostImage.**
+* **User → Playlist → PlaylistItem → CatalogBook** (Colecciones e IA).
 
 ---
 
-**Actualización:** abril 2026 — rol de usuario, marcas de tiempo en pedidos, tablas `@map`.
+**Actualización:** mayo 2026 — rol de usuario, marcas de tiempo en pedidos, tablas `@map`, modelos de Playlists e integraciones de IA.

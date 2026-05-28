@@ -1,6 +1,19 @@
-# Changelog Reciente
+[TOC]
 
-### Mayo 2026
+## Mayo 2026
+
+*   [SCRUM-227] **Autenticación:** Implementada recuperación de contraseñas en el componente de Login (Frontend).
+*   [SCRUM-226] **Correos y Stripe:** Configuración de credenciales SMTP en producción para el envío de recibos.
+*   [SCRUM-195] **Analíticas:** Integración de Google Analytics (GA4) con visualización estilo PowerBI mediante Chart.js.
+*   [SCRUM-194] **Backend:** Nuevo endpoint protegido `/api/analytics/traffic` para ingesta de métricas.
+*   [SCRUM-193] **IA/Data:** Nuevo script Python (`seed_analytics.py` y `ga4_analytics.py`) para métricas de prueba.
+*   [SCRUM-181] **Playlists:** Generación de portadas por IA y almacenamiento en Firebase Storage.
+*   [SCRUM-175] **AI Chat:** Rediseño del chat con panel lateral, conversión de hilos a listas de reproducción.
+*   [SCRUM-170] **Playlists:** Compartición pública y exportación a JSON/Markdown.
+*   [SCRUM-168] **IA (n8n):** Generación de colecciones de libros a partir de prompts de lenguaje natural.
+*   [SCRUM-161] **Backend:** Módulo de Playlists implementado (Prisma + Express).
+
+## Abril 2026
 
 #### Infra — API en EC2 + HTTPS + Supabase + CI
 

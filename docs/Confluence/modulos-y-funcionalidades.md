@@ -86,11 +86,37 @@ Webhook registrado en `app.ts` **antes** de `express.json()`, cuerpo **raw** par
 
 ---
 
+---
+
+### Módulo de Playlists (`/api/playlists`)
+
+| Método | Ruta                      | Descripción                                                                 | Auth          |
+| ------ | ------------------------- | --------------------------------------------------------------------------- | ------------- |
+| GET    | /api/playlists            | Lista las playlists (manuales e IA) del usuario o públicas.                 | Bearer        |
+| POST   | /api/playlists            | Crea una nueva playlist manual.                                             | Bearer        |
+| GET    | /api/playlists/:id        | Obtiene detalle completo de una playlist.                                   | Bearer        |
+| PATCH  | /api/playlists/:id        | Modifica título, estado de visibilidad o items (reorder).                   | Bearer        |
+| DELETE | /api/playlists/:id        | Elimina una playlist entera.                                                | Bearer        |
+| POST   | /api/playlists/:id/items  | Añade un `PlaylistItem` a una playlist existente.                           | Bearer        |
+| DELETE | /api/playlists/items/:id  | Elimina un libro de la lista.                                               | Bearer        |
+| POST   | /api/playlists/generate   | Dispara webhook a n8n para generar playlist vía IA; usa polling en cliente. | Bearer        |
+
+---
+
+### Módulo de Analytics (`/api/analytics`)
+
+| Método | Ruta                      | Descripción                                                                 | Auth          |
+| ------ | ------------------------- | --------------------------------------------------------------------------- | ------------- |
+| GET    | /api/analytics/traffic    | Agrega datos desde DB o GA4 (si está configurado) para el dashboard admin.  | Bearer + Admin|
+
+---
+
 ### IA / Chat (`/api/ai-chat`)
 
 | Método | Ruta                      | Descripción                                                                                                            | Auth                                             |
 | ------ | ------------------------- | ---------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------ |
 | POST   | /api/ai-chat/send-message | Body: userId, conversationId, content. Firestore + webhook n8n (N8N\_WEBHOOK\_URL). **503** si webhook no configurado. | Sin auth en router; **endurecer en producción**. |
+| POST   | /api/ai-chat/playlists    | Endpoint interno (opcional) o lógica de guardado directo en DB.                                                        | -                                                |
 
 ---
 
