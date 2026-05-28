@@ -147,8 +147,8 @@ model UserBook {
   createdAt      DateTime       @default(now()) @map("created_at")
   updatedAt      DateTime       @updatedAt @map("updated_at")
 
-  owner       User               @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  catalogBook CatalogBook?       @relation(fields: [catalogBookId], references: [id], onDelete: SetNull)
+  owner       User        @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  catalogBook CatalogBook? @relation(fields: [catalogBookId], references: [id], onDelete: SetNull)
   categories  UserBookCategory[]
   tradeItems  TradeItem[]
 

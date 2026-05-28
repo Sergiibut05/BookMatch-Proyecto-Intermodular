@@ -1,4 +1,5 @@
-import type { Trade, TradeItem, TradeSide, TradeStatus } from '@prisma/client';
+import type { TradeSide, TradeStatus } from '@prisma/client';
+import type { Prisma } from '@prisma/client';
 import { prisma } from '../../config/db.js';
 
 export type { TradeSide, TradeStatus };
@@ -10,19 +11,67 @@ export type TradeListItem = {
   receiverId: number;
   createdAt: Date;
   updatedAt: Date;
+  /** Hasta 4 portadas de ítems del trueque (orden por id). */
+  previewCovers: (string | null)[];
+};
+
+export type TradeDetailItem = {
+  id: number;
+  tradeId: number;
+  userBookId: number;
+  side: TradeSide;
+  createdAt: Date;
+  userBook: {
+    id: number;
+    title: string;
+    author: string;
+    coverUrl: string | null;
+    owner: { id: number; fullName: string | null; avatarUrl: string | null };
+  };
+};
+
+/** Datos públicos de participante; solo se envían en trueques ACCEPTED / COMPLETED. */
+export type TradeParticipantPublic = {
+  id: number;
+  fullName: string | null;
+  avatarUrl: string | null;
+  email: string;
+  phone: string | null;
 };
 
 export type TradeDetail = TradeListItem & {
-  items: Array<{
-    id: number;
-    tradeId: number;
-    userBookId: number;
-    side: TradeSide;
-    createdAt: Date;
-  }>;
+  message: string | null;
+  expiresAt: Date | null;
+  items: TradeDetailItem[];
+  /** Solo en ACCEPTED / COMPLETED: contacto de emisor y receptor. */
+  sender?: TradeParticipantPublic;
+  receiver?: TradeParticipantPublic;
 };
 
-type TradeWithItems = Trade & { items: TradeItem[] };
+const tradeDetailInclude = {
+  items: {
+    orderBy: { id: 'asc' as const },
+    include: {
+      userBook: {
+        select: {
+          id: true,
+          title: true,
+          author: true,
+          coverUrl: true,
+          owner: { select: { id: true, fullName: true, avatarUrl: true } },
+        },
+      },
+    },
+  },
+  sender: {
+    select: { id: true, email: true, phone: true, fullName: true, avatarUrl: true },
+  },
+  receiver: {
+    select: { id: true, email: true, phone: true, fullName: true, avatarUrl: true },
+  },
+} satisfies Prisma.TradeInclude;
+
+type TradeWithDetail = Prisma.TradeGetPayload<{ include: typeof tradeDetailInclude }>;
 
 function httpError(status: number, message: string): Error {
   const err = new Error(message);
@@ -30,27 +79,66 @@ function httpError(status: number, message: string): Error {
   return err;
 }
 
-function toDetail(row: TradeWithItems): TradeDetail {
-  const { items, ...rest } = row;
-  return {
-    ...rest,
+function toDetail(row: TradeWithDetail): TradeDetail {
+  const { items, sender, receiver, ...rest } = row;
+
+  const out: TradeDetail = {
+    id: rest.id,
+    status: rest.status,
+    senderId: rest.senderId,
+    receiverId: rest.receiverId,
+    message: rest.message,
+    expiresAt: rest.expiresAt,
+    createdAt: rest.createdAt,
+    updatedAt: rest.updatedAt,
+    previewCovers: items.slice(0, 4).map((i) => i.userBook.coverUrl),
     items: items.map((i) => ({
       id: i.id,
       tradeId: i.tradeId,
       userBookId: i.userBookId,
       side: i.side,
       createdAt: i.createdAt,
+      userBook: {
+        id: i.userBook.id,
+        title: i.userBook.title,
+        author: i.userBook.author,
+        coverUrl: i.userBook.coverUrl,
+        owner: {
+          id: i.userBook.owner.id,
+          fullName: i.userBook.owner.fullName,
+          avatarUrl: i.userBook.owner.avatarUrl,
+        },
+      },
     })),
   };
+
+  if (rest.status === 'ACCEPTED' || rest.status === 'COMPLETED') {
+    out.sender = {
+      id: sender.id,
+      fullName: sender.fullName,
+      avatarUrl: sender.avatarUrl,
+      email: sender.email,
+      phone: sender.phone,
+    };
+    out.receiver = {
+      id: receiver.id,
+      fullName: receiver.fullName,
+      avatarUrl: receiver.avatarUrl,
+      email: receiver.email,
+      phone: receiver.phone,
+    };
+  }
+
+  return out;
 }
 
-async function loadTradeForParticipant(id: number, userId: number): Promise<TradeWithItems> {
+async function loadTradeForParticipant(id: number, userId: number): Promise<TradeWithDetail> {
   const trade = await prisma.trade.findFirst({
     where: {
       id,
       OR: [{ senderId: userId }, { receiverId: userId }],
     },
-    include: { items: { orderBy: { id: 'asc' } } },
+    include: tradeDetailInclude,
   });
   if (!trade) {
     throw httpError(404, 'No encontrado');
@@ -61,19 +149,31 @@ async function loadTradeForParticipant(id: number, userId: number): Promise<Trad
 export async function listTradesForUser(userId: number): Promise<TradeListItem[]> {
   const rows = await prisma.trade.findMany({
     where: {
-      OR: [{ senderId: userId }, { receiverId: userId }],
+      AND: [
+        { OR: [{ senderId: userId }, { receiverId: userId }] },
+        { status: { not: 'CANCELLED' } },
+      ],
     },
     orderBy: { updatedAt: 'desc' },
-    select: {
-      id: true,
-      status: true,
-      senderId: true,
-      receiverId: true,
-      createdAt: true,
-      updatedAt: true,
+    include: {
+      items: {
+        take: 4,
+        orderBy: { id: 'asc' },
+        select: {
+          userBook: { select: { coverUrl: true } },
+        },
+      },
     },
   });
-  return rows;
+  return rows.map((r) => ({
+    id: r.id,
+    status: r.status,
+    senderId: r.senderId,
+    receiverId: r.receiverId,
+    createdAt: r.createdAt,
+    updatedAt: r.updatedAt,
+    previewCovers: r.items.map((i) => i.userBook.coverUrl),
+  }));
 }
 
 export async function getTradeByIdForUser(id: number, userId: number): Promise<TradeDetail> {
@@ -138,7 +238,7 @@ export async function createTrade(args: {
         ],
       },
     },
-    include: { items: { orderBy: { id: 'asc' } } },
+    include: tradeDetailInclude,
   });
 
   return toDetail(trade);
@@ -156,7 +256,7 @@ export async function acceptTrade(id: number, userId: number): Promise<TradeDeta
   const updated = await prisma.trade.update({
     where: { id },
     data: { status: 'ACCEPTED' },
-    include: { items: { orderBy: { id: 'asc' } } },
+    include: tradeDetailInclude,
   });
   return toDetail(updated);
 }
@@ -173,7 +273,7 @@ export async function rejectTrade(id: number, userId: number): Promise<TradeDeta
   const updated = await prisma.trade.update({
     where: { id },
     data: { status: 'REJECTED' },
-    include: { items: { orderBy: { id: 'asc' } } },
+    include: tradeDetailInclude,
   });
   return toDetail(updated);
 }
@@ -190,7 +290,7 @@ export async function cancelTrade(id: number, userId: number): Promise<TradeDeta
   const updated = await prisma.trade.update({
     where: { id },
     data: { status: 'CANCELLED' },
-    include: { items: { orderBy: { id: 'asc' } } },
+    include: tradeDetailInclude,
   });
   return toDetail(updated);
 }
@@ -204,7 +304,7 @@ export async function completeTrade(id: number, userId: number): Promise<TradeDe
   const updated = await prisma.trade.update({
     where: { id },
     data: { status: 'COMPLETED' },
-    include: { items: { orderBy: { id: 'asc' } } },
+    include: tradeDetailInclude,
   });
   return toDetail(updated);
 }

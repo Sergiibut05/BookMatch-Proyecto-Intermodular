@@ -5,187 +5,326 @@
     <header class="tq-hero pl-fade-in">
       <div class="tq-hero-inner">
         <div class="tq-hero-copy">
-          <p class="tq-hero-eyebrow">BookMatch</p>
-          <h2 class="tq-hero-title">
+          <p class="tq-hero-eyebrow">{{ 'TRUEQUE.HERO_EYEBROW' | translate }}</p>
+          <h1 class="tq-hero-title">
             {{ 'TRUEQUE.TITLE' | translate }}
-          </h2>
+          </h1>
           <p class="tq-hero-subtitle">
-            Intercambia libros con otros lectores de forma simple y rápida.
+            {{ 'TRUEQUE.SUBTITLE' | translate }}
           </p>
         </div>
 
         <div class="tq-hero-actions">
-          <button type="button" class="btn-outline press-target" (click)="setTab('mine')">
-            <span class="material-symbols-outlined">inbox</span>
-            <span>{{ 'TRUEQUE.TAB_MINE' | translate }}</span>
-          </button>
           <button type="button" class="btn-solid press-target" (click)="openCreate()">
-            <span class="material-symbols-outlined">add</span>
+            <span class="material-symbols-outlined" aria-hidden="true">add</span>
             <span>{{ 'TRUEQUE.CTA_CREATE' | translate }}</span>
+          </button>
+          <button type="button" class="btn-outline press-target" (click)="setTab('explore')">
+            <span class="material-symbols-outlined" aria-hidden="true">travel_explore</span>
+            <span>{{ 'TRUEQUE.HERO_BROWSE' | translate }}</span>
           </button>
         </div>
       </div>
     </header>
 
-      <div class="mt-4 rounded-2xl bg-white/70 backdrop-blur border border-[#E9E1D1] shadow-sm overflow-hidden">
-        <div class="grid grid-cols-3 text-center">
-          <button
-            type="button"
-            class="py-3 text-sm sm:text-base font-semibold text-[#45332D] press-target"
-            [class.bg-white]="activeTab() === 'news'"
-            [class.border-b-2]="activeTab() === 'news'"
-            [class.border-[#E0A15E]]="activeTab() === 'news'"
-            (click)="setTab('news')">
-            {{ 'TRUEQUE.TAB_NEWS' | translate }}
-          </button>
+    <div
+      class="mt-4 tq-segmented segmented pl-fade-in"
+      role="tablist"
+      [attr.aria-label]="'TRUEQUE.SEGMENT_ARIA' | translate"
+      [style.--seg-index]="tabSegmentIndex()"
+      style="animation-delay: 50ms">
+      <span class="segmented-indicator" aria-hidden="true"></span>
+      <button
+        type="button"
+        role="tab"
+        [attr.aria-selected]="activeTab() === 'explore'"
+        (click)="setTab('explore')"
+        class="segmented-item"
+        [class.is-active]="activeTab() === 'explore'">
+        {{ 'TRUEQUE.TAB_EXPLORE' | translate }}
+      </button>
+      <button
+        type="button"
+        role="tab"
+        [attr.aria-selected]="activeTab() === 'trades'"
+        (click)="setTab('trades')"
+        class="segmented-item"
+        [class.is-active]="activeTab() === 'trades'">
+        {{ 'TRUEQUE.TAB_TRADES' | translate }}
+      </button>
+      <button
+        type="button"
+        role="tab"
+        [attr.aria-selected]="activeTab() === 'library'"
+        (click)="setTab('library')"
+        class="segmented-item"
+        [class.is-active]="activeTab() === 'library'">
+        {{ 'TRUEQUE.TAB_LIBRARY' | translate }}
+      </button>
+    </div>
 
-          <button
-            type="button"
-            class="py-3 text-sm sm:text-base font-semibold text-[#45332D] press-target"
-            [class.bg-white]="activeTab() === 'popular'"
-            [class.border-b-2]="activeTab() === 'popular'"
-            [class.border-[#E0A15E]]="activeTab() === 'popular'"
-            (click)="setTab('popular')">
-            {{ 'TRUEQUE.TAB_NEAR' | translate }}
-          </button>
-
-          <button
-            type="button"
-            class="py-3 text-sm sm:text-base font-semibold text-[#45332D] press-target"
-            [class.bg-white]="activeTab() === 'mine'"
-            [class.border-b-2]="activeTab() === 'mine'"
-            [class.border-[#E0A15E]]="activeTab() === 'mine'"
-            (click)="setTab('mine')">
-            {{ 'TRUEQUE.TAB_MINE' | translate }}
-          </button>
-        </div>
-      </div>
-
-      <div class="mt-4">
-        <div class="rounded-2xl border border-[#E9E1D1] bg-white/70 backdrop-blur shadow-sm px-4 py-3">
-          <div class="flex items-center gap-3">
-            <span class="material-symbols-outlined text-[#6b4d39]">search</span>
+    <div class="mt-4">
+      <div class="tq-search-shell px-3 py-2.5 sm:px-4 sm:py-3">
+        <div class="flex flex-col sm:flex-row sm:items-center gap-3">
+          <div class="flex items-center gap-3 flex-1 min-w-0">
+            <span class="material-symbols-outlined text-[#6b4d39] shrink-0">search</span>
             <input
               class="w-full bg-transparent outline-none text-sm sm:text-base text-[#45332D] placeholder:text-[#6b4d39]/70"
-              [placeholder]="'HEADER.SEARCH_TRADES_PLACEHOLDER' | translate"
+              [placeholder]="
+                activeTab() === 'explore'
+                  ? ('TRUEQUE.SEARCH_EXPLORE_PLACEHOLDER' | translate)
+                  : activeTab() === 'trades'
+                    ? ('HEADER.SEARCH_TRADES_PLACEHOLDER' | translate)
+                    : ('TRUEQUE.SEARCH_LIBRARY_PLACEHOLDER' | translate)
+              "
               [value]="query()"
-              (input)="query.set(($any($event.target).value || '').toString())" />
+              (input)="onSearchInput(($any($event.target).value || '').toString())" />
             @if (query()) {
               <button
                 type="button"
-                class="p-1 rounded-lg text-[#6b4d39] hover:bg-black/5"
-                (click)="query.set('')"
-                aria-label="Clear search">
-                <span class="material-symbols-outlined text-base">close</span>
+                class="tq-touch-icon rounded-xl text-[#6b4d39] hover:bg-black/5 shrink-0 press-target"
+                (click)="clearSearchQuery()"
+                [attr.aria-label]="'TRUEQUE.CLEAR_SEARCH' | translate">
+                <span class="material-symbols-outlined text-base" aria-hidden="true">close</span>
               </button>
             }
           </div>
         </div>
       </div>
+    </div>
 
-      <div class="mt-6">
-        <div class="flex items-center justify-between gap-3">
-          <h3 class="text-base sm:text-lg font-bold text-[#45332D]">
-            {{ 'TRUEQUE.AVAILABLE_TITLE' | translate }}
-          </h3>
-        </div>
-
-        @if (activeTab() === 'mine') {
-          @if (mineLoading()) {
-            <div class="mt-4 rounded-2xl border border-[#E9E1D1] bg-white/70 p-5 text-[#45332D]">
-              <p class="font-bold">Cargando...</p>
-              <p class="mt-1 text-sm opacity-80">Estamos preparando tus trueques.</p>
-            </div>
-          } @else if (mineError()) {
-            <div class="mt-4 rounded-2xl border border-[#E9E1D1] bg-white/70 p-5 text-[#45332D]">
-              <p class="font-bold">Error</p>
-              <p class="mt-1 text-sm opacity-80">{{ mineError() }}</p>
-            </div>
-          } @else if (myTrades().length === 0) {
-            <div class="mt-4 rounded-2xl border border-[#E9E1D1] bg-white/70 p-5 text-[#45332D]">
-              <p class="font-bold">{{ 'TRUEQUE.EMPTY_TITLE' | translate }}</p>
-              <p class="mt-1 text-sm opacity-80">{{ 'TRUEQUE.EMPTY_BODY' | translate }}</p>
-            </div>
+    <div class="mt-6">
+      <div class="flex items-center justify-between gap-3 flex-wrap">
+        <h3 class="text-base sm:text-lg font-bold text-[#45332D]">
+          @if (activeTab() === 'explore') {
+            {{ 'TRUEQUE.SECTION_EXPLORE' | translate }}
+          } @else if (activeTab() === 'trades') {
+            {{ 'TRUEQUE.SECTION_TRADES' | translate }}
           } @else {
-            <div class="mt-4 space-y-3">
-              @for (t of myTrades(); track t.id) {
-                <button
-                  type="button"
-                  class="w-full text-left rounded-2xl border border-[#E9E1D1] bg-white/80 shadow-sm hover:bg-white transition pl-card-hover"
-                  (click)="openTrade(t.id)">
-                  <div class="p-4">
-                    <div class="flex items-start justify-between gap-3">
-                      <div>
-                        <p class="text-sm font-bold text-[#45332D]">
-                          {{ t.other.name }}
-                          <span class="ml-2 text-xs font-semibold px-2 py-0.5 rounded-full border border-[#E9E1D1] bg-[#FFFDF7] text-[#6b4d39]">
-                            {{ t.status }}
-                          </span>
-                        </p>
-                        <p class="mt-1 text-xs text-[#6b4d39] opacity-90">
-                          {{ t.updatedAt }} · {{ t.id }}
-                        </p>
-                      </div>
+            {{ 'TRUEQUE.SECTION_LIBRARY' | translate }}
+          }
+        </h3>
+        @if (activeTab() === 'library' && myUserId() !== null) {
+          <button type="button" class="btn-solid press-target min-h-[44px] px-4 py-2 text-sm" (click)="openAddBook()">
+            <span class="material-symbols-outlined text-base" aria-hidden="true">add</span>
+            <span>{{ 'TRUEQUE.ADD_BOOK' | translate }}</span>
+          </button>
+        }
+      </div>
 
-                      <span class="material-symbols-outlined text-[#6b4d39]">chevron_right</span>
-                    </div>
-
-                    <div class="mt-3 flex items-center justify-between gap-4">
-                      <div class="flex -space-x-2">
-                        @for (c of t.previewCovers; track c) {
-                          <img
-                            class="h-9 w-9 rounded-xl border border-[#E9E1D1] object-cover bg-[#FFFDF7]"
-                            [src]="c"
-                            alt=""
-                            loading="lazy"
-                            decoding="async" />
-                        }
-                      </div>
-
-                      <div class="text-right text-xs text-[#6b4d39]">
-                        <p><span class="font-bold">{{ t.senderCount }}</span> · tú</p>
-                        <p><span class="font-bold">{{ t.receiverCount }}</span> · {{ t.other.name }}</p>
-                      </div>
-                    </div>
+      @if (activeTab() === 'explore') {
+        @if (exploreLoading()) {
+          <div class="mt-4 pl-fade-in" aria-busy="true">
+            <span class="sr-only">{{ 'TRUEQUE.SKELETON_LOADING' | translate }}</span>
+            <div class="tq-book-grid pl-stagger-auto">
+              @for (s of exploreSkeletonSlots; track s) {
+                <div class="tq-skeleton tq-card-book">
+                  <div class="tq-card-book-body">
+                    <div class="tq-skeleton-cover"></div>
+                    <div class="tq-skeleton-line tq-skeleton-line--lg"></div>
+                    <div class="tq-skeleton-line"></div>
+                    <div class="tq-skeleton-line tq-skeleton-line--sm"></div>
                   </div>
-                </button>
+                </div>
               }
             </div>
-          }
-        } @else if (books().length === 0) {
+          </div>
+        } @else if (exploreError()) {
           <div class="mt-4 rounded-2xl border border-[#E9E1D1] bg-white/70 p-5 text-[#45332D]">
-            <p class="font-bold">{{ 'TRUEQUE.EMPTY_TITLE' | translate }}</p>
-            <p class="mt-1 text-sm opacity-80">{{ 'TRUEQUE.EMPTY_BODY' | translate }}</p>
+            <p class="font-bold">{{ 'TRUEQUE.ERROR_TITLE' | translate }}</p>
+            <p class="mt-1 text-sm opacity-80">{{ exploreError()! | translate }}</p>
+            <button type="button" class="mt-3 text-sm font-bold underline" (click)="loadExplore()">{{ 'PLAYLISTS.RETRY' | translate }}</button>
+          </div>
+        } @else if (exploreItems().length === 0) {
+          <div class="mt-4 rounded-2xl border border-[#E9E1D1] bg-white/70 p-5 text-[#45332D]">
+            <p class="font-bold">{{ 'TRUEQUE.EMPTY_EXPLORE_TITLE' | translate }}</p>
+            <p class="mt-1 text-sm opacity-80">{{ 'TRUEQUE.EMPTY_EXPLORE_BODY' | translate }}</p>
           </div>
         } @else {
-          <div class="mt-4 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 pl-stagger-auto">
-            @for (card of books(); track card.id) {
-              <article class="tq-card group rounded-2xl border border-[#E9E1D1] bg-white/80 shadow-sm overflow-hidden pl-card-hover">
-                <div class="p-3">
-                  <div class="rounded-xl overflow-hidden border border-[#E9E1D1] bg-[#FFFDF7] aspect-[3/4]">
+          <div class="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between text-sm text-[#6b4d39]">
+            <span>{{ 'TRUEQUE.PAGE_OF' | translate: { page: explorePage(), total: exploreTotalPages() } }}</span>
+            <div class="flex gap-2 justify-end">
+              <button
+                type="button"
+                class="btn-outline press-target min-h-[44px] min-w-[44px] px-3 text-sm font-bold"
+                [disabled]="explorePage() <= 1"
+                (click)="explorePrevPage()">
+                {{ 'TRUEQUE.PAGE_PREV' | translate }}
+              </button>
+              <button
+                type="button"
+                class="btn-outline press-target min-h-[44px] min-w-[44px] px-3 text-sm font-bold"
+                [disabled]="explorePage() >= exploreTotalPages()"
+                (click)="exploreNextPage()">
+                {{ 'TRUEQUE.PAGE_NEXT' | translate }}
+              </button>
+            </div>
+          </div>
+          <div class="mt-4 tq-book-grid pl-stagger-auto">
+            @for (card of exploreItems(); track card.id) {
+              <article
+                class="tq-card-book pl-fade-in group"
+                (click)="openExploreDetail(card.id)"
+                (keydown.enter)="openExploreDetail(card.id)"
+                tabindex="0"
+                role="button"
+                [attr.aria-label]="card.title">
+                <div class="tq-card-book-body">
+                  <div class="tq-card-book-cover-wrap">
                     <img
-                      [src]="card.coverUrl"
+                      [src]="coverSrc(card)"
                       [alt]="card.title"
-                      class="h-full w-full object-cover"
+                      class="tq-card-book-cover"
                       loading="lazy"
                       decoding="async" />
                   </div>
-
-                  <div class="mt-3">
+                  <div class="mt-2.5 min-h-0">
                     <p class="text-sm font-bold text-[#45332D] leading-snug line-clamp-2">
                       {{ card.title }}
                     </p>
                     <p class="mt-1 text-xs text-[#6b4d39] line-clamp-1">
                       {{ card.author }}
                     </p>
-                  </div>
-
-                  <div class="mt-3 flex items-center justify-between gap-2">
-                    <p class="text-[11px] font-semibold text-[#8a6a52] tracking-wide uppercase">
-                      Disponible
+                    <p class="mt-1 text-[11px] text-[#8a6a52] line-clamp-1">
+                      {{ card.owner.fullName || ('TRUEQUE.OWNER_FALLBACK' | translate: { id: card.owner.id }) }}
                     </p>
-                    <button type="button" class="tq-card-cta pl-btn-primary rounded-xl px-3 py-2 text-xs font-bold">
-                      {{ 'TRUEQUE.CTA_SWAP' | translate }}
+                  </div>
+                  <div class="tq-card-book-cta-row">
+                    <span class="tq-card-cta btn-solid pointer-events-none" aria-hidden="true">
+                      {{ 'TRUEQUE.CTA_PROPOSE_INTERCAMBIO' | translate }}
+                    </span>
+                  </div>
+                </div>
+              </article>
+            }
+          </div>
+        }
+      } @else if (activeTab() === 'trades') {
+        @if (myUserId() === null) {
+          <div class="mt-4 rounded-2xl border border-[#E9E1D1] bg-white/70 p-5 text-[#45332D]">
+            <p class="font-bold">{{ 'TRUEQUE.LOGIN_TITLE' | translate }}</p>
+            <p class="mt-1 text-sm opacity-80">{{ 'TRUEQUE.LOGIN_BODY' | translate }}</p>
+          </div>
+        } @else if (tradesLoading()) {
+          <div class="mt-4 pl-fade-in space-y-3" aria-busy="true">
+            <span class="sr-only">{{ 'TRUEQUE.SKELETON_LOADING' | translate }}</span>
+            @for (s of tradeSkeletonSlots; track s) {
+              <div class="tq-skeleton-trade">
+                <div class="tq-skeleton-trade-visual">
+                  <div class="tq-skeleton-cover"></div>
+                </div>
+                <div class="flex-1 min-w-0 py-1">
+                  <div class="tq-skeleton-line tq-skeleton-line--lg"></div>
+                  <div class="tq-skeleton-line"></div>
+                  <div class="tq-skeleton-line tq-skeleton-line--sm"></div>
+                </div>
+              </div>
+            }
+          </div>
+        } @else if (tradesError()) {
+          <div class="mt-4 rounded-2xl border border-[#E9E1D1] bg-white/70 p-5 text-[#45332D]">
+            <p class="font-bold">{{ 'TRUEQUE.ERROR_TITLE' | translate }}</p>
+            <p class="mt-1 text-sm opacity-80">{{ tradesError()! | translate }}</p>
+            <button type="button" class="mt-3 text-sm font-bold underline" (click)="loadTrades()">{{ 'PLAYLISTS.RETRY' | translate }}</button>
+          </div>
+        } @else if (filteredTrades().length === 0) {
+          <div class="mt-4 rounded-2xl border border-[#E9E1D1] bg-white/70 p-5 text-[#45332D]">
+            <p class="font-bold">{{ 'TRUEQUE.EMPTY_TITLE' | translate }}</p>
+            <p class="mt-1 text-sm opacity-80">{{ 'TRUEQUE.EMPTY_BODY' | translate }}</p>
+          </div>
+        } @else {
+          <div class="mt-4 space-y-3 pl-stagger-auto">
+            @for (t of filteredTrades(); track t.id) {
+              <button
+                type="button"
+                class="tq-trade-card press-target pl-fade-in"
+                (click)="openTrade(t.id)"
+                [attr.aria-label]="tradeCardAriaLabel(t)">
+                <div class="tq-trade-card-visual">
+                  @if (tradePreviewCovers(t).length) {
+                    <div class="tq-trade-covers" aria-hidden="true">
+                      @for (c of tradePreviewCovers(t).slice(0, 3); track $index) {
+                        <span class="tq-trade-cover" [style.zIndex]="10 - $index">
+                          <img [src]="c?.trim() ? c! : PLACEHOLDER_COVER" alt="" />
+                        </span>
+                      }
+                    </div>
+                  } @else {
+                    <span class="tq-trade-cover-fallback material-symbols-outlined" aria-hidden="true">menu_book</span>
+                  }
+                </div>
+                <div class="tq-trade-card-main">
+                  <div class="min-w-0">
+                    <p class="text-sm font-bold text-[#45332D]">
+                      {{ 'TRUEQUE.TRADE_WITH' | translate }}
+                    </p>
+                    <p class="tq-trade-card-meta">
+                      #{{ t.id }} · {{ t.updatedAt | date: 'short' }} ·
+                      @if (isSenderTrade(t)) {
+                        {{ 'TRUEQUE.ROLE_SENDER' | translate }}
+                      } @else {
+                        {{ 'TRUEQUE.ROLE_RECEIVER' | translate }}
+                      }
+                    </p>
+                    <span [class]="tradeStatusBadgeClass(t.status)">
+                      {{ tradeStatusLabelKey(t.status) | translate }}
+                    </span>
+                  </div>
+                  <span class="tq-chevron material-symbols-outlined" aria-hidden="true">chevron_right</span>
+                </div>
+              </button>
+            }
+          </div>
+        }
+      } @else {
+        @if (myUserId() === null) {
+          <div class="mt-4 rounded-2xl border border-[#E9E1D1] bg-white/70 p-5 text-[#45332D]">
+            <p class="font-bold">{{ 'TRUEQUE.LOGIN_TITLE' | translate }}</p>
+            <p class="mt-1 text-sm opacity-80">{{ 'TRUEQUE.LOGIN_BODY' | translate }}</p>
+          </div>
+        } @else if (libraryLoading()) {
+          <div class="mt-4 pl-fade-in" aria-busy="true">
+            <span class="sr-only">{{ 'TRUEQUE.SKELETON_LOADING' | translate }}</span>
+            <div class="tq-book-grid pl-stagger-auto">
+              @for (s of librarySkeletonSlots; track s) {
+                <div class="tq-skeleton tq-card-book">
+                  <div class="tq-card-book-body">
+                    <div class="tq-skeleton-cover"></div>
+                    <div class="tq-skeleton-line tq-skeleton-line--lg"></div>
+                    <div class="tq-skeleton-line"></div>
+                    <div class="tq-skeleton-line tq-skeleton-line--sm"></div>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        } @else if (libraryError()) {
+          <div class="mt-4 rounded-2xl border border-[#E9E1D1] bg-white/70 p-5 text-[#45332D]">
+            <p class="font-bold">{{ 'TRUEQUE.ERROR_TITLE' | translate }}</p>
+            <p class="mt-1 text-sm opacity-80">{{ libraryError()! | translate }}</p>
+            <button type="button" class="mt-3 text-sm font-bold underline" (click)="loadLibrary()">{{ 'PLAYLISTS.RETRY' | translate }}</button>
+          </div>
+        } @else if (filteredLibrary().length === 0) {
+          <div class="mt-4 rounded-2xl border border-[#E9E1D1] bg-white/70 p-5 text-[#45332D]">
+            <p class="font-bold">{{ 'TRUEQUE.EMPTY_LIBRARY_TITLE' | translate }}</p>
+            <p class="mt-1 text-sm opacity-80">{{ 'TRUEQUE.EMPTY_LIBRARY_BODY' | translate }}</p>
+          </div>
+        } @else {
+          <div class="mt-4 tq-book-grid pl-stagger-auto">
+            @for (b of filteredLibrary(); track b.id) {
+              <article class="tq-card-book pl-fade-in">
+                <div class="tq-card-book-body flex flex-col flex-1">
+                  <div class="tq-card-book-cover-wrap">
+                    <img [src]="coverSrc(b)" [alt]="b.title" class="tq-card-book-cover" loading="lazy" decoding="async" />
+                  </div>
+                  <p class="mt-2 text-sm font-bold text-[#45332D] line-clamp-2">{{ b.title }}</p>
+                  <p class="text-xs text-[#6b4d39] line-clamp-1">{{ b.author }}</p>
+                  <div class="mt-auto pt-2">
+                    <button
+                      type="button"
+                      class="btn-ghost is-danger press-target w-full min-h-[44px] text-xs font-bold"
+                      (click)="deleteLibraryBook(b.id)">
+                      {{ 'TRUEQUE.DELETE_BOOK' | translate }}
                     </button>
                   </div>
                 </div>
@@ -193,7 +332,8 @@
             }
           </div>
         }
-      </div>
+      }
+    </div>
   </section>
 </main>
 
@@ -202,161 +342,346 @@
 @if (toast()) {
   <div class="fixed left-1/2 top-[80px] z-50 -translate-x-1/2">
     <div class="rounded-2xl border border-[#E9E1D1] bg-white/90 px-4 py-2 text-sm font-semibold text-[#45332D] shadow-md">
-      {{ toast() }}
+      {{ toast()! | translate }}
     </div>
   </div>
 }
 
-@if (createOpen()) {
-  <div class="fixed inset-0 z-50">
-    <button type="button" class="absolute inset-0 bg-black/30" (click)="closeCreate()" aria-label="Close"></button>
+@if (exploreBookModalOpen()) {
+  <div class="pl-modal-backdrop" role="presentation" (click)="onExploreBookBackdrop($event)">
+    <div
+      class="pl-modal pl-modal-in-desktop"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="trueque-book-detail-title"
+      (click)="$event.stopPropagation()">
+      <div class="pl-modal-head">
+        <div>
+          <h2 id="trueque-book-detail-title" class="pl-modal-title">
+            {{ 'TRUEQUE.BOOK_DETAIL_TITLE' | translate }}
+          </h2>
+          @if (exploreBookDetail(); as headBook) {
+            <p class="pl-modal-sub">{{ headBook.author }} · {{ headBook.title }}</p>
+          } @else {
+            <p class="pl-modal-sub">{{ 'TRUEQUE.BOOK_DETAIL_SUB' | translate }}</p>
+          }
+        </div>
+        <button
+          type="button"
+          class="pl-modal-close press-target"
+          (click)="closeExploreBook()"
+          [attr.aria-label]="'TRUEQUE.CLOSE' | translate">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
 
-    <div class="absolute inset-x-0 bottom-0 sm:inset-0 sm:flex sm:items-center sm:justify-center p-3 sm:p-6">
-      <div class="w-full sm:max-w-2xl rounded-3xl bg-[#FCF5E2] border border-[#E9E1D1] shadow-xl overflow-hidden">
-        <div class="p-4 sm:p-5">
-          <div class="flex items-start justify-between gap-3">
-            <div>
-              <p class="text-sm font-bold text-[#45332D]">{{ 'TRUEQUE.CREATE_TITLE' | translate }}</p>
-              <p class="mt-1 text-xs text-[#6b4d39]">{{ 'TRUEQUE.CREATE_SUBTITLE' | translate }}</p>
+      <div class="pl-modal-body">
+        @if (exploreBookLoading()) {
+          <div class="pl-fade-in" aria-busy="true">
+            <span class="sr-only">{{ 'TRUEQUE.SKELETON_LOADING' | translate }}</span>
+            <div class="flex justify-center">
+              <div class="tq-skeleton-cover w-full max-w-[14rem] aspect-[3/4] rounded-2xl border border-[#E9E1D1]/60"></div>
             </div>
-            <button type="button" class="p-2 rounded-xl hover:bg-black/5" (click)="closeCreate()" aria-label="Close">
-              <span class="material-symbols-outlined">close</span>
-            </button>
+            <div class="mt-4 max-w-md mx-auto space-y-2">
+              <div class="tq-skeleton-line tq-skeleton-line--lg mx-auto"></div>
+              <div class="tq-skeleton-line mx-auto"></div>
+              <div class="tq-skeleton-line tq-skeleton-line--sm mx-auto"></div>
+            </div>
+          </div>
+        } @else if (exploreBookError()) {
+          <p class="text-sm text-red-900/80">{{ exploreBookError()! | translate }}</p>
+        } @else if (exploreBookDetail(); as book) {
+          <div class="flex justify-center">
+            <img
+              [src]="coverPrimary(book)"
+              [alt]="book.title"
+              class="tq-book-detail-cover max-h-[min(52vh,22rem)] w-auto max-w-full rounded-2xl border border-[#E9E1D1] object-contain bg-[#FFFDF7] shadow-sm"
+              loading="eager"
+              decoding="async" />
           </div>
 
-          <div class="mt-4 rounded-2xl border border-[#E9E1D1] bg-white/80 p-4">
-            <label class="block text-xs font-bold text-[#45332D]">{{ 'TRUEQUE.CREATE_RECEIVER' | translate }}</label>
-            <select
-              class="mt-2 w-full rounded-xl border border-[#E9E1D1] bg-[#FFFDF7] px-3 py-2 text-sm text-[#45332D]"
-              [value]="createReceiverId()"
-              (change)="onReceiverChange($any($event.target).value)">
-              @for (u of receivers(); track u.id) {
-                <option [value]="u.id">{{ u.name }}</option>
-              }
-            </select>
+          <div class="text-center sm:text-left">
+            <p class="text-lg font-bold text-[#45332D] font-['Lora',Georgia,serif] leading-snug">{{ book.title }}</p>
+            <p class="mt-1 text-sm text-[#6b4d39]">{{ book.author }}</p>
           </div>
 
-          <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div class="rounded-2xl border border-[#E9E1D1] bg-white/75 p-4">
-              <p class="text-xs font-bold text-[#45332D]">{{ 'TRUEQUE.DETAIL_YOUR_BOOKS' | translate }}</p>
-              <div class="mt-3 space-y-2">
-                @for (o of offeredOptions(); track o.id) {
-                  <button
-                    type="button"
-                    class="w-full text-left flex items-center gap-3 rounded-xl border border-[#E9E1D1] bg-[#FFFDF7] p-2 hover:bg-white"
-                    (click)="toggleOffered(o.id)">
-                    <img class="h-12 w-12 rounded-lg object-cover border border-[#E9E1D1]" [src]="o.book.coverUrl" [alt]="o.book.title" />
-                    <div class="min-w-0 flex-1">
-                      <p class="text-xs font-bold text-[#45332D] line-clamp-1">{{ o.book.title }}</p>
-                      <p class="text-[11px] text-[#6b4d39] line-clamp-1">{{ o.book.author }}</p>
-                    </div>
-                    <span class="material-symbols-outlined text-[#6b4d39]">
-                      @if (createOffered().has(o.id)) { check_circle } @else { radio_button_unchecked }
-                    </span>
-                  </button>
-                }
+          <dl class="grid gap-2 text-sm text-[#45332D] border border-[#E9E1D1]/80 rounded-xl bg-white/60 p-3">
+            <div class="flex flex-col sm:flex-row sm:gap-2">
+              <dt class="font-bold text-[#6b4d39] shrink-0">{{ 'TRUEQUE.BOOK_ISBN' | translate }}</dt>
+              <dd class="m-0 min-w-0 break-all">{{ book.isbn?.trim() || ('TRUEQUE.BOOK_NO_ISBN' | translate) }}</dd>
+            </div>
+            <div class="flex flex-col sm:flex-row sm:gap-2">
+              <dt class="font-bold text-[#6b4d39] shrink-0">{{ 'TRUEQUE.CONDITION' | translate }}</dt>
+              <dd class="m-0">{{ book.condition }}</dd>
+            </div>
+          </dl>
+
+          <div>
+            <p class="text-xs font-bold uppercase tracking-wide text-[#8a6a52]">{{ 'TRUEQUE.BOOK_DESCRIPTION' | translate }}</p>
+            @if (book.description?.trim()) {
+              <p class="mt-2 text-sm text-[#45332D] leading-relaxed whitespace-pre-wrap">{{ book.description }}</p>
+            } @else {
+              <p class="mt-2 text-sm text-[#6b4d39]/80 italic">{{ 'TRUEQUE.BOOK_NO_DESCRIPTION' | translate }}</p>
+            }
+          </div>
+
+          <div class="rounded-2xl border border-[#E9E1D1] bg-[#FFFDF7]/90 p-3 flex items-center gap-3">
+            @if (book.owner.avatarUrl?.trim()) {
+              <img
+                [src]="book.owner.avatarUrl!"
+                [alt]="book.owner.fullName || ('TRUEQUE.OWNER_FALLBACK' | translate: { id: book.owner.id })"
+                class="h-12 w-12 rounded-full object-cover border border-[#E9E1D1] shrink-0 bg-white" />
+            } @else {
+              <div
+                class="h-12 w-12 rounded-full border border-[#E9E1D1] shrink-0 bg-[#E9E1D1]/50 flex items-center justify-center text-[#6b4d39] font-bold text-sm"
+                aria-hidden="true">
+                {{ (book.owner.fullName || '?').charAt(0) }}
               </div>
-            </div>
-
-            <div class="rounded-2xl border border-[#E9E1D1] bg-white/75 p-4">
-              <p class="text-xs font-bold text-[#45332D]">
-                {{ 'TRUEQUE.CREATE_REQUESTED' | translate }}
+            }
+            <div class="min-w-0">
+              <p class="text-xs font-bold uppercase tracking-wide text-[#8a6a52]">{{ 'TRUEQUE.OWNER_SECTION' | translate }}</p>
+              <p class="text-sm font-bold text-[#45332D] truncate">
+                {{ book.owner.fullName || ('TRUEQUE.OWNER_FALLBACK' | translate: { id: book.owner.id }) }}
               </p>
-              <div class="mt-3 space-y-2">
-                @for (o of requestedOptions(); track o.id) {
-                  <button
-                    type="button"
-                    class="w-full text-left flex items-center gap-3 rounded-xl border border-[#E9E1D1] bg-[#FFFDF7] p-2 hover:bg-white"
-                    (click)="toggleRequested(o.id)">
-                    <img class="h-12 w-12 rounded-lg object-cover border border-[#E9E1D1]" [src]="o.book.coverUrl" [alt]="o.book.title" />
+            </div>
+          </div>
+
+          @if (book.categories.length) {
+            <div class="flex flex-wrap gap-2">
+              @for (c of book.categories; track c.id) {
+                <span class="text-[11px] font-semibold px-2 py-1 rounded-full border border-[#E9E1D1] bg-white text-[#6b4d39]">{{ c.name }}</span>
+              }
+            </div>
+          }
+        }
+      </div>
+
+      @if (!exploreBookLoading() && !exploreBookError() && exploreBookDetail(); as bookFoot) {
+        @if (myUserId() !== null && bookFoot.ownerId !== myUserId()) {
+          <div class="pl-modal-foot">
+            <button type="button" class="btn-solid press-target min-h-[44px] w-full sm:w-auto px-5 py-2.5 text-sm font-bold" (click)="proposeFromExplore()">
+              {{ 'TRUEQUE.CTA_PROPOSE_INTERCAMBIO' | translate }}
+            </button>
+          </div>
+        }
+      }
+    </div>
+  </div>
+}
+
+@if (createOpen() && createReceiverId() !== null) {
+  <div class="pl-modal-backdrop" role="presentation" (click)="onCreateBackdrop($event)">
+    <div
+      class="pl-modal pl-modal-in-desktop"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="trueque-create-title"
+      (click)="$event.stopPropagation()">
+      <div class="pl-modal-head">
+        <div>
+          <h2 id="trueque-create-title" class="pl-modal-title">{{ 'TRUEQUE.CREATE_TITLE' | translate }}</h2>
+          <p class="pl-modal-sub">{{ 'TRUEQUE.CREATE_SUBTITLE' | translate }}</p>
+          <p class="mt-2 text-sm font-semibold text-[#45332D]">
+            @if (createReceiverDisplayName(); as rxName) {
+              {{ 'TRUEQUE.CREATE_RECEIVER_INTRO' | translate: { name: rxName } }}
+            } @else {
+              {{
+                'TRUEQUE.CREATE_RECEIVER_INTRO'
+                  | translate: { name: ('TRUEQUE.OWNER_FALLBACK' | translate: { id: createReceiverId()! }) }
+              }}
+            }
+          </p>
+        </div>
+        <button
+          type="button"
+          class="pl-modal-close press-target"
+          (click)="closeCreate()"
+          [attr.aria-label]="'TRUEQUE.CLOSE' | translate">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+
+      <div class="pl-modal-body">
+        @if (createContextLoading()) {
+          <p class="text-sm text-[#6b4d39]">{{ 'TRUEQUE.LOADING' | translate }}</p>
+        } @else {
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="rounded-2xl border border-[#E9E1D1] bg-white/75 p-4">
+              <p class="text-xs font-bold uppercase tracking-wide text-[#8a6a52]">{{ 'TRUEQUE.CREATE_OFFERED_TITLE' | translate }}</p>
+              @if (offeredOptions().length === 0) {
+                <p class="mt-2 text-xs text-[#6b4d39]">{{ 'TRUEQUE.CREATE_EMPTY_MY_BOOKS' | translate }}</p>
+              }
+              <div class="mt-3 space-y-2 max-h-60 overflow-y-auto">
+                @for (o of offeredOptions(); track o.id) {
+                  <label
+                    class="flex cursor-pointer items-center gap-3 rounded-xl border border-[#E9E1D1] bg-[#FFFDF7] p-2 hover:bg-white focus-within:ring-2 focus-within:ring-[#E0A15E]/50">
+                    <input
+                      type="checkbox"
+                      class="h-4 w-4 shrink-0 rounded border-[#C9B8A8] text-[#E0A15E] focus:ring-[#E0A15E]"
+                      [checked]="createOffered().has(o.id)"
+                      (change)="setOfferedSelection(o.id, $any($event.target).checked)" />
+                    <img class="h-12 w-12 rounded-lg border border-[#E9E1D1] object-cover" [src]="o.book.coverUrl" [alt]="o.book.title" />
                     <div class="min-w-0 flex-1">
-                      <p class="text-xs font-bold text-[#45332D] line-clamp-1">{{ o.book.title }}</p>
+                      <p class="text-xs font-bold text-[#45332D] line-clamp-2">{{ o.book.title }}</p>
                       <p class="text-[11px] text-[#6b4d39] line-clamp-1">{{ o.book.author }}</p>
                     </div>
-                    <span class="material-symbols-outlined text-[#6b4d39]">
-                      @if (createRequested().has(o.id)) { check_circle } @else { radio_button_unchecked }
-                    </span>
-                  </button>
+                  </label>
+                }
+              </div>
+            </div>
+
+            <div class="rounded-2xl border border-[#E9E1D1] bg-white/75 p-4">
+              <p class="text-xs font-bold uppercase tracking-wide text-[#8a6a52]">{{ 'TRUEQUE.CREATE_REQUESTED' | translate }}</p>
+              @if (requestedOptions().length === 0) {
+                <p class="mt-2 text-xs text-[#6b4d39]">{{ 'TRUEQUE.CREATE_EMPTY_THEIR_BOOKS' | translate }}</p>
+              }
+              <div class="mt-3 space-y-2 max-h-60 overflow-y-auto">
+                @for (o of requestedOptions(); track o.id) {
+                  <label
+                    class="flex cursor-pointer items-center gap-3 rounded-xl border border-[#E9E1D1] bg-[#FFFDF7] p-2 hover:bg-white focus-within:ring-2 focus-within:ring-[#E0A15E]/50">
+                    <input
+                      type="checkbox"
+                      class="h-4 w-4 shrink-0 rounded border-[#C9B8A8] text-[#E0A15E] focus:ring-[#E0A15E]"
+                      [checked]="createRequested().has(o.id)"
+                      (change)="setRequestedSelection(o.id, $any($event.target).checked)" />
+                    <img class="h-12 w-12 rounded-lg border border-[#E9E1D1] object-cover" [src]="o.book.coverUrl" [alt]="o.book.title" />
+                    <div class="min-w-0 flex-1">
+                      <p class="text-xs font-bold text-[#45332D] line-clamp-2">{{ o.book.title }}</p>
+                      <p class="text-[11px] text-[#6b4d39] line-clamp-1">{{ o.book.author }}</p>
+                    </div>
+                  </label>
                 }
               </div>
             </div>
           </div>
+        }
+      </div>
 
-          <div class="mt-4 flex items-center justify-end gap-3">
-            <button type="button" class="rounded-xl px-4 py-2 text-sm font-bold border border-[#E9E1D1] bg-white/70 text-[#45332D] hover:bg-white" (click)="closeCreate()">
-              {{ 'TRUEQUE.ACTION_CANCEL' | translate }}
-            </button>
-            <button type="button" class="pl-btn-primary rounded-xl px-4 py-2 text-sm font-bold" [disabled]="createLoading()" (click)="submitCreate()">
-              @if (createLoading()) {
-                {{ 'TRUEQUE.CREATING' | translate }}
-              } @else {
-                {{ 'TRUEQUE.CREATE_SUBMIT' | translate }}
-              }
-            </button>
-          </div>
+      <div class="pl-modal-foot">
+        <div class="flex w-full flex-col-reverse gap-2 sm:flex-row sm:justify-end sm:gap-3">
+          <button
+            type="button"
+            class="btn-outline press-target min-h-[44px] px-4 py-2.5 text-sm font-bold"
+            (click)="closeCreate()">
+            {{ 'TRUEQUE.ACTION_CANCEL' | translate }}
+          </button>
+          <button
+            type="button"
+            class="btn-solid press-target min-h-[44px] px-5 py-2.5 text-sm font-bold"
+            [disabled]="createLoading() || createContextLoading() || createOffered().size === 0"
+            (click)="submitCreate()">
+            @if (createLoading()) {
+              {{ 'TRUEQUE.CREATING' | translate }}
+            } @else {
+              {{ 'TRUEQUE.CREATE_SUBMIT' | translate }}
+            }
+          </button>
         </div>
       </div>
     </div>
   </div>
 }
 
-@if (selectedTrade(); as t) {
-  <div class="fixed inset-0 z-50">
-    <button
-      type="button"
-      class="absolute inset-0 bg-black/30"
-      (click)="closeTrade()"
-      aria-label="Close"></button>
+@if (selectedTradeId() !== null) {
+  <div class="pl-modal-backdrop" role="presentation" (click)="onTradeBackdrop($event)">
+    <div
+      class="pl-modal pl-modal-in-desktop pl-fade-in"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="trueque-trade-detail-title"
+      (click)="$event.stopPropagation()">
+      <div class="pl-modal-head">
+        <div>
+          <h2 id="trueque-trade-detail-title" class="pl-modal-title">
+            @if (tradeDetail(); as th0) {
+              {{ 'TRUEQUE.DETAIL_TITLE' | translate: { name: otherPartyName() } }}
+            } @else {
+              {{ 'TRUEQUE.DETAIL_TITLE_LOADING' | translate }}
+            }
+          </h2>
+          @if (tradeDetail(); as th1) {
+            <p class="pl-modal-sub">#{{ th1.id }} · {{ th1.updatedAt | date: 'short' }}</p>
+          } @else {
+            <p class="pl-modal-sub">{{ 'TRUEQUE.DETAIL_MODAL_SUB' | translate }}</p>
+          }
+        </div>
+        <button
+          type="button"
+          class="pl-modal-close press-target"
+          (click)="closeTrade()"
+          [attr.aria-label]="'TRUEQUE.CLOSE' | translate">
+          <span class="material-symbols-outlined" aria-hidden="true">close</span>
+        </button>
+      </div>
 
-    <div class="absolute inset-x-0 bottom-0 sm:inset-0 sm:flex sm:items-center sm:justify-center p-3 sm:p-6">
-      <div class="w-full sm:max-w-lg rounded-3xl bg-[#FCF5E2] border border-[#E9E1D1] shadow-xl overflow-hidden">
-        <div class="p-4 sm:p-5">
-          <div class="flex items-start justify-between gap-3">
-            <div>
-              <p class="text-sm font-bold text-[#45332D]">
-                {{ 'TRUEQUE.DETAIL_TITLE' | translate: { name: t.other.name } }}
-              </p>
-              <p class="mt-1 text-xs text-[#6b4d39]">
-                {{ t.id }} · {{ t.updatedAt }}
-              </p>
+      <div class="pl-modal-body">
+        @if (tradeDetailLoading()) {
+          <div class="pl-fade-in" aria-busy="true">
+            <span class="sr-only">{{ 'TRUEQUE.SKELETON_LOADING' | translate }}</span>
+            <div class="tq-skeleton-modal-cover">
+              <div class="tq-skeleton-cover min-h-[min(40vh,14rem)] w-full"></div>
             </div>
-            <button type="button" class="p-2 rounded-xl hover:bg-black/5" (click)="closeTrade()" aria-label="Close">
-              <span class="material-symbols-outlined">close</span>
-            </button>
+            <div class="mt-4 max-w-sm mx-auto space-y-2">
+              <div class="tq-skeleton-line tq-skeleton-line--lg"></div>
+              <div class="tq-skeleton-line"></div>
+              <div class="tq-skeleton-line tq-skeleton-line--sm"></div>
+            </div>
           </div>
-
-          <div class="mt-4 rounded-2xl bg-white/80 border border-[#E9E1D1] p-4">
-            <div class="flex items-center justify-between gap-3">
+        } @else if (tradeDetailError()) {
+          <p class="text-sm text-red-900/80">{{ tradeDetailError()! | translate }}</p>
+          <button type="button" class="btn-ghost press-target mt-3 text-sm font-bold" (click)="reloadTradeDetail()">
+            {{ 'PLAYLISTS.RETRY' | translate }}
+          </button>
+        } @else if (tradeDetail(); as t) {
+          <div class="mt-1 rounded-2xl bg-white/80 border border-[#E9E1D1] p-4">
+            <div class="flex flex-wrap items-center justify-between gap-3">
               <p class="text-xs font-semibold text-[#6b4d39]">{{ 'TRUEQUE.DETAIL_STATUS' | translate }}</p>
-              <span class="text-xs font-semibold px-2 py-0.5 rounded-full border border-[#E9E1D1] bg-[#FFFDF7] text-[#6b4d39]">
-                {{ t.status }}
+              <span [class]="tradeStatusBadgeClass(t.status)">
+                {{ tradeStatusLabelKey(t.status) | translate }}
               </span>
             </div>
-
-            <div class="mt-3 flex items-center justify-between text-xs text-[#6b4d39]">
-              <p><span class="font-bold">{{ t.senderCount }}</span> · tú</p>
-              <p><span class="font-bold">{{ t.receiverCount }}</span> · {{ t.other.name }}</p>
-            </div>
-
-            <div class="mt-3 flex -space-x-2">
-              @for (c of t.previewCovers; track c) {
-                <img class="h-10 w-10 rounded-xl border border-[#E9E1D1] object-cover bg-[#FFFDF7]" [src]="c" alt="" />
+            @if (t.status === 'ACCEPTED' || t.status === 'COMPLETED') {
+              @if (tradeCounterparty(); as cp) {
+                <div class="mt-3 rounded-2xl border border-[#25D366]/35 bg-[#f6fff8] p-3 space-y-3">
+                  <p class="text-xs font-bold text-[#45332D]">{{ 'TRUEQUE.CONTACT_PANEL_TITLE' | translate }}</p>
+                  <div class="flex items-center gap-3">
+                    <img
+                      class="h-12 w-12 shrink-0 rounded-full object-cover border border-[#E9E1D1]"
+                      [src]="counterpartyAvatarSrc()"
+                      [alt]="'TRUEQUE.CONTACT_AVATAR_ALT' | translate: { name: otherPartyName() }" />
+                    <div class="min-w-0">
+                      <p class="text-sm font-bold text-[#45332D] truncate">{{ otherPartyName() }}</p>
+                      <a class="text-xs text-[#2563eb] underline break-all" [href]="'mailto:' + cp.email">{{ cp.email }}</a>
+                    </div>
+                  </div>
+                  @if (counterpartyWhatsappHref(); as waHref) {
+                    <a
+                      class="inline-flex min-h-[44px] items-center justify-center gap-2 w-full rounded-xl py-2.5 text-sm font-bold text-white bg-[#25D366] hover:bg-[#1ebe57] transition-colors press-target"
+                      [href]="waHref"
+                      target="_blank"
+                      rel="noopener noreferrer">
+                      {{ 'TRUEQUE.CONTACT_WHATSAPP' | translate }}
+                    </a>
+                    <p class="text-[11px] text-[#6b4d39]">{{ 'TRUEQUE.CONTACT_EMAIL_ALT' | translate }}</p>
+                  }
+                  @if (!cp.phone?.trim()) {
+                    <p class="text-[11px] text-[#6b4d39] leading-snug">{{ 'TRUEQUE.CONTACT_OTHER_NO_PHONE_HINT' | translate }}</p>
+                  }
+                </div>
               }
-            </div>
+            }
           </div>
 
           <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div class="rounded-2xl border border-[#E9E1D1] bg-white/75 p-4">
-              <p class="text-xs font-bold text-[#45332D]">
-                {{ 'TRUEQUE.DETAIL_YOUR_BOOKS' | translate }}
-              </p>
+              <p class="text-xs font-bold text-[#45332D]">{{ 'TRUEQUE.DETAIL_YOUR_BOOKS' | translate }}</p>
               <div class="mt-3 space-y-2">
-                @for (b of mySideBooks(); track b.id) {
+                @for (b of mySideItems(); track b.id) {
                   <div class="flex items-center gap-3 rounded-xl border border-[#E9E1D1] bg-[#FFFDF7] p-2">
-                    <img class="h-12 w-12 rounded-lg object-cover border border-[#E9E1D1]" [src]="b.coverUrl" [alt]="b.title" />
+                    <img class="h-12 w-12 rounded-lg object-cover border border-[#E9E1D1]" [src]="coverSrc(b.userBook)" [alt]="b.userBook.title" />
                     <div class="min-w-0">
-                      <p class="text-xs font-bold text-[#45332D] line-clamp-1">{{ b.title }}</p>
-                      <p class="text-[11px] text-[#6b4d39] line-clamp-1">{{ b.author }}</p>
+                      <p class="text-xs font-bold text-[#45332D] line-clamp-1">{{ b.userBook.title }}</p>
+                      <p class="text-[11px] text-[#6b4d39] line-clamp-1">{{ b.userBook.author }}</p>
                     </div>
                   </div>
                 }
@@ -365,15 +690,15 @@
 
             <div class="rounded-2xl border border-[#E9E1D1] bg-white/75 p-4">
               <p class="text-xs font-bold text-[#45332D]">
-                {{ 'TRUEQUE.DETAIL_OTHER_BOOKS' | translate: { name: t.other.name } }}
+                {{ 'TRUEQUE.DETAIL_OTHER_BOOKS' | translate: { name: otherPartyName() } }}
               </p>
               <div class="mt-3 space-y-2">
-                @for (b of otherSideBooks(); track b.id) {
+                @for (b of otherSideItems(); track b.id) {
                   <div class="flex items-center gap-3 rounded-xl border border-[#E9E1D1] bg-[#FFFDF7] p-2">
-                    <img class="h-12 w-12 rounded-lg object-cover border border-[#E9E1D1]" [src]="b.coverUrl" [alt]="b.title" />
+                    <img class="h-12 w-12 rounded-lg object-cover border border-[#E9E1D1]" [src]="coverSrc(b.userBook)" [alt]="b.userBook.title" />
                     <div class="min-w-0">
-                      <p class="text-xs font-bold text-[#45332D] line-clamp-1">{{ b.title }}</p>
-                      <p class="text-[11px] text-[#6b4d39] line-clamp-1">{{ b.author }}</p>
+                      <p class="text-xs font-bold text-[#45332D] line-clamp-1">{{ b.userBook.title }}</p>
+                      <p class="text-[11px] text-[#6b4d39] line-clamp-1">{{ b.userBook.author }}</p>
                     </div>
                   </div>
                 }
@@ -381,30 +706,24 @@
             </div>
           </div>
 
-          <div class="mt-4 grid grid-cols-2 gap-3">
+          <div class="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
             @if (availableActions().includes('reject')) {
               <button
                 type="button"
-                class="w-full rounded-xl py-2 text-sm font-bold border border-[#E9E1D1] bg-white/70 text-[#45332D] hover:bg-white"
+                class="btn-outline press-target min-h-[44px] w-full text-sm font-bold"
                 (click)="rejectSelectedTrade()">
                 {{ 'TRUEQUE.ACTION_REJECT' | translate }}
               </button>
             }
 
             @if (availableActions().includes('accept')) {
-              <button
-                type="button"
-                class="w-full pl-btn-primary rounded-xl py-2 text-sm font-bold"
-                (click)="acceptSelectedTrade()">
+              <button type="button" class="btn-solid press-target min-h-[44px] w-full text-sm font-bold" (click)="acceptSelectedTrade()">
                 {{ 'TRUEQUE.ACTION_ACCEPT' | translate }}
               </button>
             }
 
             @if (availableActions().includes('complete')) {
-              <button
-                type="button"
-                class="col-span-2 w-full pl-btn-primary rounded-xl py-2 text-sm font-bold"
-                (click)="completeSelectedTrade()">
+              <button type="button" class="btn-solid press-target col-span-1 min-h-[44px] w-full text-sm font-bold sm:col-span-2" (click)="completeSelectedTrade()">
                 {{ 'TRUEQUE.ACTION_COMPLETE' | translate }}
               </button>
             }
@@ -412,17 +731,196 @@
 
           @if (availableActions().includes('cancel')) {
             <div class="mt-3">
-              <button
-                type="button"
-                class="w-full rounded-xl py-2 text-sm font-semibold text-[#6b4d39] hover:bg-black/5"
-                (click)="cancelSelectedTrade()">
+              <button type="button" class="btn-ghost press-target min-h-[44px] w-full text-sm font-semibold" (click)="cancelSelectedTrade()">
                 {{ 'TRUEQUE.ACTION_CANCEL' | translate }}
               </button>
             </div>
+          }
+        }
+      </div>
+    </div>
+  </div>
+}
+
+@if (addBookOpen()) {
+  <div class="pl-modal-backdrop" role="presentation" (click)="onAddBookBackdrop($event)">
+    <div
+      class="pl-modal pl-modal-in-desktop"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="trueque-add-book-title"
+      (click)="$event.stopPropagation()">
+      <div class="pl-modal-head">
+        <div>
+          <h2 id="trueque-add-book-title" class="pl-modal-title">
+            @if (addBookOfferFlow()) {
+              {{ 'TRUEQUE.OFFER_TITLE' | translate }}
+            } @else {
+              {{ 'TRUEQUE.ADD_TITLE' | translate }}
+            }
+          </h2>
+          <p class="pl-modal-sub">
+            @if (addBookOfferFlow()) {
+              {{ 'TRUEQUE.OFFER_MODAL_SUB' | translate }}
+            } @else {
+              {{ 'TRUEQUE.ADD_MODAL_SUB' | translate }}
+            }
+          </p>
+        </div>
+        <button
+          type="button"
+          class="pl-modal-close press-target"
+          (click)="closeAddBook()"
+          [attr.aria-label]="'TRUEQUE.CLOSE' | translate">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+
+      <div class="pl-modal-body">
+        <div class="flex gap-2 rounded-xl border border-[#E9E1D1] bg-[#FFFDF7]/80 p-1">
+          <button
+            type="button"
+            class="flex-1 rounded-lg py-2 text-xs font-bold transition-colors"
+            [class.border]="addBookMode() === 'manual'"
+            [class.border-[#E0A15E]]="addBookMode() === 'manual'"
+            [class.bg-white]="addBookMode() === 'manual'"
+            [class.text-[#45332D]]="addBookMode() === 'manual'"
+            [class.text-[#6b4d39]]="addBookMode() !== 'manual'"
+            (click)="setAddBookMode('manual')">
+            {{ 'TRUEQUE.ADD_TAB_MANUAL' | translate }}
+          </button>
+          <button
+            type="button"
+            class="flex-1 rounded-lg py-2 text-xs font-bold transition-colors"
+            [class.border]="addBookMode() === 'purchases'"
+            [class.border-[#E0A15E]]="addBookMode() === 'purchases'"
+            [class.bg-white]="addBookMode() === 'purchases'"
+            [class.text-[#45332D]]="addBookMode() === 'purchases'"
+            [class.text-[#6b4d39]]="addBookMode() !== 'purchases'"
+            (click)="setAddBookMode('purchases')">
+            {{ 'TRUEQUE.ADD_TAB_PURCHASES' | translate }}
+          </button>
+        </div>
+
+        @if (addBookMode() === 'manual') {
+          <div class="mt-4 space-y-3 max-h-[min(52vh,22rem)] overflow-y-auto pr-1">
+            <div>
+              <label class="block text-xs font-bold text-[#45332D]" for="add-book-title">{{ 'TRUEQUE.ADD_FIELD_TITLE' | translate }}</label>
+              <input
+                id="add-book-title"
+                class="mt-1 w-full rounded-xl border border-[#E9E1D1] bg-white px-3 py-2 text-sm text-[#45332D]"
+                [value]="addBookTitle()"
+                (input)="addBookTitle.set(($any($event.target).value || '').toString())" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-[#45332D]" for="add-book-author">{{ 'TRUEQUE.ADD_FIELD_AUTHOR' | translate }}</label>
+              <input
+                id="add-book-author"
+                class="mt-1 w-full rounded-xl border border-[#E9E1D1] bg-white px-3 py-2 text-sm text-[#45332D]"
+                [value]="addBookAuthor()"
+                (input)="addBookAuthor.set(($any($event.target).value || '').toString())" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-[#45332D]" for="add-book-isbn">{{ 'TRUEQUE.ADD_FIELD_ISBN' | translate }}</label>
+              <input
+                id="add-book-isbn"
+                class="mt-1 w-full rounded-xl border border-[#E9E1D1] bg-white px-3 py-2 text-sm text-[#45332D]"
+                [value]="addBookIsbn()"
+                (input)="addBookIsbn.set(($any($event.target).value || '').toString())" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-[#45332D]" for="add-book-desc">{{ 'TRUEQUE.ADD_FIELD_DESCRIPTION' | translate }}</label>
+              <textarea
+                id="add-book-desc"
+                rows="3"
+                class="mt-1 w-full resize-y rounded-xl border border-[#E9E1D1] bg-white px-3 py-2 text-sm text-[#45332D]"
+                [value]="addBookDescription()"
+                (input)="addBookDescription.set(($any($event.target).value || '').toString())"></textarea>
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-[#45332D]" for="add-book-cover">{{ 'TRUEQUE.ADD_FIELD_COVER_URL' | translate }}</label>
+              <input
+                id="add-book-cover"
+                type="url"
+                class="mt-1 w-full rounded-xl border border-[#E9E1D1] bg-white px-3 py-2 text-sm text-[#45332D]"
+                [value]="addBookCoverUrl()"
+                (input)="addBookCoverUrl.set(($any($event.target).value || '').toString())" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-[#45332D]" for="add-book-condition">{{ 'TRUEQUE.ADD_FIELD_CONDITION' | translate }}</label>
+              <select
+                id="add-book-condition"
+                class="mt-1 w-full rounded-xl border border-[#E9E1D1] bg-white px-3 py-2 text-sm text-[#45332D]"
+                [value]="addBookCondition()"
+                (change)="onAddBookConditionChange(($any($event.target).value || '').toString())">
+                <option value="NEW">{{ 'TRUEQUE.BOOK_COND_NEW' | translate }}</option>
+                <option value="LIKE_NEW">{{ 'TRUEQUE.BOOK_COND_LIKE_NEW' | translate }}</option>
+                <option value="GOOD">{{ 'TRUEQUE.BOOK_COND_GOOD' | translate }}</option>
+                <option value="ACCEPTABLE">{{ 'TRUEQUE.BOOK_COND_ACCEPTABLE' | translate }}</option>
+                <option value="WORN">{{ 'TRUEQUE.BOOK_COND_WORN' | translate }}</option>
+              </select>
+            </div>
+          </div>
+        } @else {
+          @if (purchasesLoading()) {
+            <p class="mt-4 text-sm text-[#6b4d39]">{{ 'TRUEQUE.LOADING' | translate }}</p>
+          } @else if (purchasesRows().length === 0) {
+            <p class="mt-4 text-sm text-[#6b4d39]">{{ 'TRUEQUE.ADD_PURCHASES_EMPTY' | translate }}</p>
+          } @else {
+            <p class="mt-3 text-xs text-[#6b4d39]">{{ 'TRUEQUE.ADD_PURCHASES_HINT' | translate }}</p>
+            <div class="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3 max-h-[min(48vh,20rem)] overflow-y-auto pr-1">
+              @for (row of purchasesRows(); track row.catalogBookId) {
+                <label
+                  class="flex cursor-pointer flex-col gap-2 rounded-xl border border-[#E9E1D1] bg-white/90 p-2 shadow-sm hover:border-[#E0A15E]/60 focus-within:ring-2 focus-within:ring-[#E0A15E]/40">
+                  <div class="flex items-start gap-2">
+                    <input
+                      type="checkbox"
+                      class="mt-0.5 h-4 w-4 shrink-0 rounded border-[#C9B8A8] text-[#E0A15E] focus:ring-[#E0A15E]"
+                      [checked]="purchaseSelected().has(row.catalogBookId)"
+                      (change)="setPurchaseSelection(row.catalogBookId, $any($event.target).checked)" />
+                    <div class="min-w-0 flex-1">
+                      <p class="text-[11px] font-bold leading-tight text-[#45332D] line-clamp-2">{{ row.title }}</p>
+                      <p class="text-[10px] text-[#6b4d39] line-clamp-1">{{ row.author }}</p>
+                    </div>
+                  </div>
+                  <div class="aspect-[3/4] w-full overflow-hidden rounded-lg border border-[#E9E1D1] bg-[#FFFDF7]">
+                    <img [src]="row.coverUrl || PLACEHOLDER_COVER" class="h-full w-full object-cover" [alt]="row.title" />
+                  </div>
+                </label>
+              }
+            </div>
+          }
+        }
+      </div>
+
+      <div class="pl-modal-foot">
+        <div class="flex w-full flex-col-reverse gap-2 sm:flex-row sm:justify-end sm:gap-3">
+          <button
+            type="button"
+            class="btn-outline press-target min-h-[44px] px-4 py-2.5 text-sm font-bold"
+            [disabled]="addBookLoading()"
+            (click)="closeAddBook()">
+            {{ 'TRUEQUE.ACTION_CANCEL' | translate }}
+          </button>
+          @if (addBookMode() === 'manual') {
+            <button
+              type="button"
+              class="btn-solid press-target min-h-[44px] px-5 py-2.5 text-sm font-bold"
+              [disabled]="addBookLoading()"
+              (click)="submitManualBook()">
+              {{ 'TRUEQUE.ADD_SUBMIT' | translate }}
+            </button>
+          } @else {
+            <button
+              type="button"
+              class="btn-solid press-target min-h-[44px] px-5 py-2.5 text-sm font-bold"
+              [disabled]="addBookLoading() || purchasesLoading() || purchaseSelected().size === 0"
+              (click)="submitSelectedPurchases()">
+              {{ 'TRUEQUE.ADD_PUBLISH_SELECTED' | translate }}
+            </button>
           }
         </div>
       </div>
     </div>
   </div>
 }
-
