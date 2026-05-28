@@ -1,0 +1,110 @@
+{
+  "name": "Tool · get_user_taste",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Tool: get_user_taste\n\nInput: `{ firebaseUid: string }`\n\nDevuelve top categorías del usuario (por compras + reviews positivas) y los últimos 10 títulos para personalizar recomendaciones sin hacer varias llamadas al catálogo.",
+        "height": 120,
+        "width": 440
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [-400, -180],
+      "id": "sticky-user-taste",
+      "name": "Nota"
+    },
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [{ "name": "input" }]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [-200, 0],
+      "id": "trigger-user-taste",
+      "name": "Execute Workflow Trigger"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const raw = $input.first().json.input;\nconst inp = typeof raw === 'string' ? JSON.parse(raw) : (raw || $input.first().json);\nconst uid = (inp.firebaseUid || '').trim();\nif (!/^[A-Za-z0-9]{20,64}$/.test(uid)) {\n  throw new Error('firebaseUid inválido: ' + uid);\n}\nreturn [{ json: { firebaseUid: uid } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-20, 0],
+      "id": "code-validate-uid",
+      "name": "Validar UID"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "=SELECT\n  cat.name AS category,\n  COUNT(*) AS freq\nFROM order_items oi\nJOIN orders o ON oi.order_id = o.id\nJOIN users u ON o.user_id = u.id\nJOIN catalog_book_categories cbc ON cbc.catalog_book_id = oi.catalog_book_id\nJOIN categories cat ON cat.id = cbc.category_id\nWHERE u.firebase_uid = '{{ $json.firebaseUid.replace(/'/g, \"''\") }}'\nGROUP BY cat.name\nORDER BY freq DESC\nLIMIT 8;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [200, -80],
+      "id": "postgres-categories",
+      "name": "Top Categorías",
+      "continueOnFail": true,
+      "credentials": {
+        "postgres": {
+          "id": "zeU51y9XScYtwY9X",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "=SELECT\n  cb.id,\n  cb.title,\n  cb.author\nFROM order_items oi\nJOIN orders o ON oi.order_id = o.id\nJOIN users u ON o.user_id = u.id\nJOIN catalog_books cb ON cb.id = oi.catalog_book_id\nWHERE u.firebase_uid = '{{ $('Validar UID').first().json.firebaseUid.replace(/'/g, \"''\") }}'\nORDER BY o.created_at DESC\nLIMIT 10;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [200, 80],
+      "id": "postgres-recent-books",
+      "name": "Últimos Libros",
+      "continueOnFail": true,
+      "credentials": {
+        "postgres": {
+          "id": "zeU51y9XScYtwY9X",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const catRows = $('Top Categorías').all();\nconst bookRows = $('Últimos Libros').all();\n\nconst topCategories = catRows\n  .map(r => r.json)\n  .filter(j => j && !j.error && j.category)\n  .map(j => ({ category: j.category, freq: Number(j.freq) }));\n\nconst recentBooks = bookRows\n  .map(r => r.json)\n  .filter(j => j && !j.error && j.id)\n  .map(j => ({ id: Number(j.id), title: j.title || '', author: j.author || '' }));\n\nreturn [{ json: { topCategories, recentBooks } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [440, 0],
+      "id": "code-merge-taste",
+      "name": "Combinar Gustos"
+    }
+  ],
+  "connections": {
+    "Execute Workflow Trigger": {
+      "main": [[{ "node": "Validar UID", "type": "main", "index": 0 }]]
+    },
+    "Validar UID": {
+      "main": [
+        [
+          { "node": "Top Categorías", "type": "main", "index": 0 },
+          { "node": "Últimos Libros", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Top Categorías": {
+      "main": [[{ "node": "Combinar Gustos", "type": "main", "index": 0 }]]
+    },
+    "Últimos Libros": {
+      "main": [[{ "node": "Combinar Gustos", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": { "executionOrder": "v1" },
+  "meta": { "description": "Tool: devuelve top categorías + últimos libros comprados del usuario para personalizar recomendaciones." }
+}

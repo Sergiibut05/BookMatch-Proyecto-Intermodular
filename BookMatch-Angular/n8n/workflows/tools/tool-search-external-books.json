@@ -1,0 +1,232 @@
+{
+  "name": "Tool · search_external_books",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Tool: search_external_books\n\nInput: `{ query: string, language?: string, limit?: number }`\n\nBusca libros en fuentes externas (Open Library → Google Books → Wikidata) con validación de portada de alta calidad (HEAD ≥15 KB, image/*). Solo devuelve libros con `coverAvailable: true`.\n\n**Cadena de portada (orden):**\n1. `covers.openlibrary.org/b/id/{cover_i}-L.jpg`\n2. `covers.openlibrary.org/b/olid/{cover_edition_key}-L.jpg`\n3. `covers.openlibrary.org/b/isbn/{isbn}-L.jpg`\n4. Google Books thumbnail → reescrito a `fife=w800-h1200`",
+        "height": 200,
+        "width": 500
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [-400, -280],
+      "id": "sticky-external",
+      "name": "Nota"
+    },
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            { "name": "query", "type": "string" },
+            { "name": "limit", "type": "number" }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [-200, 0],
+      "id": "trigger-external",
+      "name": "Execute Workflow Trigger"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "version": 3, "caseSensitive": false, "typeValidation": "loose" },
+          "conditions": [{ "id": "check-query", "leftValue": "={{ $json.error }}", "rightValue": "", "operator": { "type": "string", "operation": "empty", "singleValue": true } }],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-query-valid",
+      "name": "¿Query válida?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [180, 0]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const j = $input.first().json;\nlet query, language, limit;\nif (j.query !== undefined) {\n  query = (typeof j.query === 'string' ? j.query : '').trim();\n  language = typeof j.language === 'string' ? j.language.trim().toLowerCase() : 'spa';\n  const rawLimit = j.limit;\n  limit = (rawLimit !== null && rawLimit !== undefined && Number.isFinite(Number(rawLimit)) && Number(rawLimit) > 0)\n    ? Math.max(1, Math.min(8, Number(rawLimit))) : 5;\n} else {\n  const raw = j.input;\n  const inp = typeof raw === 'string' ? JSON.parse(raw) : (raw || j);\n  query = ((inp?.query || '')).trim();\n  language = typeof inp?.language === 'string' ? inp.language.trim().toLowerCase() : 'spa';\n  const rawLimit = inp?.limit;\n  limit = (rawLimit !== null && rawLimit !== undefined && Number.isFinite(Number(rawLimit)) && Number(rawLimit) > 0)\n    ? Math.max(1, Math.min(8, Number(rawLimit))) : 5;\n}\nif (!query) {\n  return [{ json: { books: [], count: 0, error: 'Debes proporcionar el par\u00e1metro query.' } }];\n}\nreturn [{ json: { query, language, limit } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-20, 0],
+      "id": "code-validate-input",
+      "name": "Validar Input"
+    },
+    {
+      "parameters": {
+        "url": "=https://openlibrary.org/search.json",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            { "name": "q", "value": "={{ $json.query }}" },
+            { "name": "limit", "value": "={{ $json.limit * 2 }}" },
+            { "name": "fields", "value": "key,title,author_name,isbn,cover_i,cover_edition_key,first_publish_year,subject" },
+            { "name": "lang", "value": "={{ $json.language }}" }
+          ]
+        },
+        "options": { "timeout": 15000 }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [200, 0],
+      "id": "http-openlibrary",
+      "name": "Open Library Search",
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// Extrae candidatos de Open Library y construye URLs de portada para validar\nconst params = $('Validar Input').first().json;\nconst olData = $input.first().json;\n\nconst docs = Array.isArray(olData.docs) ? olData.docs : [];\nconst candidates = [];\n\nfor (const doc of docs.slice(0, (params.limit || 5) * 2)) {\n  const title = doc.title || '';\n  const author = Array.isArray(doc.author_name) ? doc.author_name[0] : null;\n  const isbn = Array.isArray(doc.isbn) ? doc.isbn.find(i => i.length === 13 || i.length === 10) : null;\n  const coverId = doc.cover_i ? String(doc.cover_i) : null;\n  const coverEditionKey = doc.cover_edition_key || null;\n  const year = doc.first_publish_year || null;\n\n  if (!title || !author) continue;\n\n  // Candidatos de portada, de mayor a menor calidad esperada\n  const coverCandidates = [];\n  if (coverId) coverCandidates.push(`https://covers.openlibrary.org/b/id/${coverId}-L.jpg`);\n  if (coverEditionKey) coverCandidates.push(`https://covers.openlibrary.org/b/olid/${coverEditionKey}-L.jpg`);\n  if (isbn) coverCandidates.push(`https://covers.openlibrary.org/b/isbn/${isbn}-L.jpg`);\n\n  candidates.push({ title, author, isbn, year, coverCandidates, olKey: doc.key });\n}\n\nreturn [{ json: { candidates, query: params.query, language: params.language, limit: params.limit } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [420, 0],
+      "id": "code-extract-candidates",
+      "name": "Extraer Candidatos OL"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// Para cada candidato de OL, valida la portada con HEAD.\n// Si ningún candidato de OL tiene portada válida, prepara query para Google Books.\n// Usa fetch nativo para las peticiones HEAD (disponible en n8n >= 1.x con Node 18+).\n\nconst data = $input.first().json;\nconst { candidates, query, language, limit } = data;\n\nasync function validateCoverUrl(url) {\n  try {\n    const resp = await fetch(url, { method: 'HEAD', signal: AbortSignal.timeout(6000) });\n    if (!resp.ok) return false;\n    const ct = resp.headers.get('content-type') || '';\n    if (!ct.startsWith('image/')) return false;\n    const cl = parseInt(resp.headers.get('content-length') || '0', 10);\n    // Open Library devuelve un placeholder de ~807 bytes para libros sin portada.\n    // Rechazamos cualquier imagen < 15 KB.\n    return cl > 15000;\n  } catch {\n    return false;\n  }\n}\n\nconst results = [];\nconst needsGoogleBooks = []; // candidatos que no tienen portada en OL\n\nfor (const cand of candidates) {\n  let validCoverUrl = null;\n  for (const url of cand.coverCandidates) {\n    const ok = await validateCoverUrl(url);\n    if (ok) { validCoverUrl = url; break; }\n  }\n  if (validCoverUrl) {\n    results.push({\n      title: cand.title,\n      author: cand.author,\n      isbn: cand.isbn,\n      year: cand.year,\n      coverUrl: validCoverUrl,\n      coverAvailable: true,\n      source: 'open_library',\n      language\n    });\n  } else {\n    needsGoogleBooks.push({ title: cand.title, author: cand.author, isbn: cand.isbn });\n  }\n  if (results.length >= limit) break;\n}\n\nreturn [{ json: { results, needsGoogleBooks: needsGoogleBooks.slice(0, limit - results.length), remaining: Math.max(0, limit - results.length), query, language, limit } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [640, 0],
+      "id": "code-validate-covers-ol",
+      "name": "Validar Portadas OL"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 3 },
+          "conditions": [
+            {
+              "id": "check-needs-google",
+              "leftValue": "={{ $json.remaining }}",
+              "rightValue": 0,
+              "operator": { "type": "number", "operation": "gt" }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [860, 0],
+      "id": "if-needs-google",
+      "name": "¿Necesita Google Books?"
+    },
+    {
+      "parameters": {
+        "url": "=https://www.googleapis.com/books/v1/volumes",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            { "name": "q", "value": "={{ $json.needsGoogleBooks.map(b => `intitle:${b.title}+inauthor:${b.author}`).join('|').slice(0, 300) }}" },
+            { "name": "maxResults", "value": "={{ Math.min(10, $json.remaining * 2) }}" },
+            { "name": "langRestrict", "value": "={{ $json.language === 'spa' ? 'es' : $json.language.slice(0, 2) }}" },
+            { "name": "printType", "value": "books" }
+          ]
+        },
+        "options": { "timeout": 10000 }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [1080, -80],
+      "id": "http-google-books",
+      "name": "Google Books API",
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// Extrae libros de Google Books y valida portadas con HEAD.\n// Reescribe thumbnail a alta resolución: zoom=0, fife=w800-h1200.\n\nconst olData = $('Validar Portadas OL').first().json;\nconst gbData = $input.first().json;\n\nconst items = Array.isArray(gbData.items) ? gbData.items : [];\nconst results = [...(olData.results || [])];\nconst seen = new Set(results.map(r => r.title.toLowerCase()));\n\nasync function validateCoverUrl(url) {\n  try {\n    const resp = await fetch(url, { method: 'HEAD', signal: AbortSignal.timeout(6000) });\n    if (!resp.ok) return false;\n    const ct = resp.headers.get('content-type') || '';\n    if (!ct.startsWith('image/')) return false;\n    const cl = parseInt(resp.headers.get('content-length') || '0', 10);\n    return cl > 15000;\n  } catch { return false; }\n}\n\nfor (const item of items) {\n  if (results.length >= (olData.limit || 5)) break;\n  const vi = item.volumeInfo || {};\n  const title = vi.title || '';\n  const author = Array.isArray(vi.authors) ? vi.authors[0] : null;\n  if (!title || !author || seen.has(title.toLowerCase())) continue;\n  seen.add(title.toLowerCase());\n\n  const isbn = (vi.industryIdentifiers || []).find(i => i.type === 'ISBN_13')?.identifier\n    || (vi.industryIdentifiers || []).find(i => i.type === 'ISBN_10')?.identifier\n    || null;\n\n  const rawThumb = vi.imageLinks?.thumbnail || vi.imageLinks?.smallThumbnail || null;\n  let coverUrl = null;\n  if (rawThumb) {\n    // Reescribir a alta resolución\n    let hqUrl = rawThumb\n      .replace('http://', 'https://')\n      .replace(/&edge=curl/g, '')\n      .replace(/&zoom=\\d+/g, '&zoom=0')\n      .replace(/zoom=\\d+/, 'zoom=0');\n    if (!hqUrl.includes('zoom=')) hqUrl += '&zoom=0';\n    // Añadir fife para 800x1200\n    if (!hqUrl.includes('fife=')) hqUrl += '&fife=w800-h1200';\n    const ok = await validateCoverUrl(hqUrl);\n    if (ok) coverUrl = hqUrl;\n  }\n\n  if (!coverUrl) continue;\n\n  results.push({\n    title,\n    author,\n    isbn,\n    year: vi.publishedDate ? parseInt(vi.publishedDate, 10) : null,\n    coverUrl,\n    coverAvailable: true,\n    source: 'google_books',\n    language: olData.language || 'es',\n    description: vi.description ? vi.description.slice(0, 1000) : null\n  });\n}\n\nreturn [{ json: { books: results } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1300, -80],
+      "id": "code-process-google",
+      "name": "Procesar Google Books"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// Rama directa: OL tiene suficientes resultados, pasar directamente\nconst olData = $input.first().json;\nreturn [{ json: { books: olData.results || [] } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1080, 80],
+      "id": "code-ol-sufficient",
+      "name": "OL Suficiente"
+    },
+    {
+      "parameters": {
+        "numberInputs": 2
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [1520, 0],
+      "id": "merge-results",
+      "name": "Unir Resultados"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// Deduplica y devuelve la lista final con descripción enriquecida\nconst allItems = $input.all();\nconst seen = new Set();\nconst books = [];\n\nfor (const item of allItems) {\n  const src = item.json?.books || item.json?.book ? [item.json] : [];\n  const arr = item.json?.books || [];\n  for (const b of arr) {\n    const key = b.title?.toLowerCase() || '';\n    if (!key || seen.has(key)) continue;\n    seen.add(key);\n    books.push({\n      title: b.title || '',\n      author: b.author || '',\n      isbn: b.isbn || null,\n      year: b.year || null,\n      description: b.description || null,\n      coverUrl: b.coverUrl || null,\n      coverAvailable: b.coverAvailable === true,\n      source: b.source || 'unknown',\n      language: b.language || 'es'\n    });\n  }\n}\n\nreturn [{ json: { books, count: books.length } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1720, 0],
+      "id": "code-final-deduplicate",
+      "name": "Deduplicar y Devolver"
+    }
+  ],
+  "connections": {
+    "Execute Workflow Trigger": {
+      "main": [[{ "node": "Validar Input", "type": "main", "index": 0 }]]
+    },
+    "Validar Input": {
+      "main": [[{ "node": "¿Query válida?", "type": "main", "index": 0 }]]
+    },
+    "¿Query válida?": {
+      "main": [
+        [{ "node": "Open Library Search", "type": "main", "index": 0 }],
+        [{ "node": "Deduplicar y Devolver", "type": "main", "index": 0 }]
+      ]
+    },
+    "Open Library Search": {
+      "main": [[{ "node": "Extraer Candidatos OL", "type": "main", "index": 0 }]]
+    },
+    "Extraer Candidatos OL": {
+      "main": [[{ "node": "Validar Portadas OL", "type": "main", "index": 0 }]]
+    },
+    "Validar Portadas OL": {
+      "main": [[{ "node": "¿Necesita Google Books?", "type": "main", "index": 0 }]]
+    },
+    "¿Necesita Google Books?": {
+      "main": [
+        [{ "node": "Google Books API", "type": "main", "index": 0 }],
+        [{ "node": "OL Suficiente", "type": "main", "index": 0 }]
+      ]
+    },
+    "Google Books API": {
+      "main": [[{ "node": "Procesar Google Books", "type": "main", "index": 0 }]]
+    },
+    "Procesar Google Books": {
+      "main": [[{ "node": "Unir Resultados", "type": "main", "index": 0 }]]
+    },
+    "OL Suficiente": {
+      "main": [[{ "node": "Unir Resultados", "type": "main", "index": 1 }]]
+    },
+    "Unir Resultados": {
+      "main": [[{ "node": "Deduplicar y Devolver", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": { "executionOrder": "v1" },
+  "meta": {
+    "description": "Tool: busca libros externos (Open Library + Google Books) validando portadas de alta calidad (≥15KB, HEAD 200, image/*). Solo devuelve libros con coverAvailable:true."
+  }
+}

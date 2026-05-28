@@ -1,0 +1,65 @@
+{
+  "name": "Tool · get_categories",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Tool: get_categories\n\nSin parámetros. Devuelve todas las categorías del catálogo `[{ id, name, type, parentName? }]`. El agente la usa para construir filtros correctos antes de llamar a search_catalog_books.",
+        "height": 100,
+        "width": 400
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [-400, -160],
+      "id": "sticky-categories",
+      "name": "Nota"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [-200, 0],
+      "id": "trigger-categories",
+      "name": "Execute Workflow Trigger"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT\n  c.id,\n  c.name,\n  c.type,\n  p.name AS \"parentName\"\nFROM categories c\nLEFT JOIN categories p ON p.id = c.parent_id\nORDER BY c.type, p.name NULLS FIRST, c.name;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [20, 0],
+      "id": "postgres-categories",
+      "name": "Cargar Categorías",
+      "continueOnFail": true,
+      "credentials": {
+        "postgres": {
+          "id": "zeU51y9XScYtwY9X",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const rows = $input.all();\nconst categories = rows\n  .map(r => r.json)\n  .filter(j => j && !j.error && j.id)\n  .map(j => ({\n    id: Number(j.id),\n    name: j.name || '',\n    type: j.type || 'MAIN',\n    parentName: j.parentName || null\n  }));\nreturn [{ json: { categories, count: categories.length } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [240, 0],
+      "id": "code-format-categories",
+      "name": "Formatear Categorías"
+    }
+  ],
+  "connections": {
+    "Execute Workflow Trigger": {
+      "main": [[{ "node": "Cargar Categorías", "type": "main", "index": 0 }]]
+    },
+    "Cargar Categorías": {
+      "main": [[{ "node": "Formatear Categorías", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": { "executionOrder": "v1" },
+  "meta": { "description": "Tool: devuelve todas las categorías del catálogo para que el agente use nombres exactos en los filtros." }
+}

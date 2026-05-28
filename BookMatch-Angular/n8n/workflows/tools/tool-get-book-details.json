@@ -1,0 +1,69 @@
+{
+  "name": "Tool · get_book_details",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Tool: get_book_details\n\nInput: `{ id: number }`\n\nDevuelve detalle completo de un libro del catálogo + sus categorías.",
+        "height": 100,
+        "width": 340
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [-400, -160],
+      "id": "sticky-book-details",
+      "name": "Nota"
+    },
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [{ "name": "input" }]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [-200, 0],
+      "id": "trigger-book-details",
+      "name": "Execute Workflow Trigger"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "=SELECT\n  cb.id,\n  cb.title,\n  cb.author,\n  cb.description,\n  cb.isbn,\n  cb.cover_url AS \"coverUrl\",\n  cb.price,\n  cb.stock,\n  ARRAY_AGG(DISTINCT cat.name) FILTER (WHERE cat.name IS NOT NULL) AS categories\nFROM catalog_books cb\nLEFT JOIN catalog_book_categories cbc ON cbc.catalog_book_id = cb.id\nLEFT JOIN categories cat ON cat.id = cbc.category_id\nWHERE cb.id = {{ (() => { const r = $input.first().json; const inp = typeof r.input === 'string' ? JSON.parse(r.input) : r; return Number(inp.id); })() }}\nGROUP BY cb.id, cb.title, cb.author, cb.description, cb.isbn, cb.cover_url, cb.price, cb.stock;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [20, 0],
+      "id": "postgres-book-details",
+      "name": "Obtener Libro",
+      "continueOnFail": true,
+      "credentials": {
+        "postgres": {
+          "id": "zeU51y9XScYtwY9X",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const rows = $input.all();\nif (rows.length === 0 || rows[0].json?.error) {\n  return [{ json: { found: false, book: null } }];\n}\nconst j = rows[0].json;\nreturn [{\n  json: {\n    found: true,\n    book: {\n      id: j.id,\n      title: j.title || '',\n      author: j.author || '',\n      description: j.description || null,\n      isbn: j.isbn || null,\n      coverUrl: j.coverUrl || null,\n      price: j.price != null ? Number(j.price) : null,\n      stock: j.stock != null ? Number(j.stock) : null,\n      categories: Array.isArray(j.categories) ? j.categories.filter(Boolean) : []\n    }\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [240, 0],
+      "id": "code-format-book",
+      "name": "Formatear Resultado"
+    }
+  ],
+  "connections": {
+    "Execute Workflow Trigger": {
+      "main": [[{ "node": "Obtener Libro", "type": "main", "index": 0 }]]
+    },
+    "Obtener Libro": {
+      "main": [[{ "node": "Formatear Resultado", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": { "executionOrder": "v1" },
+  "meta": { "description": "Tool: devuelve detalle completo de un libro del catálogo por ID." }
+}

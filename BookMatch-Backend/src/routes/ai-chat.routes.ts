@@ -100,6 +100,10 @@ router.post('/send-message', async (req, res) => {
     const currentDraft = normalizeCurrentDraft(req.body?.currentDraft, mode);
 
     const firestore = getFirestore();
+    const conversationRef = firestore.doc(`users/${userId}/conversations/${conversationId}`);
+    const conversationSnap = await conversationRef.get();
+    const messageCount = (conversationSnap.data()?.messageCount as number | undefined) ?? 0;
+    const isFirstMessage = messageCount === 0;
 
     // 1. Crear documento de mensaje del usuario en Firestore
     const userMessageRef = await firestore
@@ -126,12 +130,10 @@ router.post('/send-message', async (req, res) => {
       });
 
     // 3. Actualizar contador de mensajes en conversación
-    await firestore
-      .doc(`users/${userId}/conversations/${conversationId}`)
-      .update({
-        messageCount: FieldValue.increment(2),
-        updatedAt: FieldValue.serverTimestamp()
-      });
+    await conversationRef.update({
+      messageCount: FieldValue.increment(2),
+      updatedAt: FieldValue.serverTimestamp()
+    });
 
     // 4. Disparar workflow de n8n
     const webhookUrl = getN8nWebhookUrl();
@@ -182,6 +184,7 @@ router.post('/send-message', async (req, res) => {
       conversationId,
       messageId: assistantMessageRef.id,
       userMessage: trimmed,
+      isFirstMessage,
       baseUrl: req.headers.origin || env.FRONTEND_URL,
       mode,
       ...(maxItems ? { maxItems } : {}),
