@@ -1,7 +1,11 @@
 <app-header />
 
 <main class="tq-shell">
-  <section class="tq-shell-inner">
+  <section
+    class="tq-shell-inner"
+    [class.tq-shell-inner--locked]="truequeContentLocked()"
+    [attr.inert]="truequeContentLocked() ? '' : null"
+    [attr.aria-hidden]="truequeContentLocked()">
     <header class="tq-hero pl-fade-in">
       <div class="tq-hero-inner">
         <div class="tq-hero-copy">
@@ -920,6 +924,59 @@
             </button>
           }
         </div>
+      </div>
+    </div>
+  </div>
+}
+
+@if (phoneModalOpen()) {
+  <div
+    class="pl-modal-backdrop tq-phone-modal-backdrop"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="trueque-phone-modal-title">
+    <div class="pl-modal pl-modal-in-desktop pl-fade-in tq-phone-modal" (click)="$event.stopPropagation()">
+      <div class="pl-modal-head">
+        <div>
+          <h2 id="trueque-phone-modal-title" class="pl-modal-title">
+            {{ 'TRUEQUE.PHONE_MODAL_TITLE' | translate }}
+          </h2>
+          <p class="pl-modal-sub">{{ 'TRUEQUE.PHONE_MODAL_BODY' | translate }}</p>
+        </div>
+      </div>
+
+      <div class="pl-modal-body">
+        <input
+          id="trueque-phone-input"
+          type="tel"
+          autocomplete="tel"
+          inputmode="tel"
+          class="w-full min-h-[44px] rounded-xl border border-[#E9E1D1] bg-white/90 px-3 py-2.5 text-sm text-[#45332D] placeholder:text-[#8a6a52]/70 focus:outline-none focus:ring-2 focus:ring-[#E0A15E]/50"
+          [value]="phoneInput()"
+          [disabled]="phoneSaving()"
+          [attr.placeholder]="'TRUEQUE.PHONE_MODAL_PLACEHOLDER' | translate"
+          (input)="onPhoneInput($event)"
+          (keydown.enter)="savePhone()" />
+
+        @if (phoneError()) {
+          <p class="mt-2 text-sm text-red-900/85" role="alert">
+            {{ phoneError()! | translate }}
+          </p>
+        }
+      </div>
+
+      <div class="pl-modal-foot">
+        <button
+          type="button"
+          class="btn-solid press-target min-h-[44px] w-full text-sm font-bold"
+          [disabled]="phoneSaving() || !phoneInput().trim()"
+          (click)="savePhone()">
+          @if (phoneSaving()) {
+            {{ 'TRUEQUE.CREATING' | translate }}
+          } @else {
+            {{ 'TRUEQUE.PHONE_MODAL_SAVE' | translate }}
+          }
+        </button>
       </div>
     </div>
   </div>

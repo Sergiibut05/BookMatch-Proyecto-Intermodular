@@ -211,4 +211,13 @@ export class AuthService {
   forgotPassword(email: string): Observable<any> {
     return this.http.post(`${this.API_URL}/auth/forgot-password`, { email });
   }
+
+  /**
+   * Fusiona campos en el perfil de backend ya cargado (p. ej. tras PATCH /users/me).
+   */
+  mergeCurrentUser(patch: Partial<BackendUser>): void {
+    const cur = this.currentUser();
+    if (!cur) return;
+    this.currentUser.set({ ...cur, ...patch });
+  }
 }

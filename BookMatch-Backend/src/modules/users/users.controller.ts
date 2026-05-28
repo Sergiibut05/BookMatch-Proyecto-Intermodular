@@ -99,13 +99,18 @@ export async function updateProfileCtrl(req: Request, res: Response) {
 }
 
 export const getProfile = async (req: Request, res: Response) => {
-  // El middleware 'auth' ya ha encontrado al usuario y lo ha puesto en req.user
-  const user = (req as any).user; 
-  
-  if (!user) {
-    return res.status(404).json({ message: 'Usuario no encontrado' });
-  }
+  try {
+    if (!req.user) {
+      return res.status(404).json({ message: 'Usuario no encontrado' });
+    }
 
-  // Devolvemos el usuario completo (con su ID numérico)
-  res.json(user);
+    const user = await findUserById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ message: 'Usuario no encontrado' });
+    }
+
+    res.json(user);
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
 };

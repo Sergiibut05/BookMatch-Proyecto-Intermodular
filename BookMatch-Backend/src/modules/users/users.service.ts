@@ -23,19 +23,27 @@ export async function syncUserFromFirebase(profile: FirebaseProfile) {
     throw new Error('El usuario de Firebase no tiene un email asociado');
   }
 
-  const data = {
+  const base = {
     email: profile.email,
     fullName: profile.displayName ?? null,
     avatarUrl: profile.photoURL ?? null,
-    phone: profile.phoneNumber ?? null,
+  };
+
+  // No pisar teléfono guardado en BD si Firebase no trae phoneNumber (p. ej. perfil /trueque).
+  const updateData = {
+    ...base,
+    ...(profile.phoneNumber != null && profile.phoneNumber !== ''
+      ? { phone: profile.phoneNumber }
+      : {}),
   };
 
   return prisma.user.upsert({
     where: { firebaseUid: profile.uid },
-    update: data,
+    update: updateData,
     create: {
       firebaseUid: profile.uid,
-      ...data,
+      ...base,
+      phone: profile.phoneNumber ?? null,
     },
     select: userSelect,
   });
