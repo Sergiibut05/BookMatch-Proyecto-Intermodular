@@ -13,14 +13,18 @@ export class MailService {
     private transporter: nodemailer.Transporter;
 
     constructor() {
+        if (!process.env.SMTP_HOST || !process.env.SMTP_PORT || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
+            console.warn('⚠️  ADVERTENCIA: Las variables de entorno SMTP_* no están definidas. El envío de correos fallará.');
+        }
+
         this.transporter = nodemailer.createTransport({
-        host: process.env.SMTP_HOST,
-        port: Number(process.env.SMTP_PORT),
-        secure: true,
-        auth: {
-            user: process.env.SMTP_USER,
-            pass: process.env.SMTP_PASS,
-        },
+            host: process.env.SMTP_HOST,
+            port: Number(process.env.SMTP_PORT),
+            secure: true,
+            auth: {
+                user: process.env.SMTP_USER,
+                pass: process.env.SMTP_PASS,
+            },
         });
     }
 

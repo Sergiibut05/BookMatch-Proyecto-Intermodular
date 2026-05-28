@@ -1,4 +1,4 @@
-import { Component, computed, inject, OnDestroy, signal } from '@angular/core';
+import { Component, computed, effect, inject, OnDestroy, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Header } from '@shared/components/header/header';
 import { Footer } from '@shared/components/footer/footer';
@@ -17,6 +17,7 @@ import {
   type UserBooksListResponse,
 } from '@core/services/trueque.service';
 import { AuthService } from '@core/services/auth.service';
+import { UsersService } from '@core/services/users.service';
 import { forkJoin, EMPTY, Subject, Subscription } from 'rxjs';
 import { debounceTime, finalize, switchMap } from 'rxjs/operators';
 
@@ -44,8 +45,11 @@ function normalizeWhatsappDigits(raw: string): string | null {
 export class TruequeComponent implements OnDestroy {
   private truequeService = inject(TruequeService);
   private authService = inject(AuthService);
+  private usersService = inject(UsersService);
   private translate = inject(TranslateService);
   private toastDismissTimer: ReturnType<typeof setTimeout> | null = null;
+  private demoTradesRefreshTimer: ReturnType<typeof setTimeout> | null = null;
+  private tradeDetailPollInterval: ReturnType<typeof setInterval> | null = null;
   private readonly exploreSearchPulse = new Subject<void>();
   private exploreSearchSub?: Subscription;
   private createDataSub?: Subscription;
@@ -120,13 +124,73 @@ export class TruequeComponent implements OnDestroy {
 
   toast = signal<string | null>(null);
 
+  phoneModalOpen = signal(false);
+  phoneInput = signal('');
+  phoneSaving = signal(false);
+  /** Clave i18n del error inline en el modal de teléfono. */
+  phoneError = signal<string | null>(null);
+
+  readonly truequeContentLocked = computed(() => this.phoneModalOpen());
+
   ngOnDestroy(): void {
     if (this.toastDismissTimer != null) {
       clearTimeout(this.toastDismissTimer);
       this.toastDismissTimer = null;
     }
+    if (this.demoTradesRefreshTimer != null) {
+      clearTimeout(this.demoTradesRefreshTimer);
+      this.demoTradesRefreshTimer = null;
+    }
+    this.clearTradeDetailPoll();
     this.exploreSearchSub?.unsubscribe();
     this.createDataSub?.unsubscribe();
+  }
+
+  /** Tras crear propuesta a usuario seed, el backend puede auto-aceptar ~5 s después. */
+  private scheduleTradesRefreshAfterDemoAccept(): void {
+    if (this.demoTradesRefreshTimer != null) {
+      clearTimeout(this.demoTradesRefreshTimer);
+    }
+    this.demoTradesRefreshTimer = setTimeout(() => {
+      this.demoTradesRefreshTimer = null;
+      this.loadTrades();
+      const openId = this.selectedTradeId();
+      if (openId != null) this.reloadTradeDetail();
+    }, 5500);
+  }
+
+  private clearTradeDetailPoll(): void {
+    if (this.tradeDetailPollInterval != null) {
+      clearInterval(this.tradeDetailPollInterval);
+      this.tradeDetailPollInterval = null;
+    }
+  }
+
+  /** Refresca el detalle mientras esperamos la auto-aceptación demo (emisor + PROPOSED). */
+  private startTradeDetailPollIfNeeded(trade: TradeDetail): void {
+    this.clearTradeDetailPoll();
+    const me = this.myUserId();
+    if (trade.status !== 'PROPOSED' || trade.senderId !== me) return;
+
+    let polls = 0;
+    const maxPolls = 8;
+    this.tradeDetailPollInterval = setInterval(() => {
+      polls += 1;
+      const openId = this.selectedTradeId();
+      if (openId !== trade.id || polls > maxPolls) {
+        this.clearTradeDetailPoll();
+        return;
+      }
+      this.truequeService.getById(trade.id).subscribe({
+        next: (updated) => {
+          this.tradeDetail.set(updated);
+          if (updated.status !== 'PROPOSED') {
+            this.loadTrades();
+            this.clearTradeDetailPoll();
+          }
+        },
+      });
+    }, 2000);
   }
 
   /** Muestra un mensaje i18n y lo oculta solo tras unos segundos. */
@@ -238,6 +302,16 @@ export class TruequeComponent implements OnDestroy {
   );
 
   constructor() {
+    effect(() => {
+      const user = this.authService.currentUser();
+      if (!user) {
+        this.phoneModalOpen.set(false);
+        return;
+      }
+      if (this.phoneSaving()) return;
+      this.phoneModalOpen.set(!user.phone?.trim());
+    });
+
     this.loadExplore();
     this.exploreSearchSub = this.exploreSearchPulse
       .pipe(
@@ -523,6 +597,8 @@ export class TruequeComponent implements OnDestroy {
           this.closeCreate();
           this.showToast('TRUEQUE.CREATE_OK');
           this.setTab('trades');
+          this.loadTrades();
+          this.scheduleTradesRefreshAfterDemoAccept();
         },
         error: () => {
           this.createLoading.set(false);
@@ -540,6 +616,7 @@ export class TruequeComponent implements OnDestroy {
       next: (t) => {
         this.tradeDetail.set(t);
         this.tradeDetailLoading.set(false);
+        this.startTradeDetailPollIfNeeded(t);
       },
       error: () => {
         this.tradeDetailLoading.set(false);
@@ -549,6 +626,7 @@ export class TruequeComponent implements OnDestroy {
   }
 
   closeTrade() {
+    this.clearTradeDetailPoll();
     this.selectedTradeId.set(null);
     this.tradeDetail.set(null);
     this.tradeDetailError.set(null);
@@ -593,7 +671,12 @@ export class TruequeComponent implements OnDestroy {
     const id = this.selectedTradeId();
     if (id == null) return;
     this.truequeService.complete(id).subscribe({
-      next: (t) => this.tradeDetail.set(t),
+      next: (t) => {
+        this.tradeDetail.set(t);
+        this.loadLibrary();
+        this.loadExplore();
+        this.loadTrades();
+      },
       error: () => this.tradeDetailError.set('TRUEQUE.ERROR_COMPLETE'),
     });
   }
@@ -785,5 +868,38 @@ export class TruequeComponent implements OnDestroy {
     if (event.target === event.currentTarget) {
       this.closeTrade();
     }
+  }
+
+  onPhoneInput(event: Event): void {
+    const value = (event.target as HTMLInputElement).value;
+    this.phoneInput.set(value);
+    if (this.phoneError()) {
+      this.phoneError.set(null);
+    }
+  }
+
+  savePhone(): void {
+    const raw = this.phoneInput().trim();
+    const digits = raw.replace(/\D/g, '');
+    if (!raw || digits.length < 6) {
+      this.phoneError.set('PROFILE.ERROR_PHONE_MIN');
+      return;
+    }
+
+    this.phoneSaving.set(true);
+    this.phoneError.set(null);
+
+    this.usersService.updateMyProfile({ phone: raw }).subscribe({
+      next: (profile) => {
+        this.authService.mergeCurrentUser({ phone: profile.phone ?? raw });
+        this.phoneSaving.set(false);
+        this.phoneModalOpen.set(false);
+        this.phoneInput.set('');
+      },
+      error: () => {
+        this.phoneSaving.set(false);
+        this.phoneError.set('TRUEQUE.PHONE_MODAL_ERROR');
+      },
+    });
   }
 }

@@ -576,3 +576,16 @@
   align-items: center;
   justify-content: center;
 }
+
+.tq-shell-inner--locked {
+  pointer-events: none;
+  user-select: none;
+}
+
+.tq-phone-modal-backdrop {
+  z-index: 60;
+}
+
+.tq-phone-modal {
+  max-width: 22rem;
+}

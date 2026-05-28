@@ -58,6 +58,11 @@ export class Profile implements OnInit {
   /** Actualiza el perfil en el estado cuando se edita. */
   onProfileUpdated(updatedProfile: UserProfile): void {
     this.profile.set(updatedProfile);
+    this.authService.mergeCurrentUser({
+      fullName: updatedProfile.fullName ?? undefined,
+      phone: updatedProfile.phone ?? undefined,
+      avatarUrl: updatedProfile.avatarUrl ?? undefined,
+    });
   }
 
   /** Toma foto, sube a Storage y actualiza Auth y backend. */

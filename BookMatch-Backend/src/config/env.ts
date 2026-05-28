@@ -23,5 +23,10 @@ export const env = {
   N8N_WEBHOOK_PLAYLIST_URL: process.env.N8N_WEBHOOK_PLAYLIST_URL?.trim() || '',
   /** Secret compartido entre backend y n8n para el callback `POST /api/playlists/:id/ai-complete`. */
   N8N_CALLBACK_SECRET: process.env.N8N_CALLBACK_SECRET?.trim() || '',
+  /**
+   * Demo / presentación: ms hasta auto-aceptar trueques PROPOSED cuyo receptor es usuario seed
+   * (`trade_seed_*` o `seed_*`). 0 o ausente = desactivado.
+   */
+  TRADE_DEMO_AUTO_ACCEPT_MS: Math.max(0, Number(process.env.TRADE_DEMO_AUTO_ACCEPT_MS ?? 0) || 0),
 };
 

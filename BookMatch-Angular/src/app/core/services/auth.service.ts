@@ -201,4 +201,23 @@ export class AuthService {
     await updateProfile(user, profileData);
     await user.getIdToken(true);
   }
+
+  /**
+   * Solicita al backend el envío de un correo para recuperar la contraseña.
+   *
+   * @param email Correo del usuario
+   * @returns Observable con el resultado (200 OK)
+   */
+  forgotPassword(email: string): Observable<any> {
+    return this.http.post(`${this.API_URL}/auth/forgot-password`, { email });
+  }
+
+  /**
+   * Fusiona campos en el perfil de backend ya cargado (p. ej. tras PATCH /users/me).
+   */
+  mergeCurrentUser(patch: Partial<BackendUser>): void {
+    const cur = this.currentUser();
+    if (!cur) return;
+    this.currentUser.set({ ...cur, ...patch });
+  }
 }

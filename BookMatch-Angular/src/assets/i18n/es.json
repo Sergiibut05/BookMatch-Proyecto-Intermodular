@@ -166,7 +166,12 @@
         "DELETE_LIBRARY_CONFIRM": "¿Eliminar este libro de tu biblioteca de trueque?",
         "TRADE_CARD_ARIA": "Trueque número {{id}}, estado: {{status}}",
         "DETAIL_TITLE_LOADING": "Detalle del trueque",
-        "DETAIL_MODAL_SUB": "Cargando datos del intercambio…"
+        "DETAIL_MODAL_SUB": "Cargando datos del intercambio…",
+        "PHONE_MODAL_TITLE": "Tu número de teléfono",
+        "PHONE_MODAL_BODY": "Para coordinar los intercambios por WhatsApp cuando aceptéis un trueque, necesitamos tu teléfono. No podrás usar esta sección hasta guardarlo.",
+        "PHONE_MODAL_PLACEHOLDER": "Ej: +34 612 345 678",
+        "PHONE_MODAL_SAVE": "Guardar y continuar",
+        "PHONE_MODAL_ERROR": "No se ha podido guardar el teléfono. Inténtalo de nuevo."
     },
     "PLAYLISTS": {
         "TITLE": "Mis playlists",
@@ -346,6 +351,16 @@
         "ERROR_INVALID_TOKEN": "El enlace no es válido.",
         "ERROR_NOT_FOUND": "Este enlace ya no está activo o la playlist no es pública.",
         "ERROR_GENERIC": "Ha ocurrido un error al cargar la playlist."
+    },
+    "AUTH": {
+        "FORGOT_PASSWORD_LINK": "¿Olvidaste tu contraseña?",
+        "FORGOT_PASSWORD_TITLE": "Recuperar contraseña",
+        "FORGOT_PASSWORD_SUBTITLE": "Te enviaremos un enlace para restablecerla.",
+        "FORGOT_PASSWORD_EMAIL_PLACEHOLDER": "tu@email.com",
+        "FORGOT_PASSWORD_SUBMIT": "Enviar enlace",
+        "FORGOT_PASSWORD_SUCCESS": "Si el correo existe, recibirás instrucciones.",
+        "FORGOT_PASSWORD_ERROR": "No se pudo solicitar. Inténtalo más tarde.",
+        "BACK_TO_LOGIN": "Volver a iniciar sesión"
     },
     "LOGIN": {
         "SUBTITLE": "Inicia sesión para continuar",
