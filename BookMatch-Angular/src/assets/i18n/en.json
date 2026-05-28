@@ -347,6 +347,16 @@
         "ERROR_NOT_FOUND": "This link is no longer active, or the playlist is not public.",
         "ERROR_GENERIC": "An error occurred while loading the playlist."
     },
+    "AUTH": {
+        "FORGOT_PASSWORD_LINK": "Forgot your password?",
+        "FORGOT_PASSWORD_TITLE": "Recover password",
+        "FORGOT_PASSWORD_SUBTITLE": "We will send you a link to reset it.",
+        "FORGOT_PASSWORD_EMAIL_PLACEHOLDER": "you@email.com",
+        "FORGOT_PASSWORD_SUBMIT": "Send link",
+        "FORGOT_PASSWORD_SUCCESS": "If the email exists, you will receive instructions.",
+        "FORGOT_PASSWORD_ERROR": "We couldn't process your request. Try again later.",
+        "BACK_TO_LOGIN": "Back to login"
+    },
     "LOGIN": {
         "SUBTITLE": "Sign in to continue",
         "EMAIL_LABEL": "Email",

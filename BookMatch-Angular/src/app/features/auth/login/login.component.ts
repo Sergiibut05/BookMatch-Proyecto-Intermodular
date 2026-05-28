@@ -22,14 +22,60 @@ export class LoginComponent {
   private translate = inject(TranslateService);
 
   loginForm: FormGroup;
+  forgotPasswordForm: FormGroup;
+  
   loading = false;
   errorMessage = '';
+  
+  showForgotPassword = false;
+  forgotPasswordLoading = false;
+  forgotPasswordSuccess = false;
+  forgotPasswordError = '';
 
   constructor() {
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, Validators.minLength(6)]]
     });
+
+    this.forgotPasswordForm = this.fb.group({
+      email: ['', [Validators.required, Validators.email]]
+    });
+  }
+
+  toggleForgotPassword() {
+    this.showForgotPassword = !this.showForgotPassword;
+    this.forgotPasswordSuccess = false;
+    this.forgotPasswordError = '';
+    this.errorMessage = '';
+    if (this.showForgotPassword) {
+      // Pre-fill email if entered in login
+      const currentEmail = this.loginForm.get('email')?.value;
+      if (currentEmail) {
+        this.forgotPasswordForm.patchValue({ email: currentEmail });
+      }
+    }
+  }
+
+  onForgotPasswordSubmit() {
+    if (this.forgotPasswordForm.valid) {
+      this.forgotPasswordLoading = true;
+      this.forgotPasswordError = '';
+      this.forgotPasswordSuccess = false;
+
+      const email = this.forgotPasswordForm.get('email')?.value;
+      this.authService.forgotPassword(email).subscribe({
+        next: () => {
+          this.forgotPasswordLoading = false;
+          this.forgotPasswordSuccess = true;
+        },
+        error: (err) => {
+          this.forgotPasswordLoading = false;
+          this.forgotPasswordError = this.translate.instant('AUTH.FORGOT_PASSWORD_ERROR');
+          console.error('Error on forgot password:', err);
+        }
+      });
+    }
   }
 
   /**

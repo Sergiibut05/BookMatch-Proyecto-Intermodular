@@ -201,4 +201,14 @@ export class AuthService {
     await updateProfile(user, profileData);
     await user.getIdToken(true);
   }
+
+  /**
+   * Solicita al backend el envío de un correo para recuperar la contraseña.
+   *
+   * @param email Correo del usuario
+   * @returns Observable con el resultado (200 OK)
+   */
+  forgotPassword(email: string): Observable<any> {
+    return this.http.post(`${this.API_URL}/auth/forgot-password`, { email });
+  }
 }

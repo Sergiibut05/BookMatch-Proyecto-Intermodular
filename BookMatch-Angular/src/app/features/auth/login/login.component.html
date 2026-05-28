@@ -5,41 +5,79 @@
       <p>{{ 'LOGIN.SUBTITLE' | translate }}</p>
     </div>
 
-    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="auth-form">
-      <div class="form-group">
-        <label for="email">{{ 'LOGIN.EMAIL_LABEL' | translate }}</label>
-        <input type="email" id="email" formControlName="email" placeholder="{{ 'LOGIN.EMAIL_PLACEHOLDER' | translate }}"
-          [class.error]="loginForm.get('email')?.invalid && loginForm.get('email')?.touched" />
-        @if (loginForm.get('email')?.invalid && loginForm.get('email')?.touched) {
-        <span class="error-message">{{ 'LOGIN.EMAIL_ERROR' | translate }}</span>
+    @if (!showForgotPassword) {
+      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="auth-form">
+        <div class="form-group">
+          <label for="email">{{ 'LOGIN.EMAIL_LABEL' | translate }}</label>
+          <input type="email" id="email" formControlName="email" placeholder="{{ 'LOGIN.EMAIL_PLACEHOLDER' | translate }}"
+            [class.error]="loginForm.get('email')?.invalid && loginForm.get('email')?.touched" />
+          @if (loginForm.get('email')?.invalid && loginForm.get('email')?.touched) {
+          <span class="error-message">{{ 'LOGIN.EMAIL_ERROR' | translate }}</span>
+          }
+        </div>
+
+        <div class="form-group">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <label for="password">{{ 'LOGIN.PASSWORD_LABEL' | translate }}</label>
+            <a href="javascript:void(0)" class="forgot-password-link" (click)="toggleForgotPassword()">{{ 'AUTH.FORGOT_PASSWORD_LINK' | translate }}</a>
+          </div>
+          <input type="password" id="password" formControlName="password" placeholder="••••••••"
+            [class.error]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched" />
+          @if (loginForm.get('password')?.invalid && loginForm.get('password')?.touched) {
+          <span class="error-message">{{ 'LOGIN.PASSWORD_ERROR' | translate }}</span>
+          }
+        </div>
+
+        @if (errorMessage) {
+        <div class="alert alert-error">{{ errorMessage }}</div>
         }
+
+        <button type="submit" class="btn btn-primary" [disabled]="loginForm.invalid || loading">
+          @if (loading) {
+          <span class="spinner"></span>
+          } @else {
+          {{ 'LOGIN.SUBMIT_BUTTON' | translate }}
+          }
+        </button>
+      </form>
+
+      <div class="divider">
+        <span>{{ 'LOGIN.OR_CONTINUE_WITH' | translate }}</span>
       </div>
+    } @else {
+      <div class="forgot-password-section">
+        <h2>{{ 'AUTH.FORGOT_PASSWORD_TITLE' | translate }}</h2>
+        <p>{{ 'AUTH.FORGOT_PASSWORD_SUBTITLE' | translate }}</p>
 
-      <div class="form-group">
-        <label for="password">{{ 'LOGIN.PASSWORD_LABEL' | translate }}</label>
-        <input type="password" id="password" formControlName="password" placeholder="••••••••"
-          [class.error]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched" />
-        @if (loginForm.get('password')?.invalid && loginForm.get('password')?.touched) {
-        <span class="error-message">{{ 'LOGIN.PASSWORD_ERROR' | translate }}</span>
-        }
-      </div>
-
-      @if (errorMessage) {
-      <div class="alert alert-error">{{ errorMessage }}</div>
-      }
-
-      <button type="submit" class="btn btn-primary" [disabled]="loginForm.invalid || loading">
-        @if (loading) {
-        <span class="spinner"></span>
+        @if (forgotPasswordSuccess) {
+          <div class="alert alert-success">
+            {{ 'AUTH.FORGOT_PASSWORD_SUCCESS' | translate }}
+          </div>
         } @else {
-        {{ 'LOGIN.SUBMIT_BUTTON' | translate }}
-        }
-      </button>
-    </form>
+          <form [formGroup]="forgotPasswordForm" (ngSubmit)="onForgotPasswordSubmit()" class="auth-form">
+            <div class="form-group">
+              <input type="email" formControlName="email" placeholder="{{ 'AUTH.FORGOT_PASSWORD_EMAIL_PLACEHOLDER' | translate }}"
+                [class.error]="forgotPasswordForm.get('email')?.invalid && forgotPasswordForm.get('email')?.touched" />
+            </div>
 
-    <div class="divider">
-      <span>{{ 'LOGIN.OR_CONTINUE_WITH' | translate }}</span>
-    </div>
+            @if (forgotPasswordError) {
+              <div class="alert alert-error">{{ forgotPasswordError }}</div>
+            }
+
+            <button type="submit" class="btn btn-primary" [disabled]="forgotPasswordForm.invalid || forgotPasswordLoading">
+              @if (forgotPasswordLoading) {
+                <span class="spinner"></span>
+              } @else {
+                {{ 'AUTH.FORGOT_PASSWORD_SUBMIT' | translate }}
+              }
+            </button>
+          </form>
+        }
+        <button type="button" class="btn btn-secondary back-btn" (click)="toggleForgotPassword()" style="margin-top: 1rem; width: 100%;">
+          {{ 'AUTH.BACK_TO_LOGIN' | translate }}
+        </button>
+      </div>
+    }
 
     <button type="button" class="btn btn-google" (click)="loginWithGoogle()" [disabled]="loading">
       <svg width="18" height="18" viewBox="0 0 18 18">
