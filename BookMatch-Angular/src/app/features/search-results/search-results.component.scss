@@ -47,6 +47,7 @@ $book-spine-gradient: linear-gradient(
 
 .sr-book-cover {
   position: relative;
+  width: 100%;
   aspect-ratio: 2 / 3;
   border-radius: 2px 6px 6px 2px;
   overflow: hidden;
@@ -61,6 +62,8 @@ $book-spine-gradient: linear-gradient(
   }
 
   &__img {
+    position: absolute;
+    inset: 0;
     width: 100%;
     height: 100%;
     object-fit: cover;

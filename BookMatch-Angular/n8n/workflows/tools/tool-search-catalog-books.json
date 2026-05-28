@@ -1,0 +1,91 @@
+{
+  "name": "Tool · search_catalog_books",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Tool: search_catalog_books\n\nInput JSON: `{ query?: string, categories?: string[], excludeUserId?: string, limit?: number }`\n\nBusca libros en el catálogo con filtros flexibles (texto libre, categorías, historial del usuario). Devuelve hasta 20 resultados normalizados con `coverUrl`.",
+        "height": 140,
+        "width": 440
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [-400, -200],
+      "id": "sticky-search-catalog",
+      "name": "Nota"
+    },
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            { "name": "query", "type": "string" },
+            { "name": "limit", "type": "number" },
+            { "name": "categories", "type": "string" },
+            { "name": "excludeUserId", "type": "string" }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [-200, 0],
+      "id": "trigger-search-catalog",
+      "name": "Execute Workflow Trigger"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const j = $input.first().json;\nlet query, categories, excludeUserId, limit;\nif (j.query !== undefined) {\n  query = typeof j.query === 'string' && j.query.trim() ? j.query.trim() : null;\n  const rawLimit = j.limit;\n  limit = (rawLimit !== null && rawLimit !== undefined && Number.isFinite(Number(rawLimit)) && Number(rawLimit) > 0)\n    ? Math.max(1, Math.min(20, Number(rawLimit))) : 8;\n  categories = typeof j.categories === 'string' && j.categories.trim()\n    ? j.categories.trim().split(',').map(c => c.trim().toLowerCase()).filter(Boolean) : null;\n  excludeUserId = typeof j.excludeUserId === 'string' && j.excludeUserId.trim() ? j.excludeUserId.trim() : null;\n} else {\n  const raw = j.input;\n  const inp = typeof raw === 'string' ? JSON.parse(raw) : (raw || j);\n  query = typeof inp?.query === 'string' && inp.query.trim() ? inp.query.trim() : null;\n  const rawLimit = inp?.limit;\n  limit = (rawLimit !== null && rawLimit !== undefined && Number.isFinite(Number(rawLimit)) && Number(rawLimit) > 0)\n    ? Math.max(1, Math.min(20, Number(rawLimit))) : 8;\n  categories = Array.isArray(inp?.categories) && inp.categories.length > 0\n    ? inp.categories.filter(c => typeof c === 'string' && c.trim()).map(c => c.trim().toLowerCase()) : null;\n  if (categories && categories.length === 0) categories = null;\n  excludeUserId = typeof inp?.excludeUserId === 'string' && inp.excludeUserId.trim() ? inp.excludeUserId.trim() : null;\n}\nif (query === null && categories === null) {\n  return [{ json: { books: [], count: 0, ids_for_bookIds: [], error: 'Debes proporcionar al menos una query.' } }];\n}\nreturn [{ json: { query, categories, excludeUserId, limit } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [20, 0],
+      "id": "code-normalize-params",
+      "name": "Normalizar Parámetros"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "=SELECT\n  cb.id,\n  cb.title,\n  cb.author,\n  cb.description,\n  cb.cover_url AS \"coverUrl\",\n  ARRAY_AGG(DISTINCT cat.name) FILTER (WHERE cat.name IS NOT NULL) AS categories\nFROM catalog_books cb\nLEFT JOIN catalog_book_categories cbc ON cbc.catalog_book_id = cb.id\nLEFT JOIN categories cat ON cat.id = cbc.category_id\nWHERE\n  ({{ $json.query === null ? 'TRUE' : `(cb.title ILIKE '%${$json.query.replace(/'/g, \"''\")}%' OR cb.author ILIKE '%${$json.query.replace(/'/g, \"''\")}%' OR cb.description ILIKE '%${$json.query.replace(/'/g, \"''\")}%')` }})\n  AND ({{ $json.categories === null ? 'TRUE' : `LOWER(cat.name) = ANY(ARRAY['${$json.categories.map(c => c.replace(/'/g, \"''\").toLowerCase()).join(\"','\")}'::text])` }})\n  AND ({{ $json.excludeUserId === null ? 'TRUE' : `cb.id NOT IN (SELECT oi.catalog_book_id FROM order_items oi JOIN orders o ON oi.order_id = o.id JOIN users u ON o.user_id = u.id WHERE u.firebase_uid = '${$json.excludeUserId.replace(/'/g, \"''\")}')` }})\nGROUP BY cb.id, cb.title, cb.author, cb.description, cb.cover_url\nORDER BY\n  CASE WHEN {{ $json.query === null ? `'a'` : `cb.author ILIKE '%${$json.query.replace(/'/g, \"''\")}%'` }} THEN 0 ELSE 1 END,\n  cb.id\nLIMIT {{ $json.limit }};",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [240, 0],
+      "id": "postgres-search",
+      "name": "Buscar en Catálogo",
+      "continueOnFail": true,
+      "credentials": {
+        "postgres": {
+          "id": "zeU51y9XScYtwY9X",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// Normaliza y devuelve los libros encontrados como array JSON\nconst rows = $input.all();\nconst books = [];\nconst seen = new Set();\n\nfor (const row of rows) {\n  const j = row.json;\n  if (!j || j.error) continue;\n  const id = Number(j.id);\n  if (!Number.isFinite(id) || id <= 0 || seen.has(id)) continue;\n  seen.add(id);\n  books.push({\n    id,\n    title: j.title || '',\n    author: j.author || '',\n    description: j.description || null,\n    coverUrl: j.coverUrl || null,\n    categories: Array.isArray(j.categories) ? j.categories.filter(Boolean) : []\n  });\n}\n\nconst ids_for_bookIds = books.map(b => b.id);
+return [{ json: { books, count: books.length, ids_for_bookIds } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 0],
+      "id": "code-normalize-results",
+      "name": "Normalizar Resultados"
+    }
+  ],
+  "connections": {
+    "Execute Workflow Trigger": {
+      "main": [[{ "node": "Normalizar Parámetros", "type": "main", "index": 0 }]]
+    },
+    "Normalizar Parámetros": {
+      "main": [[{ "node": "Buscar en Catálogo", "type": "main", "index": 0 }]]
+    },
+    "Buscar en Catálogo": {
+      "main": [[{ "node": "Normalizar Resultados", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": { "executionOrder": "v1" },
+  "meta": {
+    "description": "Tool reutilizable: busca libros en catalog_books con filtros de texto, categorías y exclusión de compras del usuario."
+  }
+}

@@ -41,7 +41,7 @@
                 </div>
                 <span class="material-symbols-outlined cs-card__arrow">arrow_forward</span>
               </div>
-              <h3 class="cs-card__name">{{ category.name }}</h3>
+              <h3 class="cs-card__name">{{ getCategoryDisplayName(category) }}</h3>
               @if (category.description) {
                 <p class="cs-card__desc">{{ category.description }}</p>
               }
@@ -66,10 +66,10 @@
                   <span class="material-symbols-outlined">{{ category.icon || 'category' }}</span>
                 </div>
                 @if (getParentCategoryName(category)) {
-                  <span class="cs-card__badge">{{ getParentCategoryName(category) }}</span>
+                  <span class="cs-card__badge">{{ getParentCategoryDisplayName(category) }}</span>
                 }
               </div>
-              <h3 class="cs-card__name">{{ category.name }}</h3>
+              <h3 class="cs-card__name">{{ getCategoryDisplayName(category) }}</h3>
               @if (category.description) {
                 <p class="cs-card__desc">{{ category.description }}</p>
               }

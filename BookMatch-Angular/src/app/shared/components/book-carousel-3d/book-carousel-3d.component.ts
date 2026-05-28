@@ -1,6 +1,7 @@
 import { Component, ElementRef, Input, OnInit, OnDestroy, ViewChild, AfterViewInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
+import { TranslateModule } from '@ngx-translate/core';
 import * as THREE from 'three';
 import { WebGPURenderer } from 'three/webgpu';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
@@ -35,7 +36,7 @@ export interface BookData {
 @Component({
   selector: 'app-book-carousel-3d',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TranslateModule],
   templateUrl: './book-carousel-3d.component.html',
   styleUrl: './book-carousel-3d.component.scss',
 })

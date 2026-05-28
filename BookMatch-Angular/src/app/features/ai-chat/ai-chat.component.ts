@@ -91,8 +91,8 @@ export class AiChatComponent implements OnInit, AfterViewChecked {
   // "override" local que prevalece sobre el draft del último
   // mensaje hasta que llegue uno nuevo.
   // ============================================================
-  /** Modo actual del chat. */
-  playlistMode = signal<boolean>(false);
+  /** Modo actual del chat (persistido en localStorage). */
+  playlistMode = signal<boolean>(this.readPlaylistModePref());
   /** Panel del borrador visible/oculto (desktop y móvil). */
   playlistPanelOpen = signal<boolean>(false);
   /**
@@ -213,6 +213,14 @@ export class AiChatComponent implements OnInit, AfterViewChecked {
   });
 
   constructor() {
+    // Persiste el modo playlist en localStorage al cambiar
+    effect(() => {
+      const val = this.playlistMode();
+      try {
+        localStorage.setItem('bm_chat_playlist_mode', val ? '1' : '0');
+      } catch { /* storage bloqueado */ }
+    });
+
     // Cuando cambian los mensajes, pedimos al catálogo los libros recomendados
     // que aún no tengamos en cache. Esto alimenta las tarjetas de abajo de
     // cada respuesta del asistente.
@@ -482,6 +490,11 @@ export class AiChatComponent implements OnInit, AfterViewChecked {
 
   /** Selecciona una conversación y carga sus mensajes. */
   selectConversation(conversationId: string, closeSidebar: boolean = true) {
+    // Limpiar estado del borrador de la conversación anterior
+    this.manualDraftOverride.set(null);
+    this.lastDraftMessageId = null;
+    this.playlistPanelOpen.set(false);
+
     this.activeConversationId.set(conversationId);
     this.isNewEmptyConversation.set(false);
     if (closeSidebar) {
@@ -500,6 +513,11 @@ export class AiChatComponent implements OnInit, AfterViewChecked {
 
   /** Crea una conversación vacía en UI (sin guardar aún). */
   createNewConversation() {
+    // Limpiar estado del borrador de la conversación anterior
+    this.manualDraftOverride.set(null);
+    this.lastDraftMessageId = null;
+    this.playlistPanelOpen.set(false);
+
     this.activeConversationId.set(null);
     this.messages.set([]);
     this.isNewEmptyConversation.set(true);
@@ -520,7 +538,11 @@ export class AiChatComponent implements OnInit, AfterViewChecked {
 
       this.conversationService.createConversation(firebaseUser.uid).subscribe({
         next: (conversationId) => {
-          this.selectConversation(conversationId, false);
+          // Only auto-select the new conversation if the user hasn't navigated
+          // to a different existing conversation while the request was in flight.
+          if (this.isNewEmptyConversation()) {
+            this.selectConversation(conversationId, false);
+          }
           this.sendMessageToConversation(firebaseUser.uid, conversationId, content);
         },
         error: (error) => {
@@ -611,6 +633,16 @@ export class AiChatComponent implements OnInit, AfterViewChecked {
     if (typeof window === 'undefined') return false;
     try {
       return localStorage.getItem('bm_chat_playlist_hint_seen') !== '1';
+    } catch {
+      return false;
+    }
+  }
+
+  /** Lee el estado persistido del toggle de modo playlist. */
+  private readPlaylistModePref(): boolean {
+    if (typeof window === 'undefined') return false;
+    try {
+      return localStorage.getItem('bm_chat_playlist_mode') === '1';
     } catch {
       return false;
     }

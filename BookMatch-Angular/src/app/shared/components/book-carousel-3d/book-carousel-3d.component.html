@@ -9,7 +9,7 @@
 
   <!-- Eyebrow + Title -->
   <div class="bc3d-header" aria-hidden="true">
-    <span class="bc3d-eyebrow">Lo mas leido</span>
+    <span class="bc3d-eyebrow">{{ 'HOME.CAROUSEL_3D.EYEBROW' | translate }}</span>
     <h2 class="bc3d-title">{{ title }}</h2>
   </div>
 
@@ -25,7 +25,7 @@
     (click)="onDiscoverClick()"
     class="bc3d-discover-btn"
     [class.is-visible]="centerBookIndex() !== null">
-    <span>Ver libro</span>
+    <span>{{ 'HOME.CAROUSEL_3D.VIEW_BOOK' | translate }}</span>
     <span class="material-symbols-outlined bc3d-discover-btn__arrow">arrow_forward</span>
   </button>
 

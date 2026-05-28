@@ -1,0 +1,279 @@
+{
+  "name": "Tool · add_books_to_catalog",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Tool: add_books_to_catalog\n\nInput: `{ books: [{ title, author, isbn, description, coverUrl, categoryNames[] }] }` (máx 5)\n\nValida e inserta libros nuevos en `catalog_books` + `catalog_book_categories`. Verifica:\n- isbn único (10 o 13 dígitos), no existe ya\n- coverUrl HEAD 200, image/*, content-length > 15KB\n- categoryNames ⊆ categorías reales\n- price=9.99, stock=5 (TFG / simulación)\n\nDevuelve `{ insertedBooks: [{id, title}], skipped: [{title, reason}] }`",
+        "height": 200,
+        "width": 500
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [-400, -280],
+      "id": "sticky-add-books",
+      "name": "Nota"
+    },
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [{ "name": "input" }]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [-200, 0],
+      "id": "trigger-add-books",
+      "name": "Execute Workflow Trigger"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// Valida el input básico antes de ir a la BD\nconst raw = $input.first().json.input;\nconst inp = typeof raw === 'string' ? JSON.parse(raw) : (raw || $input.first().json);\nlet books = inp.books;\nif (!Array.isArray(books)) {\n  // Puede llegar como string JSON si el agente lo serializa\n  try { books = JSON.parse(String(books)); } catch { books = []; }\n}\n\nif (!Array.isArray(books) || books.length === 0) {\n  throw new Error('books debe ser un array no vacío');\n}\n\n// Limitar a máx 5 por llamada\nbooks = books.slice(0, 5);\n\nconst validated = [];\nconst skipped = [];\n\nfor (const b of books) {\n  const title = typeof b.title === 'string' ? b.title.trim() : '';\n  const author = typeof b.author === 'string' ? b.author.trim() : '';\n  const isbn = typeof b.isbn === 'string' ? b.isbn.trim().replace(/[^0-9X]/gi, '') : '';\n  const description = typeof b.description === 'string' ? b.description.slice(0, 2000) : null;\n  const coverUrl = typeof b.coverUrl === 'string' ? b.coverUrl.trim() : '';\n  const categoryNames = Array.isArray(b.categoryNames)\n    ? b.categoryNames.filter(c => typeof c === 'string' && c.trim()).map(c => c.trim())\n    : [];\n\n  if (!title) { skipped.push({ title: b.title || '?', reason: 'título vacío' }); continue; }\n  if (!author) { skipped.push({ title, reason: 'autor vacío' }); continue; }\n  if (isbn.length !== 10 && isbn.length !== 13) { skipped.push({ title, reason: `ISBN inválido: ${isbn}` }); continue; }\n  if (!coverUrl.startsWith('https://')) { skipped.push({ title, reason: 'coverUrl no HTTPS' }); continue; }\n\n  validated.push({ title, author, isbn, description, coverUrl, categoryNames });\n}\n\nreturn [{ json: { validated, skipped } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-20, 0],
+      "id": "code-validate-input",
+      "name": "Validar Input"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// Valida coverUrl con HEAD y filtra ISBNs ya existentes en la BD\nconst data = $input.first().json;\nconst { validated, skipped } = data;\n\nasync function validateCoverUrl(url) {\n  try {\n    const resp = await fetch(url, { method: 'HEAD', signal: AbortSignal.timeout(7000) });\n    if (!resp.ok) return { ok: false, reason: `HTTP ${resp.status}` };\n    const ct = resp.headers.get('content-type') || '';\n    if (!ct.startsWith('image/')) return { ok: false, reason: `content-type: ${ct}` };\n    const cl = parseInt(resp.headers.get('content-length') || '0', 10);\n    if (cl > 0 && cl < 15000) return { ok: false, reason: `imagen demasiado pequeña (${cl} bytes)` };\n    return { ok: true };\n  } catch (e) {\n    return { ok: false, reason: e.message || 'timeout' };\n  }\n}\n\nconst ready = [];\nconst newSkipped = [...skipped];\n\nfor (const b of validated) {\n  const result = await validateCoverUrl(b.coverUrl);\n  if (!result.ok) {\n    newSkipped.push({ title: b.title, reason: `portada rechazada: ${result.reason}` });\n  } else {\n    ready.push(b);\n  }\n}\n\nreturn [{ json: { ready, skipped: newSkipped } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [200, 0],
+      "id": "code-validate-covers",
+      "name": "Validar Portadas"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "=SELECT isbn FROM catalog_books WHERE isbn = ANY(ARRAY[{{ $json.ready.map(b => `'${b.isbn.replace(/'/g, \"''\")}' `).join(',') }}]);",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [420, 0],
+      "id": "postgres-check-isbn",
+      "name": "Verificar ISBN Existentes",
+      "continueOnFail": true,
+      "credentials": {
+        "postgres": {
+          "id": "zeU51y9XScYtwY9X",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// Filtra los que ya tienen ISBN en la BD\nconst coverData = $('Validar Portadas').first().json;\nconst isbnRows = $input.all();\n\nconst existingIsbns = new Set(\n  isbnRows\n    .map(r => r.json?.isbn)\n    .filter(Boolean)\n    .map(String)\n);\n\nconst toInsert = [];\nconst skipped = [...coverData.skipped];\n\nfor (const b of coverData.ready) {\n  if (existingIsbns.has(b.isbn)) {\n    skipped.push({ title: b.title, reason: `ISBN ${b.isbn} ya existe en catálogo` });\n  } else {\n    toInsert.push(b);\n  }\n}\n\nreturn [{ json: { toInsert, skipped } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [640, 0],
+      "id": "code-filter-existing",
+      "name": "Filtrar Existentes"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "=SELECT id, name FROM categories;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [860, 0],
+      "id": "postgres-get-categories",
+      "name": "Cargar Categorías",
+      "continueOnFail": true,
+      "credentials": {
+        "postgres": {
+          "id": "zeU51y9XScYtwY9X",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// Inserta los libros válidos en catalog_books en transacción\nconst filterData = $('Filtrar Existentes').first().json;\nconst catRows = $input.all();\n\nconst categoryMap = {};\nfor (const r of catRows) {\n  if (r.json?.id && r.json?.name) {\n    categoryMap[r.json.name.toLowerCase()] = Number(r.json.id);\n  }\n}\n\nconst { toInsert, skipped } = filterData;\n\nif (toInsert.length === 0) {\n  return [{ json: { insertedBooks: [], skipped } }];\n}\n\n// Construir sentencias INSERT para ejecutar por lotes\n// Devolvemos la info para que el siguiente nodo Postgres la ejecute\nconst statements = [];\n\nfor (const b of toInsert) {\n  const t = b.title.replace(/'/g, \"''\");\n  const a = b.author.replace(/'/g, \"''\");\n  const isbn = b.isbn.replace(/'/g, \"''\");\n  const desc = b.description ? b.description.replace(/'/g, \"''\") : null;\n  const cover = b.coverUrl.replace(/'/g, \"''\");\n\n  const descSql = desc ? `'${desc}'` : 'NULL';\n  statements.push(`INSERT INTO catalog_books (title, author, isbn, description, cover_url, price, stock, created_at, updated_at)\nVALUES ('${t}', '${a}', '${isbn}', ${descSql}, '${cover}', 9.99, 5, NOW(), NOW())\nRETURNING id, title`);\n\n  // Resolución de categorías: usar las que matcheen, sino 'Novedades'\n  const matchedCategoryIds = b.categoryNames\n    .map(name => categoryMap[name.toLowerCase()])\n    .filter(Boolean);\n  if (matchedCategoryIds.length === 0) {\n    const defaultId = categoryMap['novedades'];\n    if (defaultId) matchedCategoryIds.push(defaultId);\n  }\n  b._resolvedCategoryIds = matchedCategoryIds;\n}\n\nreturn [{ json: { statements, toInsert, skipped, categoryMap } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1080, 0],
+      "id": "code-prepare-insert",
+      "name": "Preparar INSERT"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// Ejecuta los INSERTs libro a libro y registra los IDs\n// Usamos la credencial de Postgres directamente via $helpers.request no disponible.\n// En su lugar, generamos un único SQL multi-insert concatenado.\n\nconst data = $input.first().json;\nconst { toInsert, skipped } = data;\n\nif (toInsert.length === 0) {\n  return [{ json: { insertedBooks: [], skipped } }];\n}\n\n// Construir VALUES multi-row para mayor eficiencia\nconst valueRows = toInsert.map(b => {\n  const t = b.title.replace(/'/g, \"''\");\n  const a = b.author.replace(/'/g, \"''\");\n  const isbn = b.isbn.replace(/'/g, \"''\");\n  const desc = b.description ? `'${b.description.replace(/'/g, \"''\")}'` : 'NULL';\n  const cover = b.coverUrl.replace(/'/g, \"''\");\n  return `('${t}', '${a}', '${isbn}', ${desc}, '${cover}', 9.99, 5, NOW(), NOW())`;\n}).join(',\\n');\n\nconst sql = `INSERT INTO catalog_books (title, author, isbn, description, cover_url, price, stock, created_at, updated_at)\\nVALUES\\n${valueRows}\\nRETURNING id, title, isbn`;\n\nreturn [{ json: { sql, toInsert, skipped } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1300, 0],
+      "id": "code-build-sql",
+      "name": "Construir SQL"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "={{ $json.sql }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [1520, 0],
+      "id": "postgres-insert-books",
+      "name": "INSERT catalog_books",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 1000,
+      "continueOnFail": true,
+      "credentials": {
+        "postgres": {
+          "id": "zeU51y9XScYtwY9X",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// Inserta las relaciones libro-categoría usando los IDs recién creados\nconst insertedRows = $input.all();\nconst buildData = $('Construir SQL').first().json;\nconst { toInsert, skipped } = buildData;\n\nconst insertedBooks = [];\nconst newSkipped = [...skipped];\n\n// Mapear isbn → id recién insertado\nconst isbnToId = {};\nfor (const r of insertedRows) {\n  const j = r.json;\n  if (j?.error) {\n    // Fallo general: todos los libros del batch se marcan como fallidos\n    newSkipped.push(...toInsert.map(b => ({ title: b.title, reason: j.error.message || 'INSERT falló' })));\n    break;\n  }\n  if (j?.id && j?.isbn) {\n    isbnToId[j.isbn] = Number(j.id);\n    insertedBooks.push({ id: Number(j.id), title: j.title || '' });\n  }\n}\n\n// Preparar sql de categorías\nconst catValueRows = [];\nfor (const b of toInsert) {\n  const bookId = isbnToId[b.isbn];\n  if (!bookId) continue;\n  for (const catId of (b._resolvedCategoryIds || [])) {\n    catValueRows.push(`(${bookId}, ${catId})`);\n  }\n}\n\nconst catSql = catValueRows.length > 0\n  ? `INSERT INTO catalog_book_categories (catalog_book_id, category_id) VALUES ${catValueRows.join(', ')} ON CONFLICT DO NOTHING`\n  : null;\n\nreturn [{ json: { insertedBooks, skipped: newSkipped, catSql } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1740, 0],
+      "id": "code-process-inserted",
+      "name": "Procesar Insertados"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 3 },
+          "conditions": [
+            {
+              "id": "check-cat-sql",
+              "leftValue": "={{ $json.catSql }}",
+              "rightValue": "",
+              "operator": { "type": "string", "operation": "notEmpty", "singleValue": true }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [1960, 0],
+      "id": "if-has-categories",
+      "name": "¿Hay Categorías?"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "={{ $json.catSql }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [2180, -80],
+      "id": "postgres-insert-categories",
+      "name": "INSERT categorías",
+      "continueOnFail": true,
+      "credentials": {
+        "postgres": {
+          "id": "zeU51y9XScYtwY9X",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// Rama sin categorías: pasar directo al resultado final\nconst d = $input.first().json;\nreturn [{ json: { insertedBooks: d.insertedBooks, skipped: d.skipped } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2180, 80],
+      "id": "code-no-categories",
+      "name": "Sin Categorías"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// Resultado final tras insertar categorías\nconst procData = $('Procesar Insertados').first().json;\nreturn [{ json: { insertedBooks: procData.insertedBooks, skipped: procData.skipped } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2400, -80],
+      "id": "code-after-categories",
+      "name": "Tras Categorías"
+    },
+    {
+      "parameters": {
+        "numberInputs": 2
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [2600, 0],
+      "id": "merge-final",
+      "name": "Resultado Final"
+    }
+  ],
+  "connections": {
+    "Execute Workflow Trigger": {
+      "main": [[{ "node": "Validar Input", "type": "main", "index": 0 }]]
+    },
+    "Validar Input": {
+      "main": [[{ "node": "Validar Portadas", "type": "main", "index": 0 }]]
+    },
+    "Validar Portadas": {
+      "main": [[{ "node": "Verificar ISBN Existentes", "type": "main", "index": 0 }]]
+    },
+    "Verificar ISBN Existentes": {
+      "main": [[{ "node": "Filtrar Existentes", "type": "main", "index": 0 }]]
+    },
+    "Filtrar Existentes": {
+      "main": [[{ "node": "Cargar Categorías", "type": "main", "index": 0 }]]
+    },
+    "Cargar Categorías": {
+      "main": [[{ "node": "Preparar INSERT", "type": "main", "index": 0 }]]
+    },
+    "Preparar INSERT": {
+      "main": [[{ "node": "Construir SQL", "type": "main", "index": 0 }]]
+    },
+    "Construir SQL": {
+      "main": [[{ "node": "INSERT catalog_books", "type": "main", "index": 0 }]]
+    },
+    "INSERT catalog_books": {
+      "main": [[{ "node": "Procesar Insertados", "type": "main", "index": 0 }]]
+    },
+    "Procesar Insertados": {
+      "main": [[{ "node": "¿Hay Categorías?", "type": "main", "index": 0 }]]
+    },
+    "¿Hay Categorías?": {
+      "main": [
+        [{ "node": "INSERT categorías", "type": "main", "index": 0 }],
+        [{ "node": "Sin Categorías", "type": "main", "index": 0 }]
+      ]
+    },
+    "INSERT categorías": {
+      "main": [[{ "node": "Tras Categorías", "type": "main", "index": 0 }]]
+    },
+    "Tras Categorías": {
+      "main": [[{ "node": "Resultado Final", "type": "main", "index": 0 }]]
+    },
+    "Sin Categorías": {
+      "main": [[{ "node": "Resultado Final", "type": "main", "index": 1 }]]
+    }
+  },
+  "settings": { "executionOrder": "v1" },
+  "meta": {
+    "description": "Tool: inserta libros nuevos en catalog_books con portada validada (HEAD ≥15KB), ISBN único, y relaciones de categorías. price=9.99, stock=5 para TFG."
+  }
+}

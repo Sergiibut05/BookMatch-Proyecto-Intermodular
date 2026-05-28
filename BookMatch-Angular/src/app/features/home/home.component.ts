@@ -20,7 +20,7 @@ import { Header } from '@shared/components/header/header';
 import { Carousel } from '@shared/components/carousel/carousel';
 import { Footer } from '@shared/components/footer/footer';
 import { BookCarousel3dComponent, BookData } from '@shared/components/book-carousel-3d/book-carousel-3d.component';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { Category } from '@shared/models';
 import lottie, { type AnimationItem } from 'lottie-web';
 
@@ -45,6 +45,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   private catalogQueryService = inject(CatalogQueryService);
   private router = inject(Router);
   private injector = inject(Injector);
+  private translate = inject(TranslateService);
 
   private lottieContainer = viewChild<ElementRef<HTMLDivElement>>('lottieChat');
   private lottieAnim: AnimationItem | null = null;
@@ -233,5 +234,12 @@ export class HomeComponent implements OnInit, OnDestroy {
     if (el) {
       el.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
+  }
+
+  /** Devuelve el nombre de la categoría traducido al idioma actual. */
+  getCategoryDisplayName(category: Category): string {
+    const key = 'CATEGORY_NAMES.' + category.slug;
+    const translated = this.translate.instant(key);
+    return translated !== key ? translated : category.name;
   }
 }
