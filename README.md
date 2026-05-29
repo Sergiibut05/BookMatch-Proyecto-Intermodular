@@ -1,631 +1,546 @@
-# 📚 BookMatch – Proyecto Intermodular
+<div align="center">
 
-![Estado del Proyecto](https://img.shields.io/badge/Estado-En%20Desarrollo-yellow)
-![Angular](https://img.shields.io/badge/Angular-21-red)
-![Firebase](https://img.shields.io/badge/Firebase-11-orange)
-![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue)
-![Stripe](https://img.shields.io/badge/Stripe-Integrado-purple)
-![Capacitor](https://img.shields.io/badge/Capacitor-7.4-blue)
+![Angular](https://img.shields.io/badge/Angular-21-C8956C?style=for-the-badge&logo=angular&logoColor=white&labelColor=1C1410)
+&nbsp;
+![Express](https://img.shields.io/badge/Express-5-A0785A?style=for-the-badge&logo=express&logoColor=white&labelColor=1C1410)
+&nbsp;
+![TypeScript](https://img.shields.io/badge/TypeScript-5.9-D4B896?style=for-the-badge&logo=typescript&logoColor=white&labelColor=1C1410)
+&nbsp;
+![Prisma](https://img.shields.io/badge/Prisma-6-8B6F47?style=for-the-badge&logo=prisma&logoColor=white&labelColor=1C1410)
+&nbsp;
+![Firebase](https://img.shields.io/badge/Firebase-11-C8956C?style=for-the-badge&logo=firebase&logoColor=white&labelColor=1C1410)
 
----
+<br/>
 
-## 🤖 IA y agentes (Cursor)
+# BookMatch — Monorepo Principal
 
-Índice de **reglas**, **skills** y **hooks** del monorepo: **[AGENTS.md](./AGENTS.md)**.
+**Web + Backend + Docs**
 
----
+<br/>
 
-## 🎯 Descripción
+<a href="https://www.bookmatch.club/">
+  <img src="https://img.shields.io/badge/Web-bookmatch.club-C8956C?style=for-the-badge&labelColor=1C1410"/>
+</a>
+&nbsp;
+<a href="https://api.bookmatch.club/api-docs">
+  <img src="https://img.shields.io/badge/API-Swagger_UI-A0785A?style=for-the-badge&labelColor=1C1410"/>
+</a>
+&nbsp;
+<a href="https://book-match-docs.vercel.app/">
+  <img src="https://img.shields.io/badge/Compodoc-Docs_Angular-D4B896?style=for-the-badge&labelColor=1C1410"/>
+</a>
+&nbsp;
+<a href="https://github.com/SamuelMarquezRuiz/BookMatch-Android">
+  <img src="https://img.shields.io/badge/Android-BookMatch--Android-8B6F47?style=for-the-badge&logo=android&logoColor=white&labelColor=1C1410"/>
+</a>
 
-**BookMatch** es una plataforma web y móvil que combina compra de libros nuevos/usados con trueque digital y recomendaciones personalizadas. El MVP se centra en construir la base técnica: autenticación con Firebase, catálogo inicial, sistema de pagos con Stripe, gestión de perfil de usuario con fotos, y servicios backend listos para escalar.
-
----
-
-## Despliegue en producción (resumen)
-
-| Capa | Dónde | Notas |
-|------|--------|--------|
-| **Frontend** | Vercel + dominio propio | `environment.prod.ts`: `apiUrl` debe incluir el prefijo **`/api`** (p. ej. `https://api.tu-dominio/api`). Sin `/api` las rutas no coinciden con Express. |
-| **API** | AWS EC2 (Ubuntu) | **Docker** (`BookMatch-Backend/Dockerfile`, `docker-compose.yml`): Node, Prisma, Python/venv (analytics). **Caddy** en el host: TLS (Let's Encrypt) y proxy a `127.0.0.1:3000`. DNS: registro **A** `api` → IP pública de la instancia. |
-| **Base de datos** | Supabase | `DATABASE_URL` (pooler) + `DIRECT_URL` (conexión directa) en `.env` del servidor. |
-| **CI backend** | GitHub Actions | `.github/workflows/deploy-ec2-backend.yml`: push a `main` con cambios en `BookMatch-Backend/` → SSH al EC2 → `git pull` + `docker compose build` + `up -d`. Secretos: `EC2_HOST`, `EC2_USER`, `EC2_SSH_KEY`. |
-| **Respaldo API** | Vercel (opcional) | Mismo repo; `vercel.json` reescribe al handler serverless. |
-
-Detalle operativo: **Confluence** (espacio PM) → *Deployment y producción*; convenciones para agentes: **`AGENTS.md`**.
-
----
-
-## 🚦 Estado del Proyecto
-
-### ✅ Funcionalidades Implementadas
-
-#### Autenticación y Usuarios
-- ✅ Autenticación completa con Firebase (email/contraseña y Google)
-- ✅ Persistencia de sesión y logout
-- ✅ Formularios reactivos para login y registro con validaciones
-- ✅ AuthGuard operativo y header reutilizable
-- ✅ **Perfil de usuario con gestión de foto de perfil**
-  - Subida de fotos usando Capacitor (móvil) o input file (web)
-  - Almacenamiento en Firebase Storage
-  - Actualización automática en Firebase Auth y base de datos
-- ✅ **Flujo de recuperación de contraseñas** integrado en la UI (Stripe-like).
-
-#### Catálogo de Libros y Playlists
-- ✅ Home con grid de libros consumiendo el backend protegido
-- ✅ Vista de detalles de libro con imágenes, precio, stock, categorías
-- ✅ Filtrado por categorías y paginación
-- ✅ Sistema de reseñas
-- ✅ **Sistema de Playlists (Manual e IA)**
-  - Creación, edición, arrastrar y soltar libros (CDK Drag&Drop).
-  - Integración con IA (n8n + API) para generación automatizada basada en prompts.
-  - Vistas públicas (solo lectura), enlaces compartibles (share/export a JSON o Markdown).
-
-#### Analíticas Avanzadas (Admin)
-- ✅ Integración con Firebase Analytics y GA4 Data API.
-- ✅ Dashboard "estilo PowerBI" con Chart.js y UI animada.
-- ✅ Generación de datos sintéticos vía Python (`pandas`, `numpy`).
-- ✅ Endpoint protegido para ingesta de métricas globales.
-
-#### Sistema de Pagos
-- ✅ **Integración completa con Stripe Checkout**
-  - Pago directo de libros individuales
-  - Soporte para múltiples métodos: Card, Link, PayPal
-  - Creación automática de órdenes en base de datos y actualización de stock.
-- ✅ Correos de confirmación vía SMTP integrados.
-
-#### Backend
-- ✅ Backend Express + TypeScript modularizado
-- ✅ Middleware de seguridad (auth, rate limiting, CORS, Helmet)
-- ✅ Swagger/OpenAPI para documentación interactiva
-- ✅ Prisma ORM con PostgreSQL
-- ✅ Múltiples modelos: usuarios, categorías, libros, pedidos, reseñas, playlists, items.
-- ✅ Scripts avanzados: `seed.ts` para catálogos y `seed_analytics.py` para métricas.
-
-### 🔄 En Curso / Próximos Pasos
-- ⏳ Implementación de carrito de compras multiproducto
-- ⏳ Vista de historial de pedidos
-- ⏳ Refinamiento de UI/UX y Tests E2E
+</div>
 
 ---
 
-## 🗂️ Estructura del Repositorio
+## Índice
+
+1. [Descripción](#descripción)
+2. [Estructura del repositorio](#estructura-del-repositorio)
+3. [Arquitectura del sistema](#arquitectura-del-sistema)
+4. [Despliegue en producción](#despliegue-en-producción)
+5. [Puesta en marcha local](#puesta-en-marcha-local)
+6. [Endpoints de la API](#endpoints-de-la-api)
+7. [Flujo de pagos con Stripe](#flujo-de-pagos-con-stripe)
+8. [Sistema de Analytics](#sistema-de-analytics)
+9. [IA y Playlists (n8n)](#ia-y-playlists-n8n)
+10. [Seeding de la base de datos](#seeding-de-la-base-de-datos)
+11. [Seguridad](#seguridad)
+12. [Testing](#testing)
+13. [Scripts útiles](#scripts-útiles)
+14. [Dependencias principales](#dependencias-principales)
+15. [Changelog](#changelog)
+
+---
+
+## Descripción
+
+**BookMatch** es una plataforma web y móvil para comprar, vender e intercambiar libros. Este repositorio contiene el **frontend Angular 21**, el **backend Express 5** y la **documentación técnica** del proyecto.
+
+> Ver el README del [repositorio de presentación](https://github.com/Sergiibut05/BookMatch-Proyecto-Intermodular) para la descripción completa del proyecto, la aportación por módulo académico y los enlaces de producción.
+
+---
+
+## Estructura del repositorio
 
 ```
 BookMatch-Proyecto-Intermodular/
-├── BookMatch-Angular/              # Frontend (Angular standalone)
-│   └── src/app/
-│       ├── core/                   # Servicios singleton, guards
-│       │   ├── guards/
-│       │   │   └── auth.guard.ts
-│       │   └── services/
-│       │       ├── auth.service.ts
-│       │       ├── catalog.service.ts
-│       │       ├── payment.service.ts    # Servicio de pagos Stripe
-│       │       ├── storage.service.ts    # Servicio de Firebase Storage
-│       │       └── users.service.ts       # Servicio de usuarios
-│       ├── shared/                 # Componentes y modelos reutilizables
-│       │   ├── components/
-│       │   │   ├── header/
-│       │   │   ├── footer/
-│       │   │   ├── carousel/
-│       │   │   └── loader/
-│       │   └── models/
-│       │       ├── catalog.model.ts
-│       │       └── api.model.ts
-│       └── features/               # Módulos de funcionalidad
-│           ├── auth/               # Login y registro
-│           ├── home/               # Página principal con catálogo
-│           ├── book-details/       # Detalles de libro
-│           ├── categories/          # Vista por categorías
-│           ├── payment-success/     # Confirmación de pago
-│           └── profile/             # Perfil de usuario con foto
-├── BookMatch-Backend/              # Backend (Express + Prisma)
+├── BookMatch-Angular/                  # Frontend Angular 21 (standalone)
 │   ├── src/
-│   │   ├── config/                 # Env, Prisma, Swagger
-│   │   ├── middleware/             # Auth, rate limiting, errores
-│   │   ├── modules/                # Módulos de negocio
-│   │   │   ├── auth/               # Autenticación Firebase
-│   │   │   ├── users/              # Gestión de usuarios
-│   │   │   ├── catalog-books/      # Catálogo de libros
-│   │   │   ├── playlists/          # Listas generadas por IA y manuales
-│   │   │   ├── analytics/          # Integración con GA4 y Data Analytics
-│   │   │   └── payments/           # Integración con Stripe
-│   │   │       ├── payments.service.ts
-│   │   │       ├── payments.controller.ts
-│   │   │       ├── payments.routes.ts
-│   │   │       └── payments.schema.ts
-│   │   └── utils/                  # Utilidades (logger, firebaseAdmin)
-│   └── prisma/                     # Esquema y migraciones
-└── README.md                       # Este archivo
+│   │   ├── app/
+│   │   │   ├── core/                   # Guards, interceptors, servicios singleton
+│   │   │   │   ├── guards/auth.guard.ts
+│   │   │   │   └── services/
+│   │   │   │       ├── auth.service.ts
+│   │   │   │       ├── catalog.service.ts
+│   │   │   │       ├── payment.service.ts
+│   │   │   │       ├── storage.service.ts
+│   │   │   │       └── users.service.ts
+│   │   │   ├── shared/                 # Componentes y modelos reutilizables
+│   │   │   │   ├── components/
+│   │   │   │   │   ├── header/
+│   │   │   │   │   ├── footer/
+│   │   │   │   │   ├── carousel/
+│   │   │   │   │   ├── loader/
+│   │   │   │   │   ├── comment-thread/
+│   │   │   │   │   └── phone-input/
+│   │   │   │   └── models/
+│   │   │   ├── features/               # Pantallas de la aplicación
+│   │   │   │   ├── auth/               # Login, registro, recuperación
+│   │   │   │   ├── landing/            # Página de inicio pública
+│   │   │   │   ├── home/               # Catálogo con grid de libros
+│   │   │   │   ├── book-details/       # Detalle del libro + botón compra
+│   │   │   │   ├── book-form/          # Formulario creación/edición libro
+│   │   │   │   ├── categories/         # Filtrado por categoría
+│   │   │   │   ├── categories-selector/
+│   │   │   │   ├── search-results/     # Resultados de búsqueda
+│   │   │   │   ├── cart-view/          # Carrito de compras
+│   │   │   │   ├── payment-success/    # Confirmación de pago Stripe
+│   │   │   │   ├── playlists/          # Listas manuales + generadas por IA
+│   │   │   │   ├── ai-chat/            # Chat con IA (n8n)
+│   │   │   │   ├── forum-index/        # Índice de foros
+│   │   │   │   ├── forum-topic-list/   # Posts de un foro
+│   │   │   │   ├── post-detail/        # Detalle de post + comentarios
+│   │   │   │   ├── trueque/            # Intercambio de libros
+│   │   │   │   ├── profile/            # Perfil del usuario + foto
+│   │   │   │   └── profile-edit/       # Edición de perfil
+│   │   │   └── pages/
+│   │   │       └── analytics/          # Dashboard analítico (admin)
+│   │   ├── assets/
+│   │   │   └── i18n/                   # Traducciones ES/EN (ngx-translate)
+│   │   └── environments/
+│   │       ├── environment.ts          # Desarrollo (Firebase + Stripe + API URL)
+│   │       └── environment.prod.ts     # Producción
+│   ├── n8n/workflows/                  # Definiciones de workflows n8n exportadas
+│   └── capacitor.config.ts
+│
+├── BookMatch-Backend/                  # API REST (Express 5 + TypeScript)
+│   ├── src/
+│   │   ├── app.ts                      # Montaje Express, middleware global
+│   │   ├── index.ts                    # Entry point
+│   │   ├── config/                     # Variables de entorno, Prisma client, Swagger
+│   │   ├── middleware/                 # auth, validate (Zod), errorHandler, rateLimit
+│   │   └── modules/                   # Un módulo por dominio de negocio
+│   │       ├── auth/                   # Firebase JWT sync
+│   │       ├── users/                  # Perfil y gestión de usuarios
+│   │       ├── catalog-books/          # Catálogo + reseñas + categorías
+│   │       ├── orders/                 # Pedidos e historial
+│   │       ├── payments/               # Stripe Checkout + Webhook
+│   │       ├── playlists/              # Playlists manuales + IA
+│   │       ├── analytics/              # GA4 Data API + dashboard
+│   │       ├── forums/                 # Foros
+│   │       ├── posts/                  # Posts en foros
+│   │       ├── comments/               # Comentarios en posts
+│   │       ├── votes/                  # Votos en posts
+│   │       ├── trades/                 # Módulo de trueque
+│   │       └── user-books/             # Biblioteca personal del usuario
+│   ├── prisma/
+│   │   ├── schema.prisma               # Schema completo de la BD
+│   │   └── migrations/                 # Migraciones versionadas
+│   ├── scripts/                        # Python analytics
+│   │   ├── seed_analytics.py           # Genera datos sintéticos (pandas + numpy)
+│   │   ├── ga4_analytics.py            # Consulta GA4 Data API
+│   │   └── requirements.txt
+│   ├── seed.ts                         # Seeding desde Google Books API (~1000 libros)
+│   ├── Dockerfile                      # Build multi-etapa Node + Prisma + Python/venv
+│   ├── docker-compose.yml
+│   └── env.production.example          # Plantilla de variables (sin secretos)
+│
+├── docs/
+│   ├── Confluence/                     # Exportación local de la wiki técnica
+│   └── *.md                            # Contratos de API adicionales
+│
+└── .github/
+    └── workflows/
+        └── deploy-ec2-backend.yml      # CI/CD: push main → SSH EC2 → docker compose
 ```
 
 ---
 
-## 🧰 Requisitos Previos
+## Arquitectura del sistema
 
-- **Node.js 20.x** (incluye npm 10) – [Descargar](https://nodejs.org/)
-- **Git** – [Descargar](https://git-scm.com/)
-- **Cuenta de Firebase** con acceso al proyecto `bookmatch-522d5`
-- **URL de la base de datos PostgreSQL** (proyecto en **Supabase**: `DATABASE_URL` y `DIRECT_URL` para Prisma)
-- **Cuenta de Stripe** (para pagos) – [Crear cuenta](https://stripe.com)
+```
+┌─────────────────────────────────────────────────────────────┐
+│  Clientes                                                   │
+│  ┌─────────────────────────┐  ┌────────────────────────┐   │
+│  │  Angular 21             │  │  Kotlin + Compose      │   │
+│  │  Tailwind · Capacitor   │  │  Room · Hilt · Retrofit│   │
+│  └───────────┬─────────────┘  └───────────┬────────────┘   │
+└──────────────┼────────────────────────────┼────────────────┘
+               │  REST HTTPS                │  Retrofit
+               ▼                            ▼
+┌─────────────────────────────────────────────────────────────┐
+│  Backend — Express 5 · TypeScript · ESM                     │
+│                                                             │
+│  Middleware: auth (Firebase JWT) · Zod · Helmet · CORS      │
+│             Rate Limit · Winston · Error handler            │
+│                                                             │
+│  Módulos: auth · users · catalog-books · orders             │
+│           payments · playlists · analytics · ai-chat        │
+│           forums · posts · comments · votes · trades        │
+│                                                             │
+│  Integraciones: Firebase Admin · Stripe · n8n · SMTP        │
+│  ORM: Prisma 6 → PostgreSQL (Supabase)                      │
+│  Docs: Swagger UI /api-docs                                 │
+└────────────────────┬────────────────────────────────────────┘
+                     │
+        ┌────────────┴────────────┐
+        │                         │
+        ▼                         ▼
+   PostgreSQL               Firebase Storage
+   (Supabase)               Avatares · Portadas IA
+```
+
+**Flujo de autenticación:**
+1. Cliente inicia sesión con Firebase (email/Google).
+2. Firebase devuelve un ID token JWT.
+3. El cliente envía `Authorization: Bearer <idToken>` en cada request protegido.
+4. El middleware `auth` verifica el token con Firebase Admin SDK y sincroniza el usuario en PostgreSQL.
 
 ---
 
-## 🚀 Puesta en Marcha
+## Despliegue en producción
 
-### 1. Clonar el Repositorio
+| Capa | Servicio | Detalle |
+|---|---|---|
+| **Frontend** | Vercel | `environment.prod.ts` — `apiUrl: 'https://api.bookmatch.club/api'` |
+| **API** | AWS EC2 (Ubuntu) | Docker (Node + Prisma + Python/venv) · Caddy (TLS) · `127.0.0.1:3000` |
+| **Base de datos** | Supabase (PostgreSQL) | `DATABASE_URL` (pooler) + `DIRECT_URL` (migraciones directas) |
+| **CI/CD backend** | GitHub Actions | Push a `main` con cambios en `BookMatch-Backend/**` → SSH → `docker compose up -d` |
+
+### Despliegue en EC2
 
 ```bash
-git clone https://github.com/Sergiibut05/BookMatch-Proyecto-Intermodular.git
-cd BookMatch-Proyecto-Intermodular
+cd BookMatch-Backend
+
+# Variables en .env solo en el servidor (nunca en git)
+docker compose build
+docker compose up -d
+
+# Migraciones cuando cambia el schema:
+docker compose run --rm api npx prisma migrate deploy
 ```
 
-### 2. Configurar el Backend (`BookMatch-Backend`)
+CI/CD automático: `.github/workflows/deploy-ec2-backend.yml` — secretos del repo: `EC2_HOST`, `EC2_USER`, `EC2_SSH_KEY`.
+
+---
+
+## Puesta en marcha local
+
+### 1 — Backend
 
 ```bash
 cd BookMatch-Backend
 npm install
+
+# Crear .env desde la plantilla
+cp env.production.example .env
+# → editar con tus credenciales de Firebase, Stripe y Supabase
+
+# Generar Prisma Client y aplicar migraciones
+npx prisma generate
+npx prisma migrate deploy
+
+# Seed del catálogo (~1000 libros desde Google Books API)
+npx tsx seed.ts
+
+# Seed de datos analíticos (requiere Python 3 + pip)
+cd scripts
+python3 -m venv venv
+source venv/bin/activate        # Windows: venv\Scripts\activate
+pip install -r requirements.txt
+python seed_analytics.py
+cd ..
+
+# Arrancar en desarrollo
+npm run dev
+# → http://localhost:3000
+# → Swagger: http://localhost:3000/api-docs
 ```
 
-#### 2.1. Crear archivo `.env`
-
-Crea un archivo `.env` en la raíz del backend (puedes basarte en `env.production.example`):
+#### Variables de entorno mínimas (`.env`)
 
 ```env
-# Configuración básica
 PORT=3000
 NODE_ENV=development
 
-# Base de datos PostgreSQL
-DATABASE_URL="postgresql://USUARIO:PASS@HOST:PUERTO/DATABASE?schema=public"
+DATABASE_URL="postgresql://USUARIO:PASS@HOST:PUERTO/DB?schema=public"
+DIRECT_URL="postgresql://USUARIO:PASS@HOST:PUERTO/DB"   # para prisma migrate
 
-# Firebase Admin SDK
 FIREBASE_PROJECT_ID=bookmatch-522d5
-FIREBASE_CLIENT_EMAIL=firebase-adminsdk-xxxxx@bookmatch-522d5.iam.gserviceaccount.com
-FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nTU_CLAVE_EN_BASE64_ESCAPADA\n-----END PRIVATE KEY-----\n"
+FIREBASE_CLIENT_EMAIL=firebase-adminsdk-...@bookmatch-522d5.iam.gserviceaccount.com
+FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
 
-# Stripe (TEST MODE - obtener de https://dashboard.stripe.com/test/apikeys)
 STRIPE_SECRET_KEY=sk_test_51...
-STRIPE_WEBHOOK_SECRET=whsec_...  # Opcional en desarrollo
+STRIPE_WEBHOOK_SECRET=whsec_...   # opcional en desarrollo
 FRONTEND_URL=http://localhost:4200
 ```
 
-> **Nota:** En **Supabase**, usa `DATABASE_URL` (pooler / transacciones) y `DIRECT_URL` (conexión directa) según Prisma. No subas `.env` al repositorio.
+> El archivo `.env` **no se versiona**. El hook del repo bloquea `git add .env`.
 
-#### 2.2. Configurar Stripe
-
-1. Ve a [Stripe Dashboard](https://dashboard.stripe.com)
-2. Asegúrate de estar en **modo Test** (toggle en la parte superior)
-3. Ve a **Developers → API keys**
-4. Copia:
-   - **Secret key** (`sk_test_...`) → `STRIPE_SECRET_KEY` en `.env`
-   - **Publishable key** (`pk_test_...`) → se usará en el frontend
-
-#### 2.3. Generar Prisma Client y Aplicar Migraciones
+#### Webhooks de Stripe en local
 
 ```bash
-npx prisma generate
-npx prisma migrate deploy
+stripe login
+stripe listen --forward-to localhost:3000/api/payments/webhook
+# → copia el webhook secret a STRIPE_WEBHOOK_SECRET en .env
 ```
-#### 2.4. Inicializar el Catálogo y Analíticas (Seeding)
-1. Ejecuta este script para llenar la base de datos con el catálogo estático de libros.
+
+### 2 — Frontend
+
+```bash
+cd BookMatch-Angular
+npm install
+
+# Editar src/environments/environment.ts con:
+# - Firebase config del proyecto bookmatch-522d5
+# - stripePublishableKey: 'pk_test_...'
+# - apiUrl: 'http://localhost:3000/api'
+
+npm start
+# → http://localhost:4200
+```
+
+### 3 — Android
+
+```
+Abrir BookMatch-Android/ en Android Studio
+Sincronizar Gradle
+Añadir app/google-services.json (Firebase)
+Run en emulador o dispositivo Android 14+ (minSdk 34)
+```
+
+---
+
+## Endpoints de la API
+
+> Documentación completa interactiva: [`api.bookmatch.club/api-docs`](https://api.bookmatch.club/api-docs)
+
+### Autenticación — `/api/auth`
+
+| Método | Ruta | Descripción | Auth |
+|--------|------|-------------|------|
+| POST | `/api/auth/register` | Sincroniza usuario Firebase en PostgreSQL | Body: `idToken` |
+| POST | `/api/auth/login` | Valida token y devuelve perfil | Body: `idToken` |
+| POST | `/api/auth/forgot-password` | Recuperación de contraseña (nodemailer) | Body: `email` |
+
+### Usuarios — `/api/users`
+
+| Método | Ruta | Descripción | Auth |
+|--------|------|-------------|------|
+| GET | `/api/users/me` | Perfil del usuario autenticado | Bearer |
+| PATCH | `/api/users/me` | Actualizar nombre, avatar, teléfono | Bearer |
+| GET | `/api/users` | Lista usuarios | Bearer + admin |
+| GET | `/api/users/:id` | Usuario por ID | Bearer |
+| DELETE | `/api/users/:id` | Eliminar usuario | Bearer + admin |
+
+### Catálogo — `/api/catalog-books`
+
+| Método | Ruta | Descripción | Auth |
+|--------|------|-------------|------|
+| GET | `/api/catalog-books` | Lista paginada — filtros: `page`, `limit`, `search`, `minPrice`, `maxPrice`, `minRating`, `categoryId`, `sortBy` | Bearer |
+| GET | `/api/catalog-books/categories` | Lista de categorías | Bearer |
+| GET | `/api/catalog-books/:id` | Detalle del libro | Bearer |
+| POST | `/api/catalog-books` | Crear libro | Bearer + admin |
+| PATCH | `/api/catalog-books/:id` | Actualizar libro | Bearer + admin |
+| DELETE | `/api/catalog-books/:id` | Eliminar libro | Bearer + admin |
+| POST | `/api/catalog-books/:id/reviews` | Añadir reseña | Bearer |
+| DELETE | `/api/catalog-books/reviews/:id` | Borrar reseña propia | Bearer |
+
+### Pedidos — `/api/orders`
+
+| Método | Ruta | Descripción | Auth |
+|--------|------|-------------|------|
+| POST | `/api/orders` | Crear pedido | Bearer |
+| GET | `/api/orders/history` | Historial del usuario | Bearer |
+
+### Pagos — `/api/payments`
+
+| Método | Ruta | Descripción | Auth |
+|--------|------|-------------|------|
+| POST | `/api/payments/create-checkout-session` | Sesión Stripe para un libro | Bearer |
+| POST | `/api/payments/create-checkout-session-cart` | Sesión Stripe para carrito | Bearer |
+| POST | `/api/payments/webhook` | Eventos Stripe (body raw, verifica firma) | No |
+| GET | `/api/payments/success` | Verificar pago + crear Order | Bearer |
+| GET | `/api/payments/session/:id` | Detalles de la sesión | Bearer |
+
+### Playlists — `/api/playlists`
+
+| Método | Ruta | Descripción | Auth |
+|--------|------|-------------|------|
+| GET | `/api/playlists` | Playlists del usuario | Bearer |
+| POST | `/api/playlists` | Crear playlist manual | Bearer |
+| GET | `/api/playlists/:id` | Detalle completo | Bearer |
+| PATCH | `/api/playlists/:id` | Modificar título, visibilidad, items | Bearer |
+| DELETE | `/api/playlists/:id` | Eliminar playlist | Bearer |
+| POST | `/api/playlists/:id/items` | Añadir libro a la lista | Bearer |
+| DELETE | `/api/playlists/items/:id` | Quitar libro de la lista | Bearer |
+| POST | `/api/playlists/generate` | Generar playlist vía IA (n8n) | Bearer |
+
+### Foros, Posts, Comentarios y Votos
+
+| Módulo | Ruta base | GET | POST/PATCH/DELETE |
+|---|---|---|---|
+| Foros | `/api/forums` | Sin auth | Bearer |
+| Posts | `/api/forums/:forumId/posts` | Sin auth | Bearer |
+| Comentarios | `/api/forums/:forumId/posts/:postId/comments` | Sin auth | Bearer |
+| Votos | `/api/forums/:forumId/posts/:postId/votes` | Bearer | Bearer |
+
+### Trueque — `/api/trades`
+
+| Método | Ruta | Descripción | Auth |
+|--------|------|-------------|------|
+| GET | `/api/trades` | Trueques del usuario (enviados y recibidos) | Bearer |
+| POST | `/api/trades` | Crear propuesta de trueque | Bearer |
+| POST | `/api/trades/:id/accept` | Aceptar propuesta | Bearer |
+| POST | `/api/trades/:id/reject` | Rechazar propuesta | Bearer |
+| POST | `/api/trades/:id/complete` | Completar intercambio | Bearer |
+
+### Analytics — `/api/analytics`
+
+| Método | Ruta | Descripción | Auth |
+|--------|------|-------------|------|
+| GET | `/api/analytics/traffic` | Datos GA4 + métricas para dashboard | Bearer + admin |
+
+### Utilidades
+
+| Ruta | Descripción |
+|---|---|
+| `GET /health` | Health check del servicio |
+| `GET /api-docs` | Swagger UI |
+
+---
+
+## Flujo de pagos con Stripe
+
+```
+1. Usuario pulsa "Comprar" en book-details o desde el carrito
+   ↓
+2. Frontend → POST /api/payments/create-checkout-session
+   { bookId, quantity?, successUrl?, cancelUrl? }
+   ↓
+3. Backend → Stripe: crea Checkout Session con nombre, precio e imagen del libro
+   ↓
+4. Frontend redirige a stripe.com/checkout
+   ↓
+5. Usuario paga (Card / Link / PayPal) — modo test disponible
+   ↓
+6. Stripe → POST /api/payments/webhook  (evento: checkout.session.completed)
+   Backend verifica firma STRIPE_WEBHOOK_SECRET
+   ↓
+7. Backend:
+   ├── Crea Order en PostgreSQL con estado COMPLETED
+   ├── Decrementa stock del libro
+   └── Envía correo de confirmación (nodemailer + SMTP)
+   ↓
+8. Stripe redirige a /payment-success?session_id=...
+   ↓
+9. Android: deep link bookmatch://payment/success?session_id=...
+```
+
+**Tarjetas de prueba:**
+
+| Número | Resultado |
+|---|---|
+| `4242 4242 4242 4242` | Pago exitoso |
+| `4000 0000 0000 0002` | Pago rechazado |
+| `4000 0025 0000 3155` | Requiere 3D Secure |
+
+Datos: cualquier fecha futura · CVC `123` · CP `12345`
+
+---
+
+## Sistema de Analytics
+
+El módulo de analytics (`/api/analytics`) agrega datos de tres fuentes:
+
+1. **GA4 Data API** — métricas reales del frontend en producción (sesiones, usuarios, vistas de página).
+2. **Firebase Analytics** — eventos de usuario rastreados en el frontend Angular.
+3. **Datos sintéticos** generados con Python para entornos de desarrollo.
+
+**Scripts Python** (requieren entorno virtual en `BookMatch-Backend/scripts/`):
+
+```bash
+cd BookMatch-Backend/scripts
+python3 -m venv venv && source venv/bin/activate
+pip install -r requirements.txt
+
+python seed_analytics.py     # genera series temporales sintéticas
+python ga4_analytics.py      # consulta y exporta datos de GA4
+```
+
+El endpoint `GET /api/analytics/traffic` requiere Bearer + rol `admin` y alimenta el dashboard de Chart.js en `/analytics`.
+
+---
+
+## IA y Playlists (n8n)
+
+El sistema de IA delega en workflows de **n8n** mediante webhooks HTTP:
+
+| Endpoint | Webhook n8n | Descripción |
+|---|---|---|
+| `POST /api/playlists/generate` | `N8N_WEBHOOK_PLAYLIST_URL` | Genera una playlist a partir de un prompt en lenguaje natural |
+| `POST /api/ai-chat/send-message` | `N8N_WEBHOOK_URL` | Chat con el asistente; la conversación se persiste en Firestore |
+
+Si las variables `N8N_WEBHOOK_URL` / `N8N_WEBHOOK_PLAYLIST_URL` no están definidas, los endpoints responden **503** (documentado en Swagger).
+
+Los workflows están exportados en `BookMatch-Angular/n8n/workflows/` y pueden importarse directamente en cualquier instancia de n8n.
+
+---
+
+## Seeding de la base de datos
+
+### Catálogo de libros (`seed.ts`)
+
+El script conecta con la **Google Books API** y persiste ~1000 libros reales:
+
+1. **Sincroniza 47 categorías** con IDs fijos (upsert — idempotente).
+2. **Busca por categoría** con query `subject:...` en Google Books.
+3. **Filtra calidad:** descarta libros sin ISBN válido, título o autor.
+4. **Normaliza:** URLs `http→https`, precios aleatorios 12–45 €, stock aleatorio.
+5. **Persiste:** `CatalogBook` + relación N:M `CatalogBookCategory`.
+6. **Rate limiting** interno para no saturar la API de Google.
+7. **Novedades (ID 47):** selecciona los últimos 100 libros insertados, los mezcla y asigna 40 a esta categoría.
+
 ```bash
 npx tsx seed.ts
 ```
 
-2. Para generar datos analíticos sintéticos locales, utiliza el entorno Python (requiere tener `python3` y `pip` instalados):
-```bash
-cd scripts
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-python seed_analytics.py
-```
+### Datos de trueque para demo (`seed_trades.py`)
 
-#### 2.5. Ejecutar el Servidor
-
-```bash
-npm run dev   # nodemon (recomendado en desarrollo)
-# o
-npm start     # requiere build previo con npm run build
-```
-
-El backend quedará disponible en `http://localhost:3000`. La documentación Swagger está en `http://localhost:3000/api-docs`.
-
-#### 2.6. Producción en EC2 (Docker + HTTPS)
-
-En el servidor (Ubuntu + Docker; **Caddy** u otro proxy para TLS y dominio `https://api.<dominio>`):
-
-```bash
-cd BookMatch-Backend
-# .env en el servidor (mismas variables que desarrollo + FRONTEND_URL / BACKEND_PUBLIC_URL con URLs públicas HTTPS)
-docker compose build
-docker compose up -d
-# Migraciones cuando haya cambios de schema:
-docker compose run --rm api npx prisma migrate deploy
-```
-
-Redeploy desde GitHub: `.github/workflows/deploy-ec2-backend.yml` (push a `main` con cambios en `BookMatch-Backend/`); secretos del repo: `EC2_HOST`, `EC2_USER`, `EC2_SSH_KEY`.
-
-### 3. Configurar el Frontend (`BookMatch-Angular`)
-
-```bash
-cd ../BookMatch-Angular
-npm install
-```
-
-#### 3.1. Configurar Variables de Entorno
-
-Edita `src/environments/environment.ts`:
-
-```typescript
-export const environment = {
-    production: false,
-    firebase: {
-        apiKey: "AIzaSyBh8yIwyt8pAxG_jj3nx8Y8vDnKnrPsV14",
-        authDomain: "bookmatch-522d5.firebaseapp.com",
-        projectId: "bookmatch-522d5",
-        storageBucket: "bookmatch-522d5.firebasestorage.app",
-        messagingSenderId: "735953151639",
-        appId: "1:735953151639:web:35092cd2fa7015d06f2bd2",
-        databaseURL: "https://bookmatch-522d5-default-rtdb.europe-west1.firebasedatabase.app",
-        measurementId: "G-YD2T0NCDTC"
-    },
-    // Stripe (TEST MODE - usar la Publishable key de Stripe)
-    stripePublishableKey: 'pk_test_51...',
-    apiUrl: 'http://localhost:3000/api'
-};
-```
-
-En **producción** (`environment.prod.ts`), `apiUrl` debe ser la URL pública del API **incluyendo** el sufijo `/api` (p. ej. `https://api.tu-dominio/api`). En despliegues serverless tipo Vercel el rewrite puede ocultar ese prefijo; contra EC2 + Express no.
-
-> **Importante:** Reemplaza `stripePublishableKey` con tu clave pública de prueba de Stripe.
-
-#### 3.2. Arrancar el Servidor de Desarrollo
-
-```bash
-npm start        # alias de ng serve
-# o
-ng serve --port 4300
-```
-
-La app se sirve en `http://localhost:4200`.
-
----
-## 📚 Guía Técnica de Seeding (Base de Datos)
-
-Esta sección detalla cómo funciona el script **`seed.ts`** que conecta con la **Google Books API** e inserta aproximadamente 1000 libros en la base de datos **PostgreSQL** usando **Prisma**.
-
-### ¿Qué hace el script de Seeding?
-
-Este script actúa como un **robot bibliotecario automatizado**. Su objetivo es poblar la base de datos desde cero, conectándose a una fuente externa y mapeando los datos a la estructura relacional compleja de Prisma (`Category`, `CatalogBook`, `CatalogBookCategory`).
+Genera usuarios seed y propuestas de trueque pre-existentes para facilitar las demostraciones. Con `TRADE_DEMO_AUTO_ACCEPT_MS=5000` en `.env`, las propuestas dirigidas a usuarios seed se auto-aceptan a los 5 segundos.
 
 ---
 
-### Flujo de Ejecución
-
-#### 1. Sincronización de Categorías (Setup)
-
-El script comienza leyendo una lista predefinida de categorías (con IDs fijos del 1 al 47).
-
-* **Lógica `Upsert`**: Utiliza la función `upsert` de Prisma. Esto significa que **Actualiza** si la categoría ya existe o la **Inserta** si es nueva.
-* **Integridad de Datos**: Garantiza que las categorías siempre tengan los mismos IDs (ej: "Terror" siempre será ID 1), lo cual es **vital para la navegación del frontend**.
-
-#### 2. Búsqueda y Recolección (API de Google)
-
-El script itera sobre cada categoría y realiza peticiones a la API de Google Books.
-
-* **Query Inteligente**: Busca por temática específica (`subject:Fantasía`, `subject:Ciencia`).
-* **Filtrado de Calidad (Data Hygiene)**: Descarta el libro si no tiene **ISBN** válido, título o autor.
-* **Normalización**:
-    * Convierte enlaces `http` a `https`.
-    * **Precios Simulados**: Genera un precio aleatorio (**12.00€ - 45.00€**) y stock, ya que la API de Google es una biblioteca, no una tienda.
-
-#### 3. Persistencia en Base de Datos
-
-* **Tabla `CatalogBook`**: Se guarda el libro. Si el ISBN ya existe, se **reutiliza el registro**.
-* **Tabla Intermedia `CatalogBookCategory`**: Se crea el **vínculo explícito** (Relación N:M).
-* **Rate Limiting**: Incluye pausas programadas para evitar bloqueos de IP por parte de Google.
-
-#### 4. La Lógica de "Novedades" (ID 47)
-
-La categoría "Novedades" se genera procedimentalmente al final:
-
-* Selecciona los **últimos 100 libros** insertados.
-* Los mezcla aleatoriamente (**Shuffle**).
-* Toma 40 libros y crea relaciones apuntando al `categoryId: 47`.
-
-**Resultado**: Una sección de novedades ecléctica y fresca.
----
-
-## 🔐 Variables Clave
-
-### Frontend (`environment.ts` / `environment.prod.ts`)
-- **Firebase:** Configuración completa de Firebase (Auth, Storage, Database)
-- **Stripe:** `stripePublishableKey` - Clave pública de Stripe (modo test o live)
-- **API:** `apiUrl` - URL del backend
-
-### Backend (`.env`)
-- **DATABASE_URL:** URL de conexión a PostgreSQL
-- **FIREBASE_***:** Credenciales de Firebase Admin SDK
-- **STRIPE_SECRET_KEY:** Clave secreta de Stripe (modo test o live)
-- **STRIPE_WEBHOOK_SECRET:** Secret para verificar webhooks (opcional en desarrollo)
-- **FRONTEND_URL:** URL del frontend para redirecciones de Stripe
-
-> ⚠️ **Importante:** El archivo `.env` NO se versiona. Cada colaborador debe crear el suyo.
-
----
-
-## 📡 Endpoints Principales
-
-### Autenticación
-| Método | Ruta                    | Descripción                      | Auth |
-|--------|-------------------------|----------------------------------|------|
-| POST   | `/api/auth/register`    | Sincroniza usuario Firebase      | Token Firebase |
-| POST   | `/api/auth/login`       | Valida y devuelve perfil básico  | Token Firebase |
-
-### Usuarios
-| Método | Ruta                    | Descripción                      | Auth |
-|--------|-------------------------|----------------------------------|------|
-| GET    | `/api/users/me`         | Perfil del usuario autenticado   | ✅   |
-| PATCH  | `/api/users/me`         | Actualizar perfil (nombre, email, avatar, teléfono) | ✅   |
-| GET    | `/api/users`            | Lista todos los usuarios         | ✅   |
-| GET    | `/api/users/:id`        | Obtener usuario por ID          | ✅   |
-| PATCH  | `/api/users/:id`        | Actualizar usuario              | ✅   |
-| DELETE | `/api/users/:id`        | Eliminar usuario                 | ✅   |
-
-### Catálogo de Libros
-| Método | Ruta                    | Descripción                      | Auth |
-|--------|-------------------------|----------------------------------|------|
-| GET    | `/api/catalog-books`    | Lista catálogo (paginado, filtros por categoría) | ✅   |
-| GET    | `/api/catalog-books/:id`| Obtener libro por ID             | ✅   |
-| POST   | `/api/catalog-books`    | Crear libro                      | ✅   |
-| PATCH  | `/api/catalog-books/:id`| Actualizar libro                 | ✅   |
-| DELETE | `/api/catalog-books/:id`| Eliminar libro                   | ✅   |
-
-### Pagos (Stripe)
-| Método | Ruta                                    | Descripción                      | Auth |
-|--------|-----------------------------------------|----------------------------------|------|
-| POST   | `/api/payments/create-checkout-session` | Crea sesión de pago para un libro | ✅   |
-| POST   | `/api/payments/create-checkout-session-cart` | Crea sesión para carrito (preparado) | ✅   |
-| POST   | `/api/payments/webhook`                 | Webhook de Stripe (sin auth)     | ❌   |
-| GET    | `/api/payments/success`                 | Verifica pago y crea Order       | ✅   |
-| GET    | `/api/payments/session/:sessionId`      | Obtiene detalles de sesión       | ✅   |
-
-### Playlists
-| Método | Ruta                    | Descripción                      | Auth |
-|--------|-------------------------|----------------------------------|------|
-| GET    | `/api/playlists`        | Obtiene listas del usuario       | ✅   |
-| POST   | `/api/playlists/generate`| Genera playlist vía IA (n8n)     | ✅   |
-
-### Analíticas
-| Método | Ruta                    | Descripción                      | Auth |
-|--------|-------------------------|----------------------------------|------|
-| GET    | `/api/analytics/traffic`| Retorna datos procesados GA4     | ✅ (Admin) |
-
-### Utilidades
-| Método | Ruta                    | Descripción                      | Auth |
-|--------|-------------------------|----------------------------------|------|
-| GET    | `/health`               | Health check                     | ❌   |
-| GET    | `/api-docs`             | Documentación Swagger            | ❌   |
-
-> El middleware `auth` valida el `Authorization: Bearer <idToken>` contra Firebase y sincroniza el usuario en PostgreSQL.
-
----
-
-## 💳 Sistema de Pagos con Stripe
-
-### Características Implementadas
-
-- ✅ **Stripe Checkout** - Página de pago alojada por Stripe
-- ✅ **Múltiples métodos de pago:** Card, Link, PayPal
-- ✅ **Dirección de envío obligatoria** - Configurada para múltiples países
-- ✅ **Modo de prueba** - Usa tarjetas de prueba sin cobrar dinero real
-- ✅ **Creación automática de órdenes** - Se crean en la BD después del pago
-- ✅ **Actualización de stock** - El stock se decrementa automáticamente
-- ✅ **Preparado para carrito** - Estructura lista, pendiente de implementar
-
-### Tarjetas de Prueba
-
-Para probar pagos en modo test, usa estas tarjetas:
-
-| Tarjeta | Resultado |
-|---------|-----------|
-| `4242 4242 4242 4242` | ✅ Pago exitoso |
-| `4000 0000 0000 0002` | ❌ Pago rechazado |
-| `4000 0025 0000 3155` | 🔐 Requiere 3D Secure |
-
-**Datos de prueba:**
-- Cualquier fecha futura (ej: `12/25`)
-- Cualquier CVC (ej: `123`)
-- Cualquier código postal (ej: `12345`)
-
-### Flujo de Pago
-
-```
-1. Usuario hace clic "Comprar con Stripe" en detalles del libro
-   ↓
-2. Frontend → Backend: Crea sesión de checkout
-   ↓
-3. Backend → Stripe: Crea sesión con datos del libro (nombre, precio, foto)
-   ↓
-4. Frontend redirige a Stripe Checkout
-   ↓
-5. Usuario ingresa datos de pago y dirección de envío
-   ↓
-6. Stripe procesa el pago (modo test: no cobra dinero real)
-   ↓
-7. Stripe redirige a /payment-success
-   ↓
-8. Backend verifica pago y crea Order en BD
-   ↓
-9. Backend actualiza stock del libro
-```
-
-### Webhooks (Opcional en Desarrollo)
-
-Para desarrollo local, puedes usar **Stripe CLI** para reenviar webhooks:
-
-```bash
-# Instalar Stripe CLI
-# Windows: https://stripe.com/docs/stripe-cli
-# Mac: brew install stripe/stripe-cli/stripe
-
-# Autenticarse
-stripe login
-
-# Iniciar listener
-stripe listen --forward-to localhost:3000/api/payments/webhook
-```
-
-Esto te dará un `webhook secret` que puedes añadir a tu `.env`.
-
-> **Nota:** Sin Stripe CLI, el sistema funciona igual. La Order se crea cuando el usuario regresa de Stripe (fallback implementado).
-
----
-
-## 👤 Gestión de Perfil de Usuario
-
-### Características Implementadas
-
-- ✅ **Vista de perfil** - Muestra información del usuario
-- ✅ **Foto de perfil circular** - Con icono por defecto si no hay foto
-- ✅ **Cambio de foto** - Usando Capacitor (móvil) o input file (web)
-- ✅ **Almacenamiento en Firebase Storage** - Fotos guardadas en `avatars/`
-- ✅ **Actualización automática** - Se actualiza en Firebase Auth y BD
-- ✅ **Eliminación de fotos antiguas** - Se eliminan automáticamente al cambiar
-
-### Flujo de Cambio de Foto
-
-```
-1. Usuario hace clic en botón de cámara sobre la foto
-   ↓
-2. Capacitor abre cámara/galería (móvil) o input file (web)
-   ↓
-3. Usuario selecciona/toma foto
-   ↓
-4. Foto se sube a Firebase Storage (carpeta avatars/)
-   ↓
-5. Se obtiene URL de descarga
-   ↓
-6. Se actualiza photoURL en Firebase Auth
-   ↓
-7. Se actualiza avatarUrl en la BD (PostgreSQL)
-   ↓
-8. Se elimina foto anterior de Firebase Storage (si existe)
-```
-
-### Tecnologías Usadas
-
-- **Capacitor Camera** - Para tomar fotos en móvil
-- **Firebase Storage** - Para almacenar imágenes
-- **Firebase Auth** - Para actualizar photoURL del usuario
-- **PostgreSQL** - Para guardar avatarUrl en la BD
-
-### Permisos Necesarios
-
-En móvil, Capacitor pedirá automáticamente permisos de cámara cuando sea necesario.
-
----
-
-## 🧪 Testing
-
-```bash
-# Frontend (Angular)
-cd BookMatch-Angular
-ng test
-
-# Backend (Express)
-cd BookMatch-Backend
-npm test           # Jest
-```
-
----
-
-## 🔧 Scripts Útiles
-
-### Frontend
-```bash
-npm start            # Desarrollo
-npm run build        # Build producción
-ng test              # Tests unitarios
-```
-
-### Backend
-```bash
-npm run dev          # Desarrollo con nodemon
-npm run build        # Compila a dist/
-npm start            # Ejecuta la build
-npx prisma studio    # Interfaz visual de la base de datos
-npx prisma migrate dev # Crear nueva migración
-npx prisma generate  # Regenerar Prisma Client
-```
-
----
-
-## 📦 Dependencias Principales
-
-### Frontend
-- `@angular/core` ^20.3.0 - Framework Angular
-- `@angular/fire` ^20.0.1 - Integración con Firebase
-- `@stripe/stripe-js` ^8.5.3 - SDK de Stripe
-- `@capacitor/core` ^7.4.4 - Capacitor (aplicaciones móviles)
-- `@capacitor/camera` ^7.0.2 - Plugin de cámara
-- `firebase` ^11.10.0 - SDK de Firebase
-- `rxjs` ~7.8.0 - Programación reactiva
-
-### Backend
-- `express` ^5.1.0 - Framework web
-- `@prisma/client` ^6.18.0 - ORM Prisma
-- `stripe` - SDK de Stripe
-- `firebase-admin` ^13.6.0 - Firebase Admin SDK
-- `zod` ^4.1.12 - Validación de esquemas
-- `winston` ^3.18.3 - Sistema de logging
-- `helmet` ^8.1.0 - Seguridad HTTP
-- `express-rate-limit` ^8.2.1 - Rate limiting
-
----
-
-## 🗺️ Roadmap MVP
-
-1. ✅ Configuración de base (repositorio, Firebase, PostgreSQL)  
-2. ✅ Registro e inicio de sesión con formularios reactivos  
-3. ✅ Catálogo inicial de libros y vista protegida  
-4. ✅ **Sistema de pagos con Stripe**  
-5. ✅ **Gestión de perfil de usuario con fotos**  
-6. ✅ **Recomendaciones IA y Trueque/Playlists** (Sistema de listas de libros)
-7. ✅ Sistema de envío de correos (Confirmaciones vía SMTP)
-8. ✅ Dashboard Analítico (Firebase Analytics + GA4)
-9. 🔄 Carrito de compras multiproducto
-10. ⏳ Vista de historial de pedidos  
-
----
-
-## 🔒 Seguridad
-
-### Implementado
-- ✅ Autenticación con Firebase (JWT tokens)
-- ✅ Middleware de autenticación en todas las rutas protegidas
-- ✅ Rate limiting para prevenir abusos
-- ✅ Helmet para headers de seguridad HTTP
-- ✅ CORS configurado
-- ✅ Validación de datos con Zod
-- ✅ Logging de errores con Winston
-- ✅ Variables de entorno para secretos
-- ✅ Firebase Storage rules (configurar según necesidades)
-
-### Firebase Storage Rules (Recomendadas)
-
-Configura en Firebase Console → Storage → Rules:
+## Seguridad
+
+| Capa | Medida | Implementación |
+|---|---|---|
+| **Autenticación** | Firebase JWT | `middleware/auth.ts` — verifica con Firebase Admin SDK |
+| **Autorización** | Rol `isAdmin` | Checks en servicios para rutas admin |
+| **Headers** | Helmet | CSP, HSTS, X-Frame-Options, etc. |
+| **Rate limiting** | express-rate-limit | `/api/auth` más restrictivo |
+| **Validación** | Zod | `middleware/validate.ts` — esquemas por ruta |
+| **CORS** | Lista blanca | `app.ts` — orígenes `bookmatch.club` + localhost |
+| **Logs** | Winston | `utils/logger.ts` — fichero + stdout |
+| **Secretos** | `.env` no versionado | Hook pre-commit bloquea `git add .env` |
+| **TLS** | Caddy + Let's Encrypt | Certificado automático en producción |
+| **Pagos** | Firma HMAC | `STRIPE_WEBHOOK_SECRET` — verificación en cada evento |
+
+**Firebase Storage Rules** (configurar en Firebase Console):
 
 ```javascript
 rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
     match /avatars/{userId}_{allPaths=**} {
-      // Solo el usuario puede subir/eliminar su propia foto
-      allow read: if true; // Fotos públicas
-      allow write: if request.auth != null && 
+      allow read: if true;
+      allow write: if request.auth != null &&
                       request.auth.uid == userId.split('_')[0];
     }
   }
@@ -634,46 +549,107 @@ service firebase.storage {
 
 ---
 
-## 🤝 Contribución
+## Testing
 
-- El equipo trabaja con Jira para la planificación de sprints.
-- Usa ramas por feature (`feature/nombre`) y Pull Requests en GitHub.
-- Documenta los cambios relevantes cuando no exista ticket previo.
-- Sigue las convenciones de código establecidas.
+```bash
+# Frontend (Angular + Karma/Jasmine)
+cd BookMatch-Angular
+ng test
 
----
-
-## 📞 Contacto y Recursos
-
-- **Repositorio:** [BookMatch-Proyecto-Intermodular](https://github.com/Sergiibut05/BookMatch-Proyecto-Intermodular)
-- **Proyecto Firebase:** `bookmatch-522d5`
-- **Documentación Swagger:** `http://localhost:3000/api-docs` (cuando el backend está corriendo)
-- **Stripe Dashboard:** [dashboard.stripe.com](https://dashboard.stripe.com)
+# Backend (Jest)
+cd BookMatch-Backend
+npm test
+```
 
 ---
 
-## 📝 Changelog Reciente
+## Scripts útiles
 
-### Mayo 2026 (Sprints 8, 9 y 10)
-- ✅ **Playlists e IA**: Integración con n8n para generación de colecciones mediante prompts.
-- ✅ **AI Chat**: Nuevo panel lateral para conversar con el asistente sobre libros y convertir hilos en playlists.
-- ✅ **Dashboard Analytics**: Nueva sección para administradores con reportes de tráfico en `Chart.js` y datos conectados a GA4.
-- ✅ **Autenticación**: UI de recuperación de contraseña añadida al modal de login.
-- ✅ **Stripe y SMTP**: Correcciones y estabilización en el envío de recibos en producción.
-- ✅ **Documentación y Agentes**: Creación y estabilización de convenciones para IA (Cursor).
+### Frontend
 
-### Noviembre 2025
-#### Sistema de Pagos con Stripe
-- ✅ Integración completa de Stripe Checkout
-- ✅ Soporte para Card, Link y PayPal
-- ✅ Creación automática de órdenes y actualización de stock
+```bash
+npm start            # ng serve → http://localhost:4200
+npm run build        # Build de producción → dist/
+ng test              # Tests unitarios
+npx @compodoc/compodoc -p tsconfig.json -s  # Docs → http://localhost:8080
+```
 
-#### Gestión de Perfil
-- ✅ Componente de perfil implementado con subida de fotos
-- ✅ Integración con Firebase Storage y BD
-- ✅ Eliminación automática de fotos antiguas
+### Backend
+
+```bash
+npm run dev          # nodemon — desarrollo
+npm run build        # tsc → dist/
+npm start            # node dist/index.js
+npx prisma studio    # Interfaz visual de la BD
+npx prisma migrate dev   # Nueva migración en desarrollo
+npx prisma generate  # Regenerar Prisma Client
+npx tsx seed.ts      # Poblar catálogo
+```
 
 ---
 
-**Última actualización:** Mayo 2026 — despliegue API en EC2 (Docker/Caddy), Supabase, dominio propio y CI GitHub Actions.  
-**Versión del documento:** 1.5.0 (Beta con IA y Analytics)
+## Dependencias principales
+
+### Frontend
+
+| Paquete | Versión | Uso |
+|---|---|---|
+| `@angular/core` | ^21.x | Framework Angular |
+| `@angular/fire` | ^20.x | Integración Firebase |
+| `@stripe/stripe-js` | ^8.x | SDK Stripe (frontend) |
+| `@capacitor/core` | ^7.4 | Bridge nativo |
+| `@capacitor/camera` | ^7.x | Cámara y galería |
+| `firebase` | ^11.x | Auth, Storage, Firestore |
+| `chart.js` | — | Gráficos analytics |
+| `@ngx-translate/core` | — | Internacionalización |
+| `rxjs` | ~7.8 | Programación reactiva |
+
+### Backend
+
+| Paquete | Versión | Uso |
+|---|---|---|
+| `express` | ^5.1 | Framework web |
+| `@prisma/client` | ^6.x | ORM |
+| `stripe` | — | SDK Stripe |
+| `firebase-admin` | ^13.x | Admin SDK |
+| `zod` | ^4.x | Validación de esquemas |
+| `winston` | ^3.x | Logging estructurado |
+| `helmet` | ^8.x | Seguridad HTTP |
+| `express-rate-limit` | ^8.x | Rate limiting |
+| `nodemailer` | — | Envío de correos SMTP |
+
+---
+
+## Changelog
+
+### Mayo 2026 — Sprints 9 y 10
+
+- **[SCRUM-231]** Trueque: auto-aceptación de propuestas a usuarios seed para demo.
+- **[SCRUM-230]** UI: estética global con fuente Lora en footer/carrito/ai-chat, fix nav header.
+- **[SCRUM-227]** Auth: UI de recuperación de contraseña en pantalla de login.
+- **[SCRUM-226]** Stripe + SMTP: credenciales en producción para envío de recibos.
+- **[SCRUM-220]** Trueque: rediseño visual completo con skeletons, i18n y responsividad móvil.
+- **[SCRUM-197]** Épica Trueque: módulo completo (UI + API + estados).
+- **[SCRUM-195]** Analytics: integración GA4 con dashboard PowerBI en Chart.js.
+- **[SCRUM-181]** Playlists: portadas generadas por IA en Firebase Storage.
+- **[SCRUM-175]** AI Chat: rediseño con panel lateral, memoria y conversión de hilos a listas.
+
+### Abril 2026 — Sprint 8
+
+- Despliegue en AWS EC2 con Docker + Caddy + Supabase.
+- CI/CD GitHub Actions (`deploy-ec2-backend.yml`).
+- Workflows n8n: memoria de conversación, `playlist_builder`, SQL.
+- Auditoría completa de la wiki Confluence.
+
+### Noviembre 2025 — Sprints 1–7
+
+- Stripe Checkout completo (libro + carrito) con webhooks y creación de órdenes.
+- Sistema de foros: posts, comentarios anidados, votos, subida de imágenes.
+- Perfil de usuario con foto (Capacitor + Firebase Storage).
+- Carrito con persistencia en localStorage.
+- Playlists CRUD + integración n8n inicial.
+- App Android nativa (Kotlin + Compose + Room).
+
+---
+
+**Última actualización:** Mayo 2026 — Trueque, rediseño UI, SCRUM-231.
