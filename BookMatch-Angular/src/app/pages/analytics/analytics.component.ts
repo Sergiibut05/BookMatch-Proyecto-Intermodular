@@ -132,7 +132,6 @@ export class AnalyticsComponent implements OnInit {
   trafficData: TrafficResponse | null = null;
 
   pageviewsChart: Chart | null = null;
-  topPagesChart: Chart | null = null;
   countriesChart: Chart | null = null;
   browsersChart: Chart | null = null;
 
@@ -190,7 +189,6 @@ export class AnalyticsComponent implements OnInit {
           if (!this.isTrafficEmpty()) {
             setTimeout(() => {
               this.renderPageviewsChart(data.pageviewsByDay);
-              this.renderTopPagesChart(data.topPages);
               this.renderCountriesChart(data.visitorsByCountry);
               this.renderBrowsersChart(data.browsers);
             }, 0);
@@ -464,8 +462,7 @@ export class AnalyticsComponent implements OnInit {
 
   isTrafficEmpty(): boolean {
     if (!this.trafficData) return true;
-    return this.trafficData.pageviewsByDay.length === 0 && 
-           this.trafficData.topPages.length === 0;
+    return this.trafficData.pageviewsByDay.length === 0;
   }
 
   // ─── SCRUM-195 · Traffic Charts ──────────────────────────────────────────
@@ -504,31 +501,6 @@ export class AnalyticsComponent implements OnInit {
       }
     };
     this.pageviewsChart = new Chart(ctx, config);
-  }
-
-  renderTopPagesChart(data: TopPageData[]) {
-    const ctx = document.getElementById('topPagesChart') as HTMLCanvasElement;
-    if (!ctx || !data || data.length === 0) return;
-    if (this.topPagesChart) this.topPagesChart.destroy();
-
-    const config: ChartConfiguration<'bar'> = {
-      type: 'bar',
-      data: {
-        labels: data.map(d => d.title || d.path),
-        datasets: [{
-          label: 'Pageviews',
-          data: data.map(d => d.views),
-          backgroundColor: this.colors.gold,
-          borderRadius: 4
-        }]
-      },
-      options: {
-        ...this.getDefaultChartOptions(),
-        indexAxis: 'y',
-        scales: this.getDefaultScales()
-      }
-    };
-    this.topPagesChart = new Chart(ctx, config);
   }
 
   renderCountriesChart(data: VisitorData[]) {

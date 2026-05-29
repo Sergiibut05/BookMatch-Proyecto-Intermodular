@@ -65,6 +65,7 @@
                   [src]="book.coverUrl" 
                   [alt]="book.title" 
                   class="sr-book-cover__img"
+                  width="200" height="300"
                   loading="lazy" decoding="async"
                   (error)="$event.target.src='assets/placeholder-book.png'">
               } @else {

@@ -197,9 +197,9 @@
     }
 
     <!-- ─── SCRUM-195 · Sección de Tráfico ────────────────────────────────── -->
-    <div class="section-header" style="margin-top: 3rem; margin-bottom: 1.5rem;">
-      <h1 class="page-title" style="font-size: 1.5rem;">Tráfico Web</h1>
-      <p class="page-subtitle">Rendimiento y origen de los visitantes (Google Analytics 4)</p>
+    <div style="margin-top: 3rem; margin-bottom: 1.5rem;">
+      <h1 class="analytics-title">Tráfico Web</h1>
+      <p class="analytics-subtitle">Rendimiento y origen de los visitantes (Google Analytics 4)</p>
     </div>
 
     @if (isTrafficEmpty()) {
@@ -213,28 +213,17 @@
     } @else {
       <!-- KPIs Tráfico -->
       <div class="kpi-grid" style="margin-bottom: 2rem;">
-        <div class="kpi-card">
-          <div class="kpi-header">
-            <h3 class="kpi-title">Sesiones Totales</h3>
-            <span class="kpi-icon">🌐</span>
-          </div>
-          <div class="kpi-value" [appCountUp]="trafficData?.summary?.sessions || 0">0</div>
+        <div class="kpi-card press-target" tabindex="0">
+          <span class="kpi-label">Sesiones Totales</span>
+          <h2 class="kpi-value" [appCountUp]="trafficData?.summary?.sessions || 0">0</h2>
         </div>
-        <div class="kpi-card">
-          <div class="kpi-header">
-            <h3 class="kpi-title">Tasa de Rebote</h3>
-            <span class="kpi-icon">🚪</span>
-          </div>
-          <div class="kpi-value">
-            <span [appCountUp]="(trafficData?.summary?.bounceRate || 0) * 100" [decimals]="1">0</span>%
-          </div>
+        <div class="kpi-card press-target" tabindex="0" style="animation-delay: 40ms">
+          <span class="kpi-label">Tasa de Rebote</span>
+          <h2 class="kpi-value"><span [appCountUp]="(trafficData?.summary?.bounceRate || 0) * 100" [decimals]="1">0</span>%</h2>
         </div>
-        <div class="kpi-card">
-          <div class="kpi-header">
-            <h3 class="kpi-title">Duración Media (s)</h3>
-            <span class="kpi-icon">⏱️</span>
-          </div>
-          <div class="kpi-value" [appCountUp]="trafficData?.summary?.averageSessionDuration || 0" [decimals]="1">0</div>
+        <div class="kpi-card press-target" tabindex="0" style="animation-delay: 80ms">
+          <span class="kpi-label">Duración Media (s)</span>
+          <h2 class="kpi-value" [appCountUp]="trafficData?.summary?.averageSessionDuration || 0" [decimals]="1">0</h2>
         </div>
       </div>
 
@@ -250,20 +239,11 @@
 
       <div class="dashboard-grid">
         <div class="chart-card">
-          <h2 class="chart-title">Top 10 Páginas</h2>
-          <div class="chart-container">
-            <canvas id="topPagesChart"></canvas>
-          </div>
-        </div>
-        <div class="chart-card">
           <h2 class="chart-title">Visitantes por País</h2>
           <div class="chart-container">
             <canvas id="countriesChart"></canvas>
           </div>
         </div>
-      </div>
-
-      <div class="dashboard-grid">
         <div class="chart-card">
           <h2 class="chart-title">Navegadores</h2>
           <div class="chart-container">

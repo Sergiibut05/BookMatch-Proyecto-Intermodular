@@ -6,6 +6,11 @@
     <!-- Header de la página -->
     <div class="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
       <div>
+        <div class="forum-ornament">
+          <span class="forum-ornament__line"></span>
+          <span class="forum-ornament__label">{{ 'HEADER.FORUM' | translate }}</span>
+          <span class="forum-ornament__line"></span>
+        </div>
         <h1 class="text-3xl md:text-4xl font-bold mb-2" style="color: #45332D;">{{ 'FORUM.TITLE' | translate }}</h1>
         <p class="text-base md:text-lg" style="color: #4E6A6A;">
           {{ 'FORUM.SUBTITLE' | translate }}
@@ -13,10 +18,7 @@
       </div>
       <button
         (click)="openCreateModal()"
-        class="flex items-center gap-2 px-6 py-3 rounded-lg transition-colors duration-200 font-medium text-base whitespace-nowrap"
-        style="background-color: #E0A15E; color: #FCF5E2;"
-        onmouseover="this.style.backgroundColor='#B88B65'"
-        onmouseout="this.style.backgroundColor='#E0A15E'">
+        class="btn-solid press-target">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
         </svg>
@@ -59,17 +61,14 @@
 
     <!-- Forums Grid -->
     @if (!isLoading() && !error() && forums().length > 0) {
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8 forum-grid">
         @for (forum of forums(); track forum.id) {
           <div 
             (click)="goToForum(forum.id)"
-            class="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-200 cursor-pointer overflow-hidden border border-transparent hover:border-opacity-50"
-            style="border-color: #E0A15E;"
-            onmouseover="this.style.transform='translateY(-4px)'"
-            onmouseout="this.style.transform='translateY(0)'">
-            
+            class="forum-card">
+
             <!-- Header de la tarjeta -->
-            <div class="p-6 border-b" style="border-color: #E9E1D1;">
+            <div class="forum-card__header">
               <h3 class="text-xl font-bold mb-2" style="color: #45332D;">
                 {{ forum.title }}
               </h3>
@@ -79,7 +78,7 @@
             </div>
 
             <!-- Footer con metadatos -->
-            <div class="p-4 bg-gray-50">
+            <div class="forum-card__footer">
               <div class="flex items-center justify-between mb-3">
                 <!-- Creador -->
                 <div class="flex items-center gap-2">
@@ -127,20 +126,14 @@
           <button
             (click)="goToPage(currentPage() - 1)"
             [disabled]="currentPage() === 1"
-            class="px-4 py-2 rounded-lg border transition-colors duration-200 font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-            style="border-color: #E9E1D1; color: #45332D; background-color: white;"
-            onmouseover="if(!this.disabled) this.style.backgroundColor='#F5F5F5'"
-            onmouseout="if(!this.disabled) this.style.backgroundColor='white'">
+            class="forum-btn-secondary">
             {{ 'FORUM.PREVIOUS' | translate }}
           </button>
 
           @if (currentPage() > 3) {
             <button
               (click)="goToPage(1)"
-              class="px-4 py-2 rounded-lg border transition-colors duration-200 font-medium text-sm"
-              style="border-color: #E9E1D1; color: #45332D; background-color: white;"
-              onmouseover="this.style.backgroundColor='#F5F5F5'"
-              onmouseout="this.style.backgroundColor='white'">
+              class="forum-btn-secondary">
               1
             </button>
             @if (currentPage() > 4) {
@@ -150,21 +143,9 @@
 
           @for (page of getPageNumbers(); track page) {
             @if (page === currentPage()) {
-              <button
-                class="px-4 py-2 rounded-lg font-medium text-sm"
-                style="background-color: #E0A15E; color: #FCF5E2;"
-                disabled>
-                {{ page }}
-              </button>
+              <button class="forum-btn-page-active" disabled>{{ page }}</button>
             } @else {
-              <button
-                (click)="goToPage(page)"
-                class="px-4 py-2 rounded-lg border transition-colors duration-200 font-medium text-sm"
-                style="border-color: #E9E1D1; color: #45332D; background-color: white;"
-                onmouseover="this.style.backgroundColor='#F5F5F5'"
-                onmouseout="this.style.backgroundColor='white'">
-                {{ page }}
-              </button>
+              <button (click)="goToPage(page)" class="forum-btn-secondary">{{ page }}</button>
             }
           }
 
@@ -174,10 +155,7 @@
             }
             <button
               (click)="goToPage(totalPages())"
-              class="px-4 py-2 rounded-lg border transition-colors duration-200 font-medium text-sm"
-              style="border-color: #E9E1D1; color: #45332D; background-color: white;"
-              onmouseover="this.style.backgroundColor='#F5F5F5'"
-              onmouseout="this.style.backgroundColor='white'">
+              class="forum-btn-secondary">
               {{ totalPages() }}
             </button>
           }
@@ -185,10 +163,7 @@
           <button
             (click)="goToPage(currentPage() + 1)"
             [disabled]="currentPage() === totalPages()"
-            class="px-4 py-2 rounded-lg border transition-colors duration-200 font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-            style="border-color: #E9E1D1; color: #45332D; background-color: white;"
-            onmouseover="if(!this.disabled) this.style.backgroundColor='#F5F5F5'"
-            onmouseout="if(!this.disabled) this.style.backgroundColor='white'">
+            class="forum-btn-secondary">
             {{ 'FORUM.NEXT' | translate }}
           </button>
         </div>
@@ -257,10 +232,7 @@
             <button
               type="submit"
               [disabled]="isCreating() || createForm.invalid"
-              class="flex-1 px-4 py-2 rounded-lg transition-colors duration-200 font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-              style="background-color: #E0A15E; color: #FCF5E2;"
-              onmouseover="if(!this.disabled) this.style.backgroundColor='#B88B65'"
-              onmouseout="if(!this.disabled) this.style.backgroundColor='#E0A15E'">
+              class="flex-1 forum-btn-primary justify-center">
               @if (isCreating()) {
                 <span class="flex items-center justify-center gap-2">
                   <div class="inline-block animate-spin rounded-full h-4 w-4 border-2 border-t-transparent border-white"></div>
@@ -274,10 +246,7 @@
               type="button"
               (click)="closeCreateModal()"
               [disabled]="isCreating()"
-              class="px-4 py-2 rounded-lg border transition-colors duration-200 font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-              style="border-color: #E9E1D1; color: #45332D; background-color: white;"
-              onmouseover="if(!this.disabled) this.style.backgroundColor='#F5F5F5'"
-              onmouseout="if(!this.disabled) this.style.backgroundColor='white'">
+              class="forum-btn-secondary">
               {{ 'FORUM.CANCEL' | translate }}
             </button>
           </div>

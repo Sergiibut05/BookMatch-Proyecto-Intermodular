@@ -10,10 +10,7 @@
       <button
         (click)="toggleMainInput()"
         type="button"
-        class="flex items-center gap-2 px-4 py-2 rounded-lg transition-colors duration-200 font-medium text-sm"
-        style="background-color: #E0A15E; color: #FCF5E2;"
-        onmouseover="this.style.backgroundColor='#B88B65'"
-        onmouseout="this.style.backgroundColor='#E0A15E'">
+        class="btn-solid press-target">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
         </svg>
@@ -47,10 +44,7 @@
             <button
               type="submit"
               [disabled]="isSubmittingMain() || mainCommentForm.invalid"
-              class="px-4 py-2 rounded-lg transition-colors duration-200 font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-              style="background-color: #E0A15E; color: #FCF5E2;"
-              onmouseover="if(!this.disabled) this.style.backgroundColor='#B88B65'"
-              onmouseout="if(!this.disabled) this.style.backgroundColor='#E0A15E'">
+              class="btn-solid press-target">
               @if (isSubmittingMain()) {
                 <span class="flex items-center gap-2">
                   <div class="inline-block animate-spin rounded-full h-4 w-4 border-2 border-t-transparent border-white"></div>
@@ -64,10 +58,7 @@
               type="button"
               (click)="toggleMainInput()"
               [disabled]="isSubmittingMain()"
-              class="px-4 py-2 rounded-lg border transition-colors duration-200 font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-              style="border-color: #E9E1D1; color: #45332D; background-color: white;"
-              onmouseover="if(!this.disabled) this.style.backgroundColor='#F5F5F5'"
-              onmouseout="if(!this.disabled) this.style.backgroundColor='white'">
+              class="ct-btn-secondary">
               {{ 'COMMENTS.CANCEL' | translate }}
             </button>
           </div>

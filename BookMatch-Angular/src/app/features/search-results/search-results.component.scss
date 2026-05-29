@@ -29,18 +29,23 @@ $book-spine-gradient: linear-gradient(
 // ─── Book grid ───────────────────────────────────────────────────────────────
 .sr-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  /* minmax(0, 1fr) en vez de 1fr: fuerza mínimo 0 en los tracks
+     y evita que imágenes con dimensiones intrínsecas grandes expandan la columna */
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1rem;
+  align-items: start;
   margin-bottom: 2rem;
 
   @media (min-width: 640px)  { gap: 1.25rem; }
-  @media (min-width: 1024px) { grid-template-columns: repeat(3, 1fr); }
-  @media (min-width: 1280px) { grid-template-columns: repeat(4, 1fr); gap: 1.5rem; }
+  @media (min-width: 1024px) { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  @media (min-width: 1280px) { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1.5rem; }
 }
 
 // ─── Book card ───────────────────────────────────────────────────────────────
 .sr-book-card {
   cursor: pointer;
+  min-width: 0;
+  overflow: hidden; /* segunda barrera: ningún hijo puede desbordarse del ítem */
 
   &:active { transform: scale(0.98); transition: transform 0.12s $ease-out-fast; }
 }
@@ -48,12 +53,13 @@ $book-spine-gradient: linear-gradient(
 .sr-book-cover {
   position: relative;
   width: 100%;
-  aspect-ratio: 2 / 3;
+  min-width: 0;
   border-radius: 2px 6px 6px 2px;
   overflow: hidden;
   background: #d5cdc0;
   box-shadow: 2px 6px 16px rgba(69, 51, 45, 0.12);
   transition: box-shadow 0.28s $ease-out-fast;
+  /* La altura la impone la imagen; todos los covers quedan igual */
 
   .sr-book-card:hover & {
     box-shadow:
@@ -62,12 +68,11 @@ $book-spine-gradient: linear-gradient(
   }
 
   &__img {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
     display: block;
+    width: 100%;
+    aspect-ratio: 2 / 3;
+    object-fit: cover;
+    object-position: center top;
   }
 
   &__spine {
@@ -80,7 +85,7 @@ $book-spine-gradient: linear-gradient(
 
   &__placeholder {
     width: 100%;
-    height: 100%;
+    aspect-ratio: 2 / 3;
     display: flex;
     align-items: center;
     justify-content: center;

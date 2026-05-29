@@ -1,25 +1,151 @@
-.forum-index {
-  width: 100%;
+// ── Design tokens ─────────────────────────────────────────────────────────────
+$font-serif:    'Lora', 'Georgia', serif;
+$color-walnut:  #45332D;
+$color-teal:    #4E6A6A;
+$color-gold:    #E0A15E;
+$color-gold-dk: #B88B65;
+$color-cream:   #FCF5E2;
+$color-border:  #E9E1D1;
+$ease-out-fast: cubic-bezier(0.23, 1, 0.32, 1);
+
+:host {
+  font-family: $font-serif;
 }
 
-// Animación para hover de tarjetas
-@keyframes fadeIn {
-  from {
+// ── Page header ornament (gold line · LABEL · gold line) ────────────────────
+.forum-ornament {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  margin-bottom: 0.625rem;
+}
+
+.forum-ornament__line {
+  display: block;
+  flex: 0 0 28px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, $color-gold, transparent);
+}
+
+.forum-ornament__label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: $color-gold;
+  white-space: nowrap;
+}
+
+// ── Forum card ────────────────────────────────────────────────────────────────
+.forum-card {
+  background: white;
+  border-radius: 1rem;
+  border: 1px solid $color-border;
+  box-shadow: 0 1px 3px rgba(69, 51, 45, 0.07), 0 1px 2px rgba(69, 51, 45, 0.04);
+  cursor: pointer;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition:
+    transform 220ms $ease-out-fast,
+    box-shadow 220ms $ease-out-fast,
+    border-color 200ms $ease-out-fast;
+
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 24px rgba(69, 51, 45, 0.10), 0 2px 6px rgba(69, 51, 45, 0.06);
+      border-color: rgba(224, 161, 94, 0.5);
+    }
+  }
+
+  &:active {
+    transform: scale(0.99);
+    transition-duration: 100ms;
+  }
+
+  &__header {
+    flex: 1;
+    padding: 1.5rem;
+    border-bottom: 1px solid $color-border;
+  }
+
+  &__footer {
+    padding: 1rem 1.5rem;
+    background-color: #F9F4EC;
+  }
+}
+
+// ── Stagger: grid items fade up ───────────────────────────────────────────────
+@for $i from 1 through 12 {
+  $delay: ($i - 1) * 45ms;
+  .forum-grid > div:nth-child(#{$i}) .forum-card {
     opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+    animation: forum-fade-up 380ms $ease-out-fast $delay forwards;
   }
 }
 
-// Aplicar animación a las tarjetas
-.grid > div {
-  animation: fadeIn 0.3s ease-out;
+
+// ── Buttons ───────────────────────────────────────────────────────────────────
+.forum-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  border: none;
+  background-color: $color-gold;
+  color: $color-cream;
+  font-family: $font-serif;
+  font-weight: 500;
+  font-size: 1rem;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color 180ms $ease-out-fast, transform 150ms $ease-out-fast;
+
+  @media (hover: hover) and (pointer: fine) {
+    &:hover { background-color: $color-gold-dk; }
+  }
+
+  &:active { transform: scale(0.97); }
+
+  &:disabled { opacity: 0.5; cursor: not-allowed; }
 }
 
-// Line clamp para descripción
+.forum-btn-secondary {
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  border: 1px solid $color-border;
+  color: $color-walnut;
+  background: white;
+  font-family: $font-serif;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 160ms $ease-out-fast, transform 150ms $ease-out-fast;
+
+  &:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  @media (hover: hover) and (pointer: fine) {
+    &:not(:disabled):hover { background-color: #F5F5F5; }
+  }
+
+  &:not(:disabled):active { transform: scale(0.97); }
+}
+
+.forum-btn-page-active {
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  background-color: $color-gold;
+  color: $color-cream;
+  font-family: $font-serif;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border: none;
+  cursor: default;
+}
+
+// ── Line clamp ────────────────────────────────────────────────────────────────
 .line-clamp-2 {
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -27,10 +153,22 @@
   overflow: hidden;
 }
 
-// Responsive adjustments
-@media (max-width: 768px) {
-  .forum-index {
-    padding: 0;
+// ── Entry animation ───────────────────────────────────────────────────────────
+@keyframes forum-fade-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .forum-card,
+  .forum-btn-primary,
+  .forum-btn-secondary {
+    transition: none !important;
+    animation: none !important;
+    opacity: 1 !important;
   }
 }
 
+@media (max-width: 768px) {
+  .forum-index { padding: 0; }
+}
