@@ -946,17 +946,11 @@
       </div>
 
       <div class="pl-modal-body">
-        <input
-          id="trueque-phone-input"
-          type="tel"
-          autocomplete="tel"
-          inputmode="tel"
-          class="w-full min-h-[44px] rounded-xl border border-[#E9E1D1] bg-white/90 px-3 py-2.5 text-sm text-[#45332D] placeholder:text-[#8a6a52]/70 focus:outline-none focus:ring-2 focus:ring-[#E0A15E]/50"
+        <app-phone-input
           [value]="phoneInput()"
           [disabled]="phoneSaving()"
-          [attr.placeholder]="'TRUEQUE.PHONE_MODAL_PLACEHOLDER' | translate"
-          (input)="onPhoneInput($event)"
-          (keydown.enter)="savePhone()" />
+          placeholder="612 345 678"
+          (valueChange)="onPhoneChange($event)" />
 
         @if (phoneError()) {
           <p class="mt-2 text-sm text-red-900/85" role="alert">

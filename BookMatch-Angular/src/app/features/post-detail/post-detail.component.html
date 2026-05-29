@@ -4,12 +4,7 @@
   <div class="max-w-4xl mx-auto px-4 py-8 md:py-12">
     
     <!-- Botón volver -->
-    <button
-      (click)="goBack()"
-      class="flex items-center gap-2 text-sm mb-6 transition-colors"
-      style="color: #4E6A6A;"
-      onmouseover="this.style.color='#45332D'"
-      onmouseout="this.style.color='#4E6A6A'">
+    <button (click)="goBack()" class="post-back-btn mb-6">
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
       </svg>
@@ -40,9 +35,9 @@
 
     <!-- Contenido del post -->
     @if (!isLoading() && !error() && post()) {
-      <article class="bg-white rounded-xl shadow-lg overflow-hidden">
+      <article class="bg-white overflow-hidden">
         
-        <div class="p-6 border-b bg-white relative" style="border-color: #E9E1D1;">
+        <div class="post-article-header">
           <div class="flex items-center gap-4 mb-4">
             @if (getAuthorAvatar()) {
               <img 
@@ -82,9 +77,9 @@
               <div class="relative">
                 <button
                   (click)="toggleMenu()"
-                  class="p-2 rounded-full hover:bg-gray-100 transition-colors"
+                  class="post-3dot-btn"
                   (click)="$event.stopPropagation()">
-                  <svg class="w-5 h-5" style="color: #4E6A6A;" fill="currentColor" viewBox="0 0 24 24">
+                  <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
                   </svg>
                 </button>
@@ -232,10 +227,7 @@
             <button
               type="submit"
               [disabled]="isUpdating() || editForm.invalid"
-              class="flex-1 px-4 py-2 rounded-lg transition-colors duration-200 font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-              style="background-color: #E0A15E; color: #FCF5E2;"
-              onmouseover="if(!this.disabled) this.style.backgroundColor='#B88B65'"
-              onmouseout="if(!this.disabled) this.style.backgroundColor='#E0A15E'">
+              class="flex-1 post-btn-primary justify-center">
               @if (isUpdating()) {
                 <span class="flex items-center justify-center gap-2">
                   <div class="inline-block animate-spin rounded-full h-4 w-4 border-2 border-t-transparent border-white"></div>
@@ -249,10 +241,7 @@
               type="button"
               (click)="closeEditModal()"
               [disabled]="isUpdating()"
-              class="px-4 py-2 rounded-lg border transition-colors duration-200 font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-              style="border-color: #E9E1D1; color: #45332D; background-color: white;"
-              onmouseover="if(!this.disabled) this.style.backgroundColor='#F5F5F5'"
-              onmouseout="if(!this.disabled) this.style.backgroundColor='white'">
+              class="post-btn-secondary">
               {{ 'POST.CANCEL' | translate }}
             </button>
           </div>
@@ -297,10 +286,7 @@
           <button
             (click)="closeDeleteModal()"
             [disabled]="isDeleting()"
-            class="px-4 py-2 rounded-lg border transition-colors duration-200 font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-            style="border-color: #E9E1D1; color: #45332D; background-color: white;"
-            onmouseover="if(!this.disabled) this.style.backgroundColor='#F5F5F5'"
-            onmouseout="if(!this.disabled) this.style.backgroundColor='white'">
+            class="post-btn-secondary">
             {{ 'POST.CANCEL' | translate }}
           </button>
         </div>

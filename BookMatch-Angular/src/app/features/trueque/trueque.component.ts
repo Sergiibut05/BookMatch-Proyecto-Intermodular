@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Header } from '@shared/components/header/header';
 import { Footer } from '@shared/components/footer/footer';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { PhoneInputComponent } from '@shared/components/phone-input/phone-input.component';
 import {
   TruequeService,
   type CreateUserBookDto,
@@ -38,7 +39,7 @@ function normalizeWhatsappDigits(raw: string): string | null {
 
 @Component({
   selector: 'app-trueque',
-  imports: [CommonModule, Header, Footer, TranslateModule],
+  imports: [CommonModule, Header, Footer, TranslateModule, PhoneInputComponent],
   templateUrl: './trueque.component.html',
   styleUrl: './trueque.component.scss',
 })
@@ -870,8 +871,7 @@ export class TruequeComponent implements OnDestroy {
     }
   }
 
-  onPhoneInput(event: Event): void {
-    const value = (event.target as HTMLInputElement).value;
+  onPhoneChange(value: string): void {
     this.phoneInput.set(value);
     if (this.phoneError()) {
       this.phoneError.set(null);

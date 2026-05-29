@@ -1,8 +1,123 @@
-// Estilos específicos del componente post-detail
+// ── Design tokens ─────────────────────────────────────────────────────────────
+$font-serif:    'Lora', 'Georgia', serif;
+$color-walnut:  #45332D;
+$color-gold:    #E0A15E;
+$color-gold-dk: #B88B65;
+$color-cream:   #FCF5E2;
+$color-border:  #E9E1D1;
+$ease-out-fast: cubic-bezier(0.23, 1, 0.32, 1);
 
-// Cerrar el menú al hacer clic fuera
 :host {
   position: relative;
+  font-family: $font-serif;
+}
+
+// ── Back button ───────────────────────────────────────────────────────────────
+.post-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  background: none;
+  border: none;
+  padding: 0.25rem 0;
+  font-family: $font-serif;
+  font-size: 0.875rem;
+  color: #4E6A6A;
+  cursor: pointer;
+  transition: color 160ms $ease-out-fast;
+
+  svg { transition: transform 200ms $ease-out-fast; }
+
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      color: $color-walnut;
+      svg { transform: translateX(-3px); }
+    }
+  }
+}
+
+// ── Post article card ─────────────────────────────────────────────────────────
+article {
+  border-radius: 1rem;
+  border: 1px solid $color-border;
+  box-shadow: 0 1px 4px rgba(69, 51, 45, 0.07), 0 1px 2px rgba(69, 51, 45, 0.04);
+  overflow: hidden;
+}
+
+.post-article-header {
+  padding: 1.5rem;
+  border-bottom: 1px solid $color-border;
+  background: linear-gradient(180deg, #FDFAF4 0%, white 100%);
+  position: relative;
+}
+
+// ── 3-dot menu button ─────────────────────────────────────────────────────────
+.post-3dot-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  color: #4E6A6A;
+  cursor: pointer;
+  transition: background-color 160ms $ease-out-fast, color 160ms $ease-out-fast;
+
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      background-color: rgba(69, 51, 45, 0.06);
+      color: $color-walnut;
+    }
+  }
+
+  &:active { transform: scale(0.93); }
+}
+
+// ── Buttons ───────────────────────────────────────────────────────────────────
+.post-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1.25rem;
+  border-radius: 0.5rem;
+  border: none;
+  background-color: $color-gold;
+  color: $color-cream;
+  font-family: $font-serif;
+  font-weight: 500;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: background-color 180ms $ease-out-fast, transform 150ms $ease-out-fast;
+
+  @media (hover: hover) and (pointer: fine) {
+    &:hover { background-color: $color-gold-dk; }
+  }
+
+  &:active { transform: scale(0.97); }
+  &:disabled { opacity: 0.5; cursor: not-allowed; }
+}
+
+.post-btn-secondary {
+  padding: 0.625rem 1.25rem;
+  border-radius: 0.5rem;
+  border: 1px solid $color-border;
+  color: $color-walnut;
+  background: white;
+  font-family: $font-serif;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 160ms $ease-out-fast, transform 150ms $ease-out-fast;
+
+  &:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  @media (hover: hover) and (pointer: fine) {
+    &:not(:disabled):hover { background-color: #F5F5F5; }
+  }
+
+  &:not(:disabled):active { transform: scale(0.97); }
 }
 
 .post-content {

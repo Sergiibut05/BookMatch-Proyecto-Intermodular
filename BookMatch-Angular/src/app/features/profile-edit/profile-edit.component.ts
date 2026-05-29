@@ -11,6 +11,7 @@ import {
 import { UsersService, UserProfile, UpdateProfileData } from '@core/services/users.service';
 import { AuthService } from '@core/services/auth.service';
 import { TranslateModule } from '@ngx-translate/core';
+import { PhoneInputComponent } from '@shared/components/phone-input/phone-input.component';
 
 function optionalProfilePhone(control: AbstractControl): ValidationErrors | null {
   const v = String(control.value ?? '').trim();
@@ -25,7 +26,7 @@ function optionalProfilePhone(control: AbstractControl): ValidationErrors | null
  */
 @Component({
   selector: 'app-profile-edit',
-  imports: [CommonModule, ReactiveFormsModule, TranslateModule],
+  imports: [CommonModule, ReactiveFormsModule, TranslateModule, PhoneInputComponent],
   templateUrl: './profile-edit.component.html',
   styleUrl: './profile-edit.component.scss',
 })
