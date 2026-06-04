@@ -402,12 +402,10 @@ export class AiChatComponent implements OnInit, AfterViewChecked {
     const title = draft.title || 'Playlist creada en el chat';
     const description = draft.description || (aiPrompt ? `Generada en el chat: "${aiPrompt.slice(0, 140)}"` : null);
 
-    // Portada generada por IA: misma receta que usa n8n para las playlists
-    // generadas "en un paso" (Pollinations / modelo flux). La frase de prompt
-    // se construye a partir del título del borrador para que la imagen
-    // encaje temáticamente. Si Pollinations falla, el backend simplemente
-    // guarda la playlist sin portada (coverUrl es opcional).
-    const coverUrl = this.buildAiCoverUrl(title);
+    // Portada: usa la del primer libro del borrador (ya cargada en booksById).
+    // Pollinations.ai ha dejado de ser gratuito (error 402), así que reutilizamos
+    // la portada real del libro para mantener coherencia visual.
+    const coverUrl = this.getDraftFirstBookCover(draft);
 
     try {
       const playlist = await firstValueFrom(
@@ -422,10 +420,14 @@ export class AiChatComponent implements OnInit, AfterViewChecked {
         }),
       );
       this.showSavedPlaylistToast(playlist.id, playlist.title);
-      // Una vez guardada, cerramos el panel y salimos del modo playlist:
-      // el usuario normalmente querrá seguir con otra cosa.
       this.playlistPanelOpen.set(false);
       this.manualDraftOverride.set(null);
+
+      // Genera portada IA en background: el servidor llama a OpenRouter + Cloudinary
+      // y actualiza la playlist. El usuario verá la portada cuando abra la playlist.
+      this.playlistService.generateCover(playlist.id).subscribe({
+        error: (err) => console.warn('[ai-chat] portada IA no disponible:', err),
+      });
     } catch (err) {
       console.error('[ai-chat] error guardando playlist del borrador', err);
       window.alert('No se ha podido guardar la playlist.');
@@ -435,28 +437,17 @@ export class AiChatComponent implements OnInit, AfterViewChecked {
   }
 
   /**
-   * Construye una URL de Pollinations (modelo flux) para usar como portada
-   * de la playlist. Es el mismo proveedor que usa el workflow de n8n para
-   * las generaciones one-shot, así la estética queda consistente entre los
-   * dos flujos (chat en modo playlist vs. "generar con IA" normal).
-   *
-   * @param title Título del borrador; se usa como seed estilística.
-   * @returns URL absoluta estable (usa un seed derivado del título).
+   * Devuelve la portada del primer libro del borrador como coverUrl de la playlist.
+   * Pollinations.ai ya no es gratuito (error 402 / x402), así que usamos la
+   * portada real del primer libro en lugar de generar una imagen por IA.
+   * Si el libro no está cargado aún, devuelve null (el backend acepta coverUrl opcional).
    */
-  private buildAiCoverUrl(title: string): string {
-    const seed = Math.abs(this.hashCode(title)) % 10000;
-    const clean = title.trim().replace(/\s+/g, ' ').slice(0, 80);
-    const prompt = `book collection cover art, ${clean}, stylized vibrant painterly minimalist no text no letters`;
-    return `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=800&height=800&nologo=true&model=flux&seed=${seed}`;
-  }
-
-  /** Hash determinista estable para construir seeds desde el título. */
-  private hashCode(s: string): number {
-    let h = 0;
-    for (let i = 0; i < s.length; i++) {
-      h = ((h << 5) - h + s.charCodeAt(i)) | 0;
+  private getDraftFirstBookCover(draft: PlaylistDraft): string | null {
+    for (const item of draft.items) {
+      const cover = this.booksById().get(item.catalogBookId)?.coverUrl;
+      if (cover) return cover;
     }
-    return h;
+    return null;
   }
 
   /** Comprueba auth, carga conversaciones y deja mensajes vacíos. */

@@ -23,6 +23,8 @@ export const env = {
   N8N_WEBHOOK_PLAYLIST_URL: process.env.N8N_WEBHOOK_PLAYLIST_URL?.trim() || '',
   /** Secret compartido entre backend y n8n para el callback `POST /api/playlists/:id/ai-complete`. */
   N8N_CALLBACK_SECRET: process.env.N8N_CALLBACK_SECRET?.trim() || '',
+  /** API Key de OpenRouter para generación de portadas IA (FLUX Schnell). Opcional: sin ella se omite la generación. */
+  OPENROUTER_API_KEY: process.env.OPENROUTER_API_KEY?.trim() || '',
   /**
    * Demo / presentación: ms hasta auto-aceptar trueques PROPOSED cuyo receptor es usuario seed
    * (`trade_seed_*` o `seed_*`). 0 o ausente = desactivado.

@@ -16,7 +16,7 @@
     {
       "parameters": {
         "workflowInputs": {
-          "values": [{ "name": "input" }]
+          "values": [{ "name": "input" }, { "name": "books" }]
         }
       },
       "type": "n8n-nodes-base.executeWorkflowTrigger",
@@ -28,7 +28,7 @@
     {
       "parameters": {
         "mode": "runOnceForAllItems",
-        "jsCode": "// Valida el input básico antes de ir a la BD\nconst raw = $input.first().json.input;\nconst inp = typeof raw === 'string' ? JSON.parse(raw) : (raw || $input.first().json);\nlet books = inp.books;\nif (!Array.isArray(books)) {\n  // Puede llegar como string JSON si el agente lo serializa\n  try { books = JSON.parse(String(books)); } catch { books = []; }\n}\n\nif (!Array.isArray(books) || books.length === 0) {\n  throw new Error('books debe ser un array no vacío');\n}\n\n// Limitar a máx 5 por llamada\nbooks = books.slice(0, 5);\n\nconst validated = [];\nconst skipped = [];\n\nfor (const b of books) {\n  const title = typeof b.title === 'string' ? b.title.trim() : '';\n  const author = typeof b.author === 'string' ? b.author.trim() : '';\n  const isbn = typeof b.isbn === 'string' ? b.isbn.trim().replace(/[^0-9X]/gi, '') : '';\n  const description = typeof b.description === 'string' ? b.description.slice(0, 2000) : null;\n  const coverUrl = typeof b.coverUrl === 'string' ? b.coverUrl.trim() : '';\n  const categoryNames = Array.isArray(b.categoryNames)\n    ? b.categoryNames.filter(c => typeof c === 'string' && c.trim()).map(c => c.trim())\n    : [];\n\n  if (!title) { skipped.push({ title: b.title || '?', reason: 'título vacío' }); continue; }\n  if (!author) { skipped.push({ title, reason: 'autor vacío' }); continue; }\n  if (isbn.length !== 10 && isbn.length !== 13) { skipped.push({ title, reason: `ISBN inválido: ${isbn}` }); continue; }\n  if (!coverUrl.startsWith('https://')) { skipped.push({ title, reason: 'coverUrl no HTTPS' }); continue; }\n\n  validated.push({ title, author, isbn, description, coverUrl, categoryNames });\n}\n\nreturn [{ json: { validated, skipped } }];"
+        "jsCode": "const trigger = $input.first().json;\n// Soporta dos modos: parámetro directo 'books' (string) o parámetro 'input' (JSON string con {books:[...]})\nlet books;\nif (trigger.books !== undefined) {\n  const raw = trigger.books;\n  if (Array.isArray(raw)) {\n    books = raw;\n  } else {\n    try { books = JSON.parse(String(raw)); } catch { books = []; }\n  }\n} else if (trigger.input !== undefined) {\n  const raw = trigger.input;\n  const inp = typeof raw === 'string' ? JSON.parse(raw) : (raw || trigger);\n  books = inp.books;\n  if (!Array.isArray(books)) {\n    try { books = JSON.parse(String(books)); } catch { books = []; }\n  }\n} else {\n  books = [];\n}\n\nif (!Array.isArray(books) || books.length === 0) throw new Error('books debe ser un array no vacío');\nbooks = books.slice(0, 5);\nconst validated = [];\nconst skipped = [];\nfor (const b of books) {\n  const title = typeof b.title === 'string' ? b.title.trim() : '';\n  const author = typeof b.author === 'string' ? b.author.trim() : '';\n  const isbn = typeof b.isbn === 'string' ? b.isbn.trim().replace(/[^0-9X]/gi, '') : '';\n  const description = typeof b.description === 'string' ? b.description.slice(0, 2000) : null;\n  const coverUrl = typeof b.coverUrl === 'string' ? b.coverUrl.trim() : '';\n  const categoryNames = Array.isArray(b.categoryNames) ? b.categoryNames.filter(c => typeof c === 'string' && c.trim()).map(c => c.trim()) : [];\n  if (!title) { skipped.push({ title: b.title || '?', reason: 'título vacío' }); continue; }\n  if (!author) { skipped.push({ title, reason: 'autor vacío' }); continue; }\n  if (isbn.length !== 10 && isbn.length !== 13) { skipped.push({ title, reason: `ISBN inválido: ${isbn}` }); continue; }\n  if (!coverUrl.startsWith('https://')) { skipped.push({ title, reason: 'coverUrl no HTTPS' }); continue; }\n  validated.push({ title, author, isbn, description, coverUrl, categoryNames });\n}\nreturn [{ json: { validated, skipped } }];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -39,7 +39,7 @@
     {
       "parameters": {
         "mode": "runOnceForAllItems",
-        "jsCode": "// Valida coverUrl con HEAD y filtra ISBNs ya existentes en la BD\nconst data = $input.first().json;\nconst { validated, skipped } = data;\n\nasync function validateCoverUrl(url) {\n  try {\n    const resp = await fetch(url, { method: 'HEAD', signal: AbortSignal.timeout(7000) });\n    if (!resp.ok) return { ok: false, reason: `HTTP ${resp.status}` };\n    const ct = resp.headers.get('content-type') || '';\n    if (!ct.startsWith('image/')) return { ok: false, reason: `content-type: ${ct}` };\n    const cl = parseInt(resp.headers.get('content-length') || '0', 10);\n    if (cl > 0 && cl < 15000) return { ok: false, reason: `imagen demasiado pequeña (${cl} bytes)` };\n    return { ok: true };\n  } catch (e) {\n    return { ok: false, reason: e.message || 'timeout' };\n  }\n}\n\nconst ready = [];\nconst newSkipped = [...skipped];\n\nfor (const b of validated) {\n  const result = await validateCoverUrl(b.coverUrl);\n  if (!result.ok) {\n    newSkipped.push({ title: b.title, reason: `portada rechazada: ${result.reason}` });\n  } else {\n    ready.push(b);\n  }\n}\n\nreturn [{ json: { ready, skipped: newSkipped } }];"
+        "jsCode": "// Skip HEAD validation — fetch() is not available in Code node sandbox.\n// Books from search_external_books already have coverAvailable:true.\n// Only require HTTPS (already validated in Validar Input).\nconst data = $input.first().json;\nconst { validated, skipped } = data;\n\nconst ready = validated.filter(b => b.coverUrl && b.coverUrl.startsWith('https://'));\nconst newSkipped = [...skipped];\n\nfor (const b of validated) {\n  if (!b.coverUrl || !b.coverUrl.startsWith('https://')) {\n    newSkipped.push({ title: b.title, reason: 'coverUrl no HTTPS' });\n  }\n}\n\nreturn [{ json: { ready, skipped: newSkipped } }];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -50,7 +50,7 @@
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "=SELECT isbn FROM catalog_books WHERE isbn = ANY(ARRAY[{{ $json.ready.map(b => `'${b.isbn.replace(/'/g, \"''\")}' `).join(',') }}]);",
+        "query": "={{ $json.ready.length === 0 ? \"SELECT '[]'::json AS existing_isbns\" : `SELECT COALESCE(json_agg(isbn), '[]'::json) AS existing_isbns FROM catalog_books WHERE isbn = ANY(ARRAY[${$json.ready.map(b => \"'\" + b.isbn.replace(/'/g, \"''\") + \"'\").join(',')}])` }}",
         "options": {}
       },
       "type": "n8n-nodes-base.postgres",
@@ -69,7 +69,7 @@
     {
       "parameters": {
         "mode": "runOnceForAllItems",
-        "jsCode": "// Filtra los que ya tienen ISBN en la BD\nconst coverData = $('Validar Portadas').first().json;\nconst isbnRows = $input.all();\n\nconst existingIsbns = new Set(\n  isbnRows\n    .map(r => r.json?.isbn)\n    .filter(Boolean)\n    .map(String)\n);\n\nconst toInsert = [];\nconst skipped = [...coverData.skipped];\n\nfor (const b of coverData.ready) {\n  if (existingIsbns.has(b.isbn)) {\n    skipped.push({ title: b.title, reason: `ISBN ${b.isbn} ya existe en catálogo` });\n  } else {\n    toInsert.push(b);\n  }\n}\n\nreturn [{ json: { toInsert, skipped } }];"
+        "jsCode": "const coverData = $('Validar Portadas').first().json;\nconst isbnRow = $input.first().json;\nconst existingIsbnArr = Array.isArray(isbnRow.existing_isbns) ? isbnRow.existing_isbns : [];\nconst existingIsbns = new Set(existingIsbnArr.filter(Boolean).map(String));\n\nconst toInsert = [];\nconst skipped = [...coverData.skipped];\n\nfor (const b of coverData.ready) {\n  if (existingIsbns.has(b.isbn)) {\n    skipped.push({ title: b.title, reason: `ISBN ${b.isbn} ya existe en catálogo` });\n  } else {\n    toInsert.push(b);\n  }\n}\n\nreturn [{ json: { toInsert, skipped } }];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,

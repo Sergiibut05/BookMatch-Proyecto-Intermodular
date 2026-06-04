@@ -3,195 +3,241 @@
   "nodes": [
     {
       "parameters": {
-        "content": "# BookMatch — Generate Playlist AI Agent v2\n\n**Modelo:** OpenRouter → Gemini 2.5 Flash\n**Tools:** search_catalog_books, search_external_books, add_books_to_catalog, get_categories\n**Sin memoria** (one-shot)\n\n**Flujo:**\n1. Webhook recibe prompt del backend\n2. Respond 202\n3. Validar Payload\n4. AI Agent construye la playlist usando tools\n5. Generar Portada (Pollinations 1024x1024)\n6. Callback al backend (`POST /api/playlists/:id/ai-complete`)",
-        "height": 220,
-        "width": 520
-      },
-      "type": "n8n-nodes-base.stickyNote",
-      "typeVersion": 1,
-      "position": [-400, -340],
-      "id": "sticky-playlist",
-      "name": "Documentación"
-    },
-    {
-      "parameters": {
         "httpMethod": "POST",
         "path": "playlist-generate",
         "responseMode": "responseNode",
         "options": {}
       },
+      "id": "767da5a5-e97e-491c-a584-e0a8610e5ce2",
+      "name": "Webhook",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2.1,
-      "position": [-320, 96],
-      "id": "webhook-playlist",
-      "name": "Webhook",
-      "webhookId": "playlist-generate-webhook"
+      "position": [224, 304],
+      "webhookId": "21534bf6-0cc8-4a76-a911-c10a15c174d9"
     },
     {
       "parameters": {
         "respondWith": "json",
-        "responseBody": "{\n  \"success\": true,\n  \"message\": \"Generando playlist...\"\n}",
+        "responseBody": "{\"success\":true,\"message\":\"Generando playlist...\"}",
         "options": { "responseCode": 202 }
       },
+      "id": "respond-202",
+      "name": "Respond 202",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.5,
-      "position": [-80, -48],
-      "id": "respond-202",
-      "name": "Respond 202"
+      "position": [448, 160]
     },
     {
       "parameters": {
         "mode": "runOnceForEachItem",
-        "jsCode": "// ============================================================\n// Validar Payload\n// ------------------------------------------------------------\n// Mismo contrato que v1: { playlistId, userId, prompt, size,\n// genres, mood, language, catalogSample, callbackUrl, callbackSecret }\n// ============================================================\n\nconst payload = $json.body;\nif (!payload) throw new Error('Request body is missing');\n\nconst { playlistId, userId, prompt, size, genres, mood, language,\n  catalogSample, callbackUrl, callbackSecret } = payload;\n\nif (!Number.isInteger(playlistId) || playlistId <= 0)\n  throw new Error(`playlistId inválido: ${playlistId}`);\nif (!Number.isInteger(userId) || userId <= 0)\n  throw new Error(`userId inválido: ${userId}`);\nif (!prompt || typeof prompt !== 'string' || prompt.length < 5)\n  throw new Error('prompt vacío o demasiado corto');\nif (!callbackUrl || typeof callbackUrl !== 'string' || !/^https?:\\/\\//.test(callbackUrl))\n  throw new Error(`callbackUrl inválido: ${callbackUrl}`);\nif (!Array.isArray(catalogSample) || catalogSample.length === 0)\n  throw new Error('catalogSample vacío');\n\nconst safeSample = catalogSample\n  .filter(b => Number.isInteger(b?.id) && typeof b?.title === 'string')\n  .slice(0, 80);\n\nconst allowedIds = safeSample.map(b => b.id);\nconst targetSize = Number.isInteger(size) ? Math.max(3, Math.min(25, size)) : 8;\n\n// Construir el input del agente\nconst sampleList = safeSample\n  .map(b => `- [${b.id}] ${b.title}${b.author ? ' — ' + b.author : ''}`)\n  .join('\\n');\n\nconst genreStr = Array.isArray(genres) && genres.length > 0 ? genres.slice(0, 10).join(', ') : 'no especificados';\nconst moodStr = typeof mood === 'string' && mood ? mood.slice(0, 80) : 'no especificado';\nconst lang = typeof language === 'string' ? language.slice(0, 20) : 'es';\n\nconst agentInput = `Genera una playlist de lectura coherente y atractiva.\n\nPETICIÓN DEL USUARIO:\n\"${prompt.trim()}\"\n\nGéneros preferidos: ${genreStr}\nEstado de ánimo / vibra: ${moodStr}\nTamaño deseado: ${targetSize} libros\nIdioma de respuesta: ${lang}\n\nCATÁLOGO EXISTENTE (IDs ya confirmados — úsalos si encajan):\n${sampleList}\n\nplaylistId: ${playlistId}`;\n\nreturn {\n  playlistId, userId, prompt: prompt.trim(),\n  size: targetSize,\n  genres: Array.isArray(genres) ? genres.slice(0, 10) : [],\n  mood: moodStr,\n  language: lang,\n  catalogSample: safeSample,\n  allowedIds,\n  callbackUrl,\n  callbackSecret: callbackSecret || null,\n  agentInput,\n  startTime: Date.now()\n};"
+        "jsCode": "const p = $json.body || {};\nconst { playlistId, userId, prompt, size, genres, mood, language, catalogSample, callbackUrl, callbackSecret } = p;\nif (!Number.isInteger(playlistId) || playlistId <= 0) throw new Error(`playlistId inválido: ${playlistId}`);\nif (!Number.isInteger(userId) || userId <= 0) throw new Error(`userId inválido: ${userId}`);\nif (!prompt || typeof prompt !== 'string' || prompt.length < 3) throw new Error('prompt vacío');\nif (!callbackUrl || !/^https?:\\/\\//.test(callbackUrl)) throw new Error(`callbackUrl inválido: ${callbackUrl}`);\nif (!Array.isArray(catalogSample) || catalogSample.length === 0) throw new Error('catalogSample vacío');\nconst safeSample = catalogSample.filter(b => Number.isInteger(b?.id) && typeof b?.title === 'string').slice(0, 80);\nconst targetSize = Number.isInteger(size) ? Math.max(3, Math.min(25, size)) : 8;\nconst genreStr = Array.isArray(genres) && genres.length ? genres.slice(0,10).join(', ') : 'no especificados';\nconst moodStr = typeof mood === 'string' && mood ? mood.slice(0,80) : 'no especificado';\nconst lang = typeof language === 'string' ? language.slice(0,10) : 'es';\nconst sampleList = safeSample.map(b => `- [${b.id}] ${b.title}${b.author ? ' — '+b.author : ''}`).join('\\n');\nconst agentInput = `Genera una playlist de lectura para la siguiente petición.\\n\\nPETICIÓN: \"${prompt.trim()}\"\\nGéneros preferidos: ${genreStr}\\nVibra/mood: ${moodStr}\\nTamaño deseado: ${targetSize} libros\\nIdioma respuesta: ${lang}\\n\\nCATÁLOGO EXISTENTE (IDs confirmados — úsalos si encajan):\\n${sampleList}\\n\\nplaylistId: ${playlistId}`;\nreturn { playlistId, userId, prompt: prompt.trim(), size: targetSize, genres: Array.isArray(genres)?genres.slice(0,10):[], mood: moodStr, language: lang, catalogSample: safeSample, callbackUrl, callbackSecret: callbackSecret||null, agentInput, startTime: Date.now() };"
       },
+      "id": "code-validate-payload",
+      "name": "Validar Payload",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [-80, 176],
-      "id": "code-validate-payload",
-      "name": "Validar Payload"
+      "position": [448, 304]
     },
     {
       "parameters": {
         "promptType": "define",
         "text": "={{ $json.agentInput }}",
-        "systemMessage": "Eres BookMatch, experto en curar playlists de lectura de alta calidad.\nTu objetivo es crear UNA playlist coherente, bien seleccionada y atractiva para el usuario.\n\n## PROCESO OBLIGATORIO\n1. Usa `get_categories` para conocer las categorías disponibles.\n2. Usa `search_catalog_books` con las categorías y texto relevantes para el prompt.\n   - Si el catálogo ya tiene el suficiente número de libros relevantes → úsalos directamente.\n   - El CATÁLOGO EXISTENTE en el prompt ya son IDs confirmados. Si encajan, inclúyelos directamente SIN buscar.\n3. Si necesitas más libros relevantes (tienes < size libros que encajen):\n   - Prueba con categorías más amplias en `search_catalog_books`.\n   - Si sigue sin haber suficientes, usa `search_external_books`.\n   - Con los resultados externos que tengan `coverAvailable:true`, usa `add_books_to_catalog`.\n4. NUNCA uses un `catalogBookId` que no hayas obtenido de una tool o del CATÁLOGO EXISTENTE del prompt.\n\n## REGLAS DE CALIDAD\n- La playlist debe ser COHERENTE: todos los libros deben encajar temáticamente con el prompt.\n- No incluyas libros solo por disponibilidad si no encajan con el género/mood pedido.\n- Mejor 4 libros perfectos que 8 mediocres.\n- La nota de cada libro (`note`) debe explicar en 1 frase por qué encaja en ESTA playlist concreta.\n\n## OUTPUT JSON ESTRICTO (sin ```json, sin texto extra)\n{\n  \"title\": \"Título evocador de la playlist (máx 80 chars, sin puntuación final)\",\n  \"description\": \"1-2 frases sobre la vibra y el hilo conductor (máx 400 chars)\",\n  \"items\": [\n    { \"catalogBookId\": 12, \"note\": \"Frase corta sobre por qué encaja (máx 20 palabras)\" }\n  ],\n  \"status\": \"success\"\n}\n- items: entre 3 y size libros, ordenados de mejor a peor encaje con el prompt.\n- catalogBookId: solo IDs obtenidos de tools o del CATÁLOGO EXISTENTE.\n- Si no puedes generar una playlist válida: { \"status\": \"error\", \"errorMessage\": \"explicación\", \"items\": [] }",
-        "options": {
-          "maxIterations": 5,
-          "returnIntermediateSteps": false
-        }
+        "options": { "maxIterations": 5 }
       },
+      "id": "agent-playlist",
+      "name": "AI Agent Playlist",
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 1.7,
-      "position": [160, 176],
-      "id": "agent-playlist",
-      "name": "AI Agent · Playlist"
-    },
-    {
+      "position": [608, 256],
       "parameters": {
-        "model": "google/gemini-2.5-flash",
+        "promptType": "define",
+        "text": "={{ $json.agentInput }}",
         "options": {
-          "temperature": 0.5,
-          "maxTokens": 1500,
-          "responseFormat": "json_object"
-        }
-      },
-      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
-      "typeVersion": 1,
-      "position": [160, 360],
-      "id": "lm-openrouter-playlist",
-      "name": "OpenRouter · Gemini 2.5 Flash",
-      "credentials": {
-        "openRouterApi": {
-          "id": "OPENROUTER_CREDENTIAL_ID",
-          "name": "OpenRouter account"
+          "maxIterations": 5,
+          "systemMessage": "Eres BookMatch, experto en curar playlists de lectura.\n\nREGLA ABSOLUTA: devuelve SOLO JSON puro y valido, SIN texto adicional, SIN markdown, SIN prosa, SIN listas.\n\nESQUEMA OBLIGATORIO (sin ```json, sin nada extra):\n{\"title\":\"Titulo evocador max 80 chars\",\"description\":\"1-2 frases max 400 chars\",\"items\":[{\"catalogBookId\":12,\"note\":\"Por que encaja max 20 palabras\"}],\"status\":\"success\"}\n\nPROCESO:\n1. get_categories para conocer categorias.\n2. search_catalog_books con texto y categorias del prompt.\n3. Si hay menos libros que size -> search_external_books.\n4. Libros externos con coverAvailable:true -> add_books_to_catalog.\n5. Solo usa catalogBookIds de las tools o del CATALOGO EXISTENTE.\n6. Todos los libros deben encajar tematicamente.\n7. Entre 3 y size libros ordenados por encaje.\n\nPara error: {\"status\":\"error\",\"errorMessage\":\"descripcion breve\",\"items\":[]}"
         }
       }
     },
     {
       "parameters": {
-        "name": "search_catalog_books",
-        "description": "Busca libros en el catálogo de BookMatch con filtros de texto libre y categorías. Input: { query?: string, categories?: string[], limit?: number }",
-        "workflowId": {
-          "__rl": true,
-          "value": "TOOL_SEARCH_CATALOG_ID",
-          "mode": "id"
-        },
-        "workflowValues": {
-          "values": [
-            { "name": "query", "value": "={{ /*n8n-auto-generated-fromAI*/ $fromAI('query', 'Texto libre para buscar libros', 'string') }}" },
-            { "name": "categories", "value": "={{ /*n8n-auto-generated-fromAI*/ $fromAI('categories', 'Array de nombres exactos de categorías', 'json') }}" },
-            { "name": "limit", "value": "={{ /*n8n-auto-generated-fromAI*/ $fromAI('limit', 'Número máximo de resultados (1-20)', 'number') }}" }
-          ]
-        }
+        "model": "google/gemini-2.5-flash",
+        "options": { "maxTokens": 1500, "temperature": 0.5 }
       },
-      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
-      "typeVersion": 2,
-      "position": [380, 340],
-      "id": "tool-pl-search-catalog",
-      "name": "Tool: search_catalog_books"
-    },
-    {
-      "parameters": {
-        "name": "search_external_books",
-        "description": "Busca libros en Open Library + Google Books cuando el catálogo no tiene suficientes. Solo úsala si search_catalog_books devolvió < size libros relevantes. Input: { query: string, language?: string, limit?: number }",
-        "workflowId": {
-          "__rl": true,
-          "value": "TOOL_SEARCH_EXTERNAL_ID",
-          "mode": "id"
-        },
-        "workflowValues": {
-          "values": [
-            { "name": "query", "value": "={{ /*n8n-auto-generated-fromAI*/ $fromAI('query', 'Búsqueda externa de libros', 'string') }}" },
-            { "name": "language", "value": "={{ /*n8n-auto-generated-fromAI*/ $fromAI('language', 'Código de idioma: spa, eng', 'string') }}" },
-            { "name": "limit", "value": "={{ /*n8n-auto-generated-fromAI*/ $fromAI('limit', 'Máximo de resultados (1-8)', 'number') }}" }
-          ]
-        }
-      },
-      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
-      "typeVersion": 2,
-      "position": [500, 340],
-      "id": "tool-pl-search-external",
-      "name": "Tool: search_external_books"
-    },
-    {
-      "parameters": {
-        "name": "add_books_to_catalog",
-        "description": "Inserta libros externos en el catálogo con portada real validada. SOLO úsala con libros de search_external_books que tengan coverAvailable:true. Input: { books: [{ title, author, isbn, description, coverUrl, categoryNames[] }] }",
-        "workflowId": {
-          "__rl": true,
-          "value": "TOOL_ADD_BOOKS_ID",
-          "mode": "id"
-        },
-        "workflowValues": {
-          "values": [
-            { "name": "books", "value": "={{ /*n8n-auto-generated-fromAI*/ $fromAI('books', 'Array de libros a insertar', 'json') }}" }
-          ]
-        }
-      },
-      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
-      "typeVersion": 2,
-      "position": [620, 340],
-      "id": "tool-pl-add-books",
-      "name": "Tool: add_books_to_catalog"
+      "id": "lm-openrouter-pl",
+      "name": "OpenRouter Gemini Flash PL",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [448, 512],
+      "credentials": {
+        "openRouterApi": { "id": "K8rvQyznCDBSwhWp", "name": "OpenRouter account" }
+      }
     },
     {
       "parameters": {
         "name": "get_categories",
-        "description": "Devuelve todas las categorías disponibles del catálogo. Úsala primero para conocer los nombres exactos. Sin parámetros.",
-        "workflowId": {
-          "__rl": true,
-          "value": "TOOL_CATEGORIES_ID",
-          "mode": "id"
-        },
-        "workflowValues": { "values": [] }
+        "description": "Devuelve todas las categorías del catálogo. Sin parámetros.",
+        "workflowId": { "__rl": true, "value": "pbf7FbYMjIA5sBEs", "mode": "id" }
       },
+      "id": "tool-pl-categories",
+      "name": "Tool PL get_categories",
       "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
       "typeVersion": 2,
-      "position": [740, 340],
-      "id": "tool-pl-categories",
-      "name": "Tool: get_categories"
+      "position": [944, 512]
+    },
+    {
+      "parameters": {
+        "name": "search_catalog_books",
+        "description": "Busca libros en el catálogo interno. Input: { query?, categories?, limit? }",
+        "workflowId": { "__rl": true, "value": "xeSYilX38SYpnD1g", "mode": "id" },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "query": "={{ $fromAI('query', 'Texto libre para buscar libros: título, autor o género. Puede ir vacío si solo buscas por categoría.', 'string', '') }}",
+            "categories": "={{ $fromAI('categories', 'Array de nombres exactos de categorías del catálogo', 'json') }}",
+            "limit": "={{ $fromAI('limit', 'Número máximo de resultados (1-20), por defecto 8', 'number', 8) }}"
+          },
+          "schema": [
+            { "id": "query", "type": "string", "displayName": "query", "required": false, "defaultMatch": false },
+            { "id": "categories", "type": "any", "displayName": "categories", "required": false, "defaultMatch": false },
+            { "id": "limit", "type": "number", "displayName": "limit", "required": false, "defaultMatch": false }
+          ]
+        }
+      },
+      "id": "tool-pl-search-catalog",
+      "name": "Tool PL search_catalog_books",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2,
+      "position": [784, 512]
+    },
+    {
+      "parameters": {
+        "name": "search_external_books",
+        "description": "Busca libros externos (Open Library + Google Books) cuando el catálogo interno no tiene suficientes. Input: { query: string, language?, limit? }",
+        "workflowId": { "__rl": true, "value": "s2BtZ2ybVY2nFhpa", "mode": "id" },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "query": "={{ $fromAI('query', 'Búsqueda de libros externos por título, autor o género', 'string') }}",
+            "language": "={{ $fromAI('language', 'Código de idioma: spa (español) o eng (inglés)', 'string') }}",
+            "limit": "={{ $fromAI('limit', 'Máximo de resultados (1-8), por defecto 5', 'number') }}"
+          },
+          "schema": [
+            { "id": "query", "type": "string", "displayName": "query", "required": true, "defaultMatch": false },
+            { "id": "language", "type": "string", "displayName": "language", "required": false, "defaultMatch": false },
+            { "id": "limit", "type": "number", "displayName": "limit", "required": false, "defaultMatch": false }
+          ]
+        }
+      },
+      "id": "tool-pl-search-ext",
+      "name": "Tool PL search_external_books",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2,
+      "position": [1104, 512]
+    },
+    {
+      "parameters": {
+        "name": "add_books_to_catalog",
+        "description": "Inserta libros externos en el catálogo. SOLO con coverAvailable:true. Input: { books: [{title,author,isbn,description,coverUrl,categoryNames[]}] }",
+        "workflowId": { "__rl": true, "value": "veyymEFxvwDUbSTP", "mode": "id" },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "books": "={{ $fromAI('books', 'JSON string con el array de libros a insertar. Cada elemento: {title, author, isbn, description, coverUrl, categoryNames[]}', 'string') }}"
+          },
+          "schema": [
+            { "id": "books", "type": "any", "displayName": "books", "required": true, "defaultMatch": false }
+          ]
+        }
+      },
+      "id": "tool-pl-add-books",
+      "name": "Tool PL add_books_to_catalog",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2,
+      "position": [1296, 512]
     },
     {
       "parameters": {
         "mode": "runOnceForEachItem",
-        "jsCode": "// ============================================================\n// Parsear Respuesta del AI Agent\n// ------------------------------------------------------------\n// Extrae el JSON del agente, valida catalogBookIds contra allowedIds\n// (IDs del catalogSample original + IDs recién insertados que el\n// backend ya tendrá cuando llegue el callback).\n// ============================================================\n\nconst prev = $('Validar Payload').item.json;\nconst agentOutput = $input.item.json.output || '';\n\nlet parsed = null;\ntry {\n  let clean = agentOutput.trim();\n  if (clean.startsWith('```')) {\n    clean = clean.replace(/^```(?:json)?\\n?/, '').replace(/\\n?```$/, '').trim();\n  }\n  parsed = JSON.parse(clean);\n} catch (err) {\n  return {\n    ...prev,\n    aiStatus: 'error',\n    aiErrorMessage: 'Respuesta del agente no es JSON válido: ' + (err?.message || err),\n    aiTitle: null,\n    aiDescription: null,\n    aiCoverUrl: null,\n    aiItems: []\n  };\n}\n\nif (!parsed || parsed.status === 'error') {\n  return {\n    ...prev,\n    aiStatus: 'error',\n    aiErrorMessage: parsed?.errorMessage || 'El agente indicó status:error',\n    aiTitle: null,\n    aiDescription: null,\n    aiCoverUrl: null,\n    aiItems: []\n  };\n}\n\n// Validar items: solo IDs que existan (el agente puede haber insertado nuevos\n// en add_books_to_catalog, esos IDs son válidos aunque no estén en allowedIds original)\nconst rawItems = Array.isArray(parsed.items) ? parsed.items : [];\nconst cleanItems = [];\nconst seen = new Set();\n\nfor (const it of rawItems) {\n  const id = Number(it?.catalogBookId);\n  if (!Number.isInteger(id) || id <= 0 || seen.has(id)) continue;\n  seen.add(id);\n  cleanItems.push({\n    catalogBookId: id,\n    position: cleanItems.length + 1,\n    note: typeof it?.note === 'string' ? it.note.slice(0, 500) : null\n  });\n  if (cleanItems.length >= prev.size) break;\n}\n\nif (cleanItems.length === 0) {\n  return {\n    ...prev,\n    aiStatus: 'error',\n    aiErrorMessage: 'El agente no devolvió items válidos',\n    aiTitle: null,\n    aiDescription: null,\n    aiCoverUrl: null,\n    aiItems: []\n  };\n}\n\nconst aiTitle = typeof parsed.title === 'string' ? parsed.title.slice(0, 100) : null;\nconst aiDescription = typeof parsed.description === 'string' ? parsed.description.slice(0, 2000) : null;\n\nreturn {\n  ...prev,\n  aiStatus: 'success',\n  aiErrorMessage: null,\n  aiTitle,\n  aiDescription,\n  aiItems: cleanItems,\n  processingTime: Date.now() - (prev.startTime || Date.now())\n};"
+        "jsCode": "const prev = $('Validar Payload').item.json;\nconst out = $input.item.json.output || '';\nlet parsed = null;\ntry { let c = out.trim(); if(c.startsWith('```')) c=c.replace(/^```(?:json)?\\n?/,'').replace(/\\n?```$/,'').trim(); parsed=JSON.parse(c); } catch { return { ...prev, aiStatus:'error', aiErrorMessage:'JSON inválido: '+out.slice(0,200), aiTitle:null, aiDescription:null, aiItems:[] }; }\nif (!parsed || parsed.status==='error') return { ...prev, aiStatus:'error', aiErrorMessage: parsed?.errorMessage||'El agente reportó error', aiTitle:null, aiDescription:null, aiItems:[] };\nconst items=[];\nconst seen=new Set();\nfor (const it of (parsed.items||[])) { const id=Number(it?.catalogBookId); if(!Number.isInteger(id)||id<=0||seen.has(id)) continue; seen.add(id); items.push({catalogBookId:id,position:items.length+1,note:it.note||null}); if(items.length>=prev.size) break; }\nif (items.length===0) return { ...prev, aiStatus:'error', aiErrorMessage:'Sin items válidos', aiTitle:null, aiDescription:null, aiItems:[] };\nreturn { ...prev, aiStatus:'success', aiErrorMessage:null, aiTitle: typeof parsed.title==='string'?parsed.title.slice(0,100):null, aiDescription: typeof parsed.description==='string'?parsed.description.slice(0,2000):null, aiItems:items, processingTime: Date.now()-(prev.startTime||Date.now()) };"
       },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [400, 176],
       "id": "code-parse-response",
-      "name": "Parsear Respuesta Agent"
-    },
-    {
-      "parameters": {
-        "mode": "runOnceForEachItem",
-        "jsCode": "// Genera la portada de la playlist con Pollinations (1024x1024)\n// Solo para la portada del AGREGADO (no de los libros individuales, esos tienen portadas reales)\nconst data = $input.item.json;\n\nconst coverPromptParts = [\n  'book collection cover art',\n  data.aiTitle || data.prompt.slice(0, 80),\n  Array.isArray(data.genres) && data.genres.length > 0 ? data.genres.slice(0, 3).join(' ') : '',\n  data.mood && data.mood !== 'no especificado' ? data.mood : '',\n  'stylized vibrant painterly minimalist no text no letters'\n].filter(Boolean);\n\nconst coverPrompt = coverPromptParts.join(', ').slice(0, 300);\nconst encoded = encodeURIComponent(coverPrompt);\n// Resolución mejorada a 1024x1024 para mayor calidad visual\nconst aiCoverUrl = `https://image.pollinations.ai/prompt/${encoded}?width=1024&height=1024&nologo=true&model=flux&seed=${data.playlistId}`;\n\nreturn { ...data, aiCoverUrl };"
-      },
+      "name": "Parsear Respuesta Agent",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [620, 176],
-      "id": "code-generate-cover",
-      "name": "Generar Portada Playlist"
+      "position": [928, 256]
+    },
+    {
+      "id": "code-prep-cover-prompt",
+      "name": "Preparar Prompt Portada",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1136, 256],
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const d = $input.item.json;\nconst parts = [\n  'book collection cover art',\n  d.aiTitle || d.prompt.slice(0, 80),\n  Array.isArray(d.genres) && d.genres.length > 0 ? d.genres.slice(0, 3).join(' ') : '',\n  d.mood && d.mood !== 'no especificado' ? d.mood : '',\n  'stylized vibrant painterly minimalist no text no letters'\n].filter(Boolean);\nconst coverPrompt = parts.join(', ').slice(0, 300);\nlet fallbackCover = null;\nif (Array.isArray(d.aiItems) && d.aiItems.length > 0 && Array.isArray(d.catalogSample)) {\n  const coverMap = new Map(d.catalogSample.map(b => [b.id, b.coverUrl || null]));\n  for (const item of d.aiItems) {\n    const cover = coverMap.get(item.catalogBookId);\n    if (cover) { fallbackCover = cover; break; }\n  }\n}\n// URL de Pollinations: Cloudinary la descarga desde sus propios servidores\nconst shortPrompt = coverPrompt.slice(0, 150);\nconst seed = Math.abs(shortPrompt.split('').reduce((a, c) => (a << 5) - a + c.charCodeAt(0), 0)) % 9999;\nconst pollinationsUrl = 'https://image.pollinations.ai/prompt/' + encodeURIComponent(shortPrompt) + '?width=512&height=512&model=flux&nologo=true&seed=' + seed;\nreturn { ...d, coverPrompt, fallbackCover, pollinationsUrl };"
+      }
+    },
+    {
+      "id": "http-openrouter-img",
+      "name": "HuggingFace Generar Imagen",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [1360, 256],
+      "continueOnFail": true,
+      "parameters": {
+        "method": "POST",
+        "url": "https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-schnell",
+        "authentication": "none",
+        "sendBody": true,
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "={{ 'Bearer ' + $env.HUGGINGFACE_API_TOKEN }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "specifyBody": "json",
+        "jsonBody": "={{ { inputs: $json.coverPrompt, parameters: { guidance_scale: 0, num_inference_steps: 4 } } }}",
+        "options": { "timeout": 60000, "response": { "response": { "responseFormat": "file", "outputPropertyName": "data" } } }
+      }
+    },
+    {
+      "id": "code-procesar-imagen",
+      "name": "Procesar Imagen",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1580, 256],
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const prev = $('Preparar Prompt Portada').item.json;\nconst binData = $input.item.binary;\nconst resp = $input.item.json;\n\n// 1) Respuesta binaria (HuggingFace)\nif (binData && binData.data && binData.data.data) {\n  const mimeType = binData.data.mimeType || 'image/png';\n  return { ...prev, uploadFile: 'data:' + mimeType + ';base64,' + binData.data.data, directUrl: null };\n}\n\n// 2) Respuesta JSON OpenAI-compatible (Together AI, etc.)\nif (resp && !resp.error && Array.isArray(resp.data) && resp.data[0]) {\n  const imgData = resp.data[0];\n  if (imgData.url && !imgData.b64_json) return { ...prev, uploadFile: imgData.url, directUrl: imgData.url };\n  if (imgData.b64_json) return { ...prev, uploadFile: 'data:image/png;base64,' + imgData.b64_json, directUrl: null };\n}\n\n// 3) Fallback: URL de Pollinations — Cloudinary la descarga desde sus servidores\nif (prev.pollinationsUrl) {\n  return { ...prev, uploadFile: prev.pollinationsUrl, directUrl: prev.pollinationsUrl };\n}\n\nreturn { ...prev, uploadFile: null, directUrl: null };"
+      }
+    },
+    {
+      "id": "http-cloudinary-upload",
+      "name": "Subir a Cloudinary",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [1800, 256],
+      "continueOnFail": true,
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.cloudinary.com/v1_1/dzn3jdbcp/image/upload",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { file: $json.uploadFile, upload_preset: 'bookmatch_playlists', folder: 'playlist-covers' } }}",
+        "options": { "timeout": 30000 }
+      }
+    },
+    {
+      "id": "code-finalizar-portada",
+      "name": "Finalizar Portada",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2020, 256],
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const prev = $('Procesar Imagen').item.json;\nconst cloudResp = $input.item.json;\nconst aiCoverUrl = cloudResp.secure_url || prev.directUrl || prev.fallbackCover || null;\nconst { uploadFile, directUrl, coverPrompt, fallbackCover, ...cleanPrev } = prev;\nreturn { ...cleanPrev, aiCoverUrl };"
+      }
     },
     {
       "parameters": {
@@ -206,25 +252,25 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ {\n  status: $json.aiStatus,\n  errorMessage: $json.aiErrorMessage,\n  title: $json.aiTitle,\n  description: $json.aiDescription,\n  coverUrl: $json.aiCoverUrl,\n  items: $json.aiItems\n} }}",
+        "jsonBody": "={{ { status: $json.aiStatus, errorMessage: $json.aiErrorMessage, title: $json.aiTitle, description: $json.aiDescription, coverUrl: $json.aiCoverUrl, items: $json.aiItems } }}",
         "options": { "timeout": 15000 }
       },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.3,
-      "position": [840, 176],
       "id": "http-callback-success",
-      "name": "Callback Backend (success)"
+      "name": "Callback Backend success",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [2240, 256]
     },
     {
       "parameters": {
         "mode": "runOnceForEachItem",
-        "jsCode": "const prev = $('Validar Payload').item.json;\nconst err = $json.error || $json;\nreturn {\n  ...prev,\n  aiStatus: 'error',\n  aiErrorMessage: (err?.message || 'Fallo en generación IA').slice(0, 500),\n  aiTitle: null,\n  aiDescription: null,\n  aiCoverUrl: null,\n  aiItems: []\n};"
+        "jsCode": "const prev = $('Validar Payload').item.json;\nconst err = $json.error || $json;\nreturn { ...prev, aiStatus:'error', aiErrorMessage:(err?.message||'Error en generación IA').slice(0,500), aiTitle:null, aiDescription:null, aiCoverUrl:null, aiItems:[] };"
       },
+      "id": "code-prepare-error-pl",
+      "name": "Preparar Error PL",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [400, 400],
-      "id": "code-prepare-error",
-      "name": "Preparar Error"
+      "position": [736, 656]
     },
     {
       "parameters": {
@@ -239,54 +285,74 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ {\n  status: 'error',\n  errorMessage: $json.aiErrorMessage,\n  title: null,\n  description: null,\n  items: []\n} }}",
+        "jsonBody": "={{ { status: 'error', errorMessage: $json.aiErrorMessage, title: null, description: null, items: [] } }}",
         "options": { "timeout": 15000 }
       },
+      "id": "http-callback-error",
+      "name": "Callback Backend error",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [620, 400],
-      "id": "http-callback-error",
-      "name": "Callback Backend (error)"
+      "position": [1088, 656]
     }
   ],
   "connections": {
     "Webhook": {
-      "main": [
-        [
-          { "node": "Respond 202", "type": "main", "index": 0 },
-          { "node": "Validar Payload", "type": "main", "index": 0 }
-        ]
-      ]
+      "main": [[
+        { "node": "Respond 202", "type": "main", "index": 0 },
+        { "node": "Validar Payload", "type": "main", "index": 0 }
+      ]]
     },
     "Validar Payload": {
-      "main": [[{ "node": "AI Agent · Playlist", "type": "main", "index": 0 }]]
+      "main": [[{ "node": "AI Agent Playlist", "type": "main", "index": 0 }]]
     },
-    "AI Agent · Playlist": {
+    "AI Agent Playlist": {
       "main": [
         [{ "node": "Parsear Respuesta Agent", "type": "main", "index": 0 }],
-        [{ "node": "Preparar Error", "type": "main", "index": 0 }]
+        [{ "node": "Preparar Error PL", "type": "main", "index": 0 }]
       ]
     },
     "Parsear Respuesta Agent": {
-      "main": [[{ "node": "Generar Portada Playlist", "type": "main", "index": 0 }]]
+      "main": [[{ "node": "Preparar Prompt Portada", "type": "main", "index": 0 }]]
     },
-    "Generar Portada Playlist": {
-      "main": [[{ "node": "Callback Backend (success)", "type": "main", "index": 0 }]]
+    "Preparar Prompt Portada": {
+      "main": [[{ "node": "OpenRouter Generar Imagen", "type": "main", "index": 0 }]]
     },
-    "Preparar Error": {
-      "main": [[{ "node": "Callback Backend (error)", "type": "main", "index": 0 }]]
+    "OpenRouter Generar Imagen": {
+      "main": [[{ "node": "Procesar Imagen", "type": "main", "index": 0 }]]
     },
-    "OpenRouter · Gemini 2.5 Flash": { "ai_languageModel": [[{ "node": "AI Agent · Playlist", "type": "ai_languageModel", "index": 0 }]] },
-    "Tool: search_catalog_books": { "ai_tool": [[{ "node": "AI Agent · Playlist", "type": "ai_tool", "index": 0 }]] },
-    "Tool: search_external_books": { "ai_tool": [[{ "node": "AI Agent · Playlist", "type": "ai_tool", "index": 0 }]] },
-    "Tool: add_books_to_catalog": { "ai_tool": [[{ "node": "AI Agent · Playlist", "type": "ai_tool", "index": 0 }]] },
-    "Tool: get_categories": { "ai_tool": [[{ "node": "AI Agent · Playlist", "type": "ai_tool", "index": 0 }]] }
+    "Procesar Imagen": {
+      "main": [[{ "node": "Subir a Cloudinary", "type": "main", "index": 0 }]]
+    },
+    "Subir a Cloudinary": {
+      "main": [[{ "node": "Finalizar Portada", "type": "main", "index": 0 }]]
+    },
+    "Finalizar Portada": {
+      "main": [[{ "node": "Callback Backend success", "type": "main", "index": 0 }]]
+    },
+    "Preparar Error PL": {
+      "main": [[{ "node": "Callback Backend error", "type": "main", "index": 0 }]]
+    },
+    "OpenRouter Gemini Flash PL": {
+      "ai_languageModel": [[{ "node": "AI Agent Playlist", "type": "ai_languageModel", "index": 0 }]]
+    },
+    "Tool PL get_categories": {
+      "ai_tool": [[{ "node": "AI Agent Playlist", "type": "ai_tool", "index": 0 }]]
+    },
+    "Tool PL search_catalog_books": {
+      "ai_tool": [[{ "node": "AI Agent Playlist", "type": "ai_tool", "index": 0 }]]
+    },
+    "Tool PL search_external_books": {
+      "ai_tool": [[{ "node": "AI Agent Playlist", "type": "ai_tool", "index": 0 }]]
+    },
+    "Tool PL add_books_to_catalog": {
+      "ai_tool": [[{ "node": "AI Agent Playlist", "type": "ai_tool", "index": 0 }]]
+    }
   },
   "settings": {
     "executionOrder": "v1",
-    "availableInMCP": false
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "saveManualExecutions": true
   },
-  "meta": {
-    "description": "Generate Playlist v2 — AI Agent con OpenRouter (Gemini 2.5 Flash), 4 tools, auto-alta de libros y portada Pollinations 1024x1024."
-  }
+  "meta": { "templateCredsSetupCompleted": true }
 }

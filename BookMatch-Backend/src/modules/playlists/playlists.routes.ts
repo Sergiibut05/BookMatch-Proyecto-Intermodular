@@ -28,6 +28,7 @@ import {
   unsharePlaylistCtrl,
   getSharedPlaylistCtrl,
   exportPlaylistCtrl,
+  generatePlaylistCoverCtrl,
 } from './playlists.controller.js';
 
 /**
@@ -438,6 +439,8 @@ router.post(
   validate(aiCompletePlaylistSchema),
   aiCompletePlaylistCtrl,
 );
+
+router.post('/:id/generate-cover', auth, generatePlaylistCoverCtrl);
 
 // ============================================================
 // H1.4 · Compartir / exportar (SCRUM-163)

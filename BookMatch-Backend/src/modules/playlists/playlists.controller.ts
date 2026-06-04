@@ -23,6 +23,7 @@ import {
 } from './playlists.service.js';
 import { getPlaylistsQuerySchema } from './playlists.schema.js';
 import { env } from '../../config/env.js';
+import { buildPlaylistCoverPrompt, generateAndUploadCover } from '../../utils/cover-generation.js';
 
 function requireUserId(req: Request, res: Response): number | null {
   const userId = req.user?.id;
@@ -351,6 +352,35 @@ export async function getSharedPlaylistCtrl(req: Request, res: Response) {
     res.json(playlist);
   } catch (error: any) {
     handleError(error, res);
+  }
+}
+
+/**
+ * POST /api/playlists/:id/generate-cover
+ * Genera una portada IA con OpenRouter FLUX Schnell y la sube a Cloudinary.
+ * Responde 202 inmediatamente; la portada se actualiza en background.
+ */
+export async function generatePlaylistCoverCtrl(req: Request, res: Response) {
+  const userId = requireUserId(req, res);
+  if (!userId) return;
+
+  const id = parseIntParam(req.params.id, res, 'ID de playlist');
+  if (!id) return;
+
+  try {
+    const playlist = await getPlaylistById(id, userId);
+    if (!playlist) return res.status(404).json({ message: 'Playlist no encontrada' });
+
+    res.status(202).json({ message: 'Generando portada en background', playlistId: id });
+
+    const prompt = buildPlaylistCoverPrompt(playlist.title);
+    const coverUrl = await generateAndUploadCover(prompt);
+    if (coverUrl) {
+      await updatePlaylist(id, userId, { coverUrl });
+      console.log(`[generate-cover] portada generada para playlist ${id}: ${coverUrl}`);
+    }
+  } catch (error: any) {
+    console.error('[generate-cover] error:', error);
   }
 }
 
