@@ -824,7 +824,7 @@
         "CREATE_MODAL": {
             "TITLE": "Crear Nuevo Tema",
             "TITLE_LABEL": "Título del Tema",
-            "TITLE_PLACEHOLDER": "Ej: Recomendación de libros de ciencia ficción",
+            "TITLE_PLACEHOLDER": "Ej: Recomendación de libros de ficción",
             "CONTENT_LABEL": "Contenido",
             "CONTENT_PLACEHOLDER": "Escribe el contenido de tu tema...",
             "CREATING": "Creando...",

@@ -1,127 +1,119 @@
 <app-header></app-header>
 
-<div class="about-us-container">
-  <div class="max-w-6xl mx-auto px-4 py-8 md:py-12">
-    <!-- Hero Section -->
-    <div class="text-center mb-12">
-      <h1 class="text-4xl md:text-5xl font-bold mb-6" style="color: #45332D;">
-        {{ 'ABOUT_US.TITLE' | translate }}
+<div class="about">
+
+  <!-- ── HERO ── -->
+  <section class="about-hero">
+    <div class="about-hero__inner">
+      <span class="about-eyebrow">Quiénes somos</span>
+      <h1 class="about-title">
+        Construimos la biblioteca<br>
+        <em>que siempre quisiste tener.</em>
       </h1>
-      <p class="text-lg md:text-xl max-w-3xl mx-auto mb-4" style="color: #45332D; opacity: 0.9;">
+      <p class="about-subtitle">
         {{ 'ABOUT_US.SUBTITLE' | translate }}
       </p>
     </div>
+    <div class="about-hero__rule" aria-hidden="true"></div>
+  </section>
 
-    <!-- Introduction Section -->
-    <div class="bg-white rounded-2xl shadow-lg p-8 mb-12" style="border: 1px solid #E9E1D1;">
-      <h2 class="text-2xl font-bold mb-6" style="color: #45332D;">
-        {{ 'ABOUT_US.INTRODUCTION.TITLE' | translate }}
-      </h2>
-      <p class="mb-4 leading-relaxed" style="color: #45332D; opacity: 0.9;">
-        {{ 'ABOUT_US.INTRODUCTION.DESCRIPTION' | translate }}
-      </p>
-      <p class="mb-4 leading-relaxed" style="color: #45332D; opacity: 0.9;">
-        {{ 'ABOUT_US.INTRODUCTION.REASON' | translate }}
-      </p>
-      
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
-        <div class="text-center p-5 rounded-xl" style="background-color: #F5EDD8; border: 1px solid rgba(69,51,45,0.08);">
-          <div class="flex items-center justify-center mb-3">
-            <span class="material-symbols-outlined" style="font-size: 2.25rem; color: #E0A15E;">smartphone</span>
-          </div>
-          <h3 class="font-semibold mb-2" style="color: #45332D;">{{ 'ABOUT_US.INTRODUCTION.CONCEPT1.TITLE' | translate }}</h3>
-          <p class="text-sm" style="color: #45332D; opacity: 0.75; line-height: 1.6;">{{ 'ABOUT_US.INTRODUCTION.CONCEPT1.DESC' | translate }}</p>
+  <!-- ── INTRODUCCIÓN ── -->
+  <section class="about-intro">
+    <div class="about-intro__inner">
+      <div class="about-intro__text">
+        <h2 class="about-section-title">{{ 'ABOUT_US.INTRODUCTION.TITLE' | translate }}</h2>
+        <p class="about-body">{{ 'ABOUT_US.INTRODUCTION.DESCRIPTION' | translate }}</p>
+        <p class="about-body">{{ 'ABOUT_US.INTRODUCTION.REASON' | translate }}</p>
+      </div>
+      <div class="about-intro__concepts">
+        <div class="concept-card">
+          <span class="material-symbols-outlined concept-card__icon">smartphone</span>
+          <h3 class="concept-card__title">{{ 'ABOUT_US.INTRODUCTION.CONCEPT1.TITLE' | translate }}</h3>
+          <p class="concept-card__desc">{{ 'ABOUT_US.INTRODUCTION.CONCEPT1.DESC' | translate }}</p>
         </div>
-        <div class="text-center p-5 rounded-xl" style="background-color: #F5EDD8; border: 1px solid rgba(69,51,45,0.08);">
-          <div class="flex items-center justify-center mb-3">
-            <span class="material-symbols-outlined" style="font-size: 2.25rem; color: #E0A15E;">menu_book</span>
-          </div>
-          <h3 class="font-semibold mb-2" style="color: #45332D;">{{ 'ABOUT_US.INTRODUCTION.CONCEPT2.TITLE' | translate }}</h3>
-          <p class="text-sm" style="color: #45332D; opacity: 0.75; line-height: 1.6;">{{ 'ABOUT_US.INTRODUCTION.CONCEPT2.DESC' | translate }}</p>
+        <div class="concept-card">
+          <span class="material-symbols-outlined concept-card__icon">menu_book</span>
+          <h3 class="concept-card__title">{{ 'ABOUT_US.INTRODUCTION.CONCEPT2.TITLE' | translate }}</h3>
+          <p class="concept-card__desc">{{ 'ABOUT_US.INTRODUCTION.CONCEPT2.DESC' | translate }}</p>
         </div>
-        <div class="text-center p-5 rounded-xl" style="background-color: #F5EDD8; border: 1px solid rgba(69,51,45,0.08);">
-          <div class="flex items-center justify-center mb-3">
-            <span class="material-symbols-outlined" style="font-size: 2.25rem; color: #E0A15E;">recycling</span>
-          </div>
-          <h3 class="font-semibold mb-2" style="color: #45332D;">{{ 'ABOUT_US.INTRODUCTION.CONCEPT3.TITLE' | translate }}</h3>
-          <p class="text-sm" style="color: #45332D; opacity: 0.75; line-height: 1.6;">{{ 'ABOUT_US.INTRODUCTION.CONCEPT3.DESC' | translate }}</p>
+        <div class="concept-card">
+          <span class="material-symbols-outlined concept-card__icon">recycling</span>
+          <h3 class="concept-card__title">{{ 'ABOUT_US.INTRODUCTION.CONCEPT3.TITLE' | translate }}</h3>
+          <p class="concept-card__desc">{{ 'ABOUT_US.INTRODUCTION.CONCEPT3.DESC' | translate }}</p>
         </div>
       </div>
     </div>
+  </section>
 
-    <!-- Team Section -->
-    <div class="mb-12">
-      <h2 class="text-3xl font-bold text-center mb-12" style="color: #45332D;">
+  <!-- ── EQUIPO ── -->
+  <section class="about-team">
+    <div class="about-team__inner">
+      <span class="about-eyebrow">El equipo</span>
+      <h2 class="about-section-title about-section-title--center">
         {{ 'ABOUT_US.TEAM.TITLE' | translate }}
       </h2>
-      
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-        <!-- Sergii -->
-        <div class="team-member-card bg-white rounded-2xl shadow-lg overflow-hidden" style="border: 1px solid #E9E1D1;">
-          <div class="relative flex justify-center items-center pt-6 pb-2">
-            <img 
-              src="assets/sergii.jfif" 
+
+      <div class="team-grid">
+
+        <article class="member-card">
+          <div class="member-card__photo-wrap">
+            <img
+              src="assets/sergii.jfif"
               alt="Sergii"
-              class="w-32 h-32 object-cover rounded-full border-4"
-              style="border-color: #E9E1D1;"
-              onerror="this.src='https://via.placeholder.com/400x400?text=Sergii'">
+              class="member-card__photo"
+              onerror="this.src='https://via.placeholder.com/400x400?text=S'">
           </div>
-          <div class="p-6">
-            <h3 class="text-2xl font-bold mb-2" style="color: #45332D;">Sergii</h3>
-            <p class="mb-4 text-sm" style="color: #45332D; opacity: 0.8;">{{ 'ABOUT_US.TEAM.SERGII.ROLE' | translate }}</p>
-            <p class="leading-relaxed" style="color: #45332D; opacity: 0.9;">
-              {{ 'ABOUT_US.TEAM.SERGII.DESCRIPTION' | translate }}
-            </p>
+          <div class="member-card__body">
+            <h3 class="member-card__name">Sergii</h3>
+            <p class="member-card__role">{{ 'ABOUT_US.TEAM.SERGII.ROLE' | translate }}</p>
+            <p class="member-card__bio">{{ 'ABOUT_US.TEAM.SERGII.DESCRIPTION' | translate }}</p>
           </div>
-        </div>
+        </article>
 
-        <!-- Lucas -->
-        <div class="team-member-card bg-white rounded-2xl shadow-lg overflow-hidden" style="border: 1px solid #E9E1D1;">
-          <div class="relative flex justify-center items-center pt-6 pb-2">
-            <img 
-              src="assets/lucas.jfif" 
+        <article class="member-card">
+          <div class="member-card__photo-wrap">
+            <img
+              src="assets/lucas.jfif"
               alt="Lucas"
-              class="w-32 h-32 object-cover rounded-full border-4"
-              style="border-color: #E9E1D1;"
-              onerror="this.src='https://via.placeholder.com/400x400?text=Lucas'">
+              class="member-card__photo"
+              onerror="this.src='https://via.placeholder.com/400x400?text=L'">
           </div>
-          <div class="p-6">
-            <h3 class="text-2xl font-bold mb-2" style="color: #45332D;">Lucas</h3>
-            <p class="mb-4 text-sm" style="color: #45332D; opacity: 0.8;">{{ 'ABOUT_US.TEAM.LUCAS.ROLE' | translate }}</p>
-            <p class="leading-relaxed" style="color: #45332D; opacity: 0.9;">
-              {{ 'ABOUT_US.TEAM.LUCAS.DESCRIPTION' | translate }}
-            </p>
+          <div class="member-card__body">
+            <h3 class="member-card__name">Lucas</h3>
+            <p class="member-card__role">{{ 'ABOUT_US.TEAM.LUCAS.ROLE' | translate }}</p>
+            <p class="member-card__bio">{{ 'ABOUT_US.TEAM.LUCAS.DESCRIPTION' | translate }}</p>
           </div>
-        </div>
+        </article>
 
-        <!-- Samuel -->
-        <div class="team-member-card bg-white rounded-2xl shadow-lg overflow-hidden" style="border: 1px solid #E9E1D1;">
-          <div class="relative flex justify-center items-center pt-6 pb-2">
-            <img 
-              src="assets/samuel.jfif" 
+        <article class="member-card">
+          <div class="member-card__photo-wrap">
+            <img
+              src="assets/samuel.jfif"
               alt="Samuel"
-              class="w-32 h-32 object-cover rounded-full border-4"
-              style="border-color: #E9E1D1;"
-              onerror="this.src='https://via.placeholder.com/400x400?text=Samuel'">
+              class="member-card__photo"
+              onerror="this.src='https://via.placeholder.com/400x400?text=S'">
           </div>
-          <div class="p-6">
-            <h3 class="text-2xl font-bold mb-2" style="color: #45332D;">Samuel</h3>
-            <p class="mb-4 text-sm" style="color: #45332D; opacity: 0.8;">{{ 'ABOUT_US.TEAM.SAMUEL.ROLE' | translate }}</p>
-            <p class="leading-relaxed" style="color: #45332D; opacity: 0.9;">
-              {{ 'ABOUT_US.TEAM.SAMUEL.DESCRIPTION' | translate }}
-            </p>
+          <div class="member-card__body">
+            <h3 class="member-card__name">Samuel</h3>
+            <p class="member-card__role">{{ 'ABOUT_US.TEAM.SAMUEL.ROLE' | translate }}</p>
+            <p class="member-card__bio">{{ 'ABOUT_US.TEAM.SAMUEL.DESCRIPTION' | translate }}</p>
           </div>
-        </div>
+        </article>
+
       </div>
     </div>
+  </section>
 
-    <!-- Conclusion Section -->
-    <div class="bg-white rounded-2xl shadow-lg p-8 text-center" style="border: 1px solid #E9E1D1;">
-      <p class="text-lg leading-relaxed max-w-3xl mx-auto" style="color: #45332D; opacity: 0.9;">
+  <!-- ── CIERRE ── -->
+  <section class="about-closing">
+    <div class="about-closing__inner">
+      <span class="about-closing__ornament" aria-hidden="true">❧</span>
+      <blockquote class="about-closing__quote">
         {{ 'ABOUT_US.CONCLUSION' | translate }}
-      </p>
+      </blockquote>
     </div>
-  </div>
+  </section>
+
 </div>
 
 <app-footer></app-footer>

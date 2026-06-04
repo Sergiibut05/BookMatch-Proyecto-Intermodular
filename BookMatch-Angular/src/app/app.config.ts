@@ -14,6 +14,52 @@ import { environment } from '../environments/environment';
 import { Observable } from 'rxjs';
 import { provideQueryClientOptions } from '@ngneat/query';
 
+// ── Directional view transitions ─────────────────────────────────────────────
+// We track history position with a custom `_bm_pos` counter stored inside
+// each history.state entry (same pattern used by Nuxt, TanStack Router, etc.).
+// pushState → new entry → increment counter.
+// popstate  → read destination _bm_pos and compare with current → back or fwd.
+let pendingBackNav = false;
+let _bmHistoryPos = 0;
+
+/**
+ * Marca la siguiente navegación programática como "hacia atrás" para que
+ * la animación de View Transition entre desde la izquierda en vez de la derecha.
+ * Llamar justo antes de `router.navigate(...)`.
+ */
+export function markNavBack(): void {
+  pendingBackNav = true;
+}
+
+if (typeof window !== 'undefined') {
+  // Seed the current entry with _bm_pos = 0 if not already present
+  if (history.state?._bm_pos === undefined) {
+    history.replaceState({ ...history.state, _bm_pos: 0 }, '');
+  } else {
+    _bmHistoryPos = history.state._bm_pos;
+  }
+
+  // Intercept pushState to stamp every new entry with an incrementing position
+  const _origPush = history.pushState.bind(history);
+  history.pushState = function (state: any, title: string, url?: string | null) {
+    _bmHistoryPos++;
+    return _origPush({ ...(state ?? {}), _bm_pos: _bmHistoryPos }, title, url);
+  };
+
+  // Intercept replaceState so the _bm_pos stays consistent after URL replacements
+  const _origReplace = history.replaceState.bind(history);
+  history.replaceState = function (state: any, title: string, url?: string | null) {
+    return _origReplace({ ...(state ?? {}), _bm_pos: _bmHistoryPos }, title, url);
+  };
+
+  // On popstate the destination _bm_pos is already stamped on history.state
+  window.addEventListener('popstate', () => {
+    const destPos: number = history.state?._bm_pos ?? 0;
+    pendingBackNav = destPos < _bmHistoryPos;
+    _bmHistoryPos = destPos;
+  }, { capture: true });
+}
+
 /**
  * Loader de traducciones basado en archivos JSON bajo `assets/i18n`.
  */
@@ -48,7 +94,31 @@ export const appConfig: ApplicationConfig = {
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(
       routes,
-      withViewTransitions({ skipInitialTransition: true }),
+      withViewTransitions({
+        skipInitialTransition: true,
+        onViewTransitionCreated: ({ transition }: { transition: ViewTransition }) => {
+          const isBack = pendingBackNav;
+          pendingBackNav = false;
+          const root = document.documentElement;
+          if (isBack) {
+            root.style.setProperty('--vt-old-anim', 'proExitBack');
+            root.style.setProperty('--vt-new-anim', 'proEnterBack');
+            root.style.setProperty('--vt-old-origin', 'center right');
+            root.style.setProperty('--vt-new-shadow', '15px 0 40px rgba(0,0,0,.15)');
+          } else {
+            root.style.setProperty('--vt-old-anim', 'proExit');
+            root.style.setProperty('--vt-new-anim', 'proEnter');
+            root.style.setProperty('--vt-old-origin', 'center left');
+            root.style.setProperty('--vt-new-shadow', '-15px 0 40px rgba(0,0,0,.15)');
+          }
+          transition.finished.then(() => {
+            root.style.removeProperty('--vt-old-anim');
+            root.style.removeProperty('--vt-new-anim');
+            root.style.removeProperty('--vt-old-origin');
+            root.style.removeProperty('--vt-new-shadow');
+          });
+        }
+      }),
       withInMemoryScrolling({ scrollPositionRestoration: 'top', anchorScrolling: 'enabled' })
     ),
     provideQueryClientOptions({

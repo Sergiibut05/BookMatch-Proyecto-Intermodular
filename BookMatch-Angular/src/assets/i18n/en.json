@@ -986,7 +986,7 @@
         "WELCOME_TITLE": "Hi, I'm your book assistant",
         "WELCOME_SUBTITLE": "Ask me about genres, authors or moods and I'll suggest titles.",
         "SUGGESTION_FANTASY_LABEL": "Epic fantasy",
-        "SUGGESTION_FANTASY": "I'm looking for epic fantasy books",
+        "SUGGESTION_FANTASY": "I'm looking for fantasy books",
         "SUGGESTION_SCIFI_LABEL": "Sci-fi",
         "SUGGESTION_SCIFI": "Recommend me some sci-fi",
         "SUGGESTION_MYSTERY_LABEL": "Mystery",

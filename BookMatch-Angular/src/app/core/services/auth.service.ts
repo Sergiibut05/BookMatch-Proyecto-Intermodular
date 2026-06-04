@@ -26,6 +26,9 @@ export class AuthService {
 
   currentUser = signal<BackendUser | null>(null);
   firebaseUser = signal<FirebaseUser | null>(null);
+
+  /** Becomes true once Firebase has resolved the initial auth state (user or null). */
+  authInitialized = signal(false);
   
   isAdmin = computed(() => {
     return this.currentUser()?.role === 'ADMIN';
@@ -59,6 +62,11 @@ export class AuthService {
         this.firebaseUser.set(null);
         localStorage.removeItem(this.TOKEN_KEY);
         this.currentUser.set(null);
+      }
+
+      // Mark auth as initialized after the first Firebase state emission
+      if (!this.authInitialized()) {
+        this.authInitialized.set(true);
       }
     });
   }
