@@ -460,13 +460,13 @@ export function buildCallbackBaseUrl(reqProtocol: string, reqHost: string): stri
  * Muestra de libros del catálogo que pasamos a n8n como contexto.
  * Limitada en tamaño para no desbordar el prompt del LLM.
  */
-async function buildCatalogSample(limit = 60): Promise<Array<{ id: number; title: string; author: string | null }>> {
+async function buildCatalogSample(limit = 60): Promise<Array<{ id: number; title: string; author: string | null; coverUrl: string | null }>> {
   const books = await prisma.catalogBook.findMany({
     take: limit,
     orderBy: { id: 'desc' },
-    select: { id: true, title: true, author: true },
+    select: { id: true, title: true, author: true, coverUrl: true },
   });
-  return books.map((b: any) => ({ id: b.id, title: b.title, author: b.author }));
+  return books.map((b: any) => ({ id: b.id, title: b.title, author: b.author, coverUrl: b.coverUrl ?? null }));
 }
 
 /**

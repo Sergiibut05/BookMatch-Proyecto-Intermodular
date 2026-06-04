@@ -290,6 +290,23 @@ export class PlaylistService {
     );
   }
 
+  /**
+   * Dispara la generación de portada IA para la playlist (OpenRouter FLUX Schnell).
+   * El servidor responde 202 y genera en background; la portada aparecerá al
+   * recargar la playlist. No bloquea al usuario.
+   */
+  generateCover(id: number): Observable<{ message: string; playlistId: number }> {
+    return this.authHeaders().pipe(
+      switchMap((headers) =>
+        this.http.post<{ message: string; playlistId: number }>(
+          `${this.apiUrl}/${id}/generate-cover`,
+          {},
+          { headers },
+        ),
+      ),
+    );
+  }
+
   /** Exporta la playlist en JSON o Markdown (H1.4 · SCRUM-163). */
   export(id: number, format: PlaylistExportFormat = 'json'): Observable<Blob> {
     return this.authHeaders().pipe(
