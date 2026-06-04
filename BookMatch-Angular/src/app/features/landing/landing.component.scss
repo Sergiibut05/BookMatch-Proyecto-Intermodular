@@ -153,6 +153,8 @@ $hero-text: #2b2118;
   position: relative;
   z-index: 3;
   padding: clamp(1.1rem, 2.6vw, 1.6rem) clamp(1.25rem, 3vw, 2rem);
+  /* Clip the backdrop-filter scrim so it never bleeds into the eyebrow area */
+  overflow: hidden;
 
   /* Scrim suave: legibilidad del logo sobre el hero sin barra dura */
   &::before {
@@ -161,15 +163,14 @@ $hero-text: #2b2118;
     top: 0;
     left: 0;
     right: 0;
-    /* Extiende el scrim por debajo del header para que el fade no corte el logo */
-    height: calc(100% + clamp(1.25rem, 3vw, 2rem));
+    height: 100%;
     z-index: -1;
     pointer-events: none;
     background: linear-gradient(
       to bottom,
       rgba(216, 210, 204, 0.72) 0%,
-      rgba(216, 210, 204, 0.58) 50%,
-      rgba(216, 210, 204, 0.18) 78%,
+      rgba(216, 210, 204, 0.70) 62%,
+      rgba(216, 210, 204, 0.08) 92%,
       transparent 100%
     );
     backdrop-filter: blur(6px);

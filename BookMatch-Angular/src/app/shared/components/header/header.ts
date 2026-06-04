@@ -1,6 +1,7 @@
 import { Component, inject, signal, computed, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink, NavigationEnd, ActivatedRoute } from '@angular/router';
+import { markNavBack } from '../../../app.config';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '@core/services/auth.service';
 import { CartService } from '@core/services/cart.service';
@@ -185,7 +186,7 @@ export class Header implements OnInit, OnDestroy {
   logout(): void {
     this.authService.logout().subscribe({
       next: () => {
-        this.router.navigate(['/auth/login']);
+        this.router.navigate(['/']);
       }
     });
   }
@@ -201,7 +202,8 @@ export class Header implements OnInit, OnDestroy {
    * Navega a home.
    */
   goHome() {
-    this.router.navigate(['/home'])
+    markNavBack();
+    this.router.navigate(['/home']);
   }
 
   /**

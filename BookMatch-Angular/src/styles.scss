@@ -29,12 +29,11 @@ body.loader-active ::view-transition-group(root) {
     animation: none !important;
 }
 
-/* 3. La página ACTUAL (se va): Se aleja, se oscurece y desliza a la izquierda */
+/* 3. La página ACTUAL (se va) */
 ::view-transition-old(root) {
-    animation-name: proExit;
-    transform-origin: center left;
+    animation-name: var(--vt-old-anim, proExit);
+    transform-origin: var(--vt-old-origin, center left);
     z-index: 1;
-    /* Se queda al fondo */
 }
 
 /* Desactivar animación de salida cuando el loader está activo */
@@ -42,14 +41,12 @@ body.loader-active ::view-transition-old(root) {
     animation: none !important;
 }
 
-/* 4. La página NUEVA (entra): Aparece por derecha, crece y aterriza */
+/* 4. La página NUEVA (entra) */
 ::view-transition-new(root) {
-    animation-name: proEnter;
+    animation-name: var(--vt-new-anim, proEnter);
     transform-origin: center;
     z-index: 2;
-    /* Pasa por delante */
-    /* Sombra suave para separarla del fondo */
-    box-shadow: -15px 0 40px rgba(0, 0, 0, 0.15);
+    box-shadow: var(--vt-new-shadow, -15px 0 40px rgba(0,0,0,.15));
 }
 
 /* Desactivar animación de entrada cuando el loader está activo */
@@ -85,6 +82,30 @@ body.loader-active ::view-transition-new(root) {
 
     to {
         /* Termina en el centro y a tamaño real (1) */
+        transform: translateX(0) scale(1);
+        opacity: 1;
+    }
+}
+
+@keyframes proExitBack {
+    from {
+        transform: translateX(0) scale(1);
+        opacity: 1;
+        filter: brightness(1);
+    }
+    to {
+        transform: translateX(30%) scale(0.85);
+        opacity: 0;
+        filter: brightness(0.7);
+    }
+}
+
+@keyframes proEnterBack {
+    from {
+        transform: translateX(-100%) scale(0.9);
+        opacity: 0;
+    }
+    to {
         transform: translateX(0) scale(1);
         opacity: 1;
     }
