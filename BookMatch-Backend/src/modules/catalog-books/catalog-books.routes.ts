@@ -82,10 +82,10 @@ const router = Router();
  *       400:
  *         description: Filtros inválidos
  */
-router.get('/', auth, getCatalogBooksCtrl);
+router.get('/', getCatalogBooksCtrl);
 
 // --- Recuperando ruta de categorías ---
-router.get('/categories', auth, getCategoriesCtrl);
+router.get('/categories', getCategoriesCtrl);
 
 /**
  * @swagger
@@ -107,7 +107,7 @@ router.get('/categories', auth, getCategoriesCtrl);
  *       404:
  *         description: Libro no encontrado
  */
-router.get('/:id', auth, getCatalogBookCtrl);
+router.get('/:id', getCatalogBookCtrl);
 
 // --- RUTAS PROTEGIDAS (ADMIN) ---
 

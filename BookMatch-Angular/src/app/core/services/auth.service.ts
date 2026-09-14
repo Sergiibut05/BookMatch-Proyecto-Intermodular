@@ -3,7 +3,7 @@ import { Auth, createUserWithEmailAndPassword, signInWithEmailAndPassword,
         signInWithPopup, GoogleAuthProvider, signOut, user, User as FirebaseUser, onAuthStateChanged, updateProfile } from '@angular/fire/auth';
 import { Router } from '@angular/router';
 import { HttpClient, HttpHeaders } from '@angular/common/http'; 
-import { Observable, from, map, switchMap, of } from 'rxjs';
+import { Observable, from, map, switchMap, of, take } from 'rxjs';
 import { User as BackendUser } from '@shared/models'; 
 import { environment } from '../../../environments/environment';
 
@@ -181,6 +181,7 @@ export class AuthService {
    */
   getToken(): Observable<string | null> {
     return this.user$.pipe(
+      take(1),
       switchMap(async (firebaseUser) => {
         if (firebaseUser) {
           const token = await firebaseUser.getIdToken();

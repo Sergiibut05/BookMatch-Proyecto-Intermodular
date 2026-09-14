@@ -47,6 +47,11 @@ export async function auth(req: Request, res: Response, next: NextFunction) {
       return res.status(401).json({ message: 'Token expirado' });
     }
 
+    // Errores de Prisma/DB no son un token malo; no enmascararlos como 401.
+    if (typeof error?.code === 'string' && error.code.startsWith('P')) {
+      return res.status(503).json({ message: 'Servicio no disponible' });
+    }
+
     return res.status(401).json({ message: 'Token inválido' });
   }
 }
