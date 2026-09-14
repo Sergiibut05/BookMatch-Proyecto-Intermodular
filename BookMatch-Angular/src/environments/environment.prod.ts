@@ -18,5 +18,5 @@ export const environment = {
     stripePublishableKey: 'pk_test_51SXKSE9RfkpN8LkuajmtkGe2fBJNNYiVhepYyANGrlr5xBW9nMJXEm76iUAoJb3iqutIywJviuf4QQJHFNFQQr0d007T7bx4gt',
     // AWS (api.bookmatch.club) está caído. No hay failover en el cliente:
     // apiUrl se hornea en el build, así que hay que redeployar el front.
-    apiUrl: 'https://book-match-proyecto-intermodular-k5fb-i2442vm5r.vercel.app/api'
+    apiUrl: 'https://book-match-proyecto-intermodular-k5fb-aw18fctx8.vercel.app/api'
 };
